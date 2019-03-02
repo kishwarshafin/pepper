@@ -287,9 +287,11 @@ def get_chromosme_list(chromosome_names, ref_file):
     if not chromosome_names:
         fasta_handler = HELEN.FASTA_handler(ref_file)
         chromosome_names = fasta_handler.get_chromosome_names()
+        chromosome_names = ','.join(chromosome_names)
 
     split_names = chromosome_names.strip().split(',')
     split_names = [name.strip() for name in split_names]
+
 
     chromosome_name_list = []
     for name in split_names:
