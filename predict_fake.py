@@ -168,16 +168,15 @@ def merge_call_files(vcf_file_directory):
 
 
 def label_to_base(label):
-    if label == 1:
-        return 'A'
     if label == 2:
-        return 'C'
+        return 'A'
     if label == 3:
-        return 'G'
+        return 'C'
     if label == 4:
         return 'T'
+    if label == 5:
+        return 'G'
     return ''
-
 
 def polish_genome(csv_file, batch_size, num_workers, bam_file_path, output_dir, max_threads):
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "OUTPUT DIRECTORY: " + output_dir + "\n")
