@@ -1,3 +1,8 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
 # Prerequisites
 *.d
 
@@ -30,3 +35,12 @@
 *.exe
 *.out
 *.app
+
+# cLion specific things
+.idea
+build/
+
+# debug outputs
+outputs/
+out.txt
+.DS_store
