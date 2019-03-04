@@ -42,7 +42,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     criterion = nn.CrossEntropyLoss()
 
     if gpu_mode is True:
-        criterion = test_criterion.cuda()
+        criterion = criterion.cuda()
 
     # Test the Model
     # sys.stderr.write(TextColor.PURPLE + 'Test starting\n' + TextColor.END)
