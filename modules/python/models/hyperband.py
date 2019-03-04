@@ -100,8 +100,7 @@ class Hyperband:
                     logging.info("Iterations:\t" + str(n_iterations))
                     logging.info("Params:\t" + str(config[0]))
                     params, retrain_model, model_path, prev_ite = config
-                    enc_model, dec_model, enc_optimizer, dec_optimizer, result = self.try_params(n_iterations, config,
-                                                                                                 model_path)
+                    transducer_model, model_optimizer, result = self.try_params(n_iterations, config, model_path)
 
                     assert (type(result) == dict)
                     assert ('loss' in result)

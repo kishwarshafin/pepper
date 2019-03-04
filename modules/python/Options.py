@@ -15,15 +15,14 @@ class CandidateFinderOptions(object):
 
 
 class ImageSizeOptions(object):
-    IMAGE_HEIGHT = 100
-    IMAGE_CHANNELS = 7
+    IMAGE_HEIGHT = 20
+    IMAGE_CHANNELS = 1
     MIN_BASES_ON_LEFT = 0
     BASES_ON_RIGHT = 1
-    CONTEXT_SIZE = 10
-    SEQ_LENGTH = CONTEXT_SIZE * 2 + BASES_ON_RIGHT + MIN_BASES_ON_LEFT
-    LABEL_LENGTH = BASES_ON_RIGHT + MIN_BASES_ON_LEFT
+    SEQ_LENGTH = 1000
+    LABEL_LENGTH = 1000
 
-    TOTAL_LABELS = 6
+    TOTAL_LABELS = 5
 
 
 class AlingerOptions(object):

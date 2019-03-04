@@ -66,7 +66,7 @@ class EncoderCRNN(nn.Module):
         self.hidden_size = hidden_size
         self.bidirectional = bidirectional
         self.num_layers = gru_layers
-        self.gru = nn.GRU(1536, hidden_size, num_layers=self.num_layers, bidirectional=bidirectional, batch_first=True)
+        self.gru = nn.GRU(5, hidden_size, num_layers=self.num_layers, bidirectional=bidirectional, batch_first=True)
         self.gru.flatten_parameters()
 
     def forward(self, x, hidden):
@@ -76,7 +76,6 @@ class EncoderCRNN(nn.Module):
         batch_size = features_cnn.size(0)
         seq_len = features_cnn.size(2)
         features_cnn = features_cnn.view(batch_size, seq_len, -1)
-
         # self.gru.flatten_parameters()
         output_rnn, hidden_rnn = self.gru(features_cnn, hidden)
 
