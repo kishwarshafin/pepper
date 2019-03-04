@@ -210,10 +210,15 @@ def chromosome_level_parallelization(chr_list,
 
         with h5py.File(image_file_name, mode='w') as hdf5_file:
             # the image dataset we save. The index name in h5py is "images".
-            img_dset = hdf5_file.create_dataset("image", (len(all_images),) + (1000, 20), np.double, compression='gzip')
-            label_dataset = hdf5_file.create_dataset("label", (len(all_labels),) + (1000,), np.int16, compression='gzip')
-            position_dataset = hdf5_file.create_dataset("position", (len(all_positions),) + (1000,), np.int64, compression='gzip')
-            index_dataset = hdf5_file.create_dataset("index", (len(all_indices),) + (1000,), np.int32, compression='gzip')
+            img_dset = hdf5_file.create_dataset("image", (len(all_images),) + (ImageSizeOptions.SEQ_LENGTH,
+                                                                               ImageSizeOptions.IMAGE_HEIGHT),
+                                                np.double, compression='gzip')
+            label_dataset = hdf5_file.create_dataset("label", (len(all_labels),) + (ImageSizeOptions.LABEL_LENGTH,),
+                                                     np.int16, compression='gzip')
+            position_dataset = hdf5_file.create_dataset("position", (len(all_positions),) +
+                                                        (ImageSizeOptions.SEQ_LENGTH,), np.int64, compression='gzip')
+            index_dataset = hdf5_file.create_dataset("index", (len(all_indices),) + (ImageSizeOptions.SEQ_LENGTH,),
+                                                     np.int32, compression='gzip')
 
             # save the images and labels to the h5py file
             img_dset[...] = all_images

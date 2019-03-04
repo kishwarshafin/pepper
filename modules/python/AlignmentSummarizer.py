@@ -1,7 +1,7 @@
 from build import HELEN
 import itertools
 from operator import itemgetter
-import sys
+from modules.python.Options import ImageSizeOptions
 
 
 class AlignmentSummarizer:
@@ -146,7 +146,7 @@ class AlignmentSummarizer:
             for read in truth_reads:
                 regions.append([read.pos, read.pos_end, read, True])
 
-            regions = self.remove_conflicting_regions(regions, min_length=1000)
+            regions = self.remove_conflicting_regions(regions, min_length=ImageSizeOptions.SEQ_LENGTH)
 
             for region in regions:
                 region_start, region_end, truth_read, is_kept = tuple(region)
@@ -178,8 +178,8 @@ class AlignmentSummarizer:
                                                    train_mode)
 
                 images, labels, positions = self.chunk_images_train(summary_generator,
-                                                                    chunk_size=1000,
-                                                                    chunk_overlap=200)
+                                                                    chunk_size=ImageSizeOptions.SEQ_LENGTH,
+                                                                    chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
 
                 all_images.extend(images)
                 all_labels.extend(labels)
