@@ -69,14 +69,15 @@ class AlignmentSummarizer:
 
             assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == chunk_size)
 
+            images.append(image_chunk)
+            labels.append(label_chunk)
+            positions.append(pos_chunk)
+
             if chunk_end == len(summary.genomic_pos):
                 break
 
             chunk_start = chunk_end - chunk_overlap
             chunk_end = min(len(summary.genomic_pos), chunk_start + chunk_size)
-            images.append(image_chunk)
-            labels.append(label_chunk)
-            positions.append(pos_chunk)
 
         return images, labels, positions
 

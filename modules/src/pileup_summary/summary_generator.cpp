@@ -18,6 +18,7 @@ int get_mapping_quality_bin(int mapping_quality) {
 }
 
 int get_base_bin(char base, bool is_reverse) {
+    base = toupper(base);
     int quality_band = 4;
     int base_start_index = 1; //index 0 is to indiciate if it's an insert
     if (base == 'A' && is_reverse) return 1;
@@ -45,8 +46,9 @@ int get_index(char base, bool is_reverse, int mapping_quality) {
 }
 
 double get_base_quality_weight(int base_quality) {
-    double p = 1.0 - pow(10, (-1.0 * (double) base_quality) / 10.0);
-    return p;
+    return 1.0;
+//    double p = 1.0 - pow(10, (-1.0 * (double) base_quality) / 10.0);
+//    return p;
 }
 
 

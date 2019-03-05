@@ -22,7 +22,6 @@ Input:
 Return:
 - A trained model
 """
-CLASS_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.0]
 
 
 def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoch,
@@ -64,7 +63,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
     train_data_set = SequenceDataset(train_file)
     train_loader = DataLoader(train_data_set,
                               batch_size=batch_size,
-                              shuffle=False,
+                              shuffle=True,
                               num_workers=num_workers,
                               pin_memory=gpu_mode)
     num_classes = ImageSizeOptions.TOTAL_LABELS
@@ -190,11 +189,11 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             train_loss_logger.flush()
             test_loss_logger.flush()
             confusion_matrix_logger.flush()
-        else:
-            # this setup is for hyperband
-            if epoch + 1 >= 2 and stats['accuracy'] < 90:
-                sys.stderr.write(TextColor.PURPLE + 'EARLY STOPPING AS THE MODEL NOT DOING WELL\n' + TextColor.END)
-                return transducer_model, model_optimizer, stats
+        # else:
+        #     # this setup is for hyperband
+        #     if epoch + 1 >= 2 and stats['accuracy'] < 90:
+        #         sys.stderr.write(TextColor.PURPLE + 'EARLY STOPPING AS THE MODEL NOT DOING WELL\n' + TextColor.END)
+        #         return transducer_model, model_optimizer, stats
 
     sys.stderr.write(TextColor.PURPLE + 'Finished training\n' + TextColor.END)
 
