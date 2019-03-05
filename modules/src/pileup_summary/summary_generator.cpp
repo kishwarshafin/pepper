@@ -301,47 +301,91 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
 }
 
 
-void SummaryGenerator::generate_summary(vector <type_read> &reads,
-                                        long long start_pos,
-                                        long long end_pos,
-                                        type_read truth_read,
-                                        bool train_mode) {
+void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
+                                              long long start_pos,
+                                              long long end_pos,
+                                              type_read truth_read,
+                                              bool train_mode) {
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
         iterate_over_read(read, start_pos, end_pos);
     }
 
-    if (train_mode) {
-        // this populates base_labels and insert_labels dictionaries
-        generate_labels(truth_read, start_pos, end_pos);
+    // this populates base_labels and insert_labels dictionaries
+    generate_labels(truth_read, start_pos, end_pos);
+
+    // after all the dictionaries are populated, we can simply walk through the region and generate a sequence
+    for (long long pos = start_pos; pos <= end_pos; pos++) {
+        labels.push_back(get_labels(base_labels[pos]));
+        genomic_pos.push_back(make_pair(pos, 0));
+        if (longest_insert_count[pos] > 0) {
+            for (int ii = 0; ii < longest_insert_count[pos]; ii++) {
+                genomic_pos.push_back(make_pair(pos, ii + 1));
+                if (insert_labels[make_pair(pos, ii)])
+                    labels.push_back(get_labels(insert_labels[make_pair(pos, ii)]));
+                else labels.push_back(get_labels('*'));
+            }
+        }
+    }
+    assert(labels.size() == genomic_pos.size());
+
+    // at this point labels and positions are generated, now generate the pileup
+    for (long long i = start_pos; i <= end_pos; i++) {
+        vector<double> row;
+        row.push_back(0.0); // indicating that it's not an insert column
+        // iterate through the summaries
+        for(int j = 1; j <= 20; j++) {
+            double val = 0.0;
+            if (coverage[i] > 0) val = base_summaries[make_pair(i, j)] / coverage[i];
+            row.push_back(val);
+        }
+        assert(row.size() == 21);
+        image.push_back(row);
+
+        if (longest_insert_count[i] > 0) {
+
+            for (int ii = 0; ii < longest_insert_count[i]; ii++) {
+                vector<double> ins_row;
+                ins_row.push_back(1.0); // indicating that it's an insert column
+
+                // iterate through the summaries
+                for(int j = 1; j <= 20; j++) {
+                    double val = 0.0;
+                    if (coverage[i] > 0) val = insert_summaries[make_pair(make_pair(i, ii), j)] / coverage[i];
+                    ins_row.push_back(val);
+                }
+                assert(ins_row.size() == 21);
+                image.push_back(ins_row);
+            }
+
+        }
+
+    }
+    assert(image.size() == genomic_pos.size());
+//     at this point everything should be generated
+//    debug_print(start_pos, end_pos);
+}
+
+
+void SummaryGenerator::generate_summary(vector <type_read> &reads,
+                                        long long start_pos,
+                                        long long end_pos) {
+    for (auto &read:reads) {
+        // this populates base_summaries and insert_summaries dictionaries
+        iterate_over_read(read, start_pos, end_pos);
     }
 
     // after all the dictionaries are populated, we can simply walk through the region and generate a sequence
-    if (train_mode) {
-        for (long long pos = start_pos; pos <= end_pos; pos++) {
-            labels.push_back(get_labels(base_labels[pos]));
-            genomic_pos.push_back(make_pair(pos, 0));
-            if (longest_insert_count[pos] > 0) {
-                for (int ii = 0; ii < longest_insert_count[pos]; ii++) {
-                    genomic_pos.push_back(make_pair(pos, ii + 1));
-                    if (insert_labels[make_pair(pos, ii)])
-                        labels.push_back(get_labels(insert_labels[make_pair(pos, ii)]));
-                    else labels.push_back(get_labels('*'));
-                }
-            }
-        }
-        assert(labels.size() == genomic_pos.size());
-    } else {
-        // otherwise only generate the positions
-        for (long long pos = start_pos; pos <= end_pos; pos++) {
-            int indx = 0;
-            genomic_pos.push_back(make_pair(pos, 0));
-            if (longest_insert_count[pos] > 0) {
-                for (int ii = 0; ii < longest_insert_count[pos]; ii++)
-                    genomic_pos.push_back(make_pair(pos, ii + 1));
-            }
+    // otherwise only generate the positions
+    for (long long pos = start_pos; pos <= end_pos; pos++) {
+        int indx = 0;
+        genomic_pos.push_back(make_pair(pos, 0));
+        if (longest_insert_count[pos] > 0) {
+            for (int ii = 0; ii < longest_insert_count[pos]; ii++)
+                genomic_pos.push_back(make_pair(pos, ii + 1));
         }
     }
+
     // at this point labels and positions are generated, now generate the pileup
     for (long long i = start_pos; i <= end_pos; i++) {
         vector<double> row;

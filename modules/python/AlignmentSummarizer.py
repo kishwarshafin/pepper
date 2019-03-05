@@ -12,7 +12,8 @@ class AlignmentSummarizer:
         self.region_start_position = region_start
         self.region_end_position = region_end
 
-    def chunk_images(self, summary, train_mode, chunk_size, chunk_overlap):
+    @staticmethod
+    def chunk_images(summary, chunk_size, chunk_overlap):
         chunk_start = 0
         chunk_end = min(len(summary.genomic_pos), chunk_size)
         images = []
@@ -22,21 +23,18 @@ class AlignmentSummarizer:
         while True:
             image_chunk = summary.image[chunk_start:chunk_end]
             pos_chunk = summary.genomic_pos[chunk_start:chunk_end]
-            if train_mode:
-                label_chunk = summary.labels[chunk_start:chunk_end]
-            else:
-                label_chunk = [0] * (chunk_end-chunk_start)
+            label_chunk = [0] * (chunk_end - chunk_start)
 
-            assert(len(image_chunk) == len(pos_chunk) == len(label_chunk))
+            assert (len(image_chunk) == len(pos_chunk) == len(label_chunk))
             # print(len(image_chunk), len(pos_chunk), len(label_chunk))
 
             padding_required = chunk_size - len(image_chunk)
             if padding_required > 0:
                 label_chunk = label_chunk + [0] * padding_required
-                pos_chunk = pos_chunk + [(0, 0)] * padding_required
-                image_chunk = image_chunk + [[0.0] * 20] * padding_required
+                pos_chunk = pos_chunk + [(-1, -1)] * padding_required
+                image_chunk = image_chunk + [[0.0] * ImageSizeOptions.IMAGE_HEIGHT] * padding_required
 
-            assert(len(image_chunk) == len(pos_chunk) == len(label_chunk))
+            assert (len(image_chunk) == len(pos_chunk) == len(label_chunk))
 
             if chunk_end == len(summary.genomic_pos):
                 break
@@ -49,7 +47,8 @@ class AlignmentSummarizer:
 
         return images, labels, positions
 
-    def chunk_images_train(self, summary, chunk_size, chunk_overlap):
+    @staticmethod
+    def chunk_images_train(summary, chunk_size, chunk_overlap):
         chunk_start = 0
         chunk_end = min(len(summary.genomic_pos), chunk_size)
         images = []
@@ -57,7 +56,7 @@ class AlignmentSummarizer:
         positions = []
 
         while True:
-            if chunk_end-chunk_start != chunk_size:
+            if chunk_end - chunk_start != chunk_size:
                 padding_required = chunk_size - (chunk_end - chunk_start)
                 chunk_start -= padding_required
                 if chunk_start < 0:
@@ -67,7 +66,7 @@ class AlignmentSummarizer:
             pos_chunk = summary.genomic_pos[chunk_start:chunk_end]
             label_chunk = summary.labels[chunk_start:chunk_end]
 
-            assert(len(image_chunk) == len(pos_chunk) == len(label_chunk) == chunk_size)
+            assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == chunk_size)
 
             if chunk_end == len(summary.genomic_pos):
                 break
@@ -99,7 +98,7 @@ class AlignmentSummarizer:
             if overlap is None:
                 continue
             ovlp_start, ovlp_end = overlap
-            s, l = sorted((reg_a, reg_b), key=lambda element: (element[1]-element[0]))
+            s, l = sorted((reg_a, reg_b), key=lambda element: (element[1] - element[0]))
 
             length_ratio_ij = (l[1] - l[0]) / (s[1] - s[0])
             overlap_fraction_ij = (ovlp_end - ovlp_start) / (s[1] - s[0])
@@ -171,11 +170,11 @@ class AlignmentSummarizer:
                                                            region_start,
                                                            region_end)
 
-                summary_generator.generate_summary(all_reads,
-                                                   region_start,
-                                                   region_end,
-                                                   truth_read,
-                                                   train_mode)
+                summary_generator.generate_train_summary(all_reads,
+                                                         region_start,
+                                                         region_end,
+                                                         truth_read,
+                                                         train_mode)
 
                 images, labels, positions = self.chunk_images_train(summary_generator,
                                                                     chunk_size=ImageSizeOptions.SEQ_LENGTH,
@@ -184,5 +183,34 @@ class AlignmentSummarizer:
                 all_images.extend(images)
                 all_labels.extend(labels)
                 all_positions.extend(positions)
+        else:
+            # get the reads from the bam file
+            all_reads = self.bam_handler.get_reads(self.chromosome_name,
+                                                   self.region_start_position,
+                                                   self.region_end_position,
+                                                   0,
+                                                   0)
+
+            # ref_seq should contain region_end_position base
+            ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
+                                                                self.region_start_position,
+                                                                self.region_end_position + 1)
+
+            summary_generator = HELEN.SummaryGenerator(ref_seq,
+                                                       self.chromosome_name,
+                                                       self.region_start_position,
+                                                       self.region_end_position)
+
+            summary_generator.generate_summary(all_reads,
+                                               self.region_start_position,
+                                               self.region_end_position)
+
+            images, labels, positions = self.chunk_images(summary_generator,
+                                                          chunk_size=ImageSizeOptions.SEQ_LENGTH,
+                                                          chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
+
+            all_images.extend(images)
+            all_labels.extend(labels)
+            all_positions.extend(positions)
 
         return all_images, all_labels, all_positions

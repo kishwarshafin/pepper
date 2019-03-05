@@ -16,29 +16,31 @@ class SequenceDataset(Dataset):
 
     def __init__(self, csv_path, transform=None):
         data_frame = pd.read_csv(csv_path, header=None, dtype=str)
-        # assert data_frame[0].apply(lambda x: os.path.isfile(x.split(' ')[0])).all(), \
-        #     "Some images referenced in the CSV file were not found"
-        self.transform = transforms.Compose([transforms.ToTensor()])
+        self.transform = transform
+
         self.file_info = list(data_frame[0])
         self.file_index = list(data_frame[1])
-        self.dict_info = list(data_frame[2])
-        self.record = list(data_frame[3])
+        self.chromosome_name = list(data_frame[2])
 
     def __getitem__(self, index):
-        # load the image
+        chromosome = self.chromosome_name[index]
+
         hdf5_image = self.file_info[index]
         hdf5_index = int(self.file_index[index])
+
         hdf5_file = h5py.File(hdf5_image, 'r')
 
-        image_dataset = hdf5_file['images']
-        image = np.array(image_dataset[hdf5_index], dtype=np.uint8)
-        image = self.transform(image)
-        image = image.transpose(1, 2)
+        image_dataset = hdf5_file['image']
+        image = image_dataset[hdf5_index]
+        image = torch.Tensor(image)
 
-        dict_path = self.dict_info[index]
-        record = self.record[index]
+        pos_dataset = hdf5_file['position']
+        position = np.array(pos_dataset[hdf5_index], dtype=np.long)
 
-        return image, dict_path, record
+        index_dataset = hdf5_file['index']
+        index = np.array(index_dataset[hdf5_index], dtype=np.int16)
+
+        return image, chromosome, position, index
 
     def __len__(self):
         return len(self.file_info)

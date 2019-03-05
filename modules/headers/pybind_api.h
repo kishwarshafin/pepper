@@ -40,6 +40,7 @@ PYBIND11_MODULE(HELEN, m) {
             .def_readwrite("genomic_pos", &SummaryGenerator::genomic_pos)
             .def_readwrite("labels", &SummaryGenerator::labels)
             .def_readwrite("image", &SummaryGenerator::image)
+            .def("generate_train_summary", &SummaryGenerator::generate_train_summary)
             .def("generate_summary", &SummaryGenerator::generate_summary);
 
         py::class_<PositionalCandidateRecord>(m, "PositionalCandidateRecord")

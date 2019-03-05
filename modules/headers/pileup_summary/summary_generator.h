@@ -37,9 +37,14 @@ public:
                    long long ref_end);
     void generate_summary(vector<type_read> &reads,
                           long long start_pos,
-                          long long end_pos,
-                          type_read truth_read,
-                          bool train_mode);
+                          long long end_pos);
+
+    void generate_train_summary(vector <type_read> &reads,
+                                long long start_pos,
+                                long long end_pos,
+                                type_read truth_read,
+                                bool train_mode);
+
     void iterate_over_read(type_read read, long long region_start, long long region_end);
     int get_sequence_length(long long start_pos, long long end_pos);
     void generate_labels(type_read truth_reads, long long region_start, long long region_end);
