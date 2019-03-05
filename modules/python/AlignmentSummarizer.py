@@ -34,16 +34,17 @@ class AlignmentSummarizer:
                 pos_chunk = pos_chunk + [(-1, -1)] * padding_required
                 image_chunk = image_chunk + [[0.0] * ImageSizeOptions.IMAGE_HEIGHT] * padding_required
 
-            assert (len(image_chunk) == len(pos_chunk) == len(label_chunk))
+            assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == ImageSizeOptions.SEQ_LENGTH)
+
+            images.append(image_chunk)
+            labels.append(label_chunk)
+            positions.append(pos_chunk)
 
             if chunk_end == len(summary.genomic_pos):
                 break
 
             chunk_start = chunk_end - chunk_overlap
             chunk_end = min(len(summary.genomic_pos), chunk_start + chunk_size)
-            images.append(image_chunk)
-            labels.append(label_chunk)
-            positions.append(pos_chunk)
 
         return images, labels, positions
 
