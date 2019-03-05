@@ -169,18 +169,9 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
                 }
                 for (int i = cigar_index; i < cigar.length; i++) {
                     reference_index = ref_position - ref_start;
-                    //read.base_qualities[read_index] base quality
+
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
-
-//                            double count = 0.0;
-//                            for(int j=0;j<4;j++)
-//                              count += base_summaries[make_pair(ref_position, get_base_bin(base) + j)];
-//
-//                            if(count == 0) {
-//                                cerr<<"BASE LABEL HAS NO FREQUENCY: ";
-//                                cerr<<chromosome_name<<" "<<ref_position<<" true label:"<<base<<" "<<count<<endl;
-//                            }
                         base_labels[ref_position] = base;
                     }
                     read_index += 1;
@@ -188,7 +179,6 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
                 }
                 break;
             case CIGAR_OPERATIONS::IN:
-//                base_qualities = read.base_qualities.begin() + read_index, read.base_qualities.begin() + (read_index + cigar.length);
                 reference_index = ref_position - ref_start - 1;
                 if (ref_position - 1 >= ref_start &&
                     ref_position - 1 <= ref_end) {
@@ -196,28 +186,20 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
                     string alt;
                     alt = read.sequence.substr(read_index, cigar.length);
 
-//                        if(longest_insert_count[ref_position-1] < cigar.length) {
-//                            cerr<<"INSERT LENGTH TO TRUTH LENGTH DON'T MATCH: ";
-//                            cerr<<chromosome_name<<" "<<ref_position<<" true label:"<<alt<<endl;
-//                        } else {
-
                     for (int i = 0; i < longest_insert_count[ref_position - 1]; i++) {
-                        char base = 'T';
+                        char base = '*';
                         if (i < alt.length()) {
                             base = alt[i];
                         }
                         pair<long long, int> position_pair = make_pair(ref_position - 1, i);
                         insert_labels[position_pair] = base;
                     }
-//                        }
-                    // INSERT
                 }
                 read_index += cigar.length;
                 break;
             case CIGAR_OPERATIONS::REF_SKIP:
             case CIGAR_OPERATIONS::PAD:
             case CIGAR_OPERATIONS::DEL:
-//                base_quality = read.base_qualities[max(0, read_index)];
                 reference_index = ref_position - ref_start - 1;
 
                 if (ref_position >= ref_start && ref_position <= ref_end) {
@@ -226,14 +208,6 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
                         if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                             // DELETE
                             char base = '*';
-//                                double count = 0.0;
-//                                for(int j=0;j<4;j++)
-//                                    count += base_summaries[make_pair(ref_position, get_base_bin(base) + j)];
-//
-//                                if(count == 0) {
-//                                    cerr<<"BASE-DELETE LABEL HAS NO FREQUENCY: ";
-//                                    cerr<<chromosome_name<<" "<<ref_position<<" true label:"<<base<<" "<<count<<endl;
-//                                }
                             base_labels[ref_position + i] = '*';
                         }
                     }
