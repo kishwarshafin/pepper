@@ -35,7 +35,7 @@ Output:
 prediction_dict = defaultdict(lambda: [0.0] * ImageSizeOptions.TOTAL_LABELS)
 position_dict = defaultdict(set)
 chromosome_list = set()
-label_decoder = {0: '', 1: 'A', 2: 'C', 3: 'T', 4: 'G'}
+label_decoder = {0: '', 1: 'A', 2: 'C', 3: 'G', 4: 'T'}
 
 
 def predict(test_file, model_path, batch_size, num_workers, gpu_mode):

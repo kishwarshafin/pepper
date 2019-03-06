@@ -22,7 +22,7 @@ class SummaryGenerator {
     map< pair< pair<long long, int>, int>, double> insert_summaries;
     map< pair<long long, int>, double> base_summaries;
     map<long long, long long> longest_insert_count;
-    map<long long, long long> coverage;
+    map<long long, double> coverage;
 
     map< pair<long long, int>, char> insert_labels;
     map< long long, char> base_labels;
@@ -48,6 +48,7 @@ public:
     void iterate_over_read(type_read read, long long region_start, long long region_end);
     int get_sequence_length(long long start_pos, long long end_pos);
     void generate_labels(type_read truth_reads, long long region_start, long long region_end);
+    void generate_ref_features();
     void debug_print(long long start_pos, long long end_pos);
 };
 

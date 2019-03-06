@@ -12,43 +12,37 @@ SummaryGenerator::SummaryGenerator(string reference_sequence, string chromosome_
 }
 
 
-int get_mapping_quality_bin(int mapping_quality) {
-    if (mapping_quality >= 20) return 0;
-    return 1;
+int get_feature_index(char base, bool is_reverse, bool is_ref_base) {
+    base = toupper(base);
+    if(is_ref_base) {
+        if (base == 'A') return 0;
+        if (base == 'C') return 1;
+        if (base == 'G') return 2;
+        if (base == 'T') return 3;
+        return 4;
+    } else if(is_reverse) {
+        if (base == 'A') return 5;
+        if (base == 'C') return 6;
+        if (base == 'G') return 7;
+        if (base == 'T') return 8;
+        return 13;
+    } else {
+        if (base == 'A') return 9;
+        if (base == 'C') return 10;
+        if (base == 'G') return 11;
+        if (base == 'T') return 12;
+        return 14;
+    }
 }
 
-int get_base_bin(char base, bool is_reverse) {
-    base = toupper(base);
-    int quality_band = 4;
-    int base_start_index = 1; //index 0 is to indiciate if it's an insert
-    if (base == 'A' && is_reverse) return 1;
-    if (base == 'C' && is_reverse) return 3;
-    if (base == 'G' && is_reverse) return 5;
-    if (base == 'T' && is_reverse) return 7;
-    if (base == 'A') return 9;
-    if (base == 'C') return 11;
-    if (base == 'G') return 13;
-    if (base == 'T') return 15;
-    if (is_reverse) return 17;
-    return 19;
-}
 
 int get_labels(char base) {
-    if (base == 'A' or base == 'a') return 1;
-    if (base == 'C' or base == 'c') return 2;
-    if (base == 'T' or base == 't') return 3;
-    if (base == 'G' or base == 'g') return 4;
+    base = toupper(base);
+    if (base == 'A') return 1;
+    if (base == 'C') return 2;
+    if (base == 'G') return 3;
+    if (base == 'T') return 4;
     return 0;
-}
-
-int get_index(char base, bool is_reverse, int mapping_quality) {
-    return get_base_bin(base, is_reverse) + get_mapping_quality_bin(mapping_quality);
-}
-
-double get_base_quality_weight(int base_quality) {
-    return 1.0;
-//    double p = 1.0 - pow(10, (-1.0 * (double) base_quality) / 10.0);
-//    return p;
 }
 
 
@@ -78,9 +72,9 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                         char base = read.sequence[read_index];
 
                         // update the summary of base
-                        base_summaries[make_pair(ref_position, get_index(base, read.flags.is_reverse, read.mapping_quality))] +=
-                                get_base_quality_weight(read.base_qualities[read_index]);
-                        coverage[ref_position] += 1;
+                        base_summaries[make_pair(ref_position,
+                                                 get_feature_index(base, read.flags.is_reverse, false))] += 1.0;
+                        coverage[ref_position] += 1.0;
                     }
                     read_index += 1;
                     ref_position += 1;
@@ -97,8 +91,8 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                     alt = read.sequence.substr(read_index, cigar.length);
                     for (int i = 0; i < cigar.length; i++) {
                         pair<long long, int> position_pair = make_pair(ref_position - 1, i);
-                        insert_summaries[make_pair(position_pair, get_index(alt[i], read.flags.is_reverse, read.mapping_quality))] +=
-                                get_base_quality_weight(read.base_qualities[read_index + i]);
+                        insert_summaries[make_pair(position_pair,
+                                                   get_feature_index(alt[i], read.flags.is_reverse, false))] += 1.0;
                     }
                     longest_insert_count[ref_position - 1] = std::max(longest_insert_count[ref_position - 1],
                                                                       (long long) alt.length());
@@ -116,7 +110,8 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                     for (int i = 0; i < cigar.length; i++) {
                         if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                             // update the summary of base
-                            base_summaries[make_pair(ref_position + i, get_index('*', read.flags.is_reverse, read.mapping_quality))] += 0.75;
+                            base_summaries[make_pair(ref_position + i,
+                                                     get_feature_index('*', read.flags.is_reverse, false))] += 1.0;
                         }
                     }
 //                    cout<<"DEL: "<<ref_position<<" "<<ref<<" "<<alt<<" "<<endl;
@@ -130,7 +125,6 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                 break;
         }
     }
-//    cout<<endl;
 }
 
 int SummaryGenerator::get_sequence_length(long long start_pos, long long end_pos) {
@@ -252,28 +246,21 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
     }
     cout << endl;
 
-    for(int j = 1; j <= 20; j++) {
-        for (int i = start_pos; i <= end_pos; i++) {
-            printf("%2.2lf\t", base_summaries[make_pair(i, j)]);
-            if (longest_insert_count[i] > 0) {
-                for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                    printf("%.2lf\t", insert_summaries[make_pair(make_pair(i, ii), j)]);
-                }
-            }
-
-        }
-        cout<<endl;
-
-    }
-
     cout << "-------------" << endl;
-    for (int i = 0; i < image.size(); i++) {
-        for (int j = 0; j < image[i].size(); j++) {
-            printf("%.3lf\t", image[i][j]);
+    for (int i = 0; i < image[0].size(); i++) {
+        for (int j = 0; j < image.size(); j++) {
+            printf("%.3lf\t", image[j][i]);
         }
         cout << endl;
     }
 
+}
+
+void SummaryGenerator::generate_ref_features() {
+    for(int i=ref_start; i<=ref_end; i++) {
+        char base = reference_sequence[i-ref_start];
+        base_summaries[make_pair(i, get_feature_index(base, false, true))] = 1.0;
+    }
 }
 
 
@@ -286,6 +273,8 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
         // this populates base_summaries and insert_summaries dictionaries
         iterate_over_read(read, start_pos, end_pos);
     }
+
+    generate_ref_features();
 
     // this populates base_labels and insert_labels dictionaries
     generate_labels(truth_read, start_pos, end_pos);
@@ -308,29 +297,24 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
     // at this point labels and positions are generated, now generate the pileup
     for (long long i = start_pos; i <= end_pos; i++) {
         vector<double> row;
-        row.push_back(0.0); // indicating that it's not an insert column
         // iterate through the summaries
-        for(int j = 1; j <= 20; j++) {
-            double val = 0.0;
-            if (coverage[i] > 0) val = base_summaries[make_pair(i, j)] / coverage[i];
-            row.push_back(val);
+        for(int j = 0; j <= 14; j++) {
+            if (j > 4) row.push_back(base_summaries[make_pair(i, j)] / max(1.0, coverage[i]));
+            else row.push_back(base_summaries[make_pair(i, j)]);
         }
-        assert(row.size() == 21);
+        assert(row.size() == 15);
         image.push_back(row);
 
         if (longest_insert_count[i] > 0) {
 
             for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                vector<double> ins_row;
-                ins_row.push_back(1.0); // indicating that it's an insert column
+                vector<double> ins_row {0.0, 0.0, 0.0, 0.0, 1.0};
 
                 // iterate through the summaries
-                for(int j = 1; j <= 20; j++) {
-                    double val = 0.0;
-                    if (coverage[i] > 0) val = insert_summaries[make_pair(make_pair(i, ii), j)] / coverage[i];
-                    ins_row.push_back(val);
-                }
-                assert(ins_row.size() == 21);
+                for(int j = 5; j <= 14; j++)
+                    ins_row.push_back(insert_summaries[make_pair(make_pair(i, ii), j)] / max(1.0, coverage[i]));
+
+                assert(ins_row.size() == 15);
                 image.push_back(ins_row);
             }
 
@@ -339,7 +323,7 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
     }
     assert(image.size() == genomic_pos.size());
 //     at this point everything should be generated
-//    debug_print(start_pos, end_pos);
+    debug_print(start_pos, start_pos + 10);
 }
 
 
@@ -362,32 +346,29 @@ void SummaryGenerator::generate_summary(vector <type_read> &reads,
         }
     }
 
+    generate_ref_features();
+
     // at this point labels and positions are generated, now generate the pileup
     for (long long i = start_pos; i <= end_pos; i++) {
         vector<double> row;
-        row.push_back(0.0); // indicating that it's not an insert column
         // iterate through the summaries
-        for(int j = 1; j <= 20; j++) {
-            double val = 0.0;
-            if (coverage[i] > 0) val = base_summaries[make_pair(i, j)] / coverage[i];
-            row.push_back(val);
+        for(int j = 0; j <= 14; j++) {
+            if (j > 4) row.push_back(base_summaries[make_pair(i, j)] / max(1.0, coverage[i]));
+            else row.push_back(base_summaries[make_pair(i, j)]);
         }
-        assert(row.size() == 21);
+        assert(row.size() == 15);
         image.push_back(row);
 
         if (longest_insert_count[i] > 0) {
 
             for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                vector<double> ins_row;
-                ins_row.push_back(1.0); // indicating that it's an insert column
+                vector<double> ins_row {0.0, 0.0, 0.0, 0.0, 1.0};
 
                 // iterate through the summaries
-                for(int j = 1; j <= 20; j++) {
-                    double val = 0.0;
-                    if (coverage[i] > 0) val = insert_summaries[make_pair(make_pair(i, ii), j)] / coverage[i];
-                    ins_row.push_back(val);
-                }
-                assert(ins_row.size() == 21);
+                for(int j = 5; j <= 14; j++)
+                    ins_row.push_back(insert_summaries[make_pair(make_pair(i, ii), j)] / max(1.0, coverage[i]));
+
+                assert(ins_row.size() == 15);
                 image.push_back(ins_row);
             }
 
