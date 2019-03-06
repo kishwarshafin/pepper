@@ -323,7 +323,7 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
     }
     assert(image.size() == genomic_pos.size());
 //     at this point everything should be generated
-    debug_print(start_pos, start_pos + 10);
+//    debug_print(start_pos, start_pos + 10);
 }
 
 
