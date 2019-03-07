@@ -18,7 +18,7 @@ Input:
 Returns:
 - Loss value
 """
-CLASS_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.0]
+CLASS_WEIGHTS = [0.5, 1.0, 1.0, 1.0, 1.0]
 
 
 def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_layers, hidden_size,
@@ -37,9 +37,9 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     # set the evaluation mode of the model
     transducer_model.eval()
 
-    class_weights = torch.FloatTensor(CLASS_WEIGHTS)
+    class_weights = torch.Tensor(CLASS_WEIGHTS)
     # Loss
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(class_weights)
 
     if gpu_mode is True:
         criterion = criterion.cuda()
@@ -65,9 +65,6 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                 if gpu_mode:
                     hidden = hidden.cuda()
 
-                # from analysis.analyze_png_img import analyze_tensor
-                # print(labels[0, :].data.numpy())
-                # analyze_tensor(images[0, :, start_index:end_index, :])
                 output_ = transducer_model(images, hidden)
                 loss = criterion(output_.contiguous().view(-1, num_classes),
                                  labels.contiguous().view(-1))
@@ -77,17 +74,6 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
                 total_loss += loss.item()
                 total_images += labels.size(0)
-
-                total_loss += loss.item()
-                total_images += labels.size(0)
-
-                # print(labels.data.cpu().numpy())
-                # plt.matshow(decoder_attentions.numpy()[0])
-                # plt.title(str(labels.data.cpu().numpy()[0]), fontsize=12)
-                # plt.show()
-                # exit()
-                # plt.savefig('/data/users/kishwar/train_data/plots/'+"plot_" + str(i) + ".png")
-                # exit()
 
                 pbar.update(1)
                 cm_value = confusion_matrix.value()

@@ -22,7 +22,7 @@ Input:
 Return:
 - A trained model
 """
-
+CLASS_WEIGHTS = [0.5, 1.0, 1.0, 1.0, 1.0]
 
 def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoch,
                     file_name):
@@ -101,8 +101,9 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
     if gpu_mode:
         transducer_model = torch.nn.DataParallel(transducer_model).cuda()
 
+    class_weights = torch.Tensor(CLASS_WEIGHTS)
     # Loss
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(class_weights)
 
     if gpu_mode is True:
         criterion = criterion.cuda()
