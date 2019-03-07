@@ -87,7 +87,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                     index = index.numpy().tolist()
 
                     labels = labels.cpu().data.numpy().tolist()
-                    image = images..cpu().numpy().tolist()
+                    image = images.cpu().numpy().tolist()
 
                     assert(len(position) == len(index) == len(max_value) == len(predicted_label))
                     for i in range(0, len(position)):
