@@ -5,7 +5,7 @@ import torchnet.meter as meter
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import numpy as np
-from modules.python.models.dataloader import SequenceDataset
+from modules.python.models.dataloader_test import SequenceDataset
 from modules.python.TextColor import TextColor
 from modules.python.Options import ImageSizeOptions
 """
@@ -19,10 +19,11 @@ Returns:
 - Loss value
 """
 CLASS_WEIGHTS = [0.5, 1.0, 1.0, 1.0, 1.0]
+label_decoder = {0: '*', 1: 'A', 2: 'C', 3: 'G', 4: 'T'}
 
 
 def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_layers, hidden_size,
-         num_classes=ImageSizeOptions.TOTAL_LABELS):
+         num_classes=ImageSizeOptions.TOTAL_LABELS, print_details=False):
     # transformations = transforms.Compose([transforms.ToTensor()])
 
     # data loader
@@ -32,7 +33,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                              shuffle=False,
                              num_workers=num_workers,
                              pin_memory=gpu_mode)
-    sys.stderr.write(TextColor.CYAN + 'Test data loaded\n')
+    # sys.stderr.write(TextColor.CYAN + 'Test data loaded\n')
 
     # set the evaluation mode of the model
     transducer_model.eval()
@@ -54,7 +55,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
     with torch.no_grad():
         with tqdm(total=len(test_loader), desc='Accuracy: ', leave=True, ncols=100) as pbar:
-            for i, (images, labels) in enumerate(test_loader):
+            for i, (images, labels, chromosome, position, index) in enumerate(test_loader):
                 if gpu_mode:
                     # encoder_hidden = encoder_hidden.cuda()
                     images = images.cuda()
@@ -74,6 +75,30 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
                 total_loss += loss.item()
                 total_images += labels.size(0)
+
+                if print_details:
+                    m = nn.Softmax(dim=2)
+                    soft_probs = m(output_)
+                    output_preds = soft_probs.cpu()
+                    max_value, predicted_label = torch.max(output_preds, dim=2)
+                    max_value = max_value.numpy().tolist()
+                    predicted_label = predicted_label.numpy().tolist()
+                    position = position.numpy().tolist()
+                    index = index.numpy().tolist()
+
+                    labels = labels.data.numpy().tolist()
+                    image = images.numpy().tolist()
+
+                    assert(len(position) == len(index) == len(max_value) == len(predicted_label))
+                    for i in range(0, len(position)):
+                        for pos, idx, p, p_label, t_label, img in zip(position[i], index[i], max_value[i],
+                                                                      predicted_label[i], labels[i], image[i]):
+                            if pos < 0 or idx < 0:
+                                continue
+                            if p_label != t_label:
+                                print("CHR:", chromosome[i], ", POS:", pos, ", INDEX:", idx, ", PREDICTED:",
+                                      label_decoder[p_label], ", TRUE:", label_decoder[t_label], ", P-VALUE:", p,
+                                      ", FEATURES:", img)
 
                 pbar.update(1)
                 cm_value = confusion_matrix.value()
