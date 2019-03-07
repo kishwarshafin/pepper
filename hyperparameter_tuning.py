@@ -52,8 +52,8 @@ class WrapHyperband:
         self.max_epochs = max_epochs
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.hidden_size = 512
-        self.gru_layers = 5
+        self.hidden_size = 256
+        self.gru_layers = 3
 
     def get_params(self):
         """
