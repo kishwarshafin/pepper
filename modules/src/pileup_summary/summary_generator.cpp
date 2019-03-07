@@ -42,6 +42,8 @@ int get_labels(char base) {
     if (base == 'C') return 2;
     if (base == 'G') return 3;
     if (base == 'T') return 4;
+    if (base == '*') return 5;
+    if (base == '#') return 0;
     return 0;
 }
 
@@ -181,7 +183,7 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
                     alt = read.sequence.substr(read_index, cigar.length);
 
                     for (int i = 0; i < longest_insert_count[ref_position - 1]; i++) {
-                        char base = '*';
+                        char base = '#';
                         if (i < alt.length()) {
                             base = alt[i];
                         }
@@ -288,7 +290,7 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
                 genomic_pos.push_back(make_pair(pos, ii + 1));
                 if (insert_labels[make_pair(pos, ii)])
                     labels.push_back(get_labels(insert_labels[make_pair(pos, ii)]));
-                else labels.push_back(get_labels('*'));
+                else labels.push_back(get_labels('#'));
             }
         }
     }

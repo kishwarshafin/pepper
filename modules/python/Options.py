@@ -21,7 +21,7 @@ class ImageSizeOptions(object):
     SEQ_OVERLAP = 200
     LABEL_LENGTH = 1000
 
-    TOTAL_LABELS = 5
+    TOTAL_LABELS = 6
 
 
 class AlingerOptions(object):

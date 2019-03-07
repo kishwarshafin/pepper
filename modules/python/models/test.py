@@ -18,8 +18,8 @@ Input:
 Returns:
 - Loss value
 """
-CLASS_WEIGHTS = [0.5, 1.0, 1.0, 1.0, 1.0]
-label_decoder = {0: '*', 1: 'A', 2: 'C', 3: 'G', 4: 'T'}
+CLASS_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+label_decoder = {0: '*', 1: 'A', 2: 'C', 3: 'G', 4: 'T', 5: '#'}
 
 
 def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_layers, hidden_size,
