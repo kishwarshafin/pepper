@@ -62,7 +62,7 @@ def predict(test_file, model_path, batch_size, num_workers, gpu_mode):
                                                     input_channels=ImageSizeOptions.IMAGE_CHANNELS,
                                                     image_features=ImageSizeOptions.IMAGE_HEIGHT,
                                                     seq_len=ImageSizeOptions.SEQ_LENGTH,
-                                                    num_classes=5)
+                                                    num_classes=ImageSizeOptions.TOTAL_LABELS)
     transducer_model.eval()
 
     if gpu_mode:
