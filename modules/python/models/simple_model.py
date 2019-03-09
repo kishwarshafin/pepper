@@ -1,5 +1,4 @@
 import torch
-import torch.nn.functional as F
 import torch.nn as nn
 
 
@@ -22,16 +21,21 @@ class TransducerGRU(nn.Module):
     def forward(self, x, hidden):
         hidden = hidden.transpose(0, 1).contiguous()
         # self.gru.flatten_parameters()
-        x, hidden = self.gru(x, hidden)
-        x = self.dense1(x)
+        x_out, hidden_out = self.gru(x, hidden)
+
+        x_out = self.dense1(x_out)
         # x = self.dense2(x)
         # if self.bidirectional:
         #     output_rnn = output_rnn.contiguous()
         #     output_rnn = output_rnn.view(output_rnn.size(0), output_rnn.size(1), 2, -1) \
         #         .sum(2).view(output_rnn.size(0), output_rnn.size(1), -1)
 
-        # hidden_rnn = hidden_rnn.transpose(0, 1).contiguous()
-        return x
+        hidden_out = hidden_out.transpose(0, 1).contiguous()
+        return x_out, hidden_out
 
-    def init_hidden(self, batch_size, num_layers=3, num_directions=2):
+    def init_hidden(self, batch_size, num_layers, bidirectional=True):
+        num_directions = 1
+        if bidirectional:
+            num_directions = 2
+
         return torch.zeros(batch_size, num_directions * num_layers, self.hidden_size)

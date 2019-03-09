@@ -12,7 +12,7 @@ from modules.python.models.dataloader import SequenceDataset
 from modules.python.TextColor import TextColor
 from modules.python.models.ModelHander import ModelHandler
 from modules.python.models.test import test
-from modules.python.Options import ImageSizeOptions
+from modules.python.Options import ImageSizeOptions, TrainOptions
 """
 Train a model and return the model and optimizer trained.
 
@@ -137,20 +137,24 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                     images = images.cuda()
                     labels = labels.cuda()
 
-                hidden = torch.Tensor(images.size(0), gru_layers * 2, hidden_size).zero_()
+                model_optimizer.zero_grad()
+                hidden = transducer_model.init_hidden(images.size(0), gru_layers, bidirectional=True)
 
                 if gpu_mode:
                     hidden = hidden.cuda()
 
-                model_optimizer.zero_grad()
+                loss = 0
+                for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
+                    if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
+                        break
 
-                # from analysis.analyze_png_img import analyze_tensor
-                # print(labels[0, :].data.numpy())
-                # analyze_tensor(images[0, :, :, :])
-                # exit()
-                output_ = transducer_model(images, hidden)
-                loss = criterion(output_.contiguous().view(-1, num_classes),
-                                 labels.contiguous().view(-1))
+                    image_chunk = images[:, i:i+TrainOptions.TRAIN_WINDOW]
+                    label_chunk = labels[:, i:i+TrainOptions.TRAIN_WINDOW]
+                    # print('\n', image_chunk.size(), hidden.size())
+                    output_, hidden = transducer_model(image_chunk, hidden)
+                    # print(output_.size(), hidden.size())
+                    # exit()
+                    loss += criterion(output_.contiguous().view(-1, num_classes), label_chunk.contiguous().view(-1))
 
                 loss.backward()
                 model_optimizer.step()

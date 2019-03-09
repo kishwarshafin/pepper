@@ -11,6 +11,7 @@ import time
 from modules.python.models.hyperband import Hyperband
 from modules.python.TextColor import TextColor
 from modules.python.models.train import train, save_best_model
+from modules.python.Options import TrainOptions
 """
 Tune hyper-parameters of a model using hyperband.
 Input:
@@ -41,7 +42,7 @@ class WrapHyperband:
         self.space = {
             # hp.loguniform returns a value drawn according to exp(uniform(low, high)) so that the logarithm of the
             # return value is uniformly distributed.
-            'lr': hp.loguniform('lr', -12, -4),
+            'lr': hp.loguniform('lr', -8, -4),
             'l2': hp.loguniform('l2', -12, -4)
         }
         self.train_file = train_file
@@ -52,8 +53,8 @@ class WrapHyperband:
         self.max_epochs = max_epochs
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.hidden_size = 256
-        self.gru_layers = 3
+        self.hidden_size = TrainOptions.HIDDEN_SIZE
+        self.gru_layers = TrainOptions.GRU_LAYERS
 
     def get_params(self):
         """

@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 import numpy as np
 from modules.python.models.dataloader_test import SequenceDataset
 from modules.python.TextColor import TextColor
-from modules.python.Options import ImageSizeOptions
+from modules.python.Options import ImageSizeOptions, TrainOptions
 """
 This script will evaluate a model and return the loss value.
 
@@ -46,7 +46,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
         criterion = criterion.cuda()
 
     # Test the Model
-    # sys.stderr.write(TextColor.PURPLE + 'Test starting\n' + TextColor.END)
+    sys.stderr.write(TextColor.PURPLE + 'Test starting\n' + TextColor.END)
     confusion_matrix = meter.ConfusionMeter(num_classes)
 
     total_loss = 0
@@ -61,17 +61,24 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                     images = images.cuda()
                     labels = labels.cuda()
 
-                hidden = torch.FloatTensor(labels.size(0), gru_layers * 2, hidden_size).zero_()
+                hidden = transducer_model.init_hidden(images.size(0), gru_layers, bidirectional=True)
 
                 if gpu_mode:
                     hidden = hidden.cuda()
 
-                output_ = transducer_model(images, hidden)
-                loss = criterion(output_.contiguous().view(-1, num_classes),
-                                 labels.contiguous().view(-1))
+                loss = 0
+                for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
+                    if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
+                        break
 
-                confusion_matrix.add(output_.data.contiguous().view(-1, num_classes),
-                                     labels.data.contiguous().view(-1))
+                    image_chunk = images[:, i:i+TrainOptions.TRAIN_WINDOW]
+                    label_chunk = labels[:, i:i+TrainOptions.TRAIN_WINDOW]
+                    output_, hidden = transducer_model(image_chunk, hidden)
+
+                    loss += criterion(output_.contiguous().view(-1, num_classes), label_chunk.contiguous().view(-1))
+
+                    confusion_matrix.add(output_.data.contiguous().view(-1, num_classes),
+                                         label_chunk.data.contiguous().view(-1))
 
                 total_loss += loss.item()
                 total_images += labels.size(0)

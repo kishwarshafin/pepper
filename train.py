@@ -4,6 +4,7 @@ import time
 
 # Custom generator for our dataset
 from modules.python.models.train import train
+from modules.python.Options import TrainOptions
 """
 Input:
 - A train CSV file
@@ -31,10 +32,10 @@ class TrainModule:
         self.retrain_model = retrain_model
         self.retrain_model_path = retrain_model_path
         self.stats_dir = stats_dir
-        self.hidden_size = 256
-        self.gru_layers = 3
-        self.learning_rate = 0.003765263623701754
-        self.weight_decay = 1.9378802667236716e-05
+        self.hidden_size = TrainOptions.HIDDEN_SIZE
+        self.gru_layers = TrainOptions.GRU_LAYERS
+        self.learning_rate = 0.001
+        self.weight_decay = 0.0
 
     def train_model(self):
         # train a model

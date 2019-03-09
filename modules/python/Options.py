@@ -24,6 +24,13 @@ class ImageSizeOptions(object):
     TOTAL_LABELS = 6
 
 
+class TrainOptions(object):
+    TRAIN_WINDOW = 100
+    WINDOW_JUMP = 20
+    GRU_LAYERS = 3
+    HIDDEN_SIZE = 128
+
+
 class AlingerOptions(object):
     # base and map quality
     ALIGNMENT_SAFE_BASES = 20
