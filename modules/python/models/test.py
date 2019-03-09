@@ -61,7 +61,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                     images = images.cuda()
                     labels = labels.cuda()
 
-                hidden = torch.zeros(batch_size, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+                hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
                 if gpu_mode:
                     hidden = hidden.cuda()
