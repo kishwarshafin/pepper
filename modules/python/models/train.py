@@ -138,7 +138,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                     labels = labels.cuda()
 
                 model_optimizer.zero_grad()
-                hidden = transducer_model.init_hidden(images.size(0), gru_layers, bidirectional=True)
+                hidden = torch.zeros(batch_size, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
                 if gpu_mode:
                     hidden = hidden.cuda()
