@@ -106,17 +106,14 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
             case CIGAR_OPERATIONS::DEL:
 //                base_quality = read.base_qualities[max(0, read_index)];
                 reference_index = ref_position - ref_start - 1;
-
-                if (ref_position >= ref_start && ref_position <= ref_end) {
-                    // process delete allele here
-                    for (int i = 0; i < cigar.length; i++) {
-                        if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
-                            // update the summary of base
-                            base_summaries[make_pair(ref_position + i,
-                                                     get_feature_index('*', read.flags.is_reverse, false))] += 1.0;
-                        }
+                // process delete allele here
+                for (int i = 0; i < cigar.length; i++) {
+                    if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
+                        // update the summary of base
+                        base_summaries[make_pair(ref_position + i,
+                                                 get_feature_index('*', read.flags.is_reverse, false))] += 1.0;
+                        coverage[ref_position + i] += 1.0;
                     }
-//                    cout<<"DEL: "<<ref_position<<" "<<ref<<" "<<alt<<" "<<endl;
                 }
                 ref_position += cigar.length;
                 break;
@@ -273,7 +270,9 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
                                               bool train_mode) {
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
-        iterate_over_read(read, start_pos, end_pos);
+        if(read.mapping_quality > 0) {
+            iterate_over_read(read, start_pos, end_pos);
+        }
     }
 
     generate_ref_features();
@@ -300,23 +299,23 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
     for (long long i = start_pos; i <= end_pos; i++) {
         vector<double> row;
         // iterate through the summaries
-        for(int j = 0; j <= 14; j++) {
+        for(int j = 5; j <= 14; j++) {
             if (j > 4) row.push_back(base_summaries[make_pair(i, j)] / max(1.0, coverage[i]));
             else row.push_back(base_summaries[make_pair(i, j)]);
         }
-        assert(row.size() == 15);
+        assert(row.size() == 10);
         image.push_back(row);
 
         if (longest_insert_count[i] > 0) {
 
             for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                vector<double> ins_row {0.0, 0.0, 0.0, 0.0, 1.0};
+                vector<double> ins_row;
 
                 // iterate through the summaries
                 for(int j = 5; j <= 14; j++)
                     ins_row.push_back(insert_summaries[make_pair(make_pair(i, ii), j)] / max(1.0, coverage[i]));
 
-                assert(ins_row.size() == 15);
+                assert(ins_row.size() == 10);
                 image.push_back(ins_row);
             }
 
@@ -325,7 +324,7 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
     }
     assert(image.size() == genomic_pos.size());
 //     at this point everything should be generated
-//    debug_print(start_pos, start_pos + 10);
+//    debug_print(start_pos, end_pos);
 }
 
 
@@ -334,7 +333,9 @@ void SummaryGenerator::generate_summary(vector <type_read> &reads,
                                         long long end_pos) {
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
-        iterate_over_read(read, start_pos, end_pos);
+        if(read.mapping_quality > 0) {
+            iterate_over_read(read, start_pos, end_pos);
+        }
     }
 
     // after all the dictionaries are populated, we can simply walk through the region and generate a sequence

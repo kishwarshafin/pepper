@@ -15,11 +15,11 @@ class CandidateFinderOptions(object):
 
 
 class ImageSizeOptions(object):
-    IMAGE_HEIGHT = 15
+    IMAGE_HEIGHT = 10
     IMAGE_CHANNELS = 1
     SEQ_LENGTH = 1000
     SEQ_OVERLAP = 200
-    LABEL_LENGTH = 1000
+    LABEL_LENGTH = SEQ_LENGTH
 
     TOTAL_LABELS = 6
 

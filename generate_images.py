@@ -169,7 +169,7 @@ def chromosome_level_parallelization(chr_list,
 
         all_intervals = []
         for pos in range(interval_start, interval_end, max_size):
-            all_intervals.append((pos, min(interval_end, pos + max_size - 1)))
+            all_intervals.append((pos, min(interval_end, pos + max_size)))
 
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
 
