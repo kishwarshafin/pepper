@@ -9,19 +9,26 @@ class TransducerGRU(nn.Module):
         self.bidirectional = bidirectional
         self.num_layers = gru_layers
         self.num_classes = num_classes
-        self.gru = nn.GRU(image_features,
-                          hidden_size,
-                          num_layers=self.num_layers,
-                          bidirectional=bidirectional,
-                          batch_first=True)
-        self.gru.flatten_parameters()
+        self.gru_encoder = nn.GRU(image_features,
+                                  hidden_size,
+                                  num_layers=self.num_layers,
+                                  bidirectional=bidirectional,
+                                  batch_first=True)
+        self.gru_decoder = nn.GRU(2 * hidden_size,
+                                  hidden_size,
+                                  num_layers=self.num_layers,
+                                  bidirectional=bidirectional,
+                                  batch_first=True)
+        self.gru_encoder.flatten_parameters()
+        self.gru_decoder.flatten_parameters()
         self.dense1 = nn.Linear(self.hidden_size * 2, self.num_classes)
         # self.dense2 = nn.Linear(self.hidden_size, self.num_classes)
 
     def forward(self, x, hidden):
         hidden = hidden.transpose(0, 1).contiguous()
         # self.gru.flatten_parameters()
-        x_out, hidden_out = self.gru(x, hidden)
+        x_out, hidden_out = self.gru_encoder(x, hidden)
+        x_out, hidden_final = self.gru_decoder(x_out, hidden_out)
 
         x_out = self.dense1(x_out)
         # x = self.dense2(x)
@@ -30,8 +37,8 @@ class TransducerGRU(nn.Module):
         #     output_rnn = output_rnn.view(output_rnn.size(0), output_rnn.size(1), 2, -1) \
         #         .sum(2).view(output_rnn.size(0), output_rnn.size(1), -1)
 
-        hidden_out = hidden_out.transpose(0, 1).contiguous()
-        return x_out, hidden_out
+        hidden_final = hidden_final.transpose(0, 1).contiguous()
+        return x_out, hidden_final
 
     def init_hidden(self, batch_size, num_layers, bidirectional=True):
         num_directions = 1

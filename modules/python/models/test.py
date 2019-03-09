@@ -48,6 +48,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     # Test the Model
     sys.stderr.write(TextColor.PURPLE + 'Test starting\n' + TextColor.END)
     confusion_matrix = meter.ConfusionMeter(num_classes)
+    accuracy_meter = meter.ClassErrorMeter(accuracy=True)
 
     total_loss = 0
     total_images = 0
@@ -79,6 +80,8 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
                     confusion_matrix.add(output_.data.contiguous().view(-1, num_classes),
                                          label_chunk.data.contiguous().view(-1))
+                    accuracy_meter.add(output_.data.contiguous().view(-1, num_classes),
+                                       label_chunk.data.contiguous().view(-1))
 
                 total_loss += loss.item()
                 total_images += labels.size(0)
@@ -108,9 +111,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                                       ", FEATURES:", img)
 
                 pbar.update(1)
-                cm_value = confusion_matrix.value()
-                denom = (cm_value.sum() - cm_value[0][0]) if (cm_value.sum() - cm_value[0][0]) > 0 else 1.0
-                accuracy = 100.0 * (cm_value[1][1] + cm_value[2][2] + cm_value[3][3] + cm_value[4][4]) / denom
+                accuracy = accuracy_meter.value(1)
                 pbar.set_description("Accuracy: " + str(accuracy))
 
     avg_loss = total_loss / total_images if total_images else 0

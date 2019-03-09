@@ -24,6 +24,7 @@ Return:
 """
 CLASS_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
+
 def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoch,
                     file_name):
     """
@@ -91,7 +92,10 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                                                           num_classes=num_classes)
         prev_ite = 0
 
-    model_optimizer = torch.optim.Adam(transducer_model.parameters(), lr=lr, weight_decay=decay)
+    param_count = sum(p.numel() for p in transducer_model.parameters() if p.requires_grad)
+    sys.stderr.write(TextColor.RED + "INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n" + TextColor.END)
+
+    model_optimizer = torch.optim.RMSprop(transducer_model.parameters(), lr=lr, weight_decay=decay)
 
     if retrain_model is True:
         sys.stderr.write(TextColor.GREEN + "INFO: OPTIMIZER LOADING\n" + TextColor.END)
@@ -137,14 +141,15 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                     images = images.cuda()
                     labels = labels.cuda()
 
-                model_optimizer.zero_grad()
+
                 hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
                 if gpu_mode:
                     hidden = hidden.cuda()
 
-                loss = 0
                 for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
+                    model_optimizer.zero_grad()
+                    loss = 0
                     if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
                         break
 
@@ -152,15 +157,18 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                     label_chunk = labels[:, i:i+TrainOptions.TRAIN_WINDOW]
                     # print('\n', image_chunk.size(), hidden.size())
                     output_, hidden = transducer_model(image_chunk, hidden)
+
                     # print(output_.size(), hidden.size())
                     # exit()
-                    loss += criterion(output_.contiguous().view(-1, num_classes), label_chunk.contiguous().view(-1))
+                    loss = criterion(output_.contiguous().view(-1, num_classes), label_chunk.contiguous().view(-1))
 
-                loss.backward()
-                model_optimizer.step()
+                    loss.backward()
+                    model_optimizer.step()
 
-                total_loss += loss.item()
-                total_images += labels.size(0)
+                    total_loss += loss.item()
+                    total_images += image_chunk.size(0)
+
+                    hidden = hidden.detach()
 
                 # update the progress bar
                 avg_loss = (total_loss / total_images) if total_images else 0
