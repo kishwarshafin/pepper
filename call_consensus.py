@@ -17,7 +17,7 @@ import os
 import time
 import numpy as np
 from modules.python.models.ModelHander import ModelHandler
-from modules.python.Options import ImageSizeOptions
+from modules.python.Options import ImageSizeOptions, TrainOptions
 """
 This script uses a trained model to call variants on a given set of images generated from the genome.
 The process is:
@@ -71,33 +71,55 @@ def predict(test_file, model_path, batch_size, num_workers, gpu_mode):
 
     with torch.no_grad():
         for images, chromosome, position, index in tqdm(test_loader, ncols=50):
-            hidden = torch.Tensor(images.size(0), gru_layers * 2, hidden_size).zero_()
+            if gpu_mode:
+                # encoder_hidden = encoder_hidden.cuda()
+                images = images.cuda()
+
+            hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
             if gpu_mode:
-                images = images.cuda()
                 hidden = hidden.cuda()
 
-            output_ = transducer_model(images, hidden)
-            m = nn.Softmax(dim=2)
-            soft_probs = m(output_)
-            output_preds = soft_probs.cpu()
-            max_value, predicted_label = torch.max(output_preds, dim=2)
-            max_value = max_value.numpy().tolist()
-            predicted_label = predicted_label.numpy().tolist()
-            position = position.numpy().tolist()
-            index = index.numpy().tolist()
+            for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
+                if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
+                    break
+                chunk_start = i
+                chunk_end = i + TrainOptions.TRAIN_WINDOW
+                # chunk all the data
+                image_chunk = images[:, chunk_start:chunk_end]
+                position_chunk = position[:, chunk_start:chunk_end]
+                index_chunk = index[:, chunk_start:chunk_end]
 
-            assert(len(position) == len(index) == len(max_value) == len(predicted_label))
+                # run inference
+                output_, hidden = transducer_model(image_chunk, hidden)
 
-            for i in range(0, len(position)):
-                counter = 0
-                for pos, idx, p, label in zip(position[i], index[i], max_value[i], predicted_label[i]):
-                    if pos < 0 or idx < 0:
-                        continue
-                    prediction_dict[(chromosome[i], pos, idx)][label] += p
-                    counter += 1
-                    position_dict[chromosome[i]].add((chromosome[i], pos, idx))
-                    chromosome_list.add(chromosome[i])
+                # do softmax and get prediction
+                m = nn.Softmax(dim=2)
+                soft_probs = m(output_)
+                output_preds = soft_probs.cpu()
+                max_value, predicted_label = torch.max(output_preds, dim=2)
+
+                # convert everythin to list
+                max_value = max_value.numpy().tolist()
+                predicted_label = predicted_label.numpy().tolist()
+                position_chunk = position_chunk.numpy().tolist()
+                index_chunk = index_chunk.numpy().tolist()
+
+                assert(len(index_chunk) == len(position_chunk) == len(max_value) == len(predicted_label))
+
+                for ii in range(0, len(position_chunk)):
+                    counter = 0
+
+                    for pos, idx, p, label in zip(position_chunk[ii],
+                                                  index_chunk[ii],
+                                                  max_value[ii],
+                                                  predicted_label[ii]):
+                        if pos < 0 or idx < 0:
+                            continue
+                        prediction_dict[(chromosome[ii], pos, idx)][label] += p
+                        counter += 1
+                        position_dict[chromosome[ii]].add((chromosome[ii], pos, idx))
+                        chromosome_list.add(chromosome[ii])
 
 
 def get_record_from_prediction(pos, positional_record):
@@ -186,7 +208,18 @@ def polish_genome(csv_file, model_path, batch_size, num_workers, bam_file_path, 
 
     for chromosome in chromosome_list:
         pos_list = list(position_dict[chromosome])
-        pos_list = sorted(list(pos_list), key=lambda element: (element[0], element[1]))
+        pos_list = sorted(list(pos_list), key=lambda element: (element[0], element[1], element[2]))
+
+        chr_prev, pos_prev, indx_prev = pos_list[0]
+        for i in range(1, len(pos_list)):
+            chr, pos, indx = pos_list[i]
+            if indx > 0:
+                continue
+            else:
+                if pos - pos_prev != 1:
+                    print(pos_prev, pos)
+                    exit()
+                chr_prev, pos_prev, indx_prev = pos_list[i]
         dict_fetch = operator.itemgetter(*pos_list)
         predicted_labels = list(dict_fetch(prediction_dict))
         predicted_labels = np.argmax(np.array(predicted_labels), axis=1).tolist()
