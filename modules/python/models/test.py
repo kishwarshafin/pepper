@@ -18,7 +18,7 @@ Input:
 Returns:
 - Loss value
 """
-CLASS_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+CLASS_WEIGHTS = [0.3, 1.0, 1.0, 1.0, 1.0]
 label_decoder = {0: '*', 1: 'A', 2: 'C', 3: 'G', 4: 'T', 5: '#'}
 
 
@@ -48,7 +48,6 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     # Test the Model
     sys.stderr.write(TextColor.PURPLE + 'Test starting\n' + TextColor.END)
     confusion_matrix = meter.ConfusionMeter(num_classes)
-    accuracy_meter = meter.ClassErrorMeter(accuracy=True)
 
     total_loss = 0
     total_images = 0
@@ -56,7 +55,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
     with torch.no_grad():
         with tqdm(total=len(test_loader), desc='Accuracy: ', leave=True, ncols=100) as pbar:
-            for i, (images, labels, chromosome, position, index) in enumerate(test_loader):
+            for ii, (images, labels, chromosome, position, index) in enumerate(test_loader):
                 if gpu_mode:
                     # encoder_hidden = encoder_hidden.cuda()
                     images = images.cuda()
@@ -67,7 +66,6 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                 if gpu_mode:
                     hidden = hidden.cuda()
 
-                loss = 0
                 for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
                     if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
                         break
@@ -76,43 +74,19 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                     label_chunk = labels[:, i:i+TrainOptions.TRAIN_WINDOW]
                     output_, hidden = transducer_model(image_chunk, hidden)
 
-                    loss += criterion(output_.contiguous().view(-1, num_classes), label_chunk.contiguous().view(-1))
+                    loss = criterion(output_.contiguous().view(-1, num_classes), label_chunk.contiguous().view(-1))
 
                     confusion_matrix.add(output_.data.contiguous().view(-1, num_classes),
                                          label_chunk.data.contiguous().view(-1))
-                    accuracy_meter.add(output_.data.contiguous().view(-1, num_classes),
-                                       label_chunk.data.contiguous().view(-1))
 
-                total_loss += loss.item()
-                total_images += labels.size(0)
-
-                if print_details:
-                    m = nn.Softmax(dim=2)
-                    soft_probs = m(output_)
-                    output_preds = soft_probs.cpu()
-                    max_value, predicted_label = torch.max(output_preds, dim=2)
-                    max_value = max_value.numpy().tolist()
-                    predicted_label = predicted_label.numpy().tolist()
-                    position = position.numpy().tolist()
-                    index = index.numpy().tolist()
-
-                    labels = labels.cpu().data.numpy().tolist()
-                    image = images.cpu().numpy().tolist()
-
-                    assert(len(position) == len(index) == len(max_value) == len(predicted_label))
-                    for i in range(0, len(position)):
-                        for pos, idx, p, p_label, t_label, img in zip(position[i], index[i], max_value[i],
-                                                                      predicted_label[i], labels[i], image[i]):
-                            if pos < 0 or idx < 0:
-                                continue
-                            if p_label != t_label:
-                                print("CHR:", chromosome[i], ", POS:", pos, ", INDEX:", idx, ", PREDICTED:",
-                                      label_decoder[p_label], ", TRUE:", label_decoder[t_label], ", P-VALUE:", p,
-                                      ", FEATURES:", img)
+                    total_loss += loss.item()
+                    total_images += images.size(0)
 
                 pbar.update(1)
-                accuracy = accuracy_meter.value(1)
-                pbar.set_description("Accuracy: " + str(accuracy))
+                cm_value = confusion_matrix.value()
+                denom = (cm_value.sum() - cm_value[0][0]) if (cm_value.sum() - cm_value[0][0]) > 0 else 1.0
+                accuracy = 100.0 * (cm_value[1][1] + cm_value[2][2] + cm_value[3][3] + cm_value[4][4]) / denom
+                pbar.set_description("Accuracy: " + str(round(accuracy,5)))
 
     avg_loss = total_loss / total_images if total_images else 0
 

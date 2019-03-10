@@ -22,7 +22,7 @@ Input:
 Return:
 - A trained model
 """
-CLASS_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+CLASS_WEIGHTS = [0.5, 1.0, 1.0, 1.0, 1.0]
 
 
 def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoch,
@@ -68,6 +68,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                               num_workers=num_workers,
                               pin_memory=gpu_mode)
     num_classes = ImageSizeOptions.TOTAL_LABELS
+
     if retrain_model is True:
         if os.path.isfile(retrain_model_path) is False:
             sys.stderr.write(TextColor.RED + "ERROR: INVALID PATH TO RETRAIN PATH MODEL --retrain_model_path\n")
@@ -95,7 +96,8 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
     param_count = sum(p.numel() for p in transducer_model.parameters() if p.requires_grad)
     sys.stderr.write(TextColor.RED + "INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n" + TextColor.END)
 
-    model_optimizer = torch.optim.RMSprop(transducer_model.parameters(), lr=lr, weight_decay=decay)
+    model_optimizer = torch.optim.Adam(transducer_model.parameters())
+    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(model_optimizer, 'min')
 
     if retrain_model is True:
         sys.stderr.write(TextColor.GREEN + "INFO: OPTIMIZER LOADING\n" + TextColor.END)
@@ -141,7 +143,6 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                     images = images.cuda()
                     labels = labels.cuda()
 
-
                 hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
                 if gpu_mode:
@@ -149,17 +150,14 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
                 for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
                     model_optimizer.zero_grad()
-                    loss = 0
                     if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
                         break
 
                     image_chunk = images[:, i:i+TrainOptions.TRAIN_WINDOW]
                     label_chunk = labels[:, i:i+TrainOptions.TRAIN_WINDOW]
-                    # print('\n', image_chunk.size(), hidden.size())
+
                     output_, hidden = transducer_model(image_chunk, hidden)
 
-                    # print(output_.size(), hidden.size())
-                    # exit()
                     loss = criterion(output_.contiguous().view(-1, num_classes), label_chunk.contiguous().view(-1))
 
                     loss.backward()
@@ -188,6 +186,8 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         stats['accuracy'] = stats_dictioanry['accuracy']
         stats['loss_epoch'].append((epoch, stats_dictioanry['loss']))
         stats['accuracy_epoch'].append((epoch, stats_dictioanry['accuracy']))
+
+        lr_scheduler.step(stats['loss'])
 
         # update the loggers
         if train_mode is True:

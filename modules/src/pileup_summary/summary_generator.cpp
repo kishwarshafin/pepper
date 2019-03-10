@@ -42,7 +42,7 @@ int get_labels(char base) {
     if (base == 'C') return 2;
     if (base == 'G') return 3;
     if (base == 'T') return 4;
-    if (base == '*') return 5;
+    if (base == '*') return 0; // this is for deleted bases, but the number is so small that it creates confusion
     if (base == '#') return 0;
     return 0;
 }
