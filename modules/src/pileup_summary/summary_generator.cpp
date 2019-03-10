@@ -15,11 +15,11 @@ SummaryGenerator::SummaryGenerator(string reference_sequence, string chromosome_
 int get_feature_index(char base, bool is_reverse, bool is_ref_base) {
     base = toupper(base);
     if(is_ref_base) {
-        if (base == 'A') return 0;
-        if (base == 'C') return 1;
-        if (base == 'G') return 2;
-        if (base == 'T') return 3;
-        return 4;
+        if (base == 'A') return 1;
+        if (base == 'C') return 2;
+        if (base == 'G') return 3;
+        if (base == 'T') return 4;
+        return 0;
     } else if(is_reverse) {
         if (base == 'A') return 5;
         if (base == 'C') return 6;
@@ -263,6 +263,37 @@ void SummaryGenerator::generate_ref_features() {
 }
 
 
+void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
+    // at this point labels and positions are generated, now generate the pileup
+    for (long long i = start_pos; i <= end_pos; i++) {
+        vector<double> row;
+        // iterate through the summaries
+        for(int j = 0; j <= 14; j++) {
+            if (j > 4) row.push_back(base_summaries[make_pair(i, j)] / max(1.0, coverage[i]));
+            else row.push_back(base_summaries[make_pair(i, j)]);
+        }
+        assert(row.size() == 15);
+        image.push_back(row);
+
+        if (longest_insert_count[i] > 0) {
+
+            for (int ii = 0; ii < longest_insert_count[i]; ii++) {
+                vector<double> ins_row{1.0, 0.0, 0.0, 0.0, 0.0};
+
+                // iterate through the summaries
+                for(int j = 5; j <= 14; j++)
+                    ins_row.push_back(insert_summaries[make_pair(make_pair(i, ii), j)] / max(1.0, coverage[i]));
+
+                assert(ins_row.size() == 15);
+                image.push_back(ins_row);
+            }
+
+        }
+
+    }
+    assert(image.size() == genomic_pos.size());
+}
+
 void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
                                               long long start_pos,
                                               long long end_pos,
@@ -295,34 +326,7 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
     }
     assert(labels.size() == genomic_pos.size());
 
-    // at this point labels and positions are generated, now generate the pileup
-    for (long long i = start_pos; i <= end_pos; i++) {
-        vector<double> row;
-        // iterate through the summaries
-        for(int j = 5; j <= 14; j++) {
-            if (j > 4) row.push_back(base_summaries[make_pair(i, j)] / max(1.0, coverage[i]));
-            else row.push_back(base_summaries[make_pair(i, j)]);
-        }
-        assert(row.size() == 10);
-        image.push_back(row);
-
-        if (longest_insert_count[i] > 0) {
-
-            for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                vector<double> ins_row;
-
-                // iterate through the summaries
-                for(int j = 5; j <= 14; j++)
-                    ins_row.push_back(insert_summaries[make_pair(make_pair(i, ii), j)] / max(1.0, coverage[i]));
-
-                assert(ins_row.size() == 10);
-                image.push_back(ins_row);
-            }
-
-        }
-
-    }
-    assert(image.size() == genomic_pos.size());
+    generate_image(start_pos, end_pos);
 //     at this point everything should be generated
 //    debug_print(start_pos, end_pos);
 }
@@ -351,34 +355,7 @@ void SummaryGenerator::generate_summary(vector <type_read> &reads,
         }
     }
 
-    // at this point labels and positions are generated, now generate the pileup
-    for (long long i = start_pos; i <= end_pos; i++) {
-        vector<double> row;
-        // iterate through the summaries
-        for(int j = 5; j <= 14; j++) {
-            if (j > 4) row.push_back(base_summaries[make_pair(i, j)] / max(1.0, coverage[i]));
-            else row.push_back(base_summaries[make_pair(i, j)]);
-        }
-        assert(row.size() == 10);
-        image.push_back(row);
-
-        if (longest_insert_count[i] > 0) {
-
-            for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                vector<double> ins_row;
-
-                // iterate through the summaries
-                for(int j = 5; j <= 14; j++)
-                    ins_row.push_back(insert_summaries[make_pair(make_pair(i, ii), j)] / max(1.0, coverage[i]));
-
-                assert(ins_row.size() == 10);
-                image.push_back(ins_row);
-            }
-
-        }
-
-    }
-    assert(image.size() == genomic_pos.size());
+    generate_image(start_pos, end_pos);
 //     at this point everything should be generated
 //    debug_print(start_pos, end_pos);
 }

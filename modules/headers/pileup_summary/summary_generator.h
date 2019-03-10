@@ -50,6 +50,7 @@ public:
     void generate_labels(type_read truth_reads, long long region_start, long long region_end);
     void generate_ref_features();
     void debug_print(long long start_pos, long long end_pos);
+    void generate_image(long long start_pos, long long end_pos);
 };
 
 
