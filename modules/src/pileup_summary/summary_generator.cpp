@@ -240,7 +240,7 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
         cout << labels[i] << "\t";
     }
     cout << endl;
-    for (int i = 0; i < labels.size(); i++) {
+    for (int i = 0; i < genomic_pos.size(); i++) {
         cout << "(" << genomic_pos[i].first << "," << genomic_pos[i].second << ")\t";
     }
     cout << endl;
@@ -338,40 +338,40 @@ void SummaryGenerator::generate_summary(vector <type_read> &reads,
         }
     }
 
+    generate_ref_features();
+
+
     // after all the dictionaries are populated, we can simply walk through the region and generate a sequence
-    // otherwise only generate the positions
     for (long long pos = start_pos; pos <= end_pos; pos++) {
-        int indx = 0;
         genomic_pos.push_back(make_pair(pos, 0));
         if (longest_insert_count[pos] > 0) {
-            for (int ii = 0; ii < longest_insert_count[pos]; ii++)
+            for (int ii = 0; ii < longest_insert_count[pos]; ii++) {
                 genomic_pos.push_back(make_pair(pos, ii + 1));
+            }
         }
     }
-
-    generate_ref_features();
 
     // at this point labels and positions are generated, now generate the pileup
     for (long long i = start_pos; i <= end_pos; i++) {
         vector<double> row;
         // iterate through the summaries
-        for(int j = 0; j <= 14; j++) {
+        for(int j = 5; j <= 14; j++) {
             if (j > 4) row.push_back(base_summaries[make_pair(i, j)] / max(1.0, coverage[i]));
             else row.push_back(base_summaries[make_pair(i, j)]);
         }
-        assert(row.size() == 15);
+        assert(row.size() == 10);
         image.push_back(row);
 
         if (longest_insert_count[i] > 0) {
 
             for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                vector<double> ins_row {0.0, 0.0, 0.0, 0.0, 1.0};
+                vector<double> ins_row;
 
                 // iterate through the summaries
                 for(int j = 5; j <= 14; j++)
                     ins_row.push_back(insert_summaries[make_pair(make_pair(i, ii), j)] / max(1.0, coverage[i]));
 
-                assert(ins_row.size() == 15);
+                assert(ins_row.size() == 10);
                 image.push_back(ins_row);
             }
 

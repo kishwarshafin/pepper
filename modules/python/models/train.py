@@ -119,7 +119,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
     stats = dict()
     stats['loss_epoch'] = []
     stats['accuracy_epoch'] = []
-    sys.stderr.write(TextColor.PURPLE + 'Start: ' + str(start_epoch + 1) + ' End: ' + str(epoch_limit + 1) + "\n")
+    sys.stderr.write(TextColor.BLUE + 'Start: ' + str(start_epoch + 1) + ' End: ' + str(epoch_limit) + "\n")
     for epoch in range(start_epoch, epoch_limit, 1):
         total_loss = 0
         total_images = 0

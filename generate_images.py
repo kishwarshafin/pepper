@@ -163,9 +163,11 @@ def chromosome_level_parallelization(chr_list,
 
     for chr_name, region in chr_list:
         if not region:
-            interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) + 1)
+            interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
         else:
             interval_start, interval_end = tuple(region)
+            interval_start = max(0, interval_start)
+            interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
 
         all_intervals = []
         for pos in range(interval_start, interval_end, max_size):
