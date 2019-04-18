@@ -18,7 +18,7 @@ Input:
 Returns:
 - Loss value
 """
-CLASS_WEIGHTS = [0.3, 1.0, 1.0, 1.0, 1.0]
+CLASS_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.0]
 label_decoder = {0: '*', 1: 'A', 2: 'C', 3: 'G', 4: 'T', 5: '#'}
 
 
