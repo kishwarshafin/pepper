@@ -209,7 +209,6 @@ def polish_genome(csv_file, model_path, batch_size, num_workers, output_dir, gpu
     for chromosome in chromosome_list:
         pos_list = list(position_dict[chromosome])
         pos_list = sorted(list(pos_list), key=lambda element: (element[0], element[1], element[2]))
-        print(pos_list)
 
         chr_prev, pos_prev, indx_prev = pos_list[0]
         for i in range(1, len(pos_list)):
@@ -219,14 +218,13 @@ def polish_genome(csv_file, model_path, batch_size, num_workers, output_dir, gpu
             else:
                 if pos - pos_prev != 1:
                     print(pos_prev, pos)
+                    print("EROOR THE POSITIONS DON'T MATCH", chromosome, pos, pos_prev)
                     exit()
                 chr_prev, pos_prev, indx_prev = pos_list[i]
         dict_fetch = operator.itemgetter(*pos_list)
         predicted_labels = list(dict_fetch(prediction_dict))
-        print(predicted_labels)
         predicted_labels = np.argmax(np.array(predicted_labels), axis=1).tolist()
         sequence = ''.join([label_decoder[x] for x in predicted_labels])
-        print("SEQUENCE", sequence)
 
         if len(sequence) > 0:
             fasta_file.write('>'+chromosome+"\n")
