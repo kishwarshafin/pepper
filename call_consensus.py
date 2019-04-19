@@ -198,7 +198,7 @@ def merge_call_files(vcf_file_directory):
     return all_records
 
 
-def polish_genome(csv_file, model_path, batch_size, num_workers, bam_file_path, output_dir, gpu_mode, max_threads):
+def polish_genome(csv_file, model_path, batch_size, num_workers, output_dir, gpu_mode):
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "OUTPUT DIRECTORY: " + output_dir + "\n")
     predict(csv_file, model_path, batch_size, num_workers, gpu_mode)
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "PREDICTION GENERATED SUCCESSFULLY.\n")
@@ -209,6 +209,7 @@ def polish_genome(csv_file, model_path, batch_size, num_workers, bam_file_path, 
     for chromosome in chromosome_list:
         pos_list = list(position_dict[chromosome])
         pos_list = sorted(list(pos_list), key=lambda element: (element[0], element[1], element[2]))
+        print(pos_list)
 
         chr_prev, pos_prev, indx_prev = pos_list[0]
         for i in range(1, len(pos_list)):
@@ -222,8 +223,10 @@ def polish_genome(csv_file, model_path, batch_size, num_workers, bam_file_path, 
                 chr_prev, pos_prev, indx_prev = pos_list[i]
         dict_fetch = operator.itemgetter(*pos_list)
         predicted_labels = list(dict_fetch(prediction_dict))
+        print(predicted_labels)
         predicted_labels = np.argmax(np.array(predicted_labels), axis=1).tolist()
         sequence = ''.join([label_decoder[x] for x in predicted_labels])
+        print("SEQUENCE", sequence)
 
         if len(sequence) > 0:
             fasta_file.write('>'+chromosome+"\n")
@@ -251,16 +254,10 @@ if __name__ == '__main__':
     '''
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--csv_file",
+        "--image_file",
         type=str,
         required=True,
         help="CSV file containing all image segments for prediction."
-    )
-    parser.add_argument(
-        "--bam_file",
-        type=str,
-        required=True,
-        help="Path to the BAM file."
     )
     parser.add_argument(
         "--model_path",
@@ -290,12 +287,6 @@ if __name__ == '__main__':
         help="Output directory."
     )
     parser.add_argument(
-        "--max_threads",
-        type=int,
-        default=8,
-        help="Number of maximum threads for this region."
-    )
-    parser.add_argument(
         "--gpu_mode",
         type=bool,
         default=False,
@@ -303,12 +294,10 @@ if __name__ == '__main__':
     )
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.output_dir = handle_output_directory(FLAGS.output_dir)
-    polish_genome(FLAGS.csv_file,
+    polish_genome(FLAGS.image_file,
                   FLAGS.model_path,
                   FLAGS.batch_size,
                   FLAGS.num_workers,
-                  FLAGS.bam_file,
                   FLAGS.output_dir,
-                  FLAGS.gpu_mode,
-                  FLAGS.max_threads)
+                  FLAGS.gpu_mode)
 

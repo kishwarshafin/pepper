@@ -143,8 +143,6 @@ def chromosome_level_parallelization(chr_list,
                                      thread_id,
                                      train_mode,
                                      downsample_rate,
-                                     local_alignment,
-                                     log_dir,
                                      max_size=10000):
     """
     This method takes one chromosome name as parameter and chunks that chromosome in max_threads.
@@ -383,12 +381,6 @@ if __name__ == '__main__':
         help="Path to output directory."
     )
     parser.add_argument(
-        "--log_dir",
-        type=str,
-        default="candidate_finder_output/",
-        help="Path to output directory."
-    )
-    parser.add_argument(
         "--threads",
         type=int,
         default=5,
@@ -407,12 +399,6 @@ if __name__ == '__main__':
         default=1.0,
         help="Reference corresponding to the BAM file."
     )
-    parser.add_argument(
-        "--local_alignment",
-        type=boolean_string,
-        default=True,
-        help="If true then perform local alignment."
-    )
     FLAGS, unparsed = parser.parse_known_args()
     chr_list = get_chromosme_list(FLAGS.chromosome_name, FLAGS.draft)
 
@@ -421,11 +407,6 @@ if __name__ == '__main__':
         exit(1)
     output_dir, image_dir = handle_output_directory(os.path.abspath(FLAGS.output_dir), FLAGS.thread_id)
 
-    log_dir = FLAGS.log_dir
-    if log_dir[-1] != "/":
-        log_dir += "/"
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
 
     chromosome_level_parallelization(chr_list,
                                      FLAGS.bam,
@@ -436,7 +417,5 @@ if __name__ == '__main__':
                                      FLAGS.threads,
                                      FLAGS.thread_id,
                                      FLAGS.train_mode,
-                                     FLAGS.downsample_rate,
-                                     FLAGS.local_alignment,
-                                     log_dir)
+                                     FLAGS.downsample_rate)
 

@@ -15,23 +15,23 @@ SummaryGenerator::SummaryGenerator(string reference_sequence, string chromosome_
 int get_feature_index(char base, bool is_reverse, bool is_ref_base) {
     base = toupper(base);
     if(is_ref_base) {
-        if (base == 'A') return 1;
-        if (base == 'C') return 2;
-        if (base == 'G') return 3;
-        if (base == 'T') return 4;
-        return 0;
-    } else if(is_reverse) {
-        if (base == 'A') return 5;
-        if (base == 'C') return 6;
-        if (base == 'G') return 7;
-        if (base == 'T') return 8;
-        return 13;
-    } else {
-        if (base == 'A') return 9;
-        if (base == 'C') return 10;
-        if (base == 'G') return 11;
-        if (base == 'T') return 12;
+        if (base == 'A') return 10;
+        if (base == 'C') return 11;
+        if (base == 'G') return 12;
+        if (base == 'T') return 13;
         return 14;
+    } else if(is_reverse) {
+        if (base == 'A') return 0;
+        if (base == 'C') return 1;
+        if (base == 'G') return 2;
+        if (base == 'T') return 3;
+        return 8;
+    } else {
+        if (base == 'A') return 4;
+        if (base == 'C') return 5;
+        if (base == 'G') return 6;
+        if (base == 'T') return 7;
+        return 9;
     }
 }
 
@@ -268,11 +268,10 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
     for (long long i = start_pos; i <= end_pos; i++) {
         vector<double> row;
         // iterate through the summaries
-        for(int j = 0; j <= 14; j++) {
-            if (j > 4) row.push_back(base_summaries[make_pair(i, j)] / max(1.0, coverage[i]));
-            else row.push_back(base_summaries[make_pair(i, j)]);
+        for(int j = 0; j <= 9; j++) {
+            row.push_back(base_summaries[make_pair(i, j)] / max(1.0, coverage[i]));
         }
-        assert(row.size() == 15);
+        assert(row.size() == 10);
         image.push_back(row);
 
         if (longest_insert_count[i] > 0) {
@@ -281,10 +280,10 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
                 vector<double> ins_row{1.0, 0.0, 0.0, 0.0, 0.0};
 
                 // iterate through the summaries
-                for(int j = 5; j <= 14; j++)
+                for(int j = 5; j <= 9; j++)
                     ins_row.push_back(insert_summaries[make_pair(make_pair(i, ii), j)] / max(1.0, coverage[i]));
 
-                assert(ins_row.size() == 15);
+                assert(ins_row.size() == 10);
                 image.push_back(ins_row);
             }
 
