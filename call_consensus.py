@@ -218,7 +218,7 @@ def polish_genome(csv_file, model_path, batch_size, num_workers, output_dir, gpu
             else:
                 if pos - pos_prev != 1:
                     print(pos_prev, pos)
-                    print("EROOR THE POSITIONS DON'T MATCH", chromosome, pos, pos_prev)
+                    print("ERROR THE POSITIONS DON'T MATCH", chromosome, pos, pos_prev)
                     exit()
                 chr_prev, pos_prev, indx_prev = pos_list[i]
         dict_fetch = operator.itemgetter(*pos_list)
