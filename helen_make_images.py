@@ -407,7 +407,6 @@ if __name__ == '__main__':
         exit(1)
     output_dir, image_dir = handle_output_directory(os.path.abspath(FLAGS.output_dir), FLAGS.thread_id)
 
-
     chromosome_level_parallelization(chr_list,
                                      FLAGS.bam,
                                      FLAGS.draft,
