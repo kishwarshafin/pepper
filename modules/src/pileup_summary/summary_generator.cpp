@@ -278,7 +278,7 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
         if (longest_insert_count[i] > 0) {
 
             for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                vector<double> ins_row;
+                vector<double> ins_row{1.0, 0.0, 0.0, 0.0, 0.0};
 
                 // iterate through the summaries
                 for(int j = 5; j <= 14; j++)
