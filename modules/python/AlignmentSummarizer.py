@@ -1,6 +1,8 @@
 from build import HELEN
 import itertools
 from operator import itemgetter
+import sys
+from modules.python.TextColor import TextColor
 from modules.python.Options import ImageSizeOptions
 
 
@@ -193,6 +195,16 @@ class AlignmentSummarizer:
                                                    0,
                                                    0)
 
+            reads_un, reads_hp1, reads_hp2 = all_reads
+            total_reads = len(reads_un) + len(reads_hp1) + len(reads_hp2)
+
+            sys.stderr.write(TextColor.GREEN + "INFO: TOTAL " + str(total_reads) + " READS FOUND IN " +
+                             str(self.chromosome_name) + ":" + str(self.region_start_position) + "-"
+                             + str(self.region_end_position) + " WITH: " + str(len(reads_un)) + " UNTAGGED, "
+                             + str(len(reads_hp1)) + " HAPLOTYPE_1, " + str(len(reads_hp2)) + " HAPLOTYPE_2 READS.\n"
+                             + TextColor.END)
+
+            # HERE REALIGN THE READS TO THE REFERENCE THEN GENERATE THE SUMMARY TO GET A POLISHED HAPLOTYPE
             # ref_seq should contain region_end_position base
             ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
                                                                 self.region_start_position,
@@ -203,9 +215,10 @@ class AlignmentSummarizer:
                                                        self.region_start_position,
                                                        self.region_end_position)
 
-            summary_generator.generate_summary(all_reads,
+            summary_generator.generate_summary(reads_un + reads_hp1+ reads_hp2,
                                                self.region_start_position,
                                                self.region_end_position)
+            exit()
 
             images, labels, positions = self.chunk_images(summary_generator,
                                                           chunk_size=ImageSizeOptions.SEQ_LENGTH,

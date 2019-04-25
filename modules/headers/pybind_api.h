@@ -172,6 +172,7 @@ PYBIND11_MODULE(HELEN, m) {
             .def_readwrite("query_name", &type_read::query_name)
             .def_readwrite("read_id", &type_read::read_id)
             .def_readwrite("flags", &type_read::flags)
+            .def_readwrite("hp_tag", &type_read::hp_tag)
             .def_readwrite("sequence", &type_read::sequence)
             .def_readwrite("cigar_tuples", &type_read::cigar_tuples)
             .def_readwrite("mapping_quality", &type_read::mapping_quality)

@@ -14,6 +14,9 @@
 #include <map>
 #include <algorithm>
 #include "sam.h"
+#include "hts.h"
+#include "cram.h"
+#include "hts_endian.h"
 
 using namespace std;
 
@@ -104,6 +107,7 @@ struct type_read{
     int mapping_quality;
     vector <int> base_qualities;
     int read_id;
+    int hp_tag;
 
     void set_read_id(int id) {
         this->read_id = id;
@@ -167,7 +171,9 @@ class BAM_handler {
 
         BAM_handler(string path);
 
-        vector<type_read> get_reads(string region, long long start, long long stop, int min_mapq, int min_baseq);
+        // this will divide reads in haplotype bins and then return
+        vector< vector<type_read> > get_reads(string region, long long start, long long stop, int min_mapq,
+                                              int min_baseq);
         vector<string> get_chromosome_sequence_names();
         vector<type_sequence> get_chromosome_sequence_names_with_length();
         set<string> get_sample_names();

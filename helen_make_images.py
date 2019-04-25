@@ -18,6 +18,8 @@ from modules.python.PileupGenerator import PileupGenerator
 from modules.python.Options import ImageSizeOptions
 from modules.python.CandidateLabler import CandidateLabeler
 from modules.python.AlignmentSummarizer import AlignmentSummarizer
+from modules.python.datastore import DataStore
+import concurrent.futures
 """
 This script creates training images from BAM, Reference FASTA and truth VCF file. The process is:
 - Find candidates that can be variants
@@ -115,22 +117,18 @@ class View:
         return images, lables, positions
 
 
-def create_output_dir_for_chromosome(output_dir, chr_name):
-    """
-    Create an internal directory inside the output directory to dump choromosomal summary files
-    :param output_dir: Path to output directory
-    :param chr_name: chromosome name
-    :return: New directory path
-    """
-    path_to_dir = output_dir + chr_name + "/"
-    if not os.path.exists(path_to_dir):
-        os.mkdir(path_to_dir)
+def single_worker(args, region_start, region_end):
+    chr_name, bam_file, draft_file, truth_bam, train_mode, downsample_rate = args
+    view = View(chromosome_name=chr_name,
+                bam_file_path=bam_file,
+                draft_file_path=draft_file,
+                truth_bam=truth_bam,
+                train_mode=train_mode,
+                downsample_rate=downsample_rate)
 
-    summary_path = path_to_dir + "summary" + "/"
-    if not os.path.exists(summary_path):
-        os.mkdir(summary_path)
-
-    return path_to_dir
+    images, lables, positions = view.parse_region(region_start, region_end)
+    region = (chr_name, region_start, region_end)
+    return images, lables, positions, region
 
 
 def chromosome_level_parallelization(chr_list,
@@ -138,9 +136,7 @@ def chromosome_level_parallelization(chr_list,
                                      draft_file,
                                      truth_bam,
                                      output_path,
-                                     image_path,
                                      total_threads,
-                                     thread_id,
                                      train_mode,
                                      downsample_rate,
                                      max_size=10000):
@@ -154,12 +150,18 @@ def chromosome_level_parallelization(chr_list,
     :param output_path: path to output directory
     :return:
     """
+    start_time = time.time()
     # if there's no confident bed provided, then chop the chromosome
     fasta_handler = HELEN.FASTA_handler(draft_file)
+    chr_counter = 1
 
-    smry = open(output_path + "summary_" + str(thread_id) + ".csv", 'w')
+    timestr = time.strftime("%m%d%Y_%H%M%S")
+    file_name = output_path + "helen_images_" + timestr + ".hdf"
+    output_hdf_file = DataStore(file_name, 'w')
 
     for chr_name, region in chr_list:
+        sys.stderr.write(TextColor.GREEN + "INFO: " + str(chr_counter) + "/" + str(len(chr_list))
+                         + " GENERATING IMAGE FROM CONTIG " + str(chr_name) + "\n" + TextColor.END)
         if not region:
             interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
         else:
@@ -171,92 +173,32 @@ def chromosome_level_parallelization(chr_list,
         for pos in range(interval_start, interval_end, max_size):
             all_intervals.append((pos, min(interval_end, pos + max_size)))
 
-        intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
+        args = (chr_name, bam_file, draft_file, truth_bam, train_mode, downsample_rate)
 
-        view = View(chromosome_name=chr_name,
-                    bam_file_path=bam_file,
-                    draft_file_path=draft_file,
-                    truth_bam=truth_bam,
-                    train_mode=train_mode,
-                    downsample_rate=downsample_rate)
+        with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
+            futures = [executor.submit(single_worker, args, _start, _end) for _start, _end in all_intervals]
 
-        all_images = []
-        all_labels = []
-        all_positions = []
-        all_indices = []
-        global_index = 0
-        image_file_name = image_path + chr_name + "_" + str(thread_id) + ".h5py"
-        start_time = time.time()
+            for fut in concurrent.futures.as_completed(futures):
+                if fut.exception() is None:
+                    images, labels, positions, region = fut.result()
+                    sys.stderr.write(TextColor.GREEN + "INFO: " + str(len(images)) + " IMAGES GENERATED FROM: "
+                                     + str(region) + "\n" + TextColor.END)
 
-        for count, interval in enumerate(intervals):
-            _start, _end = interval
-            images, lables, positions = view.parse_region(start_position=_start, end_position=_end)
-
-            # save the images
-            for i, image in enumerate(images):
-                all_images.append(image)
-                all_labels.append(lables[i])
-                position_list, index_list = zip(*positions[i])
-                all_positions.append(position_list)
-                all_indices.append(index_list)
-
-                assert(len(lables[i]) == len(position_list) == len(index_list))
-                # write in summary file
-                summary_string = image_file_name + "," + str(global_index) + "," + chr_name + "\n"
-                smry.write(summary_string)
-                global_index += 1
-
-        assert(len(all_images) == len(all_labels) == len(all_positions) == len(all_indices))
-
-        with h5py.File(image_file_name, mode='w') as hdf5_file:
-            # the image dataset we save. The index name in h5py is "images".
-            img_dset = hdf5_file.create_dataset("image", (len(all_images),) + (ImageSizeOptions.SEQ_LENGTH,
-                                                                               ImageSizeOptions.IMAGE_HEIGHT),
-                                                np.double, compression='gzip')
-            label_dataset = hdf5_file.create_dataset("label", (len(all_labels),) + (ImageSizeOptions.LABEL_LENGTH,),
-                                                     np.int16, compression='gzip')
-            position_dataset = hdf5_file.create_dataset("position", (len(all_positions),) +
-                                                        (ImageSizeOptions.SEQ_LENGTH,), np.int64, compression='gzip')
-            index_dataset = hdf5_file.create_dataset("index", (len(all_indices),) + (ImageSizeOptions.SEQ_LENGTH,),
-                                                     np.int32, compression='gzip')
-
-            # save the images and labels to the h5py file
-            img_dset[...] = all_images
-            label_dataset[...] = all_labels
-            position_dataset[...] = all_positions
-            index_dataset[...] = all_indices
+                    for i, image in enumerate(images):
+                        label = labels[i]
+                        position, index = zip(*positions[i])
+                        summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(i)
+                        output_hdf_file.write_train_summary(chr_name, image, label, position, index, summary_name)
+                else:
+                    sys.stderr.write(TextColor.RED + "EXCEPTION: " + str(fut.exception()) + "\n" + TextColor.END)
+                fut._result = None
 
         print("DONE CHROMOSOME: ", chr_name,
-              "THREAD ID: ", thread_id,
               "TOTAL TIME ELAPSED: ", int(math.floor(time.time()-start_time)/60), "MINS",
               math.ceil(time.time()-start_time) % 60, "SEC")
 
 
-def summary_file_to_csv(output_dir_path, chr_list):
-    """
-    Remove the abundant number of summary files and bind them to one
-    :param output_dir_path: Path to the output directory
-    :param chr_list: List of chromosomes
-    :return:
-    """
-    for chr_name in chr_list:
-        # here we dumped all the bed files
-        path_to_dir = output_dir_path + chr_name + "/summary/"
-
-        concatenated_file_name = output_dir_path + chr_name + ".csv"
-
-        filemanager_object = FileManager()
-        # get all bed file paths from the directory
-        file_paths = filemanager_object.get_file_paths_from_directory(path_to_dir)
-        # dump all bed files into one
-        filemanager_object.concatenate_files(file_paths, concatenated_file_name)
-        # delete all temporary files
-        filemanager_object.delete_files(file_paths)
-        # remove the directory
-        os.rmdir(path_to_dir)
-
-
-def handle_output_directory(output_dir, thread_id):
+def handle_output_directory(output_dir):
     """
     Process the output directory and return a valid directory where we save the output
     :param output_dir: Output directory path
@@ -268,13 +210,7 @@ def handle_output_directory(output_dir, thread_id):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    internal_directory = "images_" + str(thread_id) + "/"
-    image_dir = output_dir + internal_directory
-
-    if not os.path.exists(image_dir):
-        os.makedirs(image_dir)
-
-    return output_dir, image_dir
+    return output_dir
 
 
 def boolean_string(s):
@@ -296,7 +232,6 @@ def get_chromosme_list(chromosome_names, ref_file):
 
     split_names = chromosome_names.strip().split(',')
     split_names = [name.strip() for name in split_names]
-
 
     chromosome_name_list = []
     for name in split_names:
@@ -358,10 +293,16 @@ if __name__ == '__main__':
         help="FASTA file containing draft assembly."
     )
     parser.add_argument(
-        "--truth_bam",
+        "--truth_bam_h1",
         type=str,
         default=None,
-        help="BAM file containing mapping of true reference to the draft assembly"
+        help="BAM file containing mapping of true haplotype 2 to the reference"
+    )
+    parser.add_argument(
+        "--truth_bam_h2",
+        type=str,
+        default=None,
+        help="BAM file containing mapping of true haplotype 1 to the reference"
     )
     parser.add_argument(
         "--chromosome_name",
@@ -387,12 +328,6 @@ if __name__ == '__main__':
         help="Number of maximum threads for this region."
     )
     parser.add_argument(
-        "--thread_id",
-        type=int,
-        required=False,
-        help="Reference corresponding to the BAM file."
-    )
-    parser.add_argument(
         "--downsample_rate",
         type=float,
         required=False,
@@ -405,16 +340,14 @@ if __name__ == '__main__':
     if FLAGS.train_mode and (not FLAGS.truth_bam):
         sys.stderr.write(TextColor.RED + "ERROR: TRAIN MODE REQUIRES --vcf AND --bed TO BE SET.\n" + TextColor.END)
         exit(1)
-    output_dir, image_dir = handle_output_directory(os.path.abspath(FLAGS.output_dir), FLAGS.thread_id)
+    output_dir = handle_output_directory(os.path.abspath(FLAGS.output_dir))
 
     chromosome_level_parallelization(chr_list,
                                      FLAGS.bam,
                                      FLAGS.draft,
                                      FLAGS.truth_bam,
                                      output_dir,
-                                     image_dir,
                                      FLAGS.threads,
-                                     FLAGS.thread_id,
                                      FLAGS.train_mode,
                                      FLAGS.downsample_rate)
 

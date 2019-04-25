@@ -357,5 +357,5 @@ void SummaryGenerator::generate_summary(vector <type_read> &reads,
 
     generate_image(start_pos, end_pos);
 //     at this point everything should be generated
-//    debug_print(start_pos, end_pos);
+    debug_print(start_pos, end_pos);
 }
