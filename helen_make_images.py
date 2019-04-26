@@ -156,7 +156,6 @@ def get_confident_intervals_of_a_region(confident_bed_regions, start_position, e
                 all_intervals.append((pos, min(interval_end, pos + max_size)))
         elif interval_end - interval_start >= min_size:
             all_intervals.append((interval_start, interval_end))
-
     return all_intervals
 
 
@@ -225,7 +224,7 @@ def chromosome_level_parallelization(chr_list,
                             hp_tag = image_hp_tag[i]
                             summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" \
                                            + str(hp_tag) + "_" + str(i)
-                            output_hdf_file.write_summary(chr_name, image, label, position, index, summary_name)
+                            output_hdf_file.write_summary(chr_name, image, label, position, index, hp_tag, summary_name)
                 else:
                     sys.stderr.write(TextColor.RED + "EXCEPTION: " + str(fut.exception()) + "\n" + TextColor.END)
                 fut._result = None

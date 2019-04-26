@@ -5,7 +5,7 @@ import torchnet.meter as meter
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import numpy as np
-from modules.python.models.dataloader_test import SequenceDataset
+from modules.python.models.dataloader import SequenceDataset
 from modules.python.TextColor import TextColor
 from modules.python.Options import ImageSizeOptions, TrainOptions
 """
@@ -55,7 +55,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
     with torch.no_grad():
         with tqdm(total=len(test_loader), desc='Accuracy: ', leave=True, ncols=100) as pbar:
-            for ii, (images, labels, chromosome, position, index) in enumerate(test_loader):
+            for ii, (images, labels) in enumerate(test_loader):
                 if gpu_mode:
                     # encoder_hidden = encoder_hidden.cuda()
                     images = images.cuda()

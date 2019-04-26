@@ -26,8 +26,8 @@ class ImageSizeOptions(object):
 
 
 class TrainOptions(object):
-    TRAIN_WINDOW = 100
-    WINDOW_JUMP = 50
+    TRAIN_WINDOW = 200
+    WINDOW_JUMP = 150
     GRU_LAYERS = 1
     HIDDEN_SIZE = 128
 
