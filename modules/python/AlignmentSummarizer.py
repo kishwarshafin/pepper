@@ -2,8 +2,12 @@ from build import HELEN
 import itertools
 from operator import itemgetter
 import sys
+import time
 from modules.python.TextColor import TextColor
-from modules.python.Options import ImageSizeOptions
+from modules.python.Options import ImageSizeOptions, AlingerOptions
+from collections import namedtuple
+
+Region = namedtuple('Region', 'start end read is_kept is_h1')
 
 
 class AlignmentSummarizer:
@@ -15,12 +19,13 @@ class AlignmentSummarizer:
         self.region_end_position = region_end
 
     @staticmethod
-    def chunk_images(summary, chunk_size, chunk_overlap):
+    def chunk_images(summary, chunk_size, chunk_overlap, hp_tag):
         chunk_start = 0
         chunk_end = min(len(summary.genomic_pos), chunk_size)
         images = []
         labels = []
         positions = []
+        hp_tags = []
 
         while True:
             image_chunk = summary.image[chunk_start:chunk_end]
@@ -41,6 +46,7 @@ class AlignmentSummarizer:
             images.append(image_chunk)
             labels.append(label_chunk)
             positions.append(pos_chunk)
+            hp_tags.append(hp_tag)
 
             if chunk_end == len(summary.genomic_pos):
                 break
@@ -48,40 +54,49 @@ class AlignmentSummarizer:
             chunk_start = chunk_end - chunk_overlap
             chunk_end = min(len(summary.genomic_pos), chunk_start + chunk_size)
 
-        return images, labels, positions
+        return images, labels, positions, hp_tags
 
     @staticmethod
-    def chunk_images_train(summary, chunk_size, chunk_overlap):
-        chunk_start = 0
-        chunk_end = min(len(summary.genomic_pos), chunk_size)
+    def chunk_images_train(summary, chunk_size, chunk_overlap, hp_tag):
         images = []
         labels = []
         positions = []
+        image_hp = []
 
-        while True:
-            if chunk_end - chunk_start != chunk_size:
-                padding_required = chunk_size - (chunk_end - chunk_start)
-                chunk_start -= padding_required
-                if chunk_start < 0:
+        bad_indices = summary.bad_label_positions
+        chunk_start = 0
+
+        for i in range(len(bad_indices)):
+            chunk_end = min(chunk_start + chunk_size, bad_indices[i])
+
+            while True:
+                if chunk_end - chunk_start != chunk_size:
+                    padding_required = chunk_size - (chunk_end - chunk_start)
+                    chunk_start -= padding_required
+                    if chunk_start < 0:
+                        break
+                    if i > 0 and chunk_start < bad_indices[i-1]:
+                        break
+
+                image_chunk = summary.image[chunk_start:chunk_end]
+                pos_chunk = summary.genomic_pos[chunk_start:chunk_end]
+                label_chunk = summary.labels[chunk_start:chunk_end]
+                assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == chunk_size)
+
+                images.append(image_chunk)
+                labels.append(label_chunk)
+                positions.append(pos_chunk)
+                image_hp.append(hp_tag)
+
+                if chunk_end == bad_indices[i]:
                     break
 
-            image_chunk = summary.image[chunk_start:chunk_end]
-            pos_chunk = summary.genomic_pos[chunk_start:chunk_end]
-            label_chunk = summary.labels[chunk_start:chunk_end]
+                chunk_start = chunk_end - chunk_overlap
+                chunk_end = min(bad_indices[i], chunk_start + chunk_size)
 
-            assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == chunk_size)
+            chunk_start = chunk_end + 1
 
-            images.append(image_chunk)
-            labels.append(label_chunk)
-            positions.append(pos_chunk)
-
-            if chunk_end == len(summary.genomic_pos):
-                break
-
-            chunk_start = chunk_end - chunk_overlap
-            chunk_end = min(len(summary.genomic_pos), chunk_start + chunk_size)
-
-        return images, labels, positions
+        return images, labels, positions, image_hp
 
     @staticmethod
     def overlap_length_between_ranges(range_a, range_b):
@@ -93,7 +108,8 @@ class AlignmentSummarizer:
         else:
             return None
 
-    def remove_conflicting_regions(self, regions, min_length=1000, length_ratio=2.0, overlap_fraction=0.5):
+    def remove_conflicting_regions(self, regions, min_length=ImageSizeOptions.MIN_SEQUENCE_LENGTH,
+                                   length_ratio=2.0, overlap_fraction=0.5):
         # reused from medaka's filter_alignments method.
         for reg_a, reg_b in itertools.combinations(regions, 2):
             el1, el2 = sorted((reg_a, reg_b), key=itemgetter(0))
@@ -135,34 +151,115 @@ class AlignmentSummarizer:
 
         return filtered_alignments
 
-    def create_summary(self, truth_bam_handler, train_mode):
+    def reads_to_reference_realignment(self, region_start, region_end, reads_un, reads_hp1, reads_hp2):
+        # PERFORMS LOCAL REALIGNMENT OF READS TO THE REFERENCE
+        if not reads_un and not reads_hp1 and not reads_hp2:
+            return [], [], []
+
+        ref_start = region_start - AlingerOptions.ALIGNMENT_SAFE_BASES
+        ref_end = region_end + AlingerOptions.ALIGNMENT_SAFE_BASES
+
+        ref_sequence = self.fasta_handler.get_reference_sequence(self.chromosome_name,
+                                                                 ref_start,
+                                                                 ref_end)
+
+        aligner = HELEN.ReadAligner(ref_start, ref_end, ref_sequence)
+
+        realigned_reads_un = aligner.align_reads_to_reference(reads_un)
+        realigned_reads_hp1 = aligner.align_reads_to_reference(reads_hp1)
+        realigned_reads_hp2 = aligner.align_reads_to_reference(reads_hp2)
+
+        return realigned_reads_un, realigned_reads_hp1, realigned_reads_hp2
+
+    def create_summary(self, truth_bam_handler_h1, truth_bam_handler_h2, train_mode):
+        log_prefix = "[" + self.chromosome_name + ":" + str(self.region_start_position) + "-" \
+                     + str(self.region_end_position) + "]"
         all_images = []
         all_labels = []
         all_positions = []
+        all_image_hp_tag = []
         if train_mode:
-            truth_reads = truth_bam_handler.get_reads(self.chromosome_name,
-                                                      self.region_start_position,
-                                                      self.region_end_position,
-                                                      0,
-                                                      0)
-            regions = []
-            for read in truth_reads:
-                regions.append([read.pos, read.pos_end, read, True])
+            include_supplementary = False
+            truth_reads_h1 = truth_bam_handler_h1.get_reads(self.chromosome_name,
+                                                            self.region_start_position,
+                                                            self.region_end_position,
+                                                            include_supplementary,
+                                                            0,
+                                                            0)
+            truth_reads_h2 = truth_bam_handler_h2.get_reads(self.chromosome_name,
+                                                            self.region_start_position,
+                                                            self.region_end_position,
+                                                            include_supplementary,
+                                                            0,
+                                                            0)
 
-            regions = self.remove_conflicting_regions(regions, min_length=ImageSizeOptions.SEQ_LENGTH)
+            # do a local realignment of truth reads to reference
+            truth_reads_h1 = self.reads_to_reference_realignment(self.region_start_position,
+                                                                 self.region_end_position,
+                                                                 truth_reads_h1[0],
+                                                                 truth_reads_h1[1],
+                                                                 truth_reads_h1[2])
 
-            for region in regions:
-                region_start, region_end, truth_read, is_kept = tuple(region)
+            truth_reads_h2 = self.reads_to_reference_realignment(self.region_start_position,
+                                                                 self.region_end_position,
+                                                                 truth_reads_h2[0],
+                                                                 truth_reads_h2[1],
+                                                                 truth_reads_h2[2])
+            # comes in three bins but we don't need the binning for truth reads
+            truth_reads_h1 = truth_reads_h1[0] + truth_reads_h1[1] + truth_reads_h1[2]
+            truth_reads_h2 = truth_reads_h2[0] + truth_reads_h2[1] + truth_reads_h2[2]
+
+            regions_h1 = []
+            for read in truth_reads_h1:
+                # start, end, read, is_kept, is_h1
+                regions_h1.append([read.pos, read.pos_end, read,  True, True])
+
+            regions_h2 = []
+            for read in truth_reads_h2:
+                # start, end, read, is_kept, is_h1
+                regions_h2.append([read.pos, read.pos_end, read,  True, False])
+
+            # these are all the regions we will use to generate summaries from.
+            # It's important to notice that we need to realign the reads to the reference before we do that.
+            regions_h1 = self.remove_conflicting_regions(regions_h1)
+            regions_h2 = self.remove_conflicting_regions(regions_h2)
+            all_regions = regions_h1 + regions_h2
+
+            if not all_regions:
+                return [], [], [], []
+
+            # get the reads from the bam file
+            include_supplementary = True
+            all_reads = self.bam_handler.get_reads(self.chromosome_name,
+                                                   self.region_start_position,
+                                                   self.region_end_position,
+                                                   include_supplementary,
+                                                   0,
+                                                   0)
+
+            reads_un, reads_hp1, reads_hp2 = all_reads
+            total_reads = len(reads_un) + len(reads_hp1) + len(reads_hp2)
+
+            sys.stderr.write(TextColor.BLUE + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND: "
+                             + TextColor.BOLD + TextColor.CYAN + str(len(reads_un)) + " UNTAGGED, "
+                             + str(len(reads_hp1)) + " HAPLOTYPE_1, " + str(len(reads_hp2)) + " HAPLOTYPE_2 READS.\n"
+                             + TextColor.END)
+
+            start_time = time.time()
+            reads_un, reads_hp1, reads_hp2 = self.reads_to_reference_realignment(self.region_start_position,
+                                                                                 self.region_end_position,
+                                                                                 reads_un,
+                                                                                 reads_hp1,
+                                                                                 reads_hp2)
+            sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL " + str(total_reads) +
+                             " READS TOOK: " + str(round(time.time()-start_time, 5)) + " secs\n" + TextColor.END)
+            # at this point everything is re-alinged and should be OK to go
+
+            for region in all_regions:
+                region_start, region_end, truth_read, is_kept, is_hp1 = tuple(region)
 
                 if not is_kept:
                     continue
-
-                # get the reads from the bam file
-                all_reads = self.bam_handler.get_reads(self.chromosome_name,
-                                                       region_start,
-                                                       region_end,
-                                                       0,
-                                                       0)
 
                 # ref_seq should contain region_end_position base
                 ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
@@ -174,58 +271,85 @@ class AlignmentSummarizer:
                                                            region_start,
                                                            region_end)
 
-                summary_generator.generate_train_summary(all_reads,
+                summary_generator.generate_train_summary(reads_un,
+                                                         reads_hp1,
+                                                         reads_hp2,
                                                          region_start,
                                                          region_end,
                                                          truth_read,
-                                                         train_mode)
+                                                         is_hp1)
 
-                images, labels, positions = self.chunk_images_train(summary_generator,
-                                                                    chunk_size=ImageSizeOptions.SEQ_LENGTH,
-                                                                    chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
+                hp_tag = 2
+                if is_hp1:
+                    hp_tag = 1
+
+                images, labels, positions, image_hp = self.chunk_images_train(summary_generator,
+                                                                              chunk_size=ImageSizeOptions.SEQ_LENGTH,
+                                                                              chunk_overlap=ImageSizeOptions.SEQ_OVERLAP,
+                                                                              hp_tag=hp_tag)
 
                 all_images.extend(images)
                 all_labels.extend(labels)
                 all_positions.extend(positions)
+                all_image_hp_tag.extend(image_hp)
         else:
             # get the reads from the bam file
+            include_supplementary = True
             all_reads = self.bam_handler.get_reads(self.chromosome_name,
                                                    self.region_start_position,
                                                    self.region_end_position,
+                                                   include_supplementary,
                                                    0,
                                                    0)
 
             reads_un, reads_hp1, reads_hp2 = all_reads
             total_reads = len(reads_un) + len(reads_hp1) + len(reads_hp2)
 
-            sys.stderr.write(TextColor.GREEN + "INFO: TOTAL " + str(total_reads) + " READS FOUND IN " +
-                             str(self.chromosome_name) + ":" + str(self.region_start_position) + "-"
-                             + str(self.region_end_position) + " WITH: " + str(len(reads_un)) + " UNTAGGED, "
+            sys.stderr.write(TextColor.BLUE + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND: "
+                             + TextColor.BOLD + TextColor.CYAN + str(len(reads_un)) + " UNTAGGED, "
                              + str(len(reads_hp1)) + " HAPLOTYPE_1, " + str(len(reads_hp2)) + " HAPLOTYPE_2 READS.\n"
                              + TextColor.END)
 
             # HERE REALIGN THE READS TO THE REFERENCE THEN GENERATE THE SUMMARY TO GET A POLISHED HAPLOTYPE
+            start_time = time.time()
+            reads_un, reads_hp1, reads_hp2 = self.reads_to_reference_realignment(self.region_start_position,
+                                                                                 self.region_end_position,
+                                                                                 reads_un,
+                                                                                 reads_hp1,
+                                                                                 reads_hp2)
+            sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL " + str(total_reads) +
+                             " READS TOOK: " + str(round(time.time()-start_time, 5)) + " secs\n" + TextColor.END)
             # ref_seq should contain region_end_position base
             ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
                                                                 self.region_start_position,
                                                                 self.region_end_position + 1)
 
-            summary_generator = HELEN.SummaryGenerator(ref_seq,
-                                                       self.chromosome_name,
-                                                       self.region_start_position,
-                                                       self.region_end_position)
+            # each haplotype
+            for is_hp1 in range(0, 2, 1):
+                summary_generator = HELEN.SummaryGenerator(ref_seq,
+                                                           self.chromosome_name,
+                                                           self.region_start_position,
+                                                           self.region_end_position)
 
-            summary_generator.generate_summary(reads_un + reads_hp1+ reads_hp2,
-                                               self.region_start_position,
-                                               self.region_end_position)
-            exit()
+                summary_generator.generate_summary(reads_un,
+                                                   reads_hp1,
+                                                   reads_hp2,
+                                                   self.region_start_position,
+                                                   self.region_end_position,
+                                                   is_hp1)
 
-            images, labels, positions = self.chunk_images(summary_generator,
-                                                          chunk_size=ImageSizeOptions.SEQ_LENGTH,
-                                                          chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
+                hp_tag = 2
+                if is_hp1:
+                    hp_tag = 1
 
-            all_images.extend(images)
-            all_labels.extend(labels)
-            all_positions.extend(positions)
+                images, labels, positions, image_hp = self.chunk_images(summary_generator,
+                                                                        chunk_size=ImageSizeOptions.SEQ_LENGTH,
+                                                                        chunk_overlap=ImageSizeOptions.SEQ_OVERLAP,
+                                                                        hp_tag=hp_tag)
 
-        return all_images, all_labels, all_positions
+                all_images.extend(images)
+                all_labels.extend(labels)
+                all_positions.extend(positions)
+                all_image_hp_tag.extend(image_hp)
+
+        return all_images, all_labels, all_positions, all_image_hp_tag

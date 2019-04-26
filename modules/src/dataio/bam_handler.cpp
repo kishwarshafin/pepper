@@ -112,7 +112,12 @@ vector<string> BAM_handler::get_chromosome_sequence_names() {
     return sequence_names;
 }
 
-vector< vector<type_read> > BAM_handler::get_reads(string chromosome, long long start, long long stop, int min_mapq=0, int min_baseq = 0) {
+vector< vector<type_read> > BAM_handler::get_reads(string chromosome,
+                                                   long long start,
+                                                   long long stop,
+                                                   bool include_supplementary,
+                                                   int min_mapq=0,
+                                                   int min_baseq = 0) {
     vector <type_read> reads_HP0;
     vector <type_read> reads_HP1;
     vector <type_read> reads_HP2;
@@ -132,6 +137,9 @@ vector< vector<type_read> > BAM_handler::get_reads(string chromosome, long long 
 
         if(read_flags.is_qc_failed || read_flags.is_duplicate || read_flags.is_secondary
            || read_flags.is_unmapped){
+            continue;
+        }
+        if(!include_supplementary && read_flags.is_supplementary) {
             continue;
         }
 

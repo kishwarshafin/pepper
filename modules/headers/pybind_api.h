@@ -40,6 +40,7 @@ PYBIND11_MODULE(HELEN, m) {
             .def_readwrite("genomic_pos", &SummaryGenerator::genomic_pos)
             .def_readwrite("labels", &SummaryGenerator::labels)
             .def_readwrite("image", &SummaryGenerator::image)
+            .def_readwrite("bad_label_positions", &SummaryGenerator::bad_label_positions)
             .def("generate_train_summary", &SummaryGenerator::generate_train_summary)
             .def("generate_summary", &SummaryGenerator::generate_summary);
 
@@ -118,6 +119,7 @@ PYBIND11_MODULE(HELEN, m) {
         // SSW alignment class
         py::class_<ReadAligner>(m, "ReadAligner")
             .def(py::init<const int &, const int &, const string &>())
+            .def("align_reads_to_reference", &ReadAligner::align_reads_to_reference)
             .def("align_reads", &ReadAligner::align_reads);
 
         // Debruijn graph class

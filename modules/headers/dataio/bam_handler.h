@@ -116,6 +116,9 @@ struct type_read{
     void set_position(long long pos){
         this->pos = pos;
     }
+    void set_end_position(long long pos){
+        this->pos_end = pos;
+    }
 
     void set_cigar_tuples(vector <CigarOp> cigar_tuples) {
         this->cigar_tuples = cigar_tuples;
@@ -131,6 +134,7 @@ struct type_read{
         this->bad_indicies = that.bad_indicies;
         this->mapping_quality = that.mapping_quality;
         this->base_qualities = that.base_qualities;
+        this->hp_tag = that.hp_tag;
     }
 
     bool operator<(const type_read& that) {
@@ -172,7 +176,11 @@ class BAM_handler {
         BAM_handler(string path);
 
         // this will divide reads in haplotype bins and then return
-        vector< vector<type_read> > get_reads(string region, long long start, long long stop, int min_mapq,
+        vector< vector<type_read> > get_reads(string region,
+                                              long long start,
+                                              long long stop,
+                                              bool include_supplementary,
+                                              int min_mapq,
                                               int min_baseq);
         vector<string> get_chromosome_sequence_names();
         vector<type_sequence> get_chromosome_sequence_names_with_length();

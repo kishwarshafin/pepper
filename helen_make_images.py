@@ -48,26 +48,29 @@ class View:
     """
     Process manager that runs sequence of processes to generate images and their labebls.
     """
-    def __init__(self, chromosome_name, bam_file_path, draft_file_path, truth_bam, train_mode, downsample_rate):
+    def __init__(self, chromosome_name, bam_file_path, draft_file_path, truth_bam_h1, truth_bam_h2,
+                 train_mode, downsample_rate):
         """
         Initialize a manager object
         :param chromosome_name: Name of the chromosome
         :param bam_file_path: Path to the BAM file
         :param draft_file_path: Path to the reference FASTA file
-        :param truth_bam: Path to the truth sequence to draft mapping file
+        :param truth_bam_h1: Path to the truth sequence to reference mapping file
+        :param truth_bam_h2: Path to the truth sequence to reference mapping file
         """
         # --- initialize handlers ---
         # create objects to handle different files and query
         self.bam_path = bam_file_path
         self.fasta_path = draft_file_path
-        self.truth_bam_path = truth_bam
         self.bam_handler = HELEN.BAM_handler(bam_file_path)
         self.fasta_handler = HELEN.FASTA_handler(draft_file_path)
         self.train_mode = train_mode
         self.downsample_rate = downsample_rate
-        self.truth_bam_handler = None
+        self.truth_bam_handler_h1 = None
+        self.truth_bam_handler_h2 = None
         if self.train_mode:
-            self.truth_bam_handler = HELEN.BAM_handler(truth_bam)
+            self.truth_bam_handler_h1 = HELEN.BAM_handler(truth_bam_h1)
+            self.truth_bam_handler_h2 = HELEN.BAM_handler(truth_bam_h2)
 
         # --- initialize names ---
         # name of the chromosome
@@ -112,44 +115,62 @@ class View:
                                                    self.chromosome_name,
                                                    start_position,
                                                    end_position)
-        images, lables, positions = alignment_summarizer.create_summary(self.truth_bam_handler,
-                                                                        self.train_mode)
-        return images, lables, positions
+
+        images, lables, positions, image_hp_tags = alignment_summarizer.create_summary(self.truth_bam_handler_h1,
+                                                                                       self.truth_bam_handler_h2,
+                                                                                       self.train_mode)
+        return images, lables, positions, image_hp_tags
 
 
 def single_worker(args, region_start, region_end):
-    chr_name, bam_file, draft_file, truth_bam, train_mode, downsample_rate = args
+    chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate = args
     view = View(chromosome_name=chr_name,
                 bam_file_path=bam_file,
                 draft_file_path=draft_file,
-                truth_bam=truth_bam,
+                truth_bam_h1=truth_bam_h1,
+                truth_bam_h2=truth_bam_h2,
                 train_mode=train_mode,
                 downsample_rate=downsample_rate)
-
-    images, lables, positions = view.parse_region(region_start, region_end)
+    images, lables, positions, image_hp_tags = view.parse_region(region_start, region_end)
     region = (chr_name, region_start, region_end)
-    return images, lables, positions, region
+    return images, lables, positions, image_hp_tags, region
+
+
+def get_confident_intervals_of_a_region(confident_bed_regions, start_position, end_position,
+                                        min_size=ImageSizeOptions.MIN_SEQUENCE_LENGTH, max_size=10000):
+
+    confident_intervals_in_region = confident_bed_regions.find(start_position, end_position)
+
+    all_intervals = []
+    for interval_start, interval_end in confident_intervals_in_region:
+        if interval_end < start_position:
+            continue
+        if interval_start > end_position:
+            continue
+
+        interval_start = max(interval_start, start_position)
+        interval_end = min(interval_end, end_position)
+
+        if interval_end - interval_start > max_size:
+            for pos in range(interval_start, interval_end, max_size):
+                all_intervals.append((pos, min(interval_end, pos + max_size)))
+        elif interval_end - interval_start >= min_size:
+            all_intervals.append((interval_start, interval_end))
+
+    return all_intervals
 
 
 def chromosome_level_parallelization(chr_list,
                                      bam_file,
                                      draft_file,
-                                     truth_bam,
+                                     truth_bam_h1,
+                                     truth_bam_h2,
+                                     confident_bed_regions,
                                      output_path,
                                      total_threads,
                                      train_mode,
                                      downsample_rate,
                                      max_size=10000):
-    """
-    This method takes one chromosome name as parameter and chunks that chromosome in max_threads.
-    :param chr_list: List of chromosomes to be processed
-    :param bam_file: path to BAM file
-    :param ref_file: path to reference FASTA file
-    :param vcf_file: path to VCF file
-    :param max_size: Maximum size of a segment
-    :param output_path: path to output directory
-    :return:
-    """
     start_time = time.time()
     # if there's no confident bed provided, then chop the chromosome
     fasta_handler = HELEN.FASTA_handler(draft_file)
@@ -170,25 +191,41 @@ def chromosome_level_parallelization(chr_list,
             interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
 
         all_intervals = []
-        for pos in range(interval_start, interval_end, max_size):
-            all_intervals.append((pos, min(interval_end, pos + max_size)))
+        if not train_mode:
+            for pos in range(interval_start, interval_end, max_size):
+                all_intervals.append((pos, min(interval_end, pos + max_size)))
+        else:
+            confident_tree = IntervalTree(confident_bed_regions[chr_name])
+            confident_intervals = get_confident_intervals_of_a_region(confident_tree,
+                                                                      interval_start,
+                                                                      interval_end)
+            all_intervals = confident_intervals
 
-        args = (chr_name, bam_file, draft_file, truth_bam, train_mode, downsample_rate)
+        if not all_intervals and train_mode:
+            log_prefix = "[" + str(chr_name) + ":" + str(interval_start) + "-" + str(interval_end) + "]"
+            sys.stderr.write(TextColor.BLUE + "INFO: " + log_prefix + " NO CONFIDENT REGION FOUND.\n" + TextColor.END)
+            continue
+
+        args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate)
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
             futures = [executor.submit(single_worker, args, _start, _end) for _start, _end in all_intervals]
 
             for fut in concurrent.futures.as_completed(futures):
                 if fut.exception() is None:
-                    images, labels, positions, region = fut.result()
-                    sys.stderr.write(TextColor.GREEN + "INFO: " + str(len(images)) + " IMAGES GENERATED FROM: "
-                                     + str(region) + "\n" + TextColor.END)
+                    images, labels, positions, image_hp_tag, region = fut.result()
+                    log_prefix = "[" + str(region[0]) + ":" + str(region[1]) + "-" + str(region[2]) + "]"
+                    sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(len(images))
+                                     + " IMAGES GENERATED\n" + TextColor.END)
 
-                    for i, image in enumerate(images):
-                        label = labels[i]
-                        position, index = zip(*positions[i])
-                        summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(i)
-                        output_hdf_file.write_train_summary(chr_name, image, label, position, index, summary_name)
+                    if images:
+                        for i, image in enumerate(images):
+                            label = labels[i]
+                            position, index = zip(*positions[i])
+                            hp_tag = image_hp_tag[i]
+                            summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" \
+                                           + str(hp_tag) + "_" + str(i)
+                            output_hdf_file.write_summary(chr_name, image, label, position, index, summary_name)
                 else:
                     sys.stderr.write(TextColor.RED + "EXCEPTION: " + str(fut.exception()) + "\n" + TextColor.END)
                 fut._result = None
@@ -224,7 +261,21 @@ def boolean_string(s):
     return s.lower() == 'true'
 
 
-def get_chromosme_list(chromosome_names, ref_file):
+def build_chromosomal_interval_trees(confident_bed_path):
+    """
+    Produce a dictionary of intervals trees, with one tree per chromosome
+    :param confident_bed_path: Path to confident bed file
+    :return: trees_chromosomal
+    """
+    # create an object for tsv file handling
+    tsv_handler_reference = TsvHandler(tsv_file_path=confident_bed_path)
+    # create intervals based on chromosome
+    intervals_chromosomal_reference = tsv_handler_reference.get_bed_intervals_by_chromosome(universal_offset=-1)
+
+    return intervals_chromosomal_reference
+
+
+def get_chromosome_list(chromosome_names, ref_file):
     if not chromosome_names:
         fasta_handler = HELEN.FASTA_handler(ref_file)
         chromosome_names = fasta_handler.get_chromosome_names()
@@ -284,36 +335,42 @@ if __name__ == '__main__':
         "--bam",
         type=str,
         required=True,
-        help="BAM file containing reads mapped to the draft assembly."
+        help="BAM file containing haplotyped (With HP tag) reads mapped to the reference."
     )
     parser.add_argument(
-        "--draft",
+        "--reference",
         type=str,
         required=True,
-        help="FASTA file containing draft assembly."
+        help="FASTA file containing the reference sequence."
     )
     parser.add_argument(
         "--truth_bam_h1",
         type=str,
         default=None,
-        help="BAM file containing mapping of true haplotype 2 to the reference"
+        help="BAM file containing mapping of true haplotype 1 to the reference"
     )
     parser.add_argument(
         "--truth_bam_h2",
         type=str,
         default=None,
-        help="BAM file containing mapping of true haplotype 1 to the reference"
+        help="BAM file containing mapping of true haplotype 2 to the reference"
+    )
+    parser.add_argument(
+        "--bed",
+        type=str,
+        default=None,
+        help="BED file containing confident regions."
     )
     parser.add_argument(
         "--chromosome_name",
         type=str,
-        help="Desired chromosome number E.g.: 3"
+        help="Desired chromosome number [chr_name:start-end] E.g.: chr3:1000-2000 or simply chr3"
     )
     parser.add_argument(
         "--train_mode",
         type=boolean_string,
         default=False,
-        help="If true then a dry test is run."
+        help="Generate training images"
     )
     parser.add_argument(
         "--output_dir",
@@ -325,27 +382,33 @@ if __name__ == '__main__':
         "--threads",
         type=int,
         default=5,
-        help="Number of maximum threads for this region."
+        help="Number of maximum threads to use."
     )
     parser.add_argument(
         "--downsample_rate",
         type=float,
         required=False,
         default=1.0,
-        help="Reference corresponding to the BAM file."
+        help="Downsample reads by this margin."
     )
     FLAGS, unparsed = parser.parse_known_args()
-    chr_list = get_chromosme_list(FLAGS.chromosome_name, FLAGS.draft)
+    chr_list = get_chromosome_list(FLAGS.chromosome_name, FLAGS.reference)
 
-    if FLAGS.train_mode and (not FLAGS.truth_bam):
-        sys.stderr.write(TextColor.RED + "ERROR: TRAIN MODE REQUIRES --vcf AND --bed TO BE SET.\n" + TextColor.END)
-        exit(1)
+    confident_regions = []
+    if FLAGS.train_mode:
+        confident_regions = build_chromosomal_interval_trees(FLAGS.bed)
+        if not FLAGS.truth_bam_h1 or not FLAGS.truth_bam_h2 or not FLAGS.bed:
+            raise Exception(TextColor.RED + "ERROR: TRAIN MODE REQUIRES --truth_bam_h1, --truth_bam_h2 "
+                                            "AND --bed TO BE SET.\n" + TextColor.END)
+
     output_dir = handle_output_directory(os.path.abspath(FLAGS.output_dir))
 
     chromosome_level_parallelization(chr_list,
                                      FLAGS.bam,
-                                     FLAGS.draft,
-                                     FLAGS.truth_bam,
+                                     FLAGS.reference,
+                                     FLAGS.truth_bam_h1,
+                                     FLAGS.truth_bam_h2,
+                                     confident_regions,
                                      output_dir,
                                      FLAGS.threads,
                                      FLAGS.train_mode,

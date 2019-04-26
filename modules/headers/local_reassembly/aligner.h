@@ -185,6 +185,7 @@ class ReadAligner {
 public:
     ReadAligner(int ref_start, int ref_end, string ref_seq);
     vector<type_read> align_reads(vector<string> haplotypes, vector<type_read> reads);
+    vector<type_read> align_reads_to_reference(vector<type_read> reads);
 };
 
 inline bool BothOpsAreMatch(const CigarOp& op1, const CigarOp& op2);

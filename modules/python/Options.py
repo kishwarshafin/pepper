@@ -15,13 +15,14 @@ class CandidateFinderOptions(object):
 
 
 class ImageSizeOptions(object):
-    IMAGE_HEIGHT = 15
+    IMAGE_HEIGHT = 25
     IMAGE_CHANNELS = 1
     SEQ_LENGTH = 1000
-    SEQ_OVERLAP = 200
+    SEQ_OVERLAP = 50
     LABEL_LENGTH = SEQ_LENGTH
 
     TOTAL_LABELS = 5
+    MIN_SEQUENCE_LENGTH = 1000
 
 
 class TrainOptions(object):

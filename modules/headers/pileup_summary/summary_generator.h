@@ -30,23 +30,29 @@ public:
     vector< vector<double> > image;
     vector<int> labels;
     vector<pair<long long, int> > genomic_pos;
+    vector<int> bad_label_positions;
 
     SummaryGenerator(string reference_sequence,
                    string chromosome_name,
                    long long ref_start,
                    long long ref_end);
-    void generate_summary(vector<type_read> &reads,
+    void generate_summary(vector <type_read> &reads_un,
+                          vector <type_read> &reads_hp1,
+                          vector <type_read> &reads_hp2,
                           long long start_pos,
-                          long long end_pos);
+                          long long end_pos,
+                          bool is_hp1);
 
-    void generate_train_summary(vector <type_read> &reads,
+    void generate_train_summary(vector <type_read> &reads_un,
+                                vector <type_read> &reads_hp1,
+                                vector <type_read> &reads_hp2,
                                 long long start_pos,
                                 long long end_pos,
                                 type_read truth_read,
-                                bool train_mode);
+                                bool is_hp1);
 
-    void iterate_over_read(type_read read, long long region_start, long long region_end);
-    int get_sequence_length(long long start_pos, long long end_pos);
+    void iterate_over_read(type_read read, long long region_start, long long region_end, bool is_h1);
+    int get_sequence_length(long long start_pos, long long end_pos, bool is_tagged);
     void generate_labels(type_read truth_reads, long long region_start, long long region_end);
     void generate_ref_features();
     void debug_print(long long start_pos, long long end_pos);

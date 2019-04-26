@@ -52,8 +52,8 @@ class DataStore(object):
         self._meta = self.meta
         self._meta.update(meta)
 
-    def write_train_summary(self, contig_name, image, label, position, index, summary_name):
-        self.file_handler['{}/{}/{}/{}'.format(self._summary_path_, contig_name, summary_name, 'image')] = np.array(image, dtype=np.float)
+    def write_summary(self, contig_name, image, label, position, index, summary_name):
+        self.file_handler['{}/{}/{}/{}'.format(self._summary_path_, contig_name, summary_name, 'image')] = np.array(image, dtype=np.float32)
         self.file_handler['{}/{}/{}/{}'.format(self._summary_path_, contig_name, summary_name, 'label')] = np.array(label, dtype=np.uint8)
         self.file_handler['{}/{}/{}/{}'.format(self._summary_path_, contig_name, summary_name, 'position')] = position
         self.file_handler['{}/{}/{}/{}'.format(self._summary_path_, contig_name, summary_name, 'index')] = np.array(index, dtype=np.uint8)
