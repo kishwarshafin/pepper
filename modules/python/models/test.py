@@ -56,6 +56,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     with torch.no_grad():
         with tqdm(total=len(test_loader), desc='Accuracy: ', leave=True, ncols=100) as pbar:
             for ii, (images, labels) in enumerate(test_loader):
+                labels = labels.type(torch.LongTensor)
                 if gpu_mode:
                     # encoder_hidden = encoder_hidden.cuda()
                     images = images.cuda()

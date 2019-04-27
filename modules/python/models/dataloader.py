@@ -41,14 +41,10 @@ class SequenceDataset(Dataset):
     def __getitem__(self, index):
         # load the image
         hdf5_filepath, image_name = self.all_images[index]
-        hdf5_file = h5py.File(hdf5_filepath, 'r')
 
-        image = hdf5_file['summaries'][image_name]['image']
-        label = hdf5_file['summaries'][image_name]['label']
-        label = torch.LongTensor(label)
-        image = torch.Tensor(image)
-
-        hdf5_file.close()
+        with h5py.File(hdf5_filepath, 'r') as hdf5_file:
+            image = hdf5_file['summaries'][image_name]['image'][()]
+            label = hdf5_file['summaries'][image_name]['label'][()]
 
         return image, label
 
