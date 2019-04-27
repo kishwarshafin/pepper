@@ -21,11 +21,13 @@ class AlignmentSummarizer:
     @staticmethod
     def chunk_images(summary, chunk_size, chunk_overlap, hp_tag):
         chunk_start = 0
+        chunk_id = 0
         chunk_end = min(len(summary.genomic_pos), chunk_size)
         images = []
         labels = []
         positions = []
         hp_tags = []
+        chunk_ids = []
 
         while True:
             image_chunk = summary.image[chunk_start:chunk_end]
@@ -47,6 +49,8 @@ class AlignmentSummarizer:
             labels.append(label_chunk)
             positions.append(pos_chunk)
             hp_tags.append(hp_tag)
+            chunk_ids.append(chunk_id)
+            chunk_id += 1
 
             if chunk_end == len(summary.genomic_pos):
                 break
@@ -54,17 +58,19 @@ class AlignmentSummarizer:
             chunk_start = chunk_end - chunk_overlap
             chunk_end = min(len(summary.genomic_pos), chunk_start + chunk_size)
 
-        return images, labels, positions, hp_tags
+        return images, labels, positions, hp_tags, chunk_ids
 
     @staticmethod
     def chunk_images_train(summary, chunk_size, chunk_overlap, hp_tag):
         images = []
         labels = []
         positions = []
-        image_hp = []
+        hp_tags = []
+        chunk_ids = []
 
         bad_indices = summary.bad_label_positions
         chunk_start = 0
+        chunk_id = 0
 
         for i in range(len(bad_indices)):
             chunk_end = min(chunk_start + chunk_size, bad_indices[i])
@@ -86,7 +92,9 @@ class AlignmentSummarizer:
                 images.append(image_chunk)
                 labels.append(label_chunk)
                 positions.append(pos_chunk)
-                image_hp.append(hp_tag)
+                hp_tags.append(hp_tag)
+                chunk_ids.append(chunk_id)
+                chunk_id += 1
 
                 if chunk_end == bad_indices[i]:
                     break
@@ -96,7 +104,7 @@ class AlignmentSummarizer:
 
             chunk_start = chunk_end + 1
 
-        return images, labels, positions, image_hp
+        return images, labels, positions, hp_tags, chunk_ids
 
     @staticmethod
     def overlap_length_between_ranges(range_a, range_b):
@@ -178,6 +186,7 @@ class AlignmentSummarizer:
         all_labels = []
         all_positions = []
         all_image_hp_tag = []
+        all_image_chunk_ids = []
         if train_mode:
             include_supplementary = False
             truth_reads_h1 = truth_bam_handler_h1.get_reads(self.chromosome_name,
@@ -283,10 +292,9 @@ class AlignmentSummarizer:
                 if is_hp1:
                     hp_tag = 1
 
-                images, labels, positions, image_hp = self.chunk_images_train(summary_generator,
-                                                                              chunk_size=ImageSizeOptions.SEQ_LENGTH,
-                                                                              chunk_overlap=ImageSizeOptions.SEQ_OVERLAP,
-                                                                              hp_tag=hp_tag)
+                images, labels, positions, image_hp, chunk_ids = \
+                    self.chunk_images_train(summary_generator, chunk_size=ImageSizeOptions.SEQ_LENGTH,
+                                            chunk_overlap=ImageSizeOptions.SEQ_OVERLAP, hp_tag=hp_tag)
 
                 all_images.extend(images)
                 all_labels.extend(labels)
@@ -342,14 +350,14 @@ class AlignmentSummarizer:
                 if is_hp1:
                     hp_tag = 1
 
-                images, labels, positions, image_hp = self.chunk_images(summary_generator,
-                                                                        chunk_size=ImageSizeOptions.SEQ_LENGTH,
-                                                                        chunk_overlap=ImageSizeOptions.SEQ_OVERLAP,
-                                                                        hp_tag=hp_tag)
+                images, labels, positions, image_hp, chunk_ids = \
+                    self.chunk_images(summary_generator, chunk_size=ImageSizeOptions.SEQ_LENGTH,
+                                      chunk_overlap=ImageSizeOptions.SEQ_OVERLAP, hp_tag=hp_tag)
 
                 all_images.extend(images)
                 all_labels.extend(labels)
                 all_positions.extend(positions)
                 all_image_hp_tag.extend(image_hp)
+                all_image_chunk_ids.extend(chunk_ids)
 
-        return all_images, all_labels, all_positions, all_image_hp_tag
+        return all_images, all_labels, all_positions, all_image_hp_tag, all_image_chunk_ids

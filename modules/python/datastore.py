@@ -52,10 +52,15 @@ class DataStore(object):
         self._meta = self.meta
         self._meta.update(meta)
 
-    def write_summary(self, contig_name, image, label, position, index, hp_tag, summary_name):
+    def write_summary(self, region, image, label, position, index, hp_tag, chunk_id, summary_name):
+        contig_name, region_start, region_end = region
+
         self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'image')] = np.array(image, dtype=np.float32)
         self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'label')] = np.array(label, dtype=np.uint8)
         self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'position')] = position
         self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'index')] = np.array(index, dtype=np.uint8)
         self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'contig')] = contig_name
+        self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_start')] = region_start
+        self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_end')] = region_end
+        self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'chunk_id')] = chunk_id
         self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'hp')] = hp_tag

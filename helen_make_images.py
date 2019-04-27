@@ -116,10 +116,10 @@ class View:
                                                    start_position,
                                                    end_position)
 
-        images, lables, positions, image_hp_tags = alignment_summarizer.create_summary(self.truth_bam_handler_h1,
-                                                                                       self.truth_bam_handler_h2,
-                                                                                       self.train_mode)
-        return images, lables, positions, image_hp_tags
+        images, lables, positions, image_hp_tags, image_chunk_ids = \
+            alignment_summarizer.create_summary(self.truth_bam_handler_h1, self.truth_bam_handler_h2, self.train_mode)
+
+        return images, lables, positions, image_hp_tags, image_chunk_ids
 
 
 def single_worker(args, region_start, region_end):
@@ -131,9 +131,9 @@ def single_worker(args, region_start, region_end):
                 truth_bam_h2=truth_bam_h2,
                 train_mode=train_mode,
                 downsample_rate=downsample_rate)
-    images, lables, positions, image_hp_tags = view.parse_region(region_start, region_end)
+    images, lables, positions, image_hp_tags, image_chunk_ids = view.parse_region(region_start, region_end)
     region = (chr_name, region_start, region_end)
-    return images, lables, positions, image_hp_tags, region
+    return images, lables, positions, image_hp_tags, region, image_chunk_ids
 
 
 def get_confident_intervals_of_a_region(confident_bed_regions, start_position, end_position,
@@ -212,7 +212,7 @@ def chromosome_level_parallelization(chr_list,
 
             for fut in concurrent.futures.as_completed(futures):
                 if fut.exception() is None:
-                    images, labels, positions, image_hp_tag, region = fut.result()
+                    images, labels, positions, image_hp_tag, region, chunk_ids = fut.result()
                     log_prefix = "[" + str(region[0]) + ":" + str(region[1]) + "-" + str(region[2]) + "]"
                     sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(len(images))
                                      + " IMAGES GENERATED\n" + TextColor.END)
@@ -222,9 +222,13 @@ def chromosome_level_parallelization(chr_list,
                             label = labels[i]
                             position, index = zip(*positions[i])
                             hp_tag = image_hp_tag[i]
+                            chunk_id = chunk_ids[i]
+
                             summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" \
                                            + str(hp_tag) + "_" + str(i)
-                            output_hdf_file.write_summary(chr_name, image, label, position, index, hp_tag, summary_name)
+
+                            output_hdf_file.write_summary(region, image, label, position, index, hp_tag, chunk_id,
+                                                          summary_name)
                 else:
                     sys.stderr.write(TextColor.RED + "EXCEPTION: " + str(fut.exception()) + "\n" + TextColor.END)
                 fut._result = None

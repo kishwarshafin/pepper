@@ -11,7 +11,7 @@
 #include "local_reassembly/active_region_finder.h"
 #include "local_reassembly/debruijn_graph.h"
 #include "local_reassembly/aligner.h"
-#include "candidate_finding/candidate_finder.h"
+#include "candidate_finding/haplotype_candidate_finder.h"
 #include "image_generator/image_generator.h"
 #include "pileup_summary/summary_generator.h"
 
@@ -46,8 +46,6 @@ PYBIND11_MODULE(HELEN, m) {
 
         py::class_<PositionalCandidateRecord>(m, "PositionalCandidateRecord")
             .def(py::init<>())
-            .def(py::init<const string &, long long &, long long&, const string &,
-                 const string &, const string &, const int &, const int &>())
             .def("print", &PositionalCandidateRecord::print)
             .def("set_genotype", &PositionalCandidateRecord::set_genotype)
             .def("get_candidate_record", &PositionalCandidateRecord::get_candidate_record)
@@ -59,25 +57,8 @@ PYBIND11_MODULE(HELEN, m) {
             .def_readwrite("alt2", &PositionalCandidateRecord::alt2)
             .def_readwrite("alt1_type", &PositionalCandidateRecord::alt1_type)
             .def_readwrite("alt2_type", &PositionalCandidateRecord::alt2_type)
-            .def(py::pickle(
-                    [](const PositionalCandidateRecord &p) { // __getstate__
-                        /* Return a tuple that fully encodes the state of the object */
-                        return py::make_tuple(p.chromosome_name, p.pos, p.pos_end, p.ref, p.alt1, p.alt2, p.alt1_type, p.alt2_type);
-                    },
-                    [](py::tuple t) { // __setstate__
-                        if (t.size() != 8)
-                            throw std::runtime_error("Invalid state!");
-
-                        /* Create a new C++ instance */
-                        PositionalCandidateRecord p(t[0].cast<string>(), t[1].cast<long long>(), t[2].cast<long long>(), t[3].cast<string>(),
-                                                    t[4].cast<string>(), t[5].cast<string>(), t[6].cast<int>(), t[7].cast<int>());
-
-                        /* Assign any additional state */
-                        //dp.setExtra(t[1].cast<int>());
-
-                        return p;
-                    }
-            ));
+            .def_readwrite("alt1_count", &PositionalCandidateRecord::alt1_count)
+            .def_readwrite("alt2_count", &PositionalCandidateRecord::alt2_count);
 
 
         // Candidate finder
@@ -120,7 +101,8 @@ PYBIND11_MODULE(HELEN, m) {
         py::class_<ReadAligner>(m, "ReadAligner")
             .def(py::init<const int &, const int &, const string &>())
             .def("align_reads_to_reference", &ReadAligner::align_reads_to_reference)
-            .def("align_reads", &ReadAligner::align_reads);
+            .def("align_reads", &ReadAligner::align_reads)
+            .def("align_haplotypes_to_reference", &ReadAligner::align_haplotypes_to_reference);
 
         // Debruijn graph class
         py::class_<DeBruijnGraph>(m, "DeBruijnGraph")

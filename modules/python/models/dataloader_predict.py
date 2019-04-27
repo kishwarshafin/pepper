@@ -1,46 +1,40 @@
-import os
-import numpy as np
-import pandas as pd
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 import h5py
-import torch
-import pickle
 
 
 class SequenceDataset(Dataset):
     """
     Arguments:
-        A CSV file path
+        A HDF5 file path
     """
+    def __init__(self, hdf5_file_path):
+        self.transform = transforms.Compose([transforms.ToTensor()])
+        file_image_pair = []
 
-    def __init__(self, csv_path, transform=None):
-        data_frame = pd.read_csv(csv_path, header=None, dtype=str)
-        self.transform = transform
+        with h5py.File(hdf5_file_path, 'r') as hdf5_file:
+            image_names = list(hdf5_file['summaries'].keys())
 
-        self.file_info = list(data_frame[0])
-        self.file_index = list(data_frame[1])
-        self.chromosome_name = list(data_frame[2])
+        for image_name in image_names:
+            file_image_pair.append((hdf5_file_path, image_name))
+
+        self.all_images = file_image_pair
 
     def __getitem__(self, index):
-        chromosome = self.chromosome_name[index]
+        # load the image
+        hdf5_filepath, image_name = self.all_images[index]
 
-        hdf5_image = self.file_info[index]
-        hdf5_index = int(self.file_index[index])
+        with h5py.File(hdf5_filepath, 'r') as hdf5_file:
+            images = hdf5_file['summaries'][image_name]['image'][()]
+            position = hdf5_file['summaries'][image_name]['position'][()]
+            index = hdf5_file['summaries'][image_name]['index'][()]
+            contig = hdf5_file['summaries'][image_name]['contig'][()]
+            chunk_id = hdf5_file['summaries'][image_name]['chunk_id'][()]
+            contig_start = hdf5_file['summaries'][image_name]['region_start'][()]
+            contig_end = hdf5_file['summaries'][image_name]['region_end'][()]
+            hp_tag = hdf5_file['summaries'][image_name]['hp'][()]
 
-        hdf5_file = h5py.File(hdf5_image, 'r')
-
-        image_dataset = hdf5_file['image']
-        image = image_dataset[hdf5_index]
-        image = torch.Tensor(image)
-
-        pos_dataset = hdf5_file['position']
-        position = np.array(pos_dataset[hdf5_index], dtype=np.long)
-
-        index_dataset = hdf5_file['index']
-        index = np.array(index_dataset[hdf5_index], dtype=np.int16)
-
-        return image, chromosome, position, index
+        return contig, contig_start, contig_end, chunk_id, images, position, index, hp_tag
 
     def __len__(self):
-        return len(self.file_info)
+        return len(self.all_images)

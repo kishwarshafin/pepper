@@ -559,6 +559,41 @@ vector<type_read> ReadAligner::align_reads_to_reference(vector<type_read> reads)
     return realigned_reads;
 }
 
+
+vector<type_read> ReadAligner::align_haplotypes_to_reference(vector<string> haplotypes) {
+    // set the reference sequence
+    SSWAligner.set_reference(reference_sequence);
+    vector<type_read> realigned_reads;
+    for(auto &haplotype_sequence: haplotypes) {
+        // go through each of the alignments and try to align it
+        Alignment alignment = SSWAligner.align(haplotype_sequence);
+
+        if(alignment.sw_score > 1) {
+            // create a new read
+            type_read realigned_read;
+            realigned_read.sequence = haplotype_sequence;
+
+            // get all the cigar operations
+            list <CigarOp> cigarOps = CigarStringToVector(alignment.cigar_string);
+            vector<CigarOp> cigar_tuples;
+            for (auto& op : cigarOps) {
+                cigar_tuples.push_back(op);
+            }
+            // if not empty then add this to realigned reads
+            if (!cigar_tuples.empty()) {
+                realigned_read.set_cigar_tuples(cigar_tuples);
+                realigned_read.set_position(region_start + alignment.ref_begin);
+                realigned_read.set_end_position(region_start + alignment.ref_end);
+            }
+            realigned_reads.push_back(realigned_read);
+        } else {
+            cerr<<"HAPLOTYPE ALIGNMENT FAILED: "<<region_start<<" "<<region_end<<endl;
+        }
+    }
+    return realigned_reads;
+}
+
+
 vector<type_read> ReadAligner::align_reads(vector<string> haplotypes, vector<type_read> reads) {
     this->haplotypes = haplotypes;
 
