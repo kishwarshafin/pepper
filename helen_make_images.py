@@ -228,7 +228,7 @@ def chromosome_level_parallelization(chr_list,
             continue
 
         args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate)
-        interval_threads = chunks(all_intervals, max_chunk_size=100)
+        interval_threads = chunks(all_intervals, max_chunk_size=1)
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
             futures = [executor.submit(single_worker, args, intervals) for intervals in interval_threads]
@@ -252,6 +252,7 @@ def chromosome_level_parallelization(chr_list,
 
                             output_hdf_file.write_summary(region, image, label, position, index, hp_tag, chunk_id,
                                                           summary_name)
+                    sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " PROCESSING FINISHED\n" + TextColor.END)
                 else:
                     sys.stderr.write(TextColor.RED + "EXCEPTION: " + str(fut.exception()) + "\n" + TextColor.END)
                 fut._result = None
