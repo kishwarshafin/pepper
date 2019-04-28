@@ -117,10 +117,12 @@ class View:
         return images, lables, positions, image_hp_tags, image_chunk_ids
 
 
-def single_worker(args, intervals):
+def single_worker(args, _start, _end, confident_bed_regions):
+
     chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate = args
-    min_region_start = intervals[0][0]
-    max_region_end = intervals[0][1]
+    intervals = [(_start, _end)]
+    if train_mode:
+        intervals = get_confident_intervals_of_a_region(confident_bed_regions, _start, _end)
 
     all_images = []
     all_labels = []
@@ -136,8 +138,6 @@ def single_worker(args, intervals):
                     train_mode=train_mode,
                     downsample_rate=downsample_rate)
         images, lables, positions, image_hp_tags, image_chunk_ids = view.parse_region(region_start, region_end)
-        min_region_start = min(min_region_start, region_start)
-        max_region_end = max(max_region_end, region_start)
 
         all_images.extend(images)
         all_labels.extend(lables)
@@ -145,13 +145,13 @@ def single_worker(args, intervals):
         all_hp_tags.extend(image_hp_tags)
         all_chunk_ids.extend(image_chunk_ids)
 
-    region = (chr_name, min_region_start, max_region_end)
+    region = (chr_name, _start, _end)
 
     return all_images, all_labels, all_positions, all_hp_tags, region, all_chunk_ids
 
 
 def get_confident_intervals_of_a_region(confident_bed_regions, start_position, end_position,
-                                        min_size=ImageSizeOptions.MIN_SEQUENCE_LENGTH, max_size=10000):
+                                        min_size=ImageSizeOptions.MIN_SEQUENCE_LENGTH, max_size=1000000):
 
     confident_intervals_in_region = confident_bed_regions.find(start_position, end_position)
 
@@ -191,7 +191,7 @@ def chromosome_level_parallelization(chr_list,
                                      total_threads,
                                      train_mode,
                                      downsample_rate,
-                                     max_size=10000):
+                                     max_size=1000000):
     start_time = time.time()
     # if there's no confident bed provided, then chop the chromosome
     fasta_handler = HELEN.FASTA_handler(draft_file)
@@ -212,26 +212,18 @@ def chromosome_level_parallelization(chr_list,
             interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
 
         all_intervals = []
-        if not train_mode:
-            for pos in range(interval_start, interval_end, max_size):
-                all_intervals.append((pos, min(interval_end, pos + max_size)))
-        else:
-            confident_tree = IntervalTree(confident_bed_regions[chr_name])
-            confident_intervals = get_confident_intervals_of_a_region(confident_tree,
-                                                                      interval_start,
-                                                                      interval_end)
-            all_intervals = confident_intervals
+        for pos in range(interval_start, interval_end, max_size):
+            all_intervals.append((pos, min(interval_end, pos + max_size)))
 
-        if not all_intervals and train_mode:
-            log_prefix = "[" + str(chr_name) + ":" + str(interval_start) + "-" + str(interval_end) + "]"
-            sys.stderr.write(TextColor.BLUE + "INFO: " + log_prefix + " NO CONFIDENT REGION FOUND.\n" + TextColor.END)
-            continue
+        confident_tree = None
+        if train_mode:
+            confident_tree = IntervalTree(confident_bed_regions[chr_name])
 
         args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate)
-        interval_threads = chunks(all_intervals, max_chunk_size=20)
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
-            futures = [executor.submit(single_worker, args, intervals) for intervals in interval_threads]
+            futures = [executor.submit(single_worker, args, _start, _end, confident_tree) for _start, _end in
+                       all_intervals]
 
             for fut in concurrent.futures.as_completed(futures):
                 if fut.exception() is None:
@@ -252,7 +244,6 @@ def chromosome_level_parallelization(chr_list,
 
                             output_hdf_file.write_summary(region, image, label, position, index, hp_tag, chunk_id,
                                                           summary_name)
-                    sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " PROCESSING FINISHED\n" + TextColor.END)
                 else:
                     sys.stderr.write(TextColor.RED + "EXCEPTION: " + str(fut.exception()) + "\n" + TextColor.END)
                 fut._result = None

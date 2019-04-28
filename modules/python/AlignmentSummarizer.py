@@ -287,10 +287,10 @@ class AlignmentSummarizer:
                         reads_un.append(read)
                 assert(len(sample) == len(reads_un) + len(reads_hp1) + len(reads_hp2))
 
-            sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND: "
-                             + TextColor.BOLD + TextColor.CYAN + str(len(reads_un)) + " UNTAGGED, "
-                             + str(len(reads_hp1)) + " HAPLOTYPE_1, " + str(len(reads_hp2)) + " HAPLOTYPE_2 READS.\n"
-                             + TextColor.END)
+            # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND: "
+            #                  + TextColor.BOLD + TextColor.CYAN + str(len(reads_un)) + " UNTAGGED, "
+            #                  + str(len(reads_hp1)) + " HAPLOTYPE_1, " + str(len(reads_hp2)) + " HAPLOTYPE_2 READS.\n"
+            #                  + TextColor.END)
 
             start_time = time.time()
 
@@ -383,10 +383,10 @@ class AlignmentSummarizer:
                         reads_un.append(read)
                 assert(len(sample) == len(reads_un) + len(reads_hp1) + len(reads_hp2))
 
-            sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND: "
-                             + TextColor.BOLD + TextColor.CYAN + str(len(reads_un)) + " UNTAGGED, "
-                             + str(len(reads_hp1)) + " HAPLOTYPE_1, " + str(len(reads_hp2)) + " HAPLOTYPE_2 READS.\n"
-                             + TextColor.END)
+            # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND: "
+            #                  + TextColor.BOLD + TextColor.CYAN + str(len(reads_un)) + " UNTAGGED, "
+            #                  + str(len(reads_hp1)) + " HAPLOTYPE_1, " + str(len(reads_hp2)) + " HAPLOTYPE_2 READS.\n"
+            #                  + TextColor.END)
 
             if realignment_flag:
                 start_time = time.time()
