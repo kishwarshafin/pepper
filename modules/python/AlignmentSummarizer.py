@@ -244,7 +244,7 @@ class AlignmentSummarizer:
             if not all_regions:
                 sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " NO TRAINING REGION FOUND.\n"
                                  + TextColor.END)
-                return [], [], [], []
+                return [], [], [], [], []
 
             include_supplementary = True
             all_reads = self.bam_handler.get_reads(self.chromosome_name,
@@ -259,7 +259,7 @@ class AlignmentSummarizer:
 
             if total_reads == 0:
                 sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " NO READS.\n" + TextColor.END)
-                return [], [], [], []
+                return [], [], [], [], []
 
             if total_reads > AlingerOptions.MAX_READS_IN_REGION:
                 # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
@@ -355,7 +355,7 @@ class AlignmentSummarizer:
             total_reads = len(reads_un) + len(reads_hp1) + len(reads_hp2)
 
             if total_reads == 0:
-                return [], [], [], []
+                return [], [], [], [], []
 
             if total_reads > AlingerOptions.MAX_READS_IN_REGION:
                 # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
