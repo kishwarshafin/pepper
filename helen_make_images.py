@@ -11,7 +11,7 @@ from modules.python.TsvHandler import TsvHandler
 from modules.python.Options import ImageSizeOptions
 from modules.python.AlignmentSummarizer import AlignmentSummarizer
 from modules.python.datastore import DataStore
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed, ThreadPoolExecutor
 """
 This script creates training images from BAM, Reference FASTA and truth VCF file. The process is:
 - Find candidates that can be variants
@@ -196,7 +196,7 @@ def chromosome_level_parallelization(chr_list,
                                      total_threads,
                                      train_mode,
                                      downsample_rate,
-                                     max_size=10000):
+                                     max_size=100000):
     start_time = time.time()
     fasta_handler = HELEN.FASTA_handler(draft_file)
     chr_counter = 1
@@ -229,7 +229,7 @@ def chromosome_level_parallelization(chr_list,
 
             args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate)
 
-            with ProcessPoolExecutor(max_workers=total_threads) as executor:
+            with ThreadPoolExecutor(max_workers=total_threads) as executor:
                 futures = [executor.submit(single_worker, args, _start, _end, confident_tree) for _start, _end in
                            all_intervals]
 
@@ -251,6 +251,7 @@ def chromosome_level_parallelization(chr_list,
 
                             output_hdf_file.write_summary(region, image, label, position, index, hp_tag, chunk_id,
                                                           summary_name)
+                        sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " IMAGES SAVED\n" + TextColor.END)
                         del images, labels, positions, image_hp_tag, region, chunk_ids
                     else:
                         sys.stderr.write(TextColor.RED + "EXCEPTION: " + str(fut.exception()) + "\n" + TextColor.END)
