@@ -118,6 +118,9 @@ vector< vector<type_read> > BAM_handler::get_reads(string chromosome,
                                                    bool include_supplementary,
                                                    int min_mapq=0,
                                                    int min_baseq = 0) {
+    // safe bases
+    stop += 5;
+
     vector <type_read> reads_HP0;
     vector <type_read> reads_HP1;
     vector <type_read> reads_HP2;

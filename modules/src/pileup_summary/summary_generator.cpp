@@ -9,6 +9,7 @@ SummaryGenerator::SummaryGenerator(string reference_sequence, string chromosome_
     this->reference_sequence = reference_sequence;
     this->ref_start = ref_start;
     this->ref_end = ref_end;
+    this->chromosome_name = chromosome_name;
 }
 
 
@@ -206,7 +207,7 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
                 }
                 for (int i = cigar_index; i < cigar.length; i++) {
                     reference_index = ref_position - ref_start;
-
+//                    cout<<ref_position<<" "<<ref_end<<" "<<region_end<<endl;
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
                         base_labels[ref_position] = base;
@@ -374,14 +375,15 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads_un,
     generate_ref_features();
 
     // this populates base_labels and insert_labels dictionaries
-    generate_labels(truth_read, start_pos, end_pos);
+    generate_labels(truth_read, start_pos, end_pos + 1);
 
     // after all the dictionaries are populated, we can simply walk through the region and generate a sequence
     for (long long pos = start_pos; pos <= end_pos; pos++) {
         labels.push_back(get_labels(base_labels[pos]));
         // if the label contains anything but ACTG
         if(!check_base(base_labels[pos])) {
-            cerr<<"INFO: INVALID REFERENCE BASE INDEX FOUND: "<<chromosome_name<<" "<<pos<<" "<<base_labels[pos]<<endl;
+            cerr<<"INFO: INVALID REFERENCE BASE INDEX FOUND: ["<<chromosome_name<<":"<<start_pos<<"-"<<end_pos<<"] " <<
+                pos<<" "<<is_hp1<<" "<<base_labels[pos]<<endl;
             bad_label_positions.push_back(labels.size());
         }
 

@@ -228,12 +228,12 @@ class AlignmentSummarizer:
             regions_h1 = []
             for read in truth_reads_h1:
                 # start, end, read, is_kept, is_h1
-                regions_h1.append([read.pos, read.pos_end, read,  True, True])
+                regions_h1.append([read.pos, read.pos_end - 1, read,  True, True])
 
             regions_h2 = []
             for read in truth_reads_h2:
                 # start, end, read, is_kept, is_h1
-                regions_h2.append([read.pos, read.pos_end, read,  True, False])
+                regions_h2.append([read.pos, read.pos_end - 1, read,  True, False])
 
             # these are all the regions we will use to generate summaries from.
             # It's important to notice that we need to realign the reads to the reference before we do that.
@@ -252,15 +252,17 @@ class AlignmentSummarizer:
                 if not is_kept:
                     continue
 
+                ref_start = region_start
+                ref_end = region_end + 1
                 # ref_seq should contain region_end_position base
                 ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
-                                                                    region_start,
-                                                                    region_end + 1)
+                                                                    ref_start,
+                                                                    ref_end)
 
                 include_supplementary = True
                 all_reads = self.bam_handler.get_reads(self.chromosome_name,
-                                                       self.region_start_position,
-                                                       self.region_end_position,
+                                                       region_start,
+                                                       region_end,
                                                        include_supplementary,
                                                        0,
                                                        0)
@@ -283,8 +285,8 @@ class AlignmentSummarizer:
                 start_time = time.time()
 
                 if realignment_flag:
-                    reads_un, reads_hp1, reads_hp2 = self.reads_to_reference_realignment(self.region_start_position,
-                                                                                         self.region_end_position,
+                    reads_un, reads_hp1, reads_hp2 = self.reads_to_reference_realignment(region_start,
+                                                                                         region_end,
                                                                                          reads_un,
                                                                                          reads_hp1,
                                                                                          reads_hp2)
@@ -294,8 +296,8 @@ class AlignmentSummarizer:
 
                 summary_generator = HELEN.SummaryGenerator(ref_seq,
                                                            self.chromosome_name,
-                                                           region_start,
-                                                           region_end)
+                                                           ref_start,
+                                                           ref_end)
 
                 summary_generator.generate_train_summary(reads_un,
                                                          reads_hp1,
