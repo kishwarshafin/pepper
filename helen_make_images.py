@@ -117,18 +117,37 @@ class View:
         return images, lables, positions, image_hp_tags, image_chunk_ids
 
 
-def single_worker(args, region_start, region_end):
+def single_worker(args, intervals):
     chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate = args
-    view = View(chromosome_name=chr_name,
-                bam_file_path=bam_file,
-                draft_file_path=draft_file,
-                truth_bam_h1=truth_bam_h1,
-                truth_bam_h2=truth_bam_h2,
-                train_mode=train_mode,
-                downsample_rate=downsample_rate)
-    images, lables, positions, image_hp_tags, image_chunk_ids = view.parse_region(region_start, region_end)
-    region = (chr_name, region_start, region_end)
-    return images, lables, positions, image_hp_tags, region, image_chunk_ids
+    min_region_start = intervals[0][0]
+    max_region_end = intervals[0][1]
+
+    all_images = []
+    all_labels = []
+    all_positions = []
+    all_hp_tags = []
+    all_chunk_ids = []
+    for region_start, region_end in intervals:
+        view = View(chromosome_name=chr_name,
+                    bam_file_path=bam_file,
+                    draft_file_path=draft_file,
+                    truth_bam_h1=truth_bam_h1,
+                    truth_bam_h2=truth_bam_h2,
+                    train_mode=train_mode,
+                    downsample_rate=downsample_rate)
+        images, lables, positions, image_hp_tags, image_chunk_ids = view.parse_region(region_start, region_end)
+        min_region_start = min(min_region_start, region_start)
+        max_region_end = max(max_region_end, region_start)
+
+        all_images.extend(images)
+        all_labels.extend(lables)
+        all_positions.extend(positions)
+        all_hp_tags.extend(image_hp_tags)
+        all_chunk_ids.extend(image_chunk_ids)
+
+    region = (chr_name, min_region_start, max_region_end)
+
+    return all_images, all_labels, all_positions, all_hp_tags, region, all_chunk_ids
 
 
 def get_confident_intervals_of_a_region(confident_bed_regions, start_position, end_position,
@@ -152,6 +171,14 @@ def get_confident_intervals_of_a_region(confident_bed_regions, start_position, e
         elif interval_end - interval_start >= min_size:
             all_intervals.append((interval_start, interval_end))
     return all_intervals
+
+
+def chunks(intervals, max_chunk_size):
+    """Yield successive n-sized chunks from l."""
+    chunks = []
+    for i in range(0, len(intervals), max_chunk_size):
+        chunks.append(intervals[i:i + max_chunk_size])
+    return chunks
 
 
 def chromosome_level_parallelization(chr_list,
@@ -201,9 +228,10 @@ def chromosome_level_parallelization(chr_list,
             continue
 
         args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate)
+        interval_threads = chunks(all_intervals, max_chunk_size=100)
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
-            futures = [executor.submit(single_worker, args, _start, _end) for _start, _end in all_intervals]
+            futures = [executor.submit(single_worker, args, intervals) for intervals in interval_threads]
 
             for fut in concurrent.futures.as_completed(futures):
                 if fut.exception() is None:
