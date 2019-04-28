@@ -229,7 +229,7 @@ def chromosome_level_parallelization(chr_list,
 
             args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate)
 
-            with ThreadPoolExecutor(max_workers=total_threads) as executor:
+            with ProcessPoolExecutor(max_workers=total_threads) as executor:
                 futures = [executor.submit(single_worker, args, _start, _end, confident_tree) for _start, _end in
                            all_intervals]
 
