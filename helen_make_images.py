@@ -196,84 +196,85 @@ def chromosome_level_parallelization(chr_list,
                                      total_threads,
                                      train_mode,
                                      downsample_rate,
-                                     max_size=1000000):
+                                     max_size=10000):
     start_time = time.time()
     fasta_handler = HELEN.FASTA_handler(draft_file)
     chr_counter = 1
 
     timestr = time.strftime("%m%d%Y_%H%M%S")
     file_name = output_path + "helen_images_" + timestr + ".hdf"
-    output_hdf_file = DataStore(file_name, 'w')
 
-    for chr_name, region in chr_list:
-        sys.stderr.write(TextColor.GREEN + "INFO: " + str(chr_counter) + "/" + str(len(chr_list))
-                         + " GENERATING IMAGE FROM CONTIG " + str(chr_name) + "\n" + TextColor.END)
-        if not region:
-            interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
-            max_end = interval_end
-        else:
-            interval_start, interval_end = tuple(region)
-            interval_start = max(0, interval_start)
-            interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
-            max_end = interval_end
+    with DataStore(file_name, 'w') as output_hdf_file:
+        for chr_name, region in chr_list:
+            sys.stderr.write(TextColor.GREEN + "INFO: " + str(chr_counter) + "/" + str(len(chr_list))
+                             + " GENERATING IMAGE FROM CONTIG " + str(chr_name) + "\n" + TextColor.END)
+            if not region:
+                interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
+                max_end = interval_end
+            else:
+                interval_start, interval_end = tuple(region)
+                interval_start = max(0, interval_start)
+                interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
+                max_end = interval_end
 
-        # this is the interval size each of the process is going to get which is 10^6
-        # I will split this into 10^4 size inside the worker process
-        all_intervals = []
-        for pos in range(interval_start, interval_end, max_size):
-            all_intervals.append((pos, min(interval_end, pos + max_size)))
+            # this is the interval size each of the process is going to get which is 10^6
+            # I will split this into 10^4 size inside the worker process
+            all_intervals = []
+            for pos in range(interval_start, interval_end, max_size):
+                all_intervals.append((pos, min(interval_end, pos + max_size)))
 
-        confident_tree = None
-        if train_mode:
-            confident_tree = IntervalTree(confident_bed_regions[chr_name])
+            confident_tree = None
+            if train_mode:
+                confident_tree = IntervalTree(confident_bed_regions[chr_name])
 
-        args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate)
+            args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate)
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
-            futures = [executor.submit(single_worker, args, _start, _end, confident_tree) for _start, _end in
-                       all_intervals]
+            with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
+                futures = [executor.submit(single_worker, args, _start, _end, confident_tree) for _start, _end in
+                           all_intervals]
 
-            for fut in concurrent.futures.as_completed(futures):
-                if fut.exception() is None:
-                    images, labels, positions, image_hp_tag, region, chunk_ids = fut.result()
-                    log_prefix = "[" + str(region[0]) + ":" + str(region[2]) + "/" + str(max_end) + "]"
-                    sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(len(images))
-                                     + " IMAGES GENERATED\n" + TextColor.END)
+                for fut in concurrent.futures.as_completed(futures):
+                    if fut.exception() is None:
+                        images, labels, positions, image_hp_tag, region, chunk_ids = fut.result()
+                        log_prefix = "[" + str(region[0]) + ":" + str(region[2]) + "/" + str(max_end) + "]"
+                        sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(len(images))
+                                         + " IMAGES GENERATED\n" + TextColor.END)
 
-                    if images:
-                        for i, image in enumerate(images):
-                            label = labels[i]
-                            position, index = zip(*positions[i])
-                            hp_tag = image_hp_tag[i]
-                            chunk_id = chunk_ids[i]
+                        if len(images) > 0:
+                            for i, image in enumerate(images):
+                                label = labels[i]
+                                position, index = zip(*positions[i])
+                                hp_tag = image_hp_tag[i]
+                                chunk_id = chunk_ids[i]
 
-                            summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" \
-                                           + str(hp_tag) + "_" + str(i)
+                                summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + \
+                                               str(hp_tag) + "_" + str(i)
 
-                            output_hdf_file.write_summary(region, image, label, position, index, hp_tag, chunk_id,
-                                                          summary_name)
-                else:
-                    sys.stderr.write(TextColor.RED + "EXCEPTION: " + str(fut.exception()) + "\n" + TextColor.END)
-                fut._result = None
+                                output_hdf_file.write_summary(region, image, label, position, index, hp_tag, chunk_id,
+                                                              summary_name)
+                        del images, labels, positions, image_hp_tag, region, chunk_ids
+                    else:
+                        sys.stderr.write(TextColor.RED + "EXCEPTION: " + str(fut.exception()) + "\n" + TextColor.END)
+                    fut._result = None
 
-        print("DONE CHROMOSOME: ", chr_name,
-              "TOTAL TIME ELAPSED: ", int(math.floor(time.time()-start_time)/60), "MINS",
-              math.ceil(time.time()-start_time) % 60, "SEC")
+            print("DONE CHROMOSOME: ", chr_name,
+                  "TOTAL TIME ELAPSED: ", int(math.floor(time.time()-start_time)/60), "MINS",
+                  math.ceil(time.time()-start_time) % 60, "SEC")
 
 
-def handle_output_directory(output_dir):
+def handle_output_directory(output_directory):
     """
     Process the output directory and return a valid directory where we save the output
-    :param output_dir: Output directory path
+    :param output_directory: Output directory path
     :return:
     """
     # process the output directory
-    if output_dir[-1] != "/":
-        output_dir += "/"
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if output_directory[-1] != "/":
+        output_directory += "/"
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
 
-    return output_dir
+    return output_directory
 
 
 def boolean_string(s):
