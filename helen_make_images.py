@@ -3,20 +3,12 @@ import math
 import time
 import os
 import sys
-import pickle
-import h5py
-import numpy as np
 
 from build import HELEN
 from modules.python.IntervalTree import IntervalTree
-from modules.python.LocalRealignment import LocalAssembler
-from modules.python.CandidateFinder import CandidateFinder
 from modules.python.TextColor import TextColor
 from modules.python.TsvHandler import TsvHandler
-from modules.python.FileManager import FileManager
-from modules.python.PileupGenerator import PileupGenerator
 from modules.python.Options import ImageSizeOptions
-from modules.python.CandidateLabler import CandidateLabeler
 from modules.python.AlignmentSummarizer import AlignmentSummarizer
 from modules.python.datastore import DataStore
 import concurrent.futures
@@ -117,7 +109,10 @@ class View:
                                                    end_position)
 
         images, lables, positions, image_hp_tags, image_chunk_ids = \
-            alignment_summarizer.create_summary(self.truth_bam_handler_h1, self.truth_bam_handler_h2, self.train_mode)
+            alignment_summarizer.create_summary(self.truth_bam_handler_h1,
+                                                self.truth_bam_handler_h2,
+                                                self.train_mode,
+                                                realignment_flag=False)
 
         return images, lables, positions, image_hp_tags, image_chunk_ids
 

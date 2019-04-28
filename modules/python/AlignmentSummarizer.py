@@ -1,5 +1,6 @@
 from build import HELEN
 import itertools
+import numpy as np
 from operator import itemgetter
 import sys
 import time
@@ -179,7 +180,7 @@ class AlignmentSummarizer:
 
         return realigned_reads_un, realigned_reads_hp1, realigned_reads_hp2
 
-    def create_summary(self, truth_bam_handler_h1, truth_bam_handler_h2, train_mode):
+    def create_summary(self, truth_bam_handler_h1, truth_bam_handler_h2, train_mode, realignment_flag):
         log_prefix = "[" + self.chromosome_name + ":" + str(self.region_start_position) + "-" \
                      + str(self.region_end_position) + "]"
         all_images = []
@@ -187,7 +188,54 @@ class AlignmentSummarizer:
         all_positions = []
         all_image_hp_tag = []
         all_image_chunk_ids = []
+
+        include_supplementary = True
+        all_reads = self.bam_handler.get_reads(self.chromosome_name,
+                                               self.region_start_position,
+                                               self.region_end_position,
+                                               include_supplementary,
+                                               0,
+                                               0)
+
+        reads_un, reads_hp1, reads_hp2 = all_reads
+        total_reads = len(reads_un) + len(reads_hp1) + len(reads_hp2)
+
+        if total_reads == 0:
+            return [], [], [], []
+
+        if total_reads > AlingerOptions.MAX_READS_IN_REGION:
+            # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
+            # reservoir_sample method utilized here
+            all_reads = reads_un + reads_hp1 + reads_hp2
+            random = np.random.RandomState(AlingerOptions.RANDOM_SEED)
+            sample = []
+            for i, read in enumerate(all_reads):
+                if len(sample) < AlingerOptions.MAX_READS_IN_REGION:
+                    sample.append(read)
+                else:
+                    j = random.randint(0, i + 1)
+                    if j < AlingerOptions.MAX_READS_IN_REGION:
+                        sample[j] = read
+
+            reads_un = []
+            reads_hp1 = []
+            reads_hp2 = []
+            for read in sample:
+                if read.hp_tag == 1:
+                    reads_hp1.append(read)
+                elif read.hp_tag == 2:
+                    reads_hp2.append(read)
+                else:
+                    reads_un.append(read)
+            assert(len(sample) == len(reads_un) + len(reads_hp1) + len(reads_hp2))
+
+        sys.stderr.write(TextColor.BLUE + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND: "
+                         + TextColor.BOLD + TextColor.CYAN + str(len(reads_un)) + " UNTAGGED, "
+                         + str(len(reads_hp1)) + " HAPLOTYPE_1, " + str(len(reads_hp2)) + " HAPLOTYPE_2 READS.\n"
+                         + TextColor.END)
+
         if train_mode:
+            # get the reads from the bam file
             include_supplementary = False
             truth_reads_h1 = truth_bam_handler_h1.get_reads(self.chromosome_name,
                                                             self.region_start_position,
@@ -203,17 +251,19 @@ class AlignmentSummarizer:
                                                             0)
 
             # do a local realignment of truth reads to reference
-            truth_reads_h1 = self.reads_to_reference_realignment(self.region_start_position,
-                                                                 self.region_end_position,
-                                                                 truth_reads_h1[0],
-                                                                 truth_reads_h1[1],
-                                                                 truth_reads_h1[2])
+            if realignment_flag:
+                truth_reads_h1 = self.reads_to_reference_realignment(self.region_start_position,
+                                                                     self.region_end_position,
+                                                                     truth_reads_h1[0],
+                                                                     truth_reads_h1[1],
+                                                                     truth_reads_h1[2])
 
-            truth_reads_h2 = self.reads_to_reference_realignment(self.region_start_position,
-                                                                 self.region_end_position,
-                                                                 truth_reads_h2[0],
-                                                                 truth_reads_h2[1],
-                                                                 truth_reads_h2[2])
+                truth_reads_h2 = self.reads_to_reference_realignment(self.region_start_position,
+                                                                     self.region_end_position,
+                                                                     truth_reads_h2[0],
+                                                                     truth_reads_h2[1],
+                                                                     truth_reads_h2[2])
+
             # comes in three bins but we don't need the binning for truth reads
             truth_reads_h1 = truth_reads_h1[0] + truth_reads_h1[1] + truth_reads_h1[2]
             truth_reads_h2 = truth_reads_h2[0] + truth_reads_h2[1] + truth_reads_h2[2]
@@ -237,31 +287,16 @@ class AlignmentSummarizer:
             if not all_regions:
                 return [], [], [], []
 
-            # get the reads from the bam file
-            include_supplementary = True
-            all_reads = self.bam_handler.get_reads(self.chromosome_name,
-                                                   self.region_start_position,
-                                                   self.region_end_position,
-                                                   include_supplementary,
-                                                   0,
-                                                   0)
-
-            reads_un, reads_hp1, reads_hp2 = all_reads
-            total_reads = len(reads_un) + len(reads_hp1) + len(reads_hp2)
-
-            sys.stderr.write(TextColor.BLUE + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND: "
-                             + TextColor.BOLD + TextColor.CYAN + str(len(reads_un)) + " UNTAGGED, "
-                             + str(len(reads_hp1)) + " HAPLOTYPE_1, " + str(len(reads_hp2)) + " HAPLOTYPE_2 READS.\n"
-                             + TextColor.END)
-
             start_time = time.time()
-            reads_un, reads_hp1, reads_hp2 = self.reads_to_reference_realignment(self.region_start_position,
-                                                                                 self.region_end_position,
-                                                                                 reads_un,
-                                                                                 reads_hp1,
-                                                                                 reads_hp2)
-            sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL " + str(total_reads) +
-                             " READS TOOK: " + str(round(time.time()-start_time, 5)) + " secs\n" + TextColor.END)
+
+            if realignment_flag:
+                reads_un, reads_hp1, reads_hp2 = self.reads_to_reference_realignment(self.region_start_position,
+                                                                                     self.region_end_position,
+                                                                                     reads_un,
+                                                                                     reads_hp1,
+                                                                                     reads_hp2)
+                sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL " + str(total_reads) +
+                                 " READS TOOK: " + str(round(time.time()-start_time, 5)) + " secs\n" + TextColor.END)
             # at this point everything is re-alinged and should be OK to go
 
             for region in all_regions:
@@ -301,32 +336,17 @@ class AlignmentSummarizer:
                 all_positions.extend(positions)
                 all_image_hp_tag.extend(image_hp)
         else:
-            # get the reads from the bam file
-            include_supplementary = True
-            all_reads = self.bam_handler.get_reads(self.chromosome_name,
-                                                   self.region_start_position,
-                                                   self.region_end_position,
-                                                   include_supplementary,
-                                                   0,
-                                                   0)
-
-            reads_un, reads_hp1, reads_hp2 = all_reads
-            total_reads = len(reads_un) + len(reads_hp1) + len(reads_hp2)
-
-            sys.stderr.write(TextColor.BLUE + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND: "
-                             + TextColor.BOLD + TextColor.CYAN + str(len(reads_un)) + " UNTAGGED, "
-                             + str(len(reads_hp1)) + " HAPLOTYPE_1, " + str(len(reads_hp2)) + " HAPLOTYPE_2 READS.\n"
-                             + TextColor.END)
-
             # HERE REALIGN THE READS TO THE REFERENCE THEN GENERATE THE SUMMARY TO GET A POLISHED HAPLOTYPE
             start_time = time.time()
-            reads_un, reads_hp1, reads_hp2 = self.reads_to_reference_realignment(self.region_start_position,
-                                                                                 self.region_end_position,
-                                                                                 reads_un,
-                                                                                 reads_hp1,
-                                                                                 reads_hp2)
-            sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL " + str(total_reads) +
-                             " READS TOOK: " + str(round(time.time()-start_time, 5)) + " secs\n" + TextColor.END)
+            if realignment_flag:
+                reads_un, reads_hp1, reads_hp2 = self.reads_to_reference_realignment(self.region_start_position,
+                                                                                    self.region_end_position,
+                                                                                    reads_un,
+                                                                                    reads_hp1,
+                                                                                    reads_hp2)
+                sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL " + str(total_reads) +
+                                 " READS TOOK: " + str(round(time.time()-start_time, 5)) + " secs\n" + TextColor.END)
+
             # ref_seq should contain region_end_position base
             ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
                                                                 self.region_start_position,

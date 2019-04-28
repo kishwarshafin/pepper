@@ -33,36 +33,28 @@ def find_variants(file_name, ref_file_path, contig, small_chunk_keys):
             region_start = hdf5_file['predictions'][contig][chunk_name]['region_start'][()]
             region_end = hdf5_file['predictions'][contig][chunk_name]['region_end'][()]
 
-        haplotype_sequences = list()
+        prediction_dict = defaultdict()
         for haplotype in haplotypes:
             with h5py.File(file_name, 'r') as hdf5_file:
                 chunk_ids = list(hdf5_file['predictions'][contig][chunk_name][haplotype].keys())
 
-            positions = set()
-            prediction_dict = defaultdict()
             for chunk in chunk_ids:
                 with h5py.File(file_name, 'r') as hdf5_file:
                     predictions = hdf5_file['predictions'][contig][chunk_name][haplotype][chunk]['predictions'][()]
                     position = hdf5_file['predictions'][contig][chunk_name][haplotype][chunk]['position'][()]
                     index = hdf5_file['predictions'][contig][chunk_name][haplotype][chunk]['index'][()]
 
-                position = np.array(position, dtype=np.int64)
                 predictions = np.array(predictions, dtype=np.int)
                 index = np.array(index, dtype=np.int)
 
                 for pos, indx, pred in zip(position, index, predictions):
-                    if (pos, indx) not in prediction_dict:
-                        prediction_dict[(pos, indx)] = pred
-                        positions.add((pos, indx))
-
-            pos_list = sorted(list(positions), key=lambda element: (element[0], element[1]))
-            dict_fetch = operator.itemgetter(*pos_list)
-            predicted_labels = list(dict_fetch(prediction_dict))
-            sequence = ''.join([label_decoder[x] for x in predicted_labels])
-            haplotype_sequences.append(sequence)
+                    if pos < 0:
+                        continue
+                    if (pos, indx, haplotype) not in prediction_dict:
+                        prediction_dict[(pos, indx, int(haplotype))] = pred
 
         hap_2_variant = Haplotype2Variant(ref_file_path, contig, region_start, region_end)
-        variant_set = hap_2_variant.generate_records_from_haplotypes(haplotype_sequences)
+        variant_set = hap_2_variant.generate_records_from_haplotypes(prediction_dict)
         all_variants.extend(variant_set)
 
     return all_variants
