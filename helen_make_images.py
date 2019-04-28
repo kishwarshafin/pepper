@@ -118,11 +118,16 @@ class View:
 
 
 def single_worker(args, _start, _end, confident_bed_regions):
-
     chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate = args
-    intervals = [(_start, _end)]
     if train_mode:
+        # if its in train mode then split it into intervals of confident regions
         intervals = get_confident_intervals_of_a_region(confident_bed_regions, _start, _end)
+    else:
+        # otherwise simply chunk it using the same logic as before but the chunk size is 10^4 this time
+        max_size = 10000
+        intervals = []
+        for pos in range(_start, _end, max_size):
+            intervals.append((pos, min(_end, pos + max_size)))
 
     all_images = []
     all_labels = []
@@ -151,7 +156,7 @@ def single_worker(args, _start, _end, confident_bed_regions):
 
 
 def get_confident_intervals_of_a_region(confident_bed_regions, start_position, end_position,
-                                        min_size=ImageSizeOptions.MIN_SEQUENCE_LENGTH, max_size=1000000):
+                                        min_size=ImageSizeOptions.MIN_SEQUENCE_LENGTH, max_size=10000):
 
     confident_intervals_in_region = confident_bed_regions.find(start_position, end_position)
 
@@ -193,7 +198,6 @@ def chromosome_level_parallelization(chr_list,
                                      downsample_rate,
                                      max_size=1000000):
     start_time = time.time()
-    # if there's no confident bed provided, then chop the chromosome
     fasta_handler = HELEN.FASTA_handler(draft_file)
     chr_counter = 1
 
@@ -206,11 +210,15 @@ def chromosome_level_parallelization(chr_list,
                          + " GENERATING IMAGE FROM CONTIG " + str(chr_name) + "\n" + TextColor.END)
         if not region:
             interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
+            max_end = interval_end
         else:
             interval_start, interval_end = tuple(region)
             interval_start = max(0, interval_start)
             interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
+            max_end = interval_end
 
+        # this is the interval size each of the process is going to get which is 10^6
+        # I will split this into 10^4 size inside the worker process
         all_intervals = []
         for pos in range(interval_start, interval_end, max_size):
             all_intervals.append((pos, min(interval_end, pos + max_size)))
@@ -228,7 +236,7 @@ def chromosome_level_parallelization(chr_list,
             for fut in concurrent.futures.as_completed(futures):
                 if fut.exception() is None:
                     images, labels, positions, image_hp_tag, region, chunk_ids = fut.result()
-                    log_prefix = "[" + str(region[0]) + ":" + str(region[1]) + "-" + str(region[2]) + "]"
+                    log_prefix = "[" + str(region[0]) + ":" + str(region[2]) + "/" + str(max_end) + "]"
                     sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(len(images))
                                      + " IMAGES GENERATED\n" + TextColor.END)
 
