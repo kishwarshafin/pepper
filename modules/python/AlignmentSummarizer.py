@@ -105,6 +105,8 @@ class AlignmentSummarizer:
 
             chunk_start = chunk_end + 1
 
+        assert(len(images) == len(labels) == len(positions) == len(hp_tags) == len(chunk_ids))
+
         return images, labels, positions, hp_tags, chunk_ids
 
     @staticmethod
@@ -335,6 +337,7 @@ class AlignmentSummarizer:
                 all_labels.extend(labels)
                 all_positions.extend(positions)
                 all_image_hp_tag.extend(image_hp)
+                all_image_chunk_ids.extend(chunk_ids)
         else:
             # HERE REALIGN THE READS TO THE REFERENCE THEN GENERATE THE SUMMARY TO GET A POLISHED HAPLOTYPE
             start_time = time.time()
@@ -379,5 +382,7 @@ class AlignmentSummarizer:
                 all_positions.extend(positions)
                 all_image_hp_tag.extend(image_hp)
                 all_image_chunk_ids.extend(chunk_ids)
+
+        assert(len(all_images) == len(all_labels) == len(all_image_hp_tag) == len(all_image_chunk_ids))
 
         return all_images, all_labels, all_positions, all_image_hp_tag, all_image_chunk_ids
