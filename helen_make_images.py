@@ -11,7 +11,7 @@ from modules.python.TsvHandler import TsvHandler
 from modules.python.Options import ImageSizeOptions
 from modules.python.AlignmentSummarizer import AlignmentSummarizer
 from modules.python.datastore import DataStore
-import concurrent.futures
+from concurrent.futures import ProcessPoolExecutor, as_completed
 """
 This script creates training images from BAM, Reference FASTA and truth VCF file. The process is:
 - Find candidates that can be variants
@@ -229,29 +229,28 @@ def chromosome_level_parallelization(chr_list,
 
             args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate)
 
-            with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
+            with ProcessPoolExecutor(max_workers=total_threads) as executor:
                 futures = [executor.submit(single_worker, args, _start, _end, confident_tree) for _start, _end in
                            all_intervals]
 
-                for fut in concurrent.futures.as_completed(futures):
+                for fut in as_completed(futures):
                     if fut.exception() is None:
                         images, labels, positions, image_hp_tag, region, chunk_ids = fut.result()
                         log_prefix = "[" + str(region[0]) + ":" + str(region[2]) + "/" + str(max_end) + "]"
                         sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(len(images))
                                          + " IMAGES GENERATED\n" + TextColor.END)
 
-                        if len(images) > 0:
-                            for i, image in enumerate(images):
-                                label = labels[i]
-                                position, index = zip(*positions[i])
-                                hp_tag = image_hp_tag[i]
-                                chunk_id = chunk_ids[i]
+                        for i, image in enumerate(images):
+                            label = labels[i]
+                            position, index = zip(*positions[i])
+                            hp_tag = image_hp_tag[i]
+                            chunk_id = chunk_ids[i]
 
-                                summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + \
-                                               str(hp_tag) + "_" + str(i)
+                            summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + \
+                                           str(hp_tag) + "_" + str(i)
 
-                                output_hdf_file.write_summary(region, image, label, position, index, hp_tag, chunk_id,
-                                                              summary_name)
+                            output_hdf_file.write_summary(region, image, label, position, index, hp_tag, chunk_id,
+                                                          summary_name)
                         del images, labels, positions, image_hp_tag, region, chunk_ids
                     else:
                         sys.stderr.write(TextColor.RED + "EXCEPTION: " + str(fut.exception()) + "\n" + TextColor.END)

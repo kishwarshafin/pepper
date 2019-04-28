@@ -14,18 +14,17 @@ class DataStore(object):
         self.mode = mode
 
         self._sample_keys = set()
-        self.file_handler = h5py.File(self.filename, self.mode)
+        self.file_handler = None
 
         self._meta = None
 
     def __enter__(self):
-        self.file_handler = None
-
+        self.file_handler = h5py.File(self.filename, self.mode)
         return self
 
     def __exit__(self, *args):
-        if self.mode != 'r' and self._meta is not None:
-            self._write_metadata(self.meta)
+        # if self.mode != 'r' and self._meta is not None:
+        #     self._write_metadata(self.meta)
         self.file_handler.close()
 
     def _write_metadata(self, data):
