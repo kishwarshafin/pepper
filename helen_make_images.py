@@ -203,11 +203,11 @@ def chromosome_level_parallelization(chr_list,
 
     timestr = time.strftime("%m%d%Y_%H%M%S")
     file_name = output_path + "helen_images_" + str(thread_id) + ".hdf"
-    thread_prefix = str(thread_id) + "/" + str(total_threads) + ":"
+    thread_prefix = "{:02d}".format(thread_id) + "/" + "{:02d}".format(total_threads) + ":"
 
     with DataStore(file_name, 'w') as output_hdf_file:
         for chr_name, region in chr_list:
-            sys.stderr.write(TextColor.GREEN + "INFO: " + thread_prefix + " GENERATING IMAGE FROM CONTIG "
+            sys.stderr.write(TextColor.YELLOW + "INFO: " + thread_prefix + " GENERATING IMAGE FROM CONTIG "
                              + str(chr_name) + "\n" + TextColor.END)
             if not region:
                 interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
@@ -279,7 +279,7 @@ def chromosome_level_parallelization(chr_list,
             #             sys.stderr.write(TextColor.RED + "EXCEPTION: " + str(fut.exception()) + "\n" + TextColor.END)
             #         fut._result = None
 
-            sys.stderr.write(TextColor.GREEN + "INFO: "+ thread_prefix + " COMPLETE PROCESSING CHROMOSOME: " +
+            sys.stderr.write(TextColor.BLUE + "INFO: "+ thread_prefix + " COMPLETED PROCESSING CHROMOSOME: " +
                              chr_name + " TOTAL TIME ELAPSED: " + str(int(math.floor(time.time()-start_time)/60))
                              + " MINS " + str(math.ceil(time.time()-start_time) % 60) + " SEC\n" + TextColor.END)
 
