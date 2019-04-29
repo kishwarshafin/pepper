@@ -384,6 +384,11 @@ class AlignmentSummarizer:
 
             # each haplotype
             for is_hp1 in range(0, 2, 1):
+                if is_hp1 and len(reads_hp1) == 0:
+                    continue
+                if not is_hp1 and len(reads_hp2) == 0:
+                    continue
+
                 summary_generator = HELEN.SummaryGenerator(ref_seq,
                                                            self.chromosome_name,
                                                            self.region_start_position,

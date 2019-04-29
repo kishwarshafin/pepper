@@ -13,6 +13,11 @@ using namespace std;
 #include "../dataio/bam_handler.h"
 #include "../candidate_finding/candidate_finder.h"
 
+
+namespace ImageOptions {
+    static constexpr int MAX_COLOR_VALUE = 254;
+};
+
 class SummaryGenerator {
     long long ref_start;
     long long ref_end;
@@ -22,13 +27,14 @@ class SummaryGenerator {
     map< pair< pair<long long, int>, int>, double> insert_summaries;
     map< pair<long long, int>, double> base_summaries;
     map<long long, long long> longest_insert_count;
-    map<long long, double> coverage;
+    map<long long, double> coverage_tagged;
+    map<long long, double> coverage_untagged;
 
     map< pair<long long, int>, char> insert_labels;
     map< long long, char> base_labels;
 public:
-    vector< vector<double> > image;
-    vector<int> labels;
+    vector< vector<uint8_t> > image;
+    vector<uint8_t> labels;
     vector<pair<long long, int> > genomic_pos;
     vector<int> bad_label_positions;
 

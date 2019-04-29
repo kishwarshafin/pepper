@@ -15,52 +15,45 @@ SummaryGenerator::SummaryGenerator(string reference_sequence, string chromosome_
 
 int get_feature_index(char base, bool is_reverse, bool is_ref_base, bool is_tagged) {
     base = toupper(base);
-    if(is_ref_base) {
-        // 0-4 indices are for indicating what is the reference
-        if (base == 'A') return 1;
-        if (base == 'C') return 2;
-        if (base == 'G') return 3;
-        if (base == 'T') return 4;
-        return 0;
-    } else if(is_tagged) {
+    if(is_tagged) {
         if (is_reverse) {
             // tagged and reverse are the next five
-            if (base == 'A') return 5;
-            if (base == 'C') return 6;
-            if (base == 'G') return 7;
-            if (base == 'T') return 8;
-            return 13;
+            if (base == 'A') return 0;
+            if (base == 'C') return 1;
+            if (base == 'G') return 2;
+            if (base == 'T') return 3;
+            return 8;
         } else {
             // tagged and forward
-            if (base == 'A') return 9;
-            if (base == 'C') return 10;
-            if (base == 'G') return 11;
-            if (base == 'T') return 12;
-            return 14;
+            if (base == 'A') return 4;
+            if (base == 'C') return 5;
+            if (base == 'G') return 6;
+            if (base == 'T') return 7;
+            return 9;
         }
 
     } else {
         // these are untagged reads
         if (is_reverse) {
             // tagged and reverse are the next five
-            if (base == 'A') return 15;
-            if (base == 'C') return 16;
-            if (base == 'G') return 17;
-            if (base == 'T') return 18;
-            return 23;
+            if (base == 'A') return 10;
+            if (base == 'C') return 11;
+            if (base == 'G') return 12;
+            if (base == 'T') return 13;
+            return 18;
         } else {
             // tagged and forward
-            if (base == 'A') return 19;
-            if (base == 'C') return 20;
-            if (base == 'G') return 21;
-            if (base == 'T') return 22;
-            return 24;
+            if (base == 'A') return 14;
+            if (base == 'C') return 15;
+            if (base == 'G') return 16;
+            if (base == 'T') return 17;
+            return 19;
         }
     }
 }
 
 
-int get_labels(char base) {
+uint8_t get_labels(char base) {
     base = toupper(base);
     if (base == 'A') return 1;
     if (base == 'C') return 2;
@@ -93,7 +86,6 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
             cerr<<"ERROR: H11 READ GOT INTO H1 IMAGE" <<" "<<chromosome_name<<" "<<region_start<<" "<<region_end<<endl;
             exit(1);
         }
-
     }
 
     for (auto &cigar: read.cigar_tuples) {
@@ -117,7 +109,11 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                         // update the summary of base
                         base_summaries[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse,
                                                                                  is_reference, is_tagged))] += 1.0;
-                        coverage[ref_position] += 1.0;
+                        if (is_tagged) {
+                            coverage_tagged[ref_position] += 1.0;
+                        } else {
+                            coverage_untagged[ref_position] += 1.0;
+                        }
                     }
                     read_index += 1;
                     ref_position += 1;
@@ -153,7 +149,11 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                         // update the summary of base
                         base_summaries[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse,
                                                                                      is_reference, is_tagged))] += 1.0;
-                        coverage[ref_position + i] += 1.0;
+                        if (is_tagged) {
+                            coverage_tagged[ref_position] += 1.0;
+                        } else {
+                            coverage_untagged[ref_position] += 1.0;
+                        }
                     }
                 }
                 ref_position += cigar.length;
@@ -263,37 +263,62 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
 
 
 void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
-    cout << setprecision(1);
+    cout << setprecision(3);
     for (int i = start_pos; i <= end_pos; i++) {
-        cout << reference_sequence[i - start_pos] << "\t";
+        if(i==start_pos) cout<<"REF:\t";
+        cout << "  " << reference_sequence[i - start_pos] << "\t";
         if (longest_insert_count[i] > 0) {
-            for (int ii = 0; ii < longest_insert_count[i]; ii++)cout << "*" << "\t";
+            for (int ii = 0; ii < longest_insert_count[i]; ii++)cout << "  *" << "\t";
         }
     }
     cout << endl;
     for (int i = start_pos; i <= end_pos; i++) {
-        cout << base_labels[i] << "\t";
+        if(i==start_pos) cout<<"TRH:\t";
+        cout << "  " <<base_labels[i] << "\t";
         if (longest_insert_count[i] > 0) {
             for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                if (insert_labels[make_pair(i, ii)]) cout << insert_labels[make_pair(i, ii)] << "\t";
-                else cout << "*" << "\t";
+                if (insert_labels[make_pair(i, ii)]) cout << "  "<< insert_labels[make_pair(i, ii)] << "\t";
+                else cout << "  *" << "\t";
             }
         }
     }
     cout << endl;
     for (int i = 0; i < labels.size(); i++) {
-        cout << labels[i] << "\t";
+        if(i==0) cout<<"LBL:\t";
+        printf("%3d\t", labels[i]);
     }
     cout << endl;
-    for (int i = 0; i < genomic_pos.size(); i++) {
-        cout << "(" << genomic_pos[i].first << "," << genomic_pos[i].second << ")\t";
-    }
-    cout << endl;
+//    for (int i = 0; i < genomic_pos.size(); i++) {
+//        cout<<"POS:\t";
+//        cout << "(" << genomic_pos[i].first << "," << genomic_pos[i].second << ")\t";
+//    }
+//    cout << endl;
 
     cout << "-------------" << endl;
     for (int i = 0; i < image[0].size(); i++) {
+        if(i==0)cout<<"AFW:\t";
+        if(i==1)cout<<"CFW:\t";
+        if(i==2)cout<<"GFW:\t";
+        if(i==3)cout<<"TFW:\t";
+        if(i==4)cout<<"ARV:\t";
+        if(i==5)cout<<"CRV:\t";
+        if(i==6)cout<<"GRV:\t";
+        if(i==7)cout<<"TRV:\t";
+        if(i==8)cout<<"GFW:\t";
+        if(i==9)cout<<"GRV:\t";
+        if(i==10)cout<<"AFW:\t";
+        if(i==11)cout<<"CFW:\t";
+        if(i==12)cout<<"GFW:\t";
+        if(i==13)cout<<"TFW:\t";
+        if(i==14)cout<<"ARV:\t";
+        if(i==15)cout<<"CRV:\t";
+        if(i==16)cout<<"GRV:\t";
+        if(i==17)cout<<"TRV:\t";
+        if(i==18)cout<<"GFW:\t";
+        if(i==19)cout<<"TFW:\t";
+
         for (int j = 0; j < image.size(); j++) {
-            printf("%.1lf\t", image[j][i]);
+            printf("%3d\t", image[j][i]);
         }
         cout << endl;
     }
@@ -311,25 +336,42 @@ void SummaryGenerator::generate_ref_features() {
 void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
     // at this point labels and positions are generated, now generate the pileup
     for (long long i = start_pos; i <= end_pos; i++) {
-        vector<double> row;
+        vector<uint8_t> row;
+        uint8_t pixel_value = 0;
         // iterate through the summaries
-        for(int j = 0; j <= 24; j++) {
-            if (j > 4) row.push_back(base_summaries[make_pair(i, j)] / max(1.0, coverage[i]));
-            else row.push_back(base_summaries[make_pair(i, j)]);
+        for(int j = 0; j <= 19; j++) {
+            if (j >= 0 && j <=9) {
+                pixel_value = (base_summaries[make_pair(i, j)] / max(1.0, coverage_tagged[i])) *
+                        ImageOptions::MAX_COLOR_VALUE;
+                row.push_back(pixel_value);
+            }
+            else if(j >=10 && j <=19) {
+                pixel_value = (base_summaries[make_pair(i, j)] / max(1.0, coverage_untagged[i])) *
+                        ImageOptions::MAX_COLOR_VALUE;
+                row.push_back(pixel_value);
+            }
         }
-        assert(row.size() == 25);
+        assert(row.size() == 20);
         image.push_back(row);
 
         if (longest_insert_count[i] > 0) {
 
             for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                vector<double> ins_row{1.0, 0.0, 0.0, 0.0, 0.0};
+                vector<uint8_t> ins_row;
 
                 // iterate through the summaries
-                for(int j = 5; j <= 24; j++)
-                    ins_row.push_back(insert_summaries[make_pair(make_pair(i, ii), j)] / max(1.0, coverage[i]));
-
-                assert(ins_row.size() == 25);
+                for(int j = 0; j <= 19; j++) {
+                    if (j >= 0 && j <=9) {
+                        pixel_value = (insert_summaries[make_pair(make_pair(i, ii), j)] /
+                                max(1.0, coverage_tagged[i])) * ImageOptions::MAX_COLOR_VALUE ;
+                        ins_row.push_back(pixel_value);
+                    } else if(j >=10 && j <=19) {
+                        pixel_value = (insert_summaries[make_pair(make_pair(i, ii), j)] /
+                                max(1.0, coverage_untagged[i])) * ImageOptions::MAX_COLOR_VALUE;
+                        ins_row.push_back(pixel_value);
+                    }
+                }
+                assert(ins_row.size() == 20);
                 image.push_back(ins_row);
             }
 
@@ -372,7 +414,7 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads_un,
         }
     }
 
-    generate_ref_features();
+//    generate_ref_features();
 
     // this populates base_labels and insert_labels dictionaries
     generate_labels(truth_read, start_pos, end_pos + 1);
@@ -446,7 +488,7 @@ void SummaryGenerator::generate_summary(vector <type_read> &reads_un,
         }
     }
 
-    generate_ref_features();
+//    generate_ref_features();
 
 
     // after all the dictionaries are populated, we can simply walk through the region and generate a sequence

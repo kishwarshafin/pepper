@@ -54,7 +54,7 @@ class DataStore(object):
     def write_summary(self, region, image, label, position, index, hp_tag, chunk_id, summary_name):
         contig_name, region_start, region_end = region
 
-        self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'image')] = np.array(image, dtype=np.float32)
+        self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'image')] = np.array(image, dtype=np.uint8)
         self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'label')] = np.array(label, dtype=np.uint8)
         self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'position')] = position
         self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'index')] = np.array(index, dtype=np.uint8)

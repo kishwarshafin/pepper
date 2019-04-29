@@ -197,7 +197,7 @@ def chromosome_level_parallelization(chr_list,
                                      thread_id,
                                      train_mode,
                                      downsample_rate,
-                                     max_size=100000):
+                                     max_size=10000):
     start_time = time.time()
     fasta_handler = HELEN.FASTA_handler(draft_file)
 
@@ -279,9 +279,9 @@ def chromosome_level_parallelization(chr_list,
             #             sys.stderr.write(TextColor.RED + "EXCEPTION: " + str(fut.exception()) + "\n" + TextColor.END)
             #         fut._result = None
 
-            sys.stderr.write(TextColor.GREEN + "INFO: "+ thread_prefix + " COMPLETE PROCESSING CHROMOSOME: " + chr_name +
-                  " TOTAL TIME ELAPSED: " + str(int(math.floor(time.time()-start_time)/60)) + " MINS "
-                             + str(math.ceil(time.time()-start_time) % 60) + " SEC\n" + TextColor.END)
+            sys.stderr.write(TextColor.GREEN + "INFO: "+ thread_prefix + " COMPLETE PROCESSING CHROMOSOME: " +
+                             chr_name + " TOTAL TIME ELAPSED: " + str(int(math.floor(time.time()-start_time)/60))
+                             + " MINS " + str(math.ceil(time.time()-start_time) % 60) + " SEC\n" + TextColor.END)
 
 
 def handle_output_directory(output_directory):
