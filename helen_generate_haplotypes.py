@@ -143,7 +143,7 @@ if __name__ == '__main__':
         "--image_file",
         type=str,
         required=True,
-        help="HDF5 file containing all image segments for prediction."
+        help="HDF5 file directory containing all image segments for prediction."
     )
     parser.add_argument(
         "--model_path",
