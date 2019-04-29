@@ -197,7 +197,7 @@ def chromosome_level_parallelization(chr_list,
                                      thread_id,
                                      train_mode,
                                      downsample_rate,
-                                     max_size=10000):
+                                     max_size=100000):
     start_time = time.time()
     fasta_handler = HELEN.FASTA_handler(draft_file)
 
