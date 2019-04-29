@@ -18,7 +18,7 @@ Input:
 Returns:
 - Loss value
 """
-CLASS_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.0]
+CLASS_WEIGHTS = [0.3, 1.0, 1.0, 1.0, 1.0]
 label_decoder = {0: '*', 1: 'A', 2: 'C', 3: 'G', 4: 'T', 5: '#'}
 
 
@@ -57,6 +57,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
         with tqdm(total=len(test_loader), desc='Accuracy: ', leave=True, ncols=100) as pbar:
             for ii, (images, labels) in enumerate(test_loader):
                 labels = labels.type(torch.LongTensor)
+                images = images.type(torch.FloatTensor)
                 if gpu_mode:
                     # encoder_hidden = encoder_hidden.cuda()
                     images = images.cuda()
@@ -85,9 +86,10 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
                 pbar.update(1)
                 cm_value = confusion_matrix.value()
-                denom = (cm_value.sum() - cm_value[0][0]) if (cm_value.sum() - cm_value[0][0]) > 0 else 1.0
-                accuracy = 100.0 * (cm_value[1][1] + cm_value[2][2] + cm_value[3][3] + cm_value[4][4]) / denom
-                pbar.set_description("Accuracy: " + str(round(accuracy,5)))
+                denom = cm_value.sum() if cm_value.sum() > 0 else 1.0
+                accuracy = 100.0 * (cm_value[0][0] + cm_value[1][1] + cm_value[2][2]
+                                    + cm_value[3][3] + cm_value[4][4]) / denom
+                pbar.set_description("Accuracy: " + str(round(accuracy, 5)))
 
     avg_loss = total_loss / total_images if total_images else 0
 

@@ -93,13 +93,13 @@ if __name__ == '__main__':
         "--train_file",
         type=str,
         required=True,
-        help="Training data description HDF file."
+        help="Training data directory containing HDF files."
     )
     parser.add_argument(
         "--test_file",
         type=str,
         required=True,
-        help="Training data description HDF file."
+        help="Testing data directory containing HDF files."
     )
     parser.add_argument(
         "--batch_size",

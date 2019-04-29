@@ -22,7 +22,7 @@ Input:
 Return:
 - A trained model
 """
-CLASS_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.0]
+CLASS_WEIGHTS = [0.3, 1.0, 1.0, 1.0, 1.0]
 
 
 def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoch,
@@ -138,6 +138,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                 # print()
                 # analyze_tensor(images[0])
                 labels = labels.type(torch.LongTensor)
+                images = images.type(torch.FloatTensor)
 
                 if gpu_mode:
                     # encoder_hidden = encoder_hidden.cuda()

@@ -23,15 +23,18 @@ class SequenceDataset(Dataset):
     Arguments:
         A HDF5 file path
     """
-    def __init__(self, hdf5_file_path):
+    def __init__(self, image_directory):
         self.transform = transforms.Compose([transforms.ToTensor()])
         file_image_pair = []
 
-        with h5py.File(hdf5_file_path, 'r') as hdf5_file:
-            image_names = list(hdf5_file['summaries'].keys())
+        hdf_files = get_file_paths_from_directory(image_directory)
 
-        for image_name in image_names:
-            file_image_pair.append((hdf5_file_path, image_name))
+        for hdf5_file_path in hdf_files:
+            with h5py.File(hdf5_file_path, 'r') as hdf5_file:
+                image_names = list(hdf5_file['summaries'].keys())
+
+            for image_name in image_names:
+                file_image_pair.append((hdf5_file_path, image_name))
 
         self.all_images = file_image_pair
 
