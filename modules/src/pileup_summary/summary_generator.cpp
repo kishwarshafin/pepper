@@ -288,11 +288,14 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
         printf("%3d\t", labels[i]);
     }
     cout << endl;
-//    for (int i = 0; i < genomic_pos.size(); i++) {
-//        cout<<"POS:\t";
+
+    cout<<"POS:\t";
+    for (int i = 0; i < genomic_pos.size(); i++) {
+
 //        cout << "(" << genomic_pos[i].first << "," << genomic_pos[i].second << ")\t";
-//    }
-//    cout << endl;
+        printf("%3lld\t", (genomic_pos[i].first) % 100);
+    }
+    cout << endl;
 
     cout << "-------------" << endl;
     for (int i = 0; i < image[0].size(); i++) {
@@ -339,7 +342,7 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
         vector<uint8_t> row;
         uint8_t pixel_value = 0;
         // iterate through the summaries
-        for(int j = 0; j <= 19; j++) {
+        for(int j = 0; j <= 9; j++) {
             if (j >= 0 && j <=9) {
                 pixel_value = (base_summaries[make_pair(i, j)] / max(1.0, coverage_tagged[i])) *
                         ImageOptions::MAX_COLOR_VALUE;
@@ -351,7 +354,7 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
                 row.push_back(pixel_value);
             }
         }
-        assert(row.size() == 20);
+        assert(row.size() == 10);
         image.push_back(row);
 
         if (longest_insert_count[i] > 0) {
@@ -360,7 +363,7 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
                 vector<uint8_t> ins_row;
 
                 // iterate through the summaries
-                for(int j = 0; j <= 19; j++) {
+                for(int j = 0; j <= 9; j++) {
                     if (j >= 0 && j <=9) {
                         pixel_value = (insert_summaries[make_pair(make_pair(i, ii), j)] /
                                 max(1.0, coverage_tagged[i])) * ImageOptions::MAX_COLOR_VALUE ;
@@ -371,7 +374,7 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
                         ins_row.push_back(pixel_value);
                     }
                 }
-                assert(ins_row.size() == 20);
+                assert(ins_row.size() == 10);
                 image.push_back(ins_row);
             }
 
@@ -391,12 +394,12 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads_un,
                                               type_read truth_read,
                                               bool is_hp1) {
     // no matter what we will generate the features for untagged reads, so let's first do that
-    for (auto &read:reads_un) {
-        // this populates base_summaries and insert_summaries dictionaries
-        if(read.mapping_quality > 0) {
-            iterate_over_read(read, start_pos, end_pos, is_hp1);
-        }
-    }
+//    for (auto &read:reads_un) {
+//        // this populates base_summaries and insert_summaries dictionaries
+//        if(read.mapping_quality > 0) {
+//            iterate_over_read(read, start_pos, end_pos, is_hp1);
+//        }
+//    }
 
     if(is_hp1) {
         for (auto &read:reads_hp1) {
@@ -421,7 +424,12 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads_un,
 
     // after all the dictionaries are populated, we can simply walk through the region and generate a sequence
     for (long long pos = start_pos; pos <= end_pos; pos++) {
-        labels.push_back(get_labels(base_labels[pos]));
+
+        if(coverage_tagged[pos] > 0) {
+            labels.push_back(get_labels(base_labels[pos]));
+        } else {
+            labels.push_back(get_labels('*'));
+        }
         // if the label contains anything but ACTG
         if(!check_base(base_labels[pos])) {
             cerr<<"INFO: INVALID REFERENCE BASE INDEX FOUND: ["<<chromosome_name<<":"<<start_pos<<"-"<<end_pos<<"] " <<
@@ -465,12 +473,12 @@ void SummaryGenerator::generate_summary(vector <type_read> &reads_un,
                                         bool is_hp1) {
 
     // no matter what we will generate the features for untagged reads, so let's first do that
-    for (auto &read:reads_un) {
-        // this populates base_summaries and insert_summaries dictionaries
-        if(read.mapping_quality > 0) {
-            iterate_over_read(read, start_pos, end_pos, is_hp1);
-        }
-    }
+//    for (auto &read:reads_un) {
+//        // this populates base_summaries and insert_summaries dictionaries
+//        if(read.mapping_quality > 0) {
+//            iterate_over_read(read, start_pos, end_pos, is_hp1);
+//        }
+//    }
 
     if(is_hp1) {
         for (auto &read:reads_hp1) {

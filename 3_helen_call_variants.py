@@ -51,6 +51,7 @@ def find_variants(file_name, ref_file_path, contig, small_chunk_keys):
                     if pos < 0:
                         continue
                     if (pos, indx, haplotype) not in prediction_dict:
+                        print(pos, indx, int(haplotype), pred)
                         prediction_dict[(pos, indx, int(haplotype))] = pred
 
         hap_2_variant = Haplotype2Variant(ref_file_path, contig, region_start, region_end)

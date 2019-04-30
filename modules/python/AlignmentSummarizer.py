@@ -259,10 +259,12 @@ class AlignmentSummarizer:
                                                                     ref_start,
                                                                     ref_end)
 
+                read_start = max(0, region_start - AlingerOptions.ALIGNMENT_SAFE_BASES)
+                read_end = region_end + AlingerOptions.ALIGNMENT_SAFE_BASES
                 include_supplementary = True
                 all_reads = self.bam_handler.get_reads(self.chromosome_name,
-                                                       region_start,
-                                                       region_end,
+                                                       read_start,
+                                                       read_end,
                                                        include_supplementary,
                                                        0,
                                                        0)
@@ -285,8 +287,8 @@ class AlignmentSummarizer:
                 start_time = time.time()
 
                 if realignment_flag:
-                    reads_un, reads_hp1, reads_hp2 = self.reads_to_reference_realignment(region_start,
-                                                                                         region_end,
+                    reads_un, reads_hp1, reads_hp2 = self.reads_to_reference_realignment(read_start,
+                                                                                         read_end,
                                                                                          reads_un,
                                                                                          reads_hp1,
                                                                                          reads_hp2)
