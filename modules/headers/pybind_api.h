@@ -7,12 +7,7 @@
 
 #include "dataio/fasta_handler.h"
 #include "dataio/bam_handler.h"
-#include "dataio/vcf_handler.h"
-#include "local_reassembly/active_region_finder.h"
-#include "local_reassembly/debruijn_graph.h"
-#include "local_reassembly/aligner.h"
-#include "candidate_finding/haplotype_candidate_finder.h"
-#include "image_generator/image_generator.h"
+#include "realignment/aligner.h"
 #include "pileup_summary/summary_generator.h"
 
 #include <pybind11/pybind11.h>
@@ -21,20 +16,6 @@
 namespace py = pybind11;
 
 PYBIND11_MODULE(HELEN, m) {
-        py::class_<PileupImage>(m, "PileupImage")
-            .def(py::init<>())
-            .def_readwrite("chromosome_name", &PileupImage::chromosome_name)
-            .def_readwrite("start_pos", &PileupImage::start_pos)
-            .def_readwrite("end_pos", &PileupImage::end_pos)
-            .def_readwrite("image", &PileupImage::image)
-            .def_readwrite("label", &PileupImage::label);
-
-        py::class_<ImageGenerator>(m, "ImageGenerator")
-            .def(py::init<const string &, const string &, long long &, long long&,
-        map<long long, PositionalCandidateRecord> & >())
-            .def("create_window_pileups", &ImageGenerator::create_window_pileups)
-            .def("set_positional_vcf", &ImageGenerator::set_positional_vcf);
-
         py::class_<SummaryGenerator>(m, "SummaryGenerator")
             .def(py::init<const string &, const string &, long long &, long long &>())
             .def_readwrite("genomic_pos", &SummaryGenerator::genomic_pos)
@@ -43,28 +24,6 @@ PYBIND11_MODULE(HELEN, m) {
             .def_readwrite("bad_label_positions", &SummaryGenerator::bad_label_positions)
             .def("generate_train_summary", &SummaryGenerator::generate_train_summary)
             .def("generate_summary", &SummaryGenerator::generate_summary);
-
-        py::class_<PositionalCandidateRecord>(m, "PositionalCandidateRecord")
-            .def(py::init<>())
-            .def("print", &PositionalCandidateRecord::print)
-            .def("set_genotype", &PositionalCandidateRecord::set_genotype)
-            .def("get_candidate_record", &PositionalCandidateRecord::get_candidate_record)
-            .def_readwrite("chromosome_name", &PositionalCandidateRecord::chromosome_name)
-            .def_readwrite("pos", &PositionalCandidateRecord::pos)
-            .def_readwrite("pos_end", &PositionalCandidateRecord::pos_end)
-            .def_readwrite("ref", &PositionalCandidateRecord::ref)
-            .def_readwrite("alt1", &PositionalCandidateRecord::alt1)
-            .def_readwrite("alt2", &PositionalCandidateRecord::alt2)
-            .def_readwrite("alt1_type", &PositionalCandidateRecord::alt1_type)
-            .def_readwrite("alt2_type", &PositionalCandidateRecord::alt2_type)
-            .def_readwrite("alt1_count", &PositionalCandidateRecord::alt1_count)
-            .def_readwrite("alt2_count", &PositionalCandidateRecord::alt2_count);
-
-
-        // Candidate finder
-        py::class_<CandidateFinder>(m, "CandidateFinder")
-            .def(py::init<const string &, const string &, long long &, long long&, long long&, long long&>())
-            .def("find_candidates", &CandidateFinder::find_candidates);
 
         // Alignment CLASS
         py::class_<StripedSmithWaterman::Alignment>(m, "Alignment")
@@ -103,23 +62,6 @@ PYBIND11_MODULE(HELEN, m) {
             .def("align_reads_to_reference", &ReadAligner::align_reads_to_reference)
             .def("align_reads", &ReadAligner::align_reads)
             .def("align_haplotypes_to_reference", &ReadAligner::align_haplotypes_to_reference);
-
-        // Debruijn graph class
-        py::class_<DeBruijnGraph>(m, "DeBruijnGraph")
-            .def(py::init<const long long &, const long long &>())
-            .def_readwrite("current_hash_value", &DeBruijnGraph::current_hash_value)
-            .def_readwrite("node_hash_int_to_str", &DeBruijnGraph::node_hash_int_to_str)
-            .def_readwrite("good_nodes", &DeBruijnGraph::good_nodes)
-            .def_readwrite("out_nodes", &DeBruijnGraph::out_nodes)
-            .def_readwrite("edges", &DeBruijnGraph::edges)
-
-            .def("generate_haplotypes", &DeBruijnGraph::generate_haplotypes)
-            .def("find_min_k_from_ref", &DeBruijnGraph::find_min_k_from_ref);
-
-        // data structure for sequence name and their length
-        py::class_<ActiveRegionFinder>(m, "ActiveRegionFinder")
-            .def(py::init<const string &, const string &, long long &, long long&>())
-            .def("find_active_region", &ActiveRegionFinder::find_active_region);
 
         // data structure for sequence name and their length
         py::class_<type_sequence>(m, "type_sequence")
@@ -176,46 +118,5 @@ PYBIND11_MODULE(HELEN, m) {
             .def("get_reference_sequence", &FASTA_handler::get_reference_sequence)
             .def("get_chromosome_sequence_length", &FASTA_handler::get_chromosome_sequence_length)
             .def("get_chromosome_names", &FASTA_handler::get_chromosome_names);
-
-        // VCF handler API
-        py::class_<VCF_handler>(m, "VCF_handler")
-            .def(py::init<const string &>())
-            .def("get_vcf_records", &VCF_handler::get_vcf_records)
-            .def("get_positional_vcf_records", &VCF_handler::get_positional_vcf_records);
-
-        // VCF handler API
-        py::class_<type_vcf_record>(m, "type_vcf_record")
-            .def_readwrite("chromosome_name", &type_vcf_record::chromosome_name)
-            .def_readwrite("start_pos", &type_vcf_record::start_pos)
-            .def_readwrite("end_pos", &type_vcf_record::end_pos)
-            .def_readwrite("id", &type_vcf_record::id)
-            .def_readwrite("qual", &type_vcf_record::qual)
-            .def_readwrite("is_filter_pass", &type_vcf_record::is_filter_pass)
-            .def_readwrite("sample_name", &type_vcf_record::sample_name)
-            .def_readwrite("genotype", &type_vcf_record::genotype)
-            .def_readwrite("filters", &type_vcf_record::filters)
-            .def_readwrite("alleles", &type_vcf_record::alleles);
-
-
-        py::class_<type_alt_allele>(m, "type_alt_allele")
-            .def_readonly("ref", &type_alt_allele::ref)
-            .def_readonly("alt_allele", &type_alt_allele::alt_allele)
-            .def_readonly("alt_type", &type_alt_allele::alt_type)
-            .def("get_ref", &type_alt_allele::get_ref)
-            .def("get_alt_allele", &type_alt_allele::get_alt_allele)
-            .def("get_alt_type", &type_alt_allele::get_alt_type);
-
-        py::class_<type_positional_vcf_record>(m, "type_positional_vcf_record")
-            .def_readonly("chromosome_name", &type_positional_vcf_record::chromosome_name)
-            .def_readonly("start_pos", &type_positional_vcf_record::start_pos)
-            .def_readonly("end_pos", &type_positional_vcf_record::end_pos)
-            .def_readonly("id", &type_positional_vcf_record::id)
-            .def_readonly("qual", &type_positional_vcf_record::qual)
-            .def_readonly("is_filter_pass", &type_positional_vcf_record::is_filter_pass)
-            .def_readonly("sample_name", &type_positional_vcf_record::sample_name)
-            .def_readonly("genotype", &type_positional_vcf_record::genotype)
-            .def_readonly("filters", &type_positional_vcf_record::filters)
-            .def_readonly("alt_allele", &type_positional_vcf_record::alt_allele);
-
 }
 #endif //HELEN_PYBIND_API_H

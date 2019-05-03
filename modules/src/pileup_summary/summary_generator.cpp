@@ -13,42 +13,21 @@ SummaryGenerator::SummaryGenerator(string reference_sequence, string chromosome_
 }
 
 
-int get_feature_index(char base, bool is_reverse, bool is_ref_base, bool is_tagged) {
+int get_feature_index(char base, bool is_reverse) {
     base = toupper(base);
-    if(is_tagged) {
-        if (is_reverse) {
-            // tagged and reverse are the next five
-            if (base == 'A') return 0;
-            if (base == 'C') return 1;
-            if (base == 'G') return 2;
-            if (base == 'T') return 3;
-            return 8;
-        } else {
-            // tagged and forward
-            if (base == 'A') return 4;
-            if (base == 'C') return 5;
-            if (base == 'G') return 6;
-            if (base == 'T') return 7;
-            return 9;
-        }
-
+    if (is_reverse) {
+        if (base == 'A') return 0;
+        if (base == 'C') return 1;
+        if (base == 'G') return 2;
+        if (base == 'T') return 3;
+        return 8;
     } else {
-        // these are untagged reads
-        if (is_reverse) {
-            // tagged and reverse are the next five
-            if (base == 'A') return 10;
-            if (base == 'C') return 11;
-            if (base == 'G') return 12;
-            if (base == 'T') return 13;
-            return 18;
-        } else {
-            // tagged and forward
-            if (base == 'A') return 14;
-            if (base == 'C') return 15;
-            if (base == 'G') return 16;
-            if (base == 'T') return 17;
-            return 19;
-        }
+        // tagged and forward
+        if (base == 'A') return 4;
+        if (base == 'C') return 5;
+        if (base == 'G') return 6;
+        if (base == 'T') return 7;
+        return 9;
     }
 }
 
@@ -65,28 +44,12 @@ uint8_t get_labels(char base) {
 }
 
 
-void SummaryGenerator::iterate_over_read(type_read read, long long region_start, long long region_end, bool is_h1) {
+void SummaryGenerator::iterate_over_read(type_read read, long long region_start, long long region_end) {
     int read_index = 0;
     long long ref_position = read.pos;
     int cigar_index = 0;
     int base_quality = 0;
     long long reference_index;
-
-    bool is_reference = false;
-    bool is_tagged = false;
-
-    if(read.hp_tag != 0){
-        is_tagged = true;
-        // sanity check
-        if(read.hp_tag == 1 && !is_h1) {
-            cerr<<"ERROR: H1 READ GOT INTO H2 IMAGE" <<" "<<chromosome_name<<" "<<region_start<<" "<<region_end<<endl;
-            exit(1);
-        }
-        if(read.hp_tag == 2 && is_h1) {
-            cerr<<"ERROR: H11 READ GOT INTO H1 IMAGE" <<" "<<chromosome_name<<" "<<region_start<<" "<<region_end<<endl;
-            exit(1);
-        }
-    }
 
     for (auto &cigar: read.cigar_tuples) {
         if (ref_position > region_end) break;
@@ -107,13 +70,9 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                         char base = read.sequence[read_index];
 
                         // update the summary of base
-                        base_summaries[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse,
-                                                                                 is_reference, is_tagged))] += 1.0;
-                        if (is_tagged) {
-                            coverage_tagged[ref_position] += 1.0;
-                        } else {
-                            coverage_untagged[ref_position] += 1.0;
-                        }
+                        base_summaries[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                        coverage[ref_position] += 1.0;
+
                     }
                     read_index += 1;
                     ref_position += 1;
@@ -130,8 +89,7 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                     alt = read.sequence.substr(read_index, cigar.length);
                     for (int i = 0; i < cigar.length; i++) {
                         pair<long long, int> position_pair = make_pair(ref_position - 1, i);
-                        insert_summaries[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse,
-                                                                                    is_reference, is_tagged))] += 1.0;
+                        insert_summaries[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
                     }
                     longest_insert_count[ref_position - 1] = std::max(longest_insert_count[ref_position - 1],
                                                                       (long long) alt.length());
@@ -147,13 +105,8 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                 for (int i = 0; i < cigar.length; i++) {
                     if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                         // update the summary of base
-                        base_summaries[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse,
-                                                                                     is_reference, is_tagged))] += 1.0;
-                        if (is_tagged) {
-                            coverage_tagged[ref_position] += 1.0;
-                        } else {
-                            coverage_untagged[ref_position] += 1.0;
-                        }
+                        base_summaries[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                        coverage[ref_position] += 1.0;
                     }
                 }
                 ref_position += cigar.length;
@@ -309,16 +262,6 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
         if(i==7)cout<<"TRV:\t";
         if(i==8)cout<<"GFW:\t";
         if(i==9)cout<<"GRV:\t";
-        if(i==10)cout<<"AFW:\t";
-        if(i==11)cout<<"CFW:\t";
-        if(i==12)cout<<"GFW:\t";
-        if(i==13)cout<<"TFW:\t";
-        if(i==14)cout<<"ARV:\t";
-        if(i==15)cout<<"CRV:\t";
-        if(i==16)cout<<"GRV:\t";
-        if(i==17)cout<<"TRV:\t";
-        if(i==18)cout<<"GFW:\t";
-        if(i==19)cout<<"TFW:\t";
 
         for (int j = 0; j < image.size(); j++) {
             printf("%3d\t", image[j][i]);
@@ -328,14 +271,6 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
 
 }
 
-void SummaryGenerator::generate_ref_features() {
-    for(int i=ref_start; i<=ref_end; i++) {
-        char base = reference_sequence[i-ref_start];
-        base_summaries[make_pair(i, get_feature_index(base, false, true, false))] = 1.0;
-    }
-}
-
-
 void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
     // at this point labels and positions are generated, now generate the pileup
     for (long long i = start_pos; i <= end_pos; i++) {
@@ -343,16 +278,8 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
         uint8_t pixel_value = 0;
         // iterate through the summaries
         for(int j = 0; j <= 9; j++) {
-            if (j >= 0 && j <=9) {
-                pixel_value = (base_summaries[make_pair(i, j)] / max(1.0, coverage_tagged[i])) *
-                        ImageOptions::MAX_COLOR_VALUE;
-                row.push_back(pixel_value);
-            }
-            else if(j >=10 && j <=19) {
-                pixel_value = (base_summaries[make_pair(i, j)] / max(1.0, coverage_untagged[i])) *
-                        ImageOptions::MAX_COLOR_VALUE;
-                row.push_back(pixel_value);
-            }
+            pixel_value = (base_summaries[make_pair(i, j)] / max(1.0, coverage[i])) * ImageOptions::MAX_COLOR_VALUE;
+            row.push_back(pixel_value);
         }
         assert(row.size() == 10);
         image.push_back(row);
@@ -366,58 +293,32 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
                 for(int j = 0; j <= 9; j++) {
                     if (j >= 0 && j <=9) {
                         pixel_value = (insert_summaries[make_pair(make_pair(i, ii), j)] /
-                                max(1.0, coverage_tagged[i])) * ImageOptions::MAX_COLOR_VALUE ;
-                        ins_row.push_back(pixel_value);
-                    } else if(j >=10 && j <=19) {
-                        pixel_value = (insert_summaries[make_pair(make_pair(i, ii), j)] /
-                                max(1.0, coverage_untagged[i])) * ImageOptions::MAX_COLOR_VALUE;
+                                max(1.0, coverage[i])) * ImageOptions::MAX_COLOR_VALUE ;
                         ins_row.push_back(pixel_value);
                     }
                 }
                 assert(ins_row.size() == 10);
                 image.push_back(ins_row);
             }
-
         }
-
     }
     assert(image.size() == genomic_pos.size());
 }
 
 
 
-void SummaryGenerator::generate_train_summary(vector <type_read> &reads_un,
-                                              vector <type_read> &reads_hp1,
-                                              vector <type_read> &reads_hp2,
+void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
                                               long long start_pos,
                                               long long end_pos,
-                                              type_read truth_read,
-                                              bool is_hp1) {
-    // no matter what we will generate the features for untagged reads, so let's first do that
-//    for (auto &read:reads_un) {
-//        // this populates base_summaries and insert_summaries dictionaries
-//        if(read.mapping_quality > 0) {
-//            iterate_over_read(read, start_pos, end_pos, is_hp1);
-//        }
-//    }
+                                              type_read truth_read) {
 
-    if(is_hp1) {
-        for (auto &read:reads_hp1) {
-            // this populates base_summaries and insert_summaries dictionaries
-            if(read.mapping_quality > 0) {
-                iterate_over_read(read, start_pos, end_pos, is_hp1);
-            }
-        }
-    } else {
-        for (auto &read:reads_hp2) {
-            // this populates base_summaries and insert_summaries dictionaries
-            if(read.mapping_quality > 0) {
-                iterate_over_read(read, start_pos, end_pos, is_hp1);
-            }
+
+    for (auto &read:reads) {
+        // this populates base_summaries and insert_summaries dictionaries
+        if(read.mapping_quality > 0) {
+            iterate_over_read(read, start_pos, end_pos);
         }
     }
-
-//    generate_ref_features();
 
     // this populates base_labels and insert_labels dictionaries
     generate_labels(truth_read, start_pos, end_pos + 1);
@@ -425,15 +326,16 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads_un,
     // after all the dictionaries are populated, we can simply walk through the region and generate a sequence
     for (long long pos = start_pos; pos <= end_pos; pos++) {
 
-        if(coverage_tagged[pos] > 0) {
+        if(coverage[pos] > 0) {
             labels.push_back(get_labels(base_labels[pos]));
         } else {
             labels.push_back(get_labels('*'));
         }
+
         // if the label contains anything but ACTG
         if(!check_base(base_labels[pos])) {
             cerr<<"INFO: INVALID REFERENCE BASE INDEX FOUND: ["<<chromosome_name<<":"<<start_pos<<"-"<<end_pos<<"] " <<
-                pos<<" "<<is_hp1<<" "<<base_labels[pos]<<endl;
+                pos<<" "<<" "<<base_labels[pos]<<endl;
             bad_label_positions.push_back(labels.size());
         }
 
@@ -465,39 +367,15 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads_un,
 }
 
 
-void SummaryGenerator::generate_summary(vector <type_read> &reads_un,
-                                        vector <type_read> &reads_hp1,
-                                        vector <type_read> &reads_hp2,
+void SummaryGenerator::generate_summary(vector <type_read> &reads,
                                         long long start_pos,
-                                        long long end_pos,
-                                        bool is_hp1) {
-
-    // no matter what we will generate the features for untagged reads, so let's first do that
-//    for (auto &read:reads_un) {
-//        // this populates base_summaries and insert_summaries dictionaries
-//        if(read.mapping_quality > 0) {
-//            iterate_over_read(read, start_pos, end_pos, is_hp1);
-//        }
-//    }
-
-    if(is_hp1) {
-        for (auto &read:reads_hp1) {
-            // this populates base_summaries and insert_summaries dictionaries
-            if(read.mapping_quality > 0) {
-                iterate_over_read(read, start_pos, end_pos, is_hp1);
-            }
-        }
-    } else {
-        for (auto &read:reads_hp2) {
-            // this populates base_summaries and insert_summaries dictionaries
-            if(read.mapping_quality > 0) {
-                iterate_over_read(read, start_pos, end_pos, is_hp1);
-            }
+                                        long long end_pos) {
+    for (auto &read:reads) {
+        // this populates base_summaries and insert_summaries dictionaries
+        if(read.mapping_quality > 0) {
+            iterate_over_read(read, start_pos, end_pos);
         }
     }
-
-//    generate_ref_features();
-
 
     // after all the dictionaries are populated, we can simply walk through the region and generate a sequence
     for (long long pos = start_pos; pos <= end_pos; pos++) {

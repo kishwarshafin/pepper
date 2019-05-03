@@ -3,11 +3,9 @@ import torch
 import torch.nn as nn
 import os
 from tqdm import tqdm
-import numpy as np
 
 # Custom generator for our dataset
 from torch.utils.data import DataLoader
-from modules.python.models.data_sampler import BalancedSampler
 from modules.python.models.dataloader import SequenceDataset
 from modules.python.TextColor import TextColor
 from modules.python.models.ModelHander import ModelHandler
@@ -29,10 +27,11 @@ def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoc
                     file_name):
     """
     Save the best model
-    :param encoder_model: A trained encoder model
-    :param decoder_model: A trained decoder model
-    :param encoder_optimizer: Encoder optimizer
-    :param decoder_optimizer: Decoder optimizer
+    :param transducer_model: A trained model
+    :param model_optimizer: Model optimizer
+    :param hidden_size: Number of hidden layers
+    :param layers: Number of GRU layers to use
+    :param epoch: Epoch/iteration number
     :param file_name: Output file name
     :return:
     """

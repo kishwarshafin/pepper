@@ -176,12 +176,12 @@ class BAM_handler {
         BAM_handler(string path);
 
         // this will divide reads in haplotype bins and then return
-        vector< vector<type_read> > get_reads(string region,
-                                              long long start,
-                                              long long stop,
-                                              bool include_supplementary,
-                                              int min_mapq,
-                                              int min_baseq);
+        vector<type_read> get_reads(string region,
+                                    long long start,
+                                    long long stop,
+                                    bool include_supplementary,
+                                    int min_mapq,
+                                    int min_baseq);
         vector<string> get_chromosome_sequence_names();
         vector<type_sequence> get_chromosome_sequence_names_with_length();
         set<string> get_sample_names();

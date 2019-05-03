@@ -5,7 +5,7 @@
 
 // REUSE DECLARATION: THIS SCRIPT HEAVILY REUSES THE METHODS USED IN DEEPVARIANT https://github.com/google/deepvariant/
 // LICENSE INCLUDED IN: third_party/deepVariant.LICENSE
-#include "../../headers/local_reassembly/aligner.h"
+#include "../../headers/realignment/aligner.h"
 #include "ssw_cpp.cpp"
 #include "ssw.c"
 

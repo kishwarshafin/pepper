@@ -1,8 +1,10 @@
+from os.path import isfile, join
+from os import listdir
+import numpy as np
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 import h5py
-from os.path import isfile, join
-from os import listdir
+from modules.python.Options import ImageSizeOptions
 
 
 def get_file_paths_from_directory(directory_path):
@@ -41,16 +43,15 @@ class SequenceDataset(Dataset):
         hdf5_filepath, image_name = self.all_images[index]
 
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
-            images = hdf5_file['summaries'][image_name]['image'][()]
+            image = hdf5_file['summaries'][image_name]['image'][()]
             position = hdf5_file['summaries'][image_name]['position'][()]
             index = hdf5_file['summaries'][image_name]['index'][()]
             contig = hdf5_file['summaries'][image_name]['contig'][()]
             chunk_id = hdf5_file['summaries'][image_name]['chunk_id'][()]
             contig_start = hdf5_file['summaries'][image_name]['region_start'][()]
             contig_end = hdf5_file['summaries'][image_name]['region_end'][()]
-            hp_tag = hdf5_file['summaries'][image_name]['hp'][()]
 
-        return contig, contig_start, contig_end, chunk_id, images, position, index, hp_tag
+        return contig, contig_start, contig_end, chunk_id, image, position, index
 
     def __len__(self):
         return len(self.all_images)

@@ -42,7 +42,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "../../headers/local_reassembly/ssw.h"
+#include "../../headers/realignment/ssw.h"
 
 #ifdef __GNUC__
 #define LIKELY(x) __builtin_expect((x),1)

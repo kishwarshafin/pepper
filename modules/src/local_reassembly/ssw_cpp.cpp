@@ -2,8 +2,8 @@
 // Created by Wan-Ping Lee
 // Last revision by Mengyao Zhao on 2017-05-30
 
-#include "../../headers/local_reassembly/ssw_cpp.h"
-#include "../../headers/local_reassembly/ssw.h"
+#include "../../headers/realignment/ssw_cpp.h"
+#include "../../headers/realignment/ssw.h"
 
 #include <sstream>
 

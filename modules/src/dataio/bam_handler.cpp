@@ -112,7 +112,7 @@ vector<string> BAM_handler::get_chromosome_sequence_names() {
     return sequence_names;
 }
 
-vector< vector<type_read> > BAM_handler::get_reads(string chromosome,
+vector<type_read> BAM_handler::get_reads(string chromosome,
                                                    long long start,
                                                    long long stop,
                                                    bool include_supplementary,
@@ -121,9 +121,7 @@ vector< vector<type_read> > BAM_handler::get_reads(string chromosome,
     // safe bases
     stop += 5;
 
-    vector <type_read> reads_HP0;
-    vector <type_read> reads_HP1;
-    vector <type_read> reads_HP2;
+    vector <type_read> all_reads;
 
     // get the id of the chromosome
     const int tid = bam_name2id(this->header, chromosome.c_str());
@@ -432,20 +430,10 @@ vector< vector<type_read> > BAM_handler::get_reads(string chromosome,
         read.bad_indicies = bad_bases;
         read.hp_tag = HP_tag;
 
-        if(HP_tag == 1)
-            reads_HP1.push_back(read);
-        else if(HP_tag == 2)
-            reads_HP2.push_back(read);
-        else
-            reads_HP0.push_back(read);
+        all_reads.push_back(read);
     }
     bam_destroy1(alignment);
     hts_itr_destroy(iter);
-
-    vector< vector<type_read> > all_reads;
-    all_reads.push_back(reads_HP0);
-    all_reads.push_back(reads_HP1);
-    all_reads.push_back(reads_HP2);
 
     return all_reads;
 }
