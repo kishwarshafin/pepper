@@ -124,8 +124,8 @@ class AlignmentSummarizer:
             ovlp_start, ovlp_end = overlap
             s, l = sorted((reg_a, reg_b), key=lambda element: (element[1] - element[0]))
 
-            length_ratio_ij = (l[1] - l[0]) / (s[1] - s[0])
-            overlap_fraction_ij = (ovlp_end - ovlp_start) / (s[1] - s[0])
+            length_ratio_ij = (l[1] - l[0]) / max(1, (s[1] - s[0]))
+            overlap_fraction_ij = (ovlp_end - ovlp_start) / max(1, (s[1] - s[0]))
             # 4 cases
             if length_ratio_ij < length_ratio:  # we don't trust one more than the other
                 if overlap_fraction_ij >= overlap_fraction:
