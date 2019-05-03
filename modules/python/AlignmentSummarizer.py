@@ -207,8 +207,8 @@ class AlignmentSummarizer:
             truth_regions = self.remove_conflicting_regions(truth_regions)
 
             if not truth_regions:
-                sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " NO TRAINING REGION FOUND.\n"
-                                 + TextColor.END)
+                # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " NO TRAINING REGION FOUND.\n"
+                #                  + TextColor.END)
                 return [], [], [], []
 
             for region in truth_regions:
@@ -238,8 +238,8 @@ class AlignmentSummarizer:
                 if total_reads == 0:
                     continue
 
-                sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(total_reads)
-                                 + " READS FOUND.\n" + TextColor.END)
+                # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(total_reads)
+                #                  + " READS FOUND.\n" + TextColor.END)
 
                 start_time = time.time()
 
@@ -311,8 +311,8 @@ class AlignmentSummarizer:
             #             reads_un.append(read)
             #     assert(len(sample) == len(reads_un) + len(reads_hp1) + len(reads_hp2))
 
-            sys.stderr.write(TextColor.PURPLE + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND\n"
-                             + TextColor.END)
+            # sys.stderr.write(TextColor.PURPLE + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND\n"
+            #                  + TextColor.END)
 
             if realignment_flag:
                 start_time = time.time()

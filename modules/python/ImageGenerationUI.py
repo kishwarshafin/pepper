@@ -229,8 +229,8 @@ class UserInterfaceSupport:
 
                         output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
 
-                    sys.stderr.write(TextColor.GREEN + "INFO: " + thread_prefix + " " + log_prefix + " TOTAL "
-                                     + str(len(images)) + " IMAGES SAVED\n" + TextColor.END)
+                    # sys.stderr.write(TextColor.GREEN + "INFO: " + thread_prefix + " " + log_prefix + " TOTAL "
+                    #                  + str(len(images)) + " IMAGES SAVED\n" + TextColor.END)
 
                 sys.stderr.write(TextColor.BLUE + "INFO: " + thread_prefix + " COMPLETED PROCESSING CHROMOSOME: " +
                                  chr_name + " TOTAL TIME ELAPSED: " + str(int(math.floor(time.time()-start_time)/60))
