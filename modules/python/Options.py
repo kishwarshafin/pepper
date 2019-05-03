@@ -11,8 +11,11 @@ class ImageSizeOptions(object):
 
 
 class TrainOptions(object):
+    # these two parameters are important, make sure you are sliding in a way that you cover the full sequence length
+    # the training loop breaks when current_index + TRAIN_WINDOW > LAST_INDEX. You may lose information if you don't
+    # slide correctly
     TRAIN_WINDOW = 200
-    WINDOW_JUMP = 150
+    WINDOW_JUMP = 100
     GRU_LAYERS = 1
     HIDDEN_SIZE = 128
 
