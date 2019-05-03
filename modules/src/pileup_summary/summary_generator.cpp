@@ -334,8 +334,8 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
 
         // if the label contains anything but ACTG
         if(!check_base(base_labels[pos])) {
-            cerr<<"INFO: INVALID REFERENCE BASE INDEX FOUND: ["<<chromosome_name<<":"<<start_pos<<"-"<<end_pos<<"] " <<
-                pos<<" "<<" "<<base_labels[pos]<<endl;
+//            cerr<<"INFO: INVALID REFERENCE BASE INDEX FOUND: ["<<chromosome_name<<":"<<start_pos<<"-"<<end_pos<<"] " <<
+//                pos<<" "<<" "<<base_labels[pos]<<endl;
             bad_label_positions.push_back(labels.size());
         }
 
@@ -348,8 +348,8 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
 
                     // if the label contains anything but ACTG
                     if(!check_base(insert_labels[make_pair(pos, ii)])) {
-                        cerr<<"INFO: INVALID REFERENCE INSERT BASE INDEX FOUND: "<<chromosome_name<<" "<<
-                            pos<<" "<<insert_labels[make_pair(pos, ii)]<<endl;
+//                        cerr<<"INFO: INVALID REFERENCE INSERT BASE INDEX FOUND: "<<chromosome_name<<" "<<
+//                            pos<<" "<<insert_labels[make_pair(pos, ii)]<<endl;
                         bad_label_positions.push_back(labels.size());
                     }
                 }
