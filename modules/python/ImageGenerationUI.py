@@ -146,34 +146,19 @@ class UserInterfaceSupport:
     @staticmethod
     def single_worker(args, _start, _end):
         chr_name, bam_file, draft_file, truth_bam, train_mode, downsample_rate = args
-        # otherwise simply chunk it using the same logic as before but the chunk size is 10^4 this time
-        max_size = 100000
-        intervals = []
-        for pos in range(_start, _end, max_size):
-            intervals.append((pos, min(_end, pos + max_size)))
 
-        all_images = []
-        all_labels = []
-        all_positions = []
-        all_chunk_ids = []
-        for region_start, region_end in intervals:
-            view = UserInterfaceView(chromosome_name=chr_name,
-                                     bam_file_path=bam_file,
-                                     draft_file_path=draft_file,
-                                     truth_bam=truth_bam,
-                                     train_mode=train_mode,
-                                     downsample_rate=downsample_rate)
+        view = UserInterfaceView(chromosome_name=chr_name,
+                                 bam_file_path=bam_file,
+                                 draft_file_path=draft_file,
+                                 truth_bam=truth_bam,
+                                 train_mode=train_mode,
+                                 downsample_rate=downsample_rate)
 
-            images, lables, positions, image_chunk_ids = view.parse_region(region_start, region_end)
-
-            all_images.extend(images)
-            all_labels.extend(lables)
-            all_positions.extend(positions)
-            all_chunk_ids.extend(image_chunk_ids)
+        images, lables, positions, image_chunk_ids = view.parse_region(_start, _end)
 
         region = (chr_name, _start, _end)
 
-        return all_images, all_labels, all_positions, all_chunk_ids, region
+        return images, lables, positions, image_chunk_ids, region
 
     @staticmethod
     def chromosome_level_parallelization(chr_list,
@@ -210,7 +195,8 @@ class UserInterfaceSupport:
                 all_intervals = []
                 for pos in range(interval_start, interval_end, max_size):
                     pos_start = max(interval_start, pos - ImageSizeOptions.MIN_IMAGE_OVERLAP)
-                    all_intervals.append((pos_start, min(interval_end, pos + max_size)))
+                    pos_end = min(interval_end, pos + max_size + ImageSizeOptions.MIN_IMAGE_OVERLAP)
+                    all_intervals.append((pos_start, pos_end))
 
                 args = (chr_name, bam_file, draft_file, truth_bam, train_mode, downsample_rate)
 

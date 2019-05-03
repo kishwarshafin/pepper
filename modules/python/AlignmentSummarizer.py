@@ -81,6 +81,7 @@ class AlignmentSummarizer:
                 image_chunk = summary.image[chunk_start:chunk_end]
                 pos_chunk = summary.genomic_pos[chunk_start:chunk_end]
                 label_chunk = summary.labels[chunk_start:chunk_end]
+
                 assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == chunk_size)
 
                 images.append(image_chunk)
@@ -185,8 +186,8 @@ class AlignmentSummarizer:
             # get the reads from the bam file
             include_supplementary = False
             truth_reads = truth_bam_handler.get_reads(self.chromosome_name,
-                                                      self.region_start_position,
-                                                      self.region_end_position,
+                                                      self.region_start_position - AlingerOptions.ALIGNMENT_SAFE_BASES,
+                                                      self.region_end_position + AlingerOptions.ALIGNMENT_SAFE_BASES,
                                                       include_supplementary,
                                                       0,
                                                       0)
