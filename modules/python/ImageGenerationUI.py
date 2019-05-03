@@ -194,8 +194,8 @@ class UserInterfaceSupport:
 
         with DataStore(file_name, 'w') as output_hdf_file:
             for chr_name, region in chr_list:
-                sys.stderr.write(TextColor.CYAN + "INFO: " + thread_prefix + " GENERATING IMAGE FROM CONTIG "
-                                 + str(chr_name) + "\n" + TextColor.END)
+                # sys.stderr.write(TextColor.CYAN + "INFO: " + thread_prefix + " GENERATING IMAGE FROM CONTIG "
+                #                  + str(chr_name) + "\n" + TextColor.END)
                 if not region:
                     interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
                     max_end = interval_end
