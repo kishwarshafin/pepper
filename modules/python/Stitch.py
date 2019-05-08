@@ -74,7 +74,7 @@ def get_confident_positions(alignment):
     read_index = 0
 
     for cigar_op, cigar_len in grouped_tuples:
-        if cigar_op == 'M' and cigar_len >= 9:
+        if cigar_op == 'M' and cigar_len >= 3:
             return ref_index, read_index
 
         if cigar_op == 'S':
