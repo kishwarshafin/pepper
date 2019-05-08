@@ -54,7 +54,7 @@ class UserInterfaceView:
 
         images, lables, positions, image_chunk_ids = alignment_summarizer.create_summary(self.truth_bam_handler,
                                                                                          self.train_mode,
-                                                                                         realignment_flag=False)
+                                                                                         realignment_flag=True)
 
         return images, lables, positions, image_chunk_ids
 
