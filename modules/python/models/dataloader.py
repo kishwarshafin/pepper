@@ -1,10 +1,11 @@
-import numpy as np
 from os.path import isfile, join
 from os import listdir
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 import h5py
-import torch
+import sys
+from tqdm import tqdm
+from modules.python.TextColor import TextColor
 
 
 def get_file_paths_from_directory(directory_path):
@@ -29,12 +30,17 @@ class SequenceDataset(Dataset):
 
         hdf_files = get_file_paths_from_directory(image_directory)
 
-        for hdf5_file_path in hdf_files:
-            with h5py.File(hdf5_file_path, 'r') as hdf5_file:
-                image_names = list(hdf5_file['summaries'].keys())
+        sys.stderr.write(TextColor.GREEN + "INFO: READING FROM HDF5 FILES\n" + TextColor.END)
+        with tqdm(total=len(hdf_files), leave=True, ncols=50) as progress_bar:
+            for hdf5_file_path in hdf_files:
+                with h5py.File(hdf5_file_path, 'r') as hdf5_file:
+                    image_names = list(hdf5_file['summaries'].keys())
 
-            for image_name in image_names:
-                file_image_pair.append((hdf5_file_path, image_name))
+                for image_name in image_names:
+                    file_image_pair.append((hdf5_file_path, image_name))
+
+                progress_bar.refresh()
+                progress_bar.update(1)
 
         self.all_images = file_image_pair
 
