@@ -14,10 +14,10 @@ class TrainOptions(object):
     # these two parameters are important, make sure you are sliding in a way that you cover the full sequence length
     # the training loop breaks when current_index + TRAIN_WINDOW > LAST_INDEX. You may lose information if you don't
     # slide correctly
-    TRAIN_WINDOW = 200
-    WINDOW_JUMP = 100
-    GRU_LAYERS = 1
-    HIDDEN_SIZE = 128
+    TRAIN_WINDOW = 100
+    WINDOW_JUMP = 50
+    GRU_LAYERS = 2
+    HIDDEN_SIZE = 256
 
 
 class AlingerOptions(object):
