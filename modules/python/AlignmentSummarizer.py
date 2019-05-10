@@ -1,4 +1,4 @@
-from build import HELEN
+from build import PEPPER
 import itertools
 import sys
 import time
@@ -169,7 +169,7 @@ class AlignmentSummarizer:
                                                                  ref_start,
                                                                  ref_end)
 
-        aligner = HELEN.ReadAligner(ref_start, ref_end, ref_sequence)
+        aligner = PEPPER.ReadAligner(ref_start, ref_end, ref_sequence)
 
         realigned_reads = aligner.align_reads_to_reference(reads)
 
@@ -267,10 +267,10 @@ class AlignmentSummarizer:
                                      + str(total_reads) + " READS TOOK: " + str(round(time.time()-start_time, 5))
                                      + " secs\n" + TextColor.END)
 
-                summary_generator = HELEN.SummaryGenerator(ref_seq,
-                                                           self.chromosome_name,
-                                                           ref_start,
-                                                           ref_end)
+                summary_generator = PEPPER.SummaryGenerator(ref_seq,
+                                                            self.chromosome_name,
+                                                            ref_start,
+                                                            ref_end)
 
                 summary_generator.generate_train_summary(all_reads,
                                                          region_start,
@@ -331,10 +331,10 @@ class AlignmentSummarizer:
                                                                 self.region_start_position,
                                                                 self.region_end_position + 1)
 
-            summary_generator = HELEN.SummaryGenerator(ref_seq,
-                                                       self.chromosome_name,
-                                                       self.region_start_position,
-                                                       self.region_end_position)
+            summary_generator = PEPPER.SummaryGenerator(ref_seq,
+                                                        self.chromosome_name,
+                                                        self.region_start_position,
+                                                        self.region_end_position)
 
             summary_generator.generate_summary(all_reads,
                                                self.region_start_position,

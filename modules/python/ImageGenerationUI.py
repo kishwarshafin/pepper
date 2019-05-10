@@ -3,7 +3,7 @@ import time
 import os
 import sys
 
-from build import HELEN
+from build import PEPPER
 from modules.python.TextColor import TextColor
 from modules.python.DataStore import DataStore
 from modules.python.AlignmentSummarizer import AlignmentSummarizer
@@ -26,14 +26,14 @@ class UserInterfaceView:
         # create objects to handle different files and query
         self.bam_path = bam_file_path
         self.fasta_path = draft_file_path
-        self.bam_handler = HELEN.BAM_handler(bam_file_path)
-        self.fasta_handler = HELEN.FASTA_handler(draft_file_path)
+        self.bam_handler = PEPPER.BAM_handler(bam_file_path)
+        self.fasta_handler = PEPPER.FASTA_handler(draft_file_path)
         self.train_mode = train_mode
         self.downsample_rate = downsample_rate
         self.truth_bam_handler = None
 
         if self.train_mode:
-            self.truth_bam_handler = HELEN.BAM_handler(truth_bam)
+            self.truth_bam_handler = PEPPER.BAM_handler(truth_bam)
 
         # --- initialize names ---
         # name of the chromosome
@@ -95,7 +95,7 @@ class UserInterfaceSupport:
         :return: LIST OF CHROMOSOME IN REGION SPECIFIC FORMAT
         """
         if not chromosome_names:
-            fasta_handler = HELEN.FASTA_handler(ref_file)
+            fasta_handler = PEPPER.FASTA_handler(ref_file)
             chromosome_names = fasta_handler.get_chromosome_names()
             chromosome_names = ','.join(chromosome_names)
 
@@ -172,9 +172,9 @@ class UserInterfaceSupport:
                                          downsample_rate,
                                          max_size=10000):
         start_time = time.time()
-        fasta_handler = HELEN.FASTA_handler(draft_file)
+        fasta_handler = PEPPER.FASTA_handler(draft_file)
 
-        file_name = output_path + "helen_images_" + str(thread_id) + ".hdf"
+        file_name = output_path + "pepper_images_" + str(thread_id) + ".hdf"
         thread_prefix = "{:02d}".format(thread_id) + "/" + "{:02d}".format(total_threads) + ":"
 
         with DataStore(file_name, 'w') as output_hdf_file:

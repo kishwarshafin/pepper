@@ -4,6 +4,6 @@
 mkdir build
 cd build
 
-cmake .. -Wno-deprecated && make -j 8
+cmake .. -Wno-deprecated && make
 cd ..
 # python3 main.py

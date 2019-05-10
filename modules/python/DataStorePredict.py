@@ -1,7 +1,6 @@
 import h5py
 import yaml
 import numpy as np
-from modules.python.Options import ImageSizeOptions
 
 
 class DataStore(object):

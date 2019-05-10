@@ -2,8 +2,8 @@
 // Created by Kishwar Shafin on 10/18/18.
 //
 
-#ifndef HELEN_PYBIND_API_H
-#define HELEN_PYBIND_API_H
+#ifndef PEPPER_PYBIND_API_H
+#define PEPPER_PYBIND_API_H
 
 #include "dataio/fasta_handler.h"
 #include "dataio/bam_handler.h"
@@ -15,7 +15,7 @@
 #include <pybind11/operators.h>
 namespace py = pybind11;
 
-PYBIND11_MODULE(HELEN, m) {
+PYBIND11_MODULE(PEPPER, m) {
         py::class_<SummaryGenerator>(m, "SummaryGenerator")
             .def(py::init<const string &, const string &, long long &, long long &>())
             .def_readwrite("genomic_pos", &SummaryGenerator::genomic_pos)
@@ -119,4 +119,4 @@ PYBIND11_MODULE(HELEN, m) {
             .def("get_chromosome_sequence_length", &FASTA_handler::get_chromosome_sequence_length)
             .def("get_chromosome_names", &FASTA_handler::get_chromosome_names);
 }
-#endif //HELEN_PYBIND_API_H
+#endif //PEPPER_PYBIND_API_H

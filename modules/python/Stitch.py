@@ -12,7 +12,7 @@ from build import HELEN
 import re
 
 
-BASE_ERROR_RATE = 1.0
+BASE_ERROR_RATE = 1.5
 label_decoder = {1: 'A', 2: 'C', 3: 'G', 4: 'T', 0: ''}
 MATCH_PENALTY = 4
 MISMATCH_PENALTY = 6
@@ -27,7 +27,8 @@ def get_file_paths_from_directory(directory_path):
     :param directory_path: Path to the directory
     :return: A list of paths of files
     """
-    file_paths = [join(directory_path, file) for file in listdir(directory_path) if isfile(join(directory_path, file)) and file[-2:] == 'h5']
+    file_paths = [join(directory_path, file) for file in listdir(directory_path)
+                  if isfile(join(directory_path, file)) and file[-2:] == 'h5']
     return file_paths
 
 
@@ -74,7 +75,7 @@ def get_confident_positions(alignment):
     read_index = 0
 
     for cigar_op, cigar_len in grouped_tuples:
-        if cigar_op == 'M' and cigar_len >= 3:
+        if cigar_op == 'M' and cigar_len >= 5:
             return ref_index, read_index
 
         if cigar_op == 'S':

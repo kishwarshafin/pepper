@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.11)
 
-# name of the project is VISION
-PROJECT(helen)
+# name of the project is PEPPER
+PROJECT(pepper)
 set (CMAKE_CXX_FLAGS "-fPIC -O3")
 set (CMAKE_C_FLAGS "-fPIC -O3")
 
@@ -26,16 +26,16 @@ INCLUDE(modules/htslib.cmake)
 INCLUDE(modules/pybind11.cmake)
 
 # pybind11 to interface
-pybind11_add_module(HELEN ${CMAKE_CURRENT_SOURCE_DIR}/modules/src/pybind_api.cpp)
+pybind11_add_module(PEPPER ${CMAKE_CURRENT_SOURCE_DIR}/modules/src/pybind_api.cpp)
 
-add_dependencies(HELEN htslib)
+add_dependencies(PEPPER htslib)
 
 # add all the external libraries
-target_link_libraries(HELEN PRIVATE z)
-target_link_libraries(HELEN PRIVATE bz2)
-target_link_libraries(HELEN PRIVATE curl)
-target_link_libraries(HELEN PRIVATE lzma)
-target_link_libraries(HELEN PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
+target_link_libraries(PEPPER PRIVATE z)
+target_link_libraries(PEPPER PRIVATE bz2)
+target_link_libraries(PEPPER PRIVATE curl)
+target_link_libraries(PEPPER PRIVATE lzma)
+target_link_libraries(PEPPER PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
 
 #-------------------
 # Test
