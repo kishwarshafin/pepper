@@ -4,7 +4,9 @@ import numpy as np
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 import h5py
+import sys
 from modules.python.Options import ImageSizeOptions
+from modules.python.TextColor import TextColor
 
 
 def get_file_paths_from_directory(directory_path):
@@ -31,10 +33,14 @@ class SequenceDataset(Dataset):
 
         for hdf5_file_path in hdf_files:
             with h5py.File(hdf5_file_path, 'r') as hdf5_file:
-                image_names = list(hdf5_file['summaries'].keys())
+                if 'summaries' in hdf5_file_path:
+                    image_names = list(hdf5_file['summaries'].keys())
 
-            for image_name in image_names:
-                file_image_pair.append((hdf5_file_path, image_name))
+                    for image_name in image_names:
+                        file_image_pair.append((hdf5_file_path, image_name))
+                else:
+                    sys.stderr.write(TextColor.YELLOW + "WARN: NO IMAGES FOUND IN FILE: "
+                                     + hdf5_file_path + "\n" + TextColor.END)
 
         self.all_images = file_image_pair
 

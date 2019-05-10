@@ -31,16 +31,16 @@ class SequenceDataset(Dataset):
         hdf_files = get_file_paths_from_directory(image_directory)
 
         sys.stderr.write(TextColor.GREEN + "INFO: READING FROM HDF5 FILES\n" + TextColor.END)
-        with tqdm(total=len(hdf_files), leave=True, ncols=50) as progress_bar:
-            for hdf5_file_path in hdf_files:
-                with h5py.File(hdf5_file_path, 'r') as hdf5_file:
+        for hdf5_file_path in hdf_files:
+            with h5py.File(hdf5_file_path, 'r') as hdf5_file:
+                if 'summaries' in hdf5_file_path:
                     image_names = list(hdf5_file['summaries'].keys())
 
-                for image_name in image_names:
-                    file_image_pair.append((hdf5_file_path, image_name))
-
-                progress_bar.refresh()
-                progress_bar.update(1)
+                    for image_name in image_names:
+                        file_image_pair.append((hdf5_file_path, image_name))
+                else:
+                    sys.stderr.write(TextColor.YELLOW + "WARN: NO IMAGES FOUND IN FILE: "
+                                     + hdf5_file_path + "\n" + TextColor.END)
 
         self.all_images = file_image_pair
 

@@ -16,8 +16,8 @@ class TrainOptions(object):
     # slide correctly
     TRAIN_WINDOW = 100
     WINDOW_JUMP = 50
-    GRU_LAYERS = 2
-    HIDDEN_SIZE = 256
+    GRU_LAYERS = 1
+    HIDDEN_SIZE = 128
 
 
 class AlingerOptions(object):
