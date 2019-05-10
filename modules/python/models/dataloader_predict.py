@@ -33,7 +33,7 @@ class SequenceDataset(Dataset):
 
         for hdf5_file_path in hdf_files:
             with h5py.File(hdf5_file_path, 'r') as hdf5_file:
-                if 'summaries' in hdf5_file_path:
+                if 'summaries' in hdf5_file:
                     image_names = list(hdf5_file['summaries'].keys())
 
                     for image_name in image_names:
