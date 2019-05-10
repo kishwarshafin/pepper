@@ -19,8 +19,8 @@ class TransducerGRU(nn.Module):
                                   num_layers=self.num_layers,
                                   bidirectional=bidirectional,
                                   batch_first=True)
-        self.gru_encoder.flatten_parameters()
-        self.gru_decoder.flatten_parameters()
+        # self.gru_encoder.flatten_parameters()
+        # self.gru_decoder.flatten_parameters()
         self.dense1 = nn.Linear(self.hidden_size * 2, self.num_classes)
         # self.dense2 = nn.Linear(self.hidden_size, self.num_classes)
 
