@@ -8,7 +8,7 @@ import numpy as np
 from collections import defaultdict
 import operator
 from modules.python.TextColor import TextColor
-from build import HELEN
+from build import PEPPER
 import re
 
 
@@ -101,8 +101,8 @@ def alignment_stitch(sequence_chunks):
     #     sys.stderr.write("ERROR: CURRENT SEQUENCE LENGTH TOO SHORT: " + sequence_chunk_keys[0] + "\n")
     #     exit()
 
-    aligner = HELEN.Aligner(MATCH_PENALTY, MISMATCH_PENALTY, GAP_PENALTY, GAP_EXTEND_PENALTY)
-    filter = HELEN.Filter()
+    aligner = PEPPER.Aligner(MATCH_PENALTY, MISMATCH_PENALTY, GAP_PENALTY, GAP_EXTEND_PENALTY)
+    filter = PEPPER.Filter()
     for i in range(1, len(sequence_chunks)):
         _, this_start, this_end, this_sequence = sequence_chunks[i]
         if this_start < running_end:
@@ -112,7 +112,7 @@ def alignment_stitch(sequence_chunks):
 
             reference_sequence = running_sequence[-overlap_bases:]
             read_sequence = this_sequence[:overlap_bases]
-            alignment = HELEN.Alignment()
+            alignment = PEPPER.Alignment()
             aligner.SetReferenceSequence(reference_sequence, len(reference_sequence))
             aligner.Align_cpp(read_sequence, filter, alignment, 0)
             if alignment.best_score == 0:
