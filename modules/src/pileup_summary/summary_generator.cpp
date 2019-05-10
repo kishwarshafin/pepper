@@ -106,7 +106,7 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                     if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                         // update the summary of base
                         base_summaries[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
-//                        coverage[ref_position] += 1.0;
+                        coverage[ref_position] += 1.0;
                     }
                 }
                 ref_position += cigar.length;
