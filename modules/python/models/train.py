@@ -20,7 +20,7 @@ Input:
 Return:
 - A trained model
 """
-CLASS_WEIGHTS = [0.3, 1.0, 1.0, 1.0, 1.0]
+CLASS_WEIGHTS = [1.0, 1.0, 1.0, 1.0, 1.0]
 
 
 def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoch,
