@@ -1,2 +1,2 @@
-# helen
-H.E.L.E.N: Haplotype Embedded Long-read Error-corrector for Nanopore
+# pepper
+P.E.P.P.E.R.: Program for Evaluating Patterns in Pileups of Erroneous Reads
