@@ -2,7 +2,7 @@ import h5py
 import argparse
 import sys
 from modules.python.TextColor import TextColor
-from modules.python.StitchV2 import create_consensus_sequence
+from modules.python.Stitch import create_consensus_sequence
 
 
 def perform_stitch(hdf_file_path, output_path, threads):
