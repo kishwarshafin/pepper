@@ -1,7 +1,7 @@
 # P.E.P.P.E.R.
 ###### Program for Evaluating Patterns in the Pileups of Erroneous Reads
-<br/>
-[![Build Status](https://travis-ci.com/kishwarshafin/pepper.svg?branch=master)](https://travis-ci.com/kishwarshafin/pepper) <br/>
+
+[![Build Status](https://travis-ci.com/kishwarshafin/pepper.svg?branch=master)](https://travis-ci.com/kishwarshafin/pepper)
 
 `PEPPER` is a deep neural network based polisher designed to work with Oxford Nanopore Sequencing technology. `PEPPER` uses a Recurrent Neural Network (RNN) based encoder-decoder model to call a consensus sequence from the summary statistics of each genomic position. We are developing a pileup based approach where we encode read attributes in multiple channels and use a hybrid CNN-RNN based network to call consensus. The `pytorch` backend support provides easy GPU distribution making easier scaling on GPU while providing competitive results to other deep neural network based approaches.
 
