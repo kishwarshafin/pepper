@@ -34,8 +34,8 @@ class TrainModule:
         self.stats_dir = stats_dir
         self.hidden_size = TrainOptions.HIDDEN_SIZE
         self.gru_layers = TrainOptions.GRU_LAYERS
-        self.learning_rate = 0.0005954109203783884
-        self.weight_decay = 0.00011056305772987133
+        self.learning_rate = 0.0001
+        self.weight_decay = 0
 
     def train_model(self):
         # train a model
