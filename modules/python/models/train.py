@@ -95,7 +95,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
     param_count = sum(p.numel() for p in transducer_model.parameters() if p.requires_grad)
     sys.stderr.write(TextColor.RED + "INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n" + TextColor.END)
 
-    model_optimizer = torch.optim.Adam(transducer_model.parameters())
+    model_optimizer = torch.optim.Adam(transducer_model.parameters(), lr=lr, weight_decay=decay)
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(model_optimizer, 'min')
 
     if retrain_model is True:
