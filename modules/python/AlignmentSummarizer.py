@@ -231,7 +231,7 @@ class AlignmentSummarizer:
 
                 read_start = max(0, region_start)
                 read_end = region_end
-                include_supplementary = True
+                include_supplementary = False
                 all_reads = self.bam_handler.get_reads(self.chromosome_name,
                                                        read_start,
                                                        read_end,
@@ -292,7 +292,7 @@ class AlignmentSummarizer:
             # HERE REALIGN THE READS TO THE REFERENCE THEN GENERATE THE SUMMARY TO GET A POLISHED HAPLOTYPE
             read_start = max(0, self.region_start_position)
             read_end = self.region_end_position
-            include_supplementary = True
+            include_supplementary = False
             all_reads = self.bam_handler.get_reads(self.chromosome_name,
                                                    read_start,
                                                    read_end,
