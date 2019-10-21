@@ -6,6 +6,7 @@ import numpy as np
 from operator import itemgetter
 from modules.python.TextColor import TextColor
 from modules.python.Options import ImageSizeOptions, AlingerOptions
+from modules.python.helper import generate_pileup_from_reads
 
 
 class AlignmentSummarizer:
@@ -162,7 +163,7 @@ class AlignmentSummarizer:
         if not reads:
             return []
 
-        ref_start = region_start - AlingerOptions.ALIGNMENT_SAFE_BASES
+        ref_start = region_start
         ref_end = region_end + AlingerOptions.ALIGNMENT_SAFE_BASES
 
         ref_sequence = self.fasta_handler.get_reference_sequence(self.chromosome_name,
@@ -172,6 +173,8 @@ class AlignmentSummarizer:
         aligner = PEPPER.ReadAligner(ref_start, ref_end, ref_sequence)
 
         realigned_reads = aligner.align_reads_to_reference(reads)
+
+        # generate_pileup_from_reads.pileup_from_reads(ref_sequence, ref_start, ref_end, realigned_reads)
 
         return realigned_reads
 
@@ -287,8 +290,8 @@ class AlignmentSummarizer:
                 all_image_chunk_ids.extend(chunk_ids)
         else:
             # HERE REALIGN THE READS TO THE REFERENCE THEN GENERATE THE SUMMARY TO GET A POLISHED HAPLOTYPE
-            read_start = max(0, self.region_start_position - AlingerOptions.ALIGNMENT_SAFE_BASES)
-            read_end = self.region_end_position + AlingerOptions.ALIGNMENT_SAFE_BASES
+            read_start = max(0, self.region_start_position)
+            read_end = self.region_end_position
             include_supplementary = True
             all_reads = self.bam_handler.get_reads(self.chromosome_name,
                                                    read_start,

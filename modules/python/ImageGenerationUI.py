@@ -39,11 +39,12 @@ class UserInterfaceView:
         # name of the chromosome
         self.chromosome_name = chromosome_name
 
-    def parse_region(self, start_position, end_position):
+    def parse_region(self, start_position, end_position, realignment_flag):
         """
         Generate labeled images of a given region of the genome
         :param start_position: Start position of the region
         :param end_position: End position of the region
+        :param realignment_flag: If true then realignment will be performed
         :return:
         """
         alignment_summarizer = AlignmentSummarizer(self.bam_handler,
@@ -54,7 +55,7 @@ class UserInterfaceView:
 
         images, lables, positions, image_chunk_ids = alignment_summarizer.create_summary(self.truth_bam_handler,
                                                                                          self.train_mode,
-                                                                                         realignment_flag=False)
+                                                                                         realignment_flag)
 
         return images, lables, positions, image_chunk_ids
 
@@ -145,7 +146,7 @@ class UserInterfaceSupport:
 
     @staticmethod
     def single_worker(args, _start, _end):
-        chr_name, bam_file, draft_file, truth_bam, train_mode, downsample_rate = args
+        chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate = args
 
         view = UserInterfaceView(chromosome_name=chr_name,
                                  bam_file_path=bam_file,
@@ -154,7 +155,7 @@ class UserInterfaceSupport:
                                  train_mode=train_mode,
                                  downsample_rate=downsample_rate)
 
-        images, lables, positions, image_chunk_ids = view.parse_region(_start, _end)
+        images, lables, positions, image_chunk_ids = view.parse_region(_start, _end, perform_realignment)
 
         region = (chr_name, _start, _end)
 
@@ -169,8 +170,9 @@ class UserInterfaceSupport:
                                          total_threads,
                                          thread_id,
                                          train_mode,
+                                         perform_realignment,
                                          downsample_rate,
-                                         max_size=10000):
+                                         max_size=1000):
         start_time = time.time()
         fasta_handler = PEPPER.FASTA_handler(draft_file)
 
@@ -198,7 +200,7 @@ class UserInterfaceSupport:
                     pos_end = min(interval_end, pos + max_size + ImageSizeOptions.MIN_IMAGE_OVERLAP)
                     all_intervals.append((pos_start, pos_end))
 
-                args = (chr_name, bam_file, draft_file, truth_bam, train_mode, downsample_rate)
+                args = (chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
 
                 intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
 

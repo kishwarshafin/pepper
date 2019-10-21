@@ -10,7 +10,7 @@ def boolean_string(s):
     :param s: string holding boolean value
     :return:
     """
-    if s.lower() not in {'false', 'true', '1', 't'}:
+    if s.lower() not in {'false', 'true', '1', 't', '0', 'f'}:
         raise ValueError('Not a valid boolean string')
     return s.lower() == 'true' or s.lower() == 't' or s.lower() == '1'
 
@@ -47,6 +47,12 @@ if __name__ == '__main__':
         "--train_mode",
         type=boolean_string,
         default=False,
+        help="If true then labeled images will be generated."
+    )
+    parser.add_argument(
+        "--perform_realignment",
+        type=boolean_string,
+        default=True,
         help="If true then labeled images will be generated."
     )
     parser.add_argument(
@@ -91,4 +97,5 @@ if __name__ == '__main__':
                                                           FLAGS.threads,
                                                           FLAGS.thread_id,
                                                           FLAGS.train_mode,
+                                                          FLAGS.perform_realignment,
                                                           FLAGS.downsample_rate)

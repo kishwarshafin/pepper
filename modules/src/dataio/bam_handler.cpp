@@ -119,7 +119,7 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                                                    int min_mapq=0,
                                                    int min_baseq = 0) {
     // safe bases
-    stop += 5;
+//    stop += 0;
 
     vector <type_read> all_reads;
 
@@ -420,7 +420,6 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
         type_read read;
         read.query_name = query_name;
         read.pos = pos_start;
-        read.pos_end = pos_end;
         read.pos_end = pos_end;
         read.sequence = read_seq;
         read.flags = read_flags;
