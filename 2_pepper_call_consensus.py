@@ -7,7 +7,7 @@ from modules.python.models.predict import predict
 
 def polish_genome(csv_file, model_path, batch_size, num_workers, output_dir, gpu_mode):
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "OUTPUT DIRECTORY: " + output_dir + "\n")
-    output_filename = output_dir + "helen_predictions.hdf"
+    output_filename = output_dir + "pepper_predictions.hdf"
     predict(csv_file, output_filename, model_path, batch_size, num_workers, gpu_mode)
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "PREDICTION GENERATED SUCCESSFULLY.\n")
 
