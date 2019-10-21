@@ -190,8 +190,8 @@ class AlignmentSummarizer:
             # get the reads from the bam file
             include_supplementary = False
             truth_reads = truth_bam_handler.get_reads(self.chromosome_name,
-                                                      self.region_start_position - AlingerOptions.ALIGNMENT_SAFE_BASES,
-                                                      self.region_end_position + AlingerOptions.ALIGNMENT_SAFE_BASES,
+                                                      self.region_start_position,
+                                                      self.region_end_position,
                                                       include_supplementary,
                                                       0,
                                                       0)
@@ -229,8 +229,8 @@ class AlignmentSummarizer:
                                                                     ref_start,
                                                                     ref_end)
 
-                read_start = max(0, region_start - AlingerOptions.ALIGNMENT_SAFE_BASES)
-                read_end = region_end + AlingerOptions.ALIGNMENT_SAFE_BASES
+                read_start = max(0, region_start)
+                read_end = region_end
                 include_supplementary = True
                 all_reads = self.bam_handler.get_reads(self.chromosome_name,
                                                        read_start,
