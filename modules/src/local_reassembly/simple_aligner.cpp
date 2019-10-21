@@ -71,7 +71,7 @@ vector<type_read> ReadAligner::align_reads_to_reference(vector<type_read> reads)
 //        cout<<read.pos<<" "<<read.pos_end<<" "<<region_start<<" "<<region_end<<" "<<endl;
         if(read.pos < region_start) {
             // read should be between the selected region.
-            cerr<<"READ STARTS BEFORE REGION: "<<region_start<<" "<<region_end<<endl;
+            cerr<<"READ STARTS BEFORE REGION: "<<read.pos<<" "<<region_start<<" "<<region_end<<endl;
             continue;
         }
         long long reference_start_index = read.pos - region_start;
