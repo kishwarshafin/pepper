@@ -68,12 +68,6 @@ if __name__ == '__main__':
         help="Number of threads to use. Default is 5."
     )
     parser.add_argument(
-        "--thread_id",
-        type=int,
-        required=False,
-        help="Thread ID."
-    )
-    parser.add_argument(
         "--downsample_rate",
         type=float,
         required=False,
@@ -95,7 +89,6 @@ if __name__ == '__main__':
                                                           FLAGS.truth_bam,
                                                           output_dir,
                                                           FLAGS.threads,
-                                                          FLAGS.thread_id,
                                                           FLAGS.train_mode,
                                                           FLAGS.perform_realignment,
                                                           FLAGS.downsample_rate)

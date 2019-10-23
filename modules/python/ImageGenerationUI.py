@@ -2,6 +2,7 @@ import math
 import time
 import os
 import sys
+import concurrent.futures
 
 from build import PEPPER
 from modules.python.TextColor import TextColor
@@ -168,7 +169,6 @@ class UserInterfaceSupport:
                                          truth_bam,
                                          output_path,
                                          total_threads,
-                                         thread_id,
                                          train_mode,
                                          perform_realignment,
                                          downsample_rate,
@@ -176,8 +176,8 @@ class UserInterfaceSupport:
         start_time = time.time()
         fasta_handler = PEPPER.FASTA_handler(draft_file)
 
-        file_name = output_path + "pepper_images_" + str(thread_id) + ".hdf"
-        thread_prefix = "{:02d}".format(thread_id) + "/" + "{:02d}".format(total_threads) + ":"
+        file_name = output_path + "pepper_images" + ".hdf"
+        # thread_prefix = "{:02d}".format(thread_id) + "/" + "{:02d}".format(total_threads) + ":"
 
         with DataStore(file_name, 'w') as output_hdf_file:
             for chr_name, region in chr_list:
@@ -202,20 +202,39 @@ class UserInterfaceSupport:
 
                 args = (chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
 
-                intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
+                # intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
 
-                for _start, _end in intervals:
-                    images, labels, positions, chunk_ids, region = UserInterfaceSupport.single_worker(args, _start, _end)
+                with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
+                    futures = [executor.submit(UserInterfaceSupport.single_worker, args,  _start, _end)
+                               for _start, _end in all_intervals]
+                    for fut in concurrent.futures.as_completed(futures):
+                        if fut.exception() is None:
+                            # get the results
+                            images, labels, positions, chunk_ids, region = fut.result()
+                            for i, image in enumerate(images):
+                                label = labels[i]
+                                position, index = zip(*positions[i])
+                                chunk_id = chunk_ids[i]
 
-                    log_prefix = "[" + str(region[0]) + ":" + str(region[1]) + "-" + str(region[2]) + "]"
-                    for i, image in enumerate(images):
-                        label = labels[i]
-                        position, index = zip(*positions[i])
-                        chunk_id = chunk_ids[i]
+                                summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
 
-                        summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
+                                output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
+                        else:
+                            sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
+                        fut._result = None  # python issue 27144
 
-                        output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
+                # for _start, _end in intervals:
+                #     images, labels, positions, chunk_ids, region = UserInterfaceSupport.single_worker(args, _start, _end)
+                #
+                #     log_prefix = "[" + str(region[0]) + ":" + str(region[1]) + "-" + str(region[2]) + "]"
+                #     for i, image in enumerate(images):
+                #         label = labels[i]
+                #         position, index = zip(*positions[i])
+                #         chunk_id = chunk_ids[i]
+                #
+                #         summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
+                #
+                #         output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
 
                     # sys.stderr.write(TextColor.GREEN + "INFO: " + thread_prefix + " " + log_prefix + " TOTAL "
                     #                  + str(len(images)) + " IMAGES SAVED\n" + TextColor.END)
