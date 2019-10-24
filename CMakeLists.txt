@@ -2,8 +2,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.11)
 
 # name of the project is PEPPER
 PROJECT(pepper)
-set (CMAKE_CXX_FLAGS "-fPIC -O3")
-set (CMAKE_C_FLAGS "-fPIC -O3")
+set (CMAKE_CXX_FLAGS "-fPIC -O3 -pipe")
+set (CMAKE_C_FLAGS "-fPIC -O3 -pipe -shared -rdynamic")
 
 SET(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)

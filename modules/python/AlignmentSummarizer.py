@@ -266,9 +266,9 @@ class AlignmentSummarizer:
                     all_reads = self.reads_to_reference_realignment(read_start,
                                                                     read_end,
                                                                     all_reads)
-                    sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL "
-                                     + str(total_reads) + " READS TOOK: " + str(round(time.time()-start_time, 5))
-                                     + " secs\n" + TextColor.END)
+                    # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL "
+                    #                  + str(total_reads) + " READS TOOK: " + str(round(time.time()-start_time, 5))
+                    #                  + " secs\n" + TextColor.END)
 
                 summary_generator = PEPPER.SummaryGenerator(ref_seq,
                                                             self.chromosome_name,
@@ -326,8 +326,8 @@ class AlignmentSummarizer:
                 all_reads = self.reads_to_reference_realignment(self.region_start_position,
                                                                 self.region_end_position,
                                                                 all_reads)
-                sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL " + str(total_reads) +
-                                 " READS TOOK: " + str(round(time.time()-start_time, 5)) + " secs\n" + TextColor.END)
+                # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL " + str(total_reads)
+                #                 + " READS TOOK: " + str(round(time.time()-start_time, 5)) + " secs\n" + TextColor.END)
 
             # ref_seq should contain region_end_position base
             ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,

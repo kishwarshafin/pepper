@@ -9,7 +9,7 @@ from modules.python.TextColor import TextColor
 from modules.python.DataStore import DataStore
 from modules.python.AlignmentSummarizer import AlignmentSummarizer
 from modules.python.Options import ImageSizeOptions
-
+MIN_SEQUENCE_REQUIRED_FOR_MULTITHREADING = 10
 
 class UserInterfaceView:
     """
@@ -156,11 +156,10 @@ class UserInterfaceSupport:
                                  train_mode=train_mode,
                                  downsample_rate=downsample_rate)
 
-        images, lables, positions, image_chunk_ids = view.parse_region(_start, _end, perform_realignment)
-
+        images, labels, positions, image_chunk_ids = view.parse_region(_start, _end, perform_realignment)
         region = (chr_name, _start, _end)
 
-        return images, lables, positions, image_chunk_ids, region
+        return images, labels, positions, image_chunk_ids, region
 
     @staticmethod
     def chromosome_level_parallelization(chr_list,
@@ -172,7 +171,7 @@ class UserInterfaceSupport:
                                          train_mode,
                                          perform_realignment,
                                          downsample_rate,
-                                         max_size=10000):
+                                         max_size=1000):
         start_time = time.time()
         fasta_handler = PEPPER.FASTA_handler(draft_file)
 
@@ -202,15 +201,14 @@ class UserInterfaceSupport:
 
                 args = (chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
 
-                # intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
-
                 with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
-                    futures = [executor.submit(UserInterfaceSupport.single_worker, args,  _start, _end)
-                               for _start, _end in all_intervals]
+                    futures = [executor.submit(UserInterfaceSupport.single_worker, args,  _start, _stop)
+                               for _start, _stop in all_intervals]
                     for fut in concurrent.futures.as_completed(futures):
                         if fut.exception() is None:
                             # get the results
                             images, labels, positions, chunk_ids, region = fut.result()
+
                             for i, image in enumerate(images):
                                 label = labels[i]
                                 position, index = zip(*positions[i])
@@ -222,23 +220,3 @@ class UserInterfaceSupport:
                         else:
                             sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
                         fut._result = None  # python issue 27144
-
-                # for _start, _end in intervals:
-                #     images, labels, positions, chunk_ids, region = UserInterfaceSupport.single_worker(args, _start, _end)
-                #
-                #     log_prefix = "[" + str(region[0]) + ":" + str(region[1]) + "-" + str(region[2]) + "]"
-                #     for i, image in enumerate(images):
-                #         label = labels[i]
-                #         position, index = zip(*positions[i])
-                #         chunk_id = chunk_ids[i]
-                #
-                #         summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
-                #
-                #         output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
-
-                    # sys.stderr.write(TextColor.GREEN + "INFO: " + thread_prefix + " " + log_prefix + " TOTAL "
-                    #                  + str(len(images)) + " IMAGES SAVED\n" + TextColor.END)
-
-                # sys.stderr.write(TextColor.BLUE + "INFO: " + thread_prefix + " COMPLETED PROCESSING CHROMOSOME: " +
-                #                  chr_name + " TOTAL TIME ELAPSED: " + str(int(math.floor(time.time()-start_time)/60))
-                #                  + " MINS " + str(math.ceil(time.time()-start_time) % 60) + " SEC\n" + TextColor.END)
