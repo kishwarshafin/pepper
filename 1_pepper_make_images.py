@@ -74,6 +74,13 @@ if __name__ == '__main__':
         default=1.0,
         help="Downsample reads by this margin."
     )
+    parser.add_argument(
+        "--chunk_size",
+        type=int,
+        required=False,
+        default=1000,
+        help="Chunk size for multi-threading."
+    )
     FLAGS, unparsed = parser.parse_known_args()
     chr_list = UserInterfaceSupport.get_chromosome_list(FLAGS.chromosome_name, FLAGS.draft)
 
@@ -91,4 +98,5 @@ if __name__ == '__main__':
                                                           FLAGS.threads,
                                                           FLAGS.train_mode,
                                                           FLAGS.perform_realignment,
-                                                          FLAGS.downsample_rate)
+                                                          FLAGS.downsample_rate,
+                                                          FLAGS.chunk_size)
