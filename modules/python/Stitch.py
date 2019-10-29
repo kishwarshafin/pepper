@@ -140,7 +140,7 @@ def alignment_stitch(sequence_chunks):
 def small_chunk_stitch(file_name, contig, small_chunk_keys):
     # for chunk_key in small_chunk_keys:
     base_prediction_dictionary = defaultdict()
-    all_positions = list()
+    all_positions = set()
     # ignore first 200 bases as they are just overlaps
     buffer_positions = 200
 
@@ -167,9 +167,8 @@ def small_chunk_stitch(file_name, contig, small_chunk_keys):
                 if indx < 0 or pos < 0:
                     continue
 
-                if (pos, indx) not in all_positions:
-                    base_prediction_dictionary[(pos, indx)] = base_pred
-                    all_positions.append((pos, indx))
+                base_prediction_dictionary[(pos, indx)] = base_pred
+                all_positions.add((pos, indx))
 
     return base_prediction_dictionary, all_positions
 
@@ -183,8 +182,7 @@ def create_consensus_sequence(hdf5_file_path, contig, sequence_chunk_keys, threa
 
     sequence_chunk_key_list = sorted(sequence_chunk_key_list, key=lambda element: (element[1], element[2]))
 
-    sequence_chunks = list()
-    global_all_positions = list()
+    global_all_positions = set()
     global_prediction_dictionary = defaultdict()
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
@@ -196,15 +194,14 @@ def create_consensus_sequence(hdf5_file_path, contig, sequence_chunk_keys, threa
             if fut.exception() is None:
                 base_prediction_dictionary, positions = fut.result()
 
-                res = {**global_prediction_dictionary, **base_prediction_dictionary}
-                global_prediction_dictionary = res
-                res = [*global_all_positions, *positions]
-                global_all_positions = res
+                # res = {**global_prediction_dictionary, **base_prediction_dictionary}
+                # global_prediction_dictionary = res
+                # global_all_positions.union(positions)
 
-                # for pos, indx in positions:
-                #     predicted_base = base_prediction_dictionary[(pos, indx)]
-                #     global_prediction_dictionary[(pos, indx)] = predicted_base
-                #     global_all_positions.add((pos, indx))
+                for pos, indx in positions:
+                    predicted_base = base_prediction_dictionary[(pos, indx)]
+                    global_prediction_dictionary[(pos, indx)] = predicted_base
+                    global_all_positions.add((pos, indx))
             else:
                 sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
             fut._result = None  # python issue 27144
