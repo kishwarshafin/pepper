@@ -209,7 +209,7 @@ class UserInterfaceSupport:
                     futures = [executor.submit(UserInterfaceSupport.single_worker, args,  _start, _stop)
                                for _start, _stop in all_intervals]
 
-                    pbar_subchr = tqdm(total=len(futures), ncols=100, desc=TextColor.GREEN + 'Contig progress: ')
+                    pbar_subchr = tqdm(total=len(futures), ncols=100, desc=TextColor.GREEN + 'Contig ' + chr_name)
 
                     for fut in concurrent.futures.as_completed(futures):
                         if fut.exception() is None:
@@ -231,4 +231,5 @@ class UserInterfaceSupport:
                         else:
                             sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
                         fut._result = None  # python issue 27144
+                    pbar_subchr.clear()
         sys.stderr.write(TextColor.GREEN + "\nFINISHED IMAGE GENERATION\n" + TextColor.END)

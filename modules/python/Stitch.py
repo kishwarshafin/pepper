@@ -139,21 +139,18 @@ def alignment_stitch(sequence_chunks):
 
 def small_chunk_stitch(file_name, contig, small_chunk_keys):
     # for chunk_key in small_chunk_keys:
-    name_sequence_tuples = list()
+    base_prediction_dictionary = defaultdict()
+    all_positions = list()
+    # ignore first 200 bases as they are just overlaps
+    buffer_positions = 200
 
     for contig_name, _st, _end in small_chunk_keys:
         chunk_name = contig_name + '-' + str(_st) + '-' + str(_end)
 
         with h5py.File(file_name, 'r') as hdf5_file:
-            contig_start = hdf5_file['predictions'][contig][chunk_name]['contig_start'][()]
-            contig_end = hdf5_file['predictions'][contig][chunk_name]['contig_end'][()]
-
-        with h5py.File(file_name, 'r') as hdf5_file:
             smaller_chunks = set(hdf5_file['predictions'][contig][chunk_name].keys()) - {'contig_start', 'contig_end'}
 
         smaller_chunks = sorted(smaller_chunks)
-        all_positions = set()
-        base_prediction_dict = defaultdict()
 
         for chunk in smaller_chunks:
             with h5py.File(file_name, 'r') as hdf5_file:
@@ -165,21 +162,16 @@ def small_chunk_stitch(file_name, contig, small_chunk_keys):
             base_predictions = np.array(bases, dtype=np.int)
 
             for pos, indx, base_pred in zip(positions, indices, base_predictions):
+                if _st > 0 and pos <= _st + buffer_positions:
+                    continue
                 if indx < 0 or pos < 0:
                     continue
-                if (pos, indx) not in base_prediction_dict:
-                    base_prediction_dict[(pos, indx)] = base_pred
-                    all_positions.add((pos, indx))
 
-        pos_list = sorted(list(all_positions), key=lambda element: (element[0], element[1]))
-        dict_fetch = operator.itemgetter(*pos_list)
-        predicted_base_labels = list(dict_fetch(base_prediction_dict))
-        sequence = ''.join([label_decoder[base] for base in predicted_base_labels])
-        name_sequence_tuples.append((contig, contig_start, contig_end, sequence))
+                if (pos, indx) not in all_positions:
+                    base_prediction_dictionary[(pos, indx)] = base_pred
+                    all_positions.append((pos, indx))
 
-    name_sequence_tuples = sorted(name_sequence_tuples, key=lambda element: (element[1], element[2]))
-    contig, running_start, running_end, running_sequence = alignment_stitch(name_sequence_tuples)
-    return contig, running_start, running_end, running_sequence
+    return base_prediction_dictionary, all_positions
 
 
 def create_consensus_sequence(hdf5_file_path, contig, sequence_chunk_keys, threads):
@@ -192,6 +184,8 @@ def create_consensus_sequence(hdf5_file_path, contig, sequence_chunk_keys, threa
     sequence_chunk_key_list = sorted(sequence_chunk_key_list, key=lambda element: (element[1], element[2]))
 
     sequence_chunks = list()
+    global_all_positions = list()
+    global_prediction_dictionary = defaultdict()
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
         file_chunks = chunks(sequence_chunk_key_list, max(MIN_SEQUENCE_REQUIRED_FOR_MULTITHREADING,
@@ -200,13 +194,24 @@ def create_consensus_sequence(hdf5_file_path, contig, sequence_chunk_keys, threa
         futures = [executor.submit(small_chunk_stitch, hdf5_file_path, contig, file_chunk) for file_chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
-                contig, contig_start, contig_end, sequence = fut.result()
-                sequence_chunks.append((contig, contig_start, contig_end, sequence))
+                base_prediction_dictionary, positions = fut.result()
+
+                res = {**global_prediction_dictionary, **base_prediction_dictionary}
+                global_prediction_dictionary = res
+                res = [*global_all_positions, *positions]
+                global_all_positions = res
+
+                # for pos, indx in positions:
+                #     predicted_base = base_prediction_dictionary[(pos, indx)]
+                #     global_prediction_dictionary[(pos, indx)] = predicted_base
+                #     global_all_positions.add((pos, indx))
             else:
                 sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
             fut._result = None  # python issue 27144
 
-    sequence_chunks = sorted(sequence_chunks, key=lambda element: (element[1], element[2]))
-    contig, contig_start, contig_end, sequence = alignment_stitch(sequence_chunks)
+    pos_list = sorted(list(global_all_positions), key=lambda element: (element[0], element[1]))
+    dict_fetch = operator.itemgetter(*pos_list)
+    predicted_base_labels = list(dict_fetch(global_prediction_dictionary))
+    sequence = ''.join([label_decoder[base] for base in predicted_base_labels])
 
     return sequence
