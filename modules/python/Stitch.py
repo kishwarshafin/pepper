@@ -6,6 +6,7 @@ import concurrent.futures
 import numpy as np
 from collections import defaultdict
 import operator
+from modules.python.TextColor import TextColor
 from modules.python.Options import ImageSizeOptions
 
 
@@ -55,6 +56,8 @@ def small_chunk_stitch(file_name, contig, small_chunk_keys):
 
             positions = np.array(positions, dtype=np.int64)
             base_predictions = np.array(bases, dtype=np.int)
+            # if _st == 107900:
+            #     print(positions)
 
             for pos, indx, base_pred in zip(positions, indices, base_predictions):
                 # not take the first buffer bases for every chunk that has an overlap to the last chunk
@@ -66,6 +69,9 @@ def small_chunk_stitch(file_name, contig, small_chunk_keys):
 
                 base_prediction_dictionary[(pos, indx)] = base_pred
                 all_positions.add((pos, indx))
+
+    if len(all_positions) == 0:
+        return -1, -1, ''
 
     pos_list = sorted(list(all_positions), key=lambda element: (element[0], element[1]))
     dict_fetch = operator.itemgetter(*pos_list)
@@ -97,14 +103,16 @@ def create_consensus_sequence(hdf5_file_path, contig, sequence_chunk_keys, threa
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
                 first_pos, last_pos, sequence = fut.result()
-                sequence_chunks.append((first_pos, last_pos, sequence))
+                if first_pos != -1 and last_pos != -1:
+                    sequence_chunks.append((first_pos, last_pos, sequence))
             else:
-                sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
+                sys.stderr.write(TextColor.RED + "ERROR: " + str(fut.exception()) + TextColor.END + "\n")
             fut._result = None  # python issue 27144
 
     sequence_chunks = sorted(sequence_chunks, key=lambda element: (element[0], element[1]))
     stitched_sequence = ''
     for first_pos, last_pos, sequence in sequence_chunks:
+        # print(first_pos, last_pos)
         stitched_sequence = stitched_sequence + sequence
 
     return stitched_sequence
