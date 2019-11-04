@@ -75,7 +75,13 @@ def small_chunk_stitch(file_name, contig, small_chunk_keys):
 
     pos_list = sorted(list(all_positions), key=lambda element: (element[0], element[1]))
     dict_fetch = operator.itemgetter(*pos_list)
-    predicted_base_labels = list(dict_fetch(base_prediction_dictionary))
+
+    # weird but python has no casting between np.int64 to list
+    if len(pos_list) > 1:
+        predicted_base_labels = list(dict_fetch(base_prediction_dictionary))
+    else:
+        predicted_base_labels = [dict_fetch(base_prediction_dictionary)]
+
     sequence = ''.join([label_decoder[base] for base in predicted_base_labels])
     first_pos = pos_list[0][0]
     last_pos = pos_list[-1][0]
@@ -112,7 +118,6 @@ def create_consensus_sequence(hdf5_file_path, contig, sequence_chunk_keys, threa
     sequence_chunks = sorted(sequence_chunks, key=lambda element: (element[0], element[1]))
     stitched_sequence = ''
     for first_pos, last_pos, sequence in sequence_chunks:
-        # print(first_pos, last_pos)
         stitched_sequence = stitched_sequence + sequence
 
     return stitched_sequence
