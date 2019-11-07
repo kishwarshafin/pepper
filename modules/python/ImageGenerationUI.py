@@ -170,7 +170,7 @@ class UserInterfaceSupport:
                                          thread_id,
                                          train_mode,
                                          downsample_rate,
-                                         max_size=10000):
+                                         max_size=1000):
         start_time = time.time()
         fasta_handler = PEPPER.FASTA_handler(draft_file)
 
