@@ -231,5 +231,5 @@ class UserInterfaceSupport:
                         fut._result = None  # python issue 27144
 
         end_time = time.time()
-        sys.stderr.write(TextColor.YELLOW + "\nFINISHED IMAGE GENERATION\n" + TextColor.END)
-        sys.stderr.write(TextColor.GREEN + "\nELAPSED TIME: " + str(end_time-start_time) + "\n" + TextColor.END)
+        sys.stderr.write(TextColor.YELLOW + "FINISHED IMAGE GENERATION\n" + TextColor.END)
+        sys.stderr.write(TextColor.GREEN + "\nELAPSED TIME: " + str((end_time-start_time)/60) + " mins\n" + TextColor.END)
