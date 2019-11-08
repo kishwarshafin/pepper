@@ -224,7 +224,7 @@ class UserInterfaceSupport:
                             if percent_completed > current_completed_percent_marker:
                                 sys.stderr.write(TextColor.GREEN + "INFO: Contig: " + contig_name + " Progress: "
                                                  + str(region_end) + "/" + str(interval_end)
-                                                 + "(" + str(percent_completed) + ")%\n" + TextColor.END)
+                                                 + " ( " + str(percent_completed) + "% )\n" + TextColor.END)
                                 current_completed_percent_marker += report_every_percent
                         else:
                             sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
