@@ -1,9 +1,7 @@
-import math
 import time
 import os
 import sys
 import concurrent.futures
-from tqdm import tqdm
 
 from build import PEPPER
 from modules.python.TextColor import TextColor
@@ -178,22 +176,16 @@ class UserInterfaceSupport:
         fasta_handler = PEPPER.FASTA_handler(draft_file)
 
         file_name = output_path + "pepper_images" + ".hdf"
-        # thread_prefix = "{:02d}".format(thread_id) + "/" + "{:02d}".format(total_threads) + ":"
-        pbar = tqdm(chr_list, ncols=100)
 
         with DataStore(file_name, 'w') as output_hdf_file:
-            for chr_name, region in pbar:
-                pbar.set_description(TextColor.BLUE + "Processing contig: %s" % chr_name)
-                # sys.stderr.write(TextColor.CYAN + "INFO: " + thread_prefix + " GENERATING IMAGE FROM CONTIG "
-                #                  + str(chr_name) + "\n" + TextColor.END)
+            for chr_name, region in chr_list:
+                sys.stderr.write(TextColor.CYAN + "INFO: PROCESSING CONTIG " + str(chr_name) + "\n" + TextColor.END)
                 if not region:
                     interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
-                    max_end = interval_end
                 else:
                     interval_start, interval_end = tuple(region)
                     interval_start = max(0, interval_start)
                     interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
-                    max_end = interval_end
 
                 # this is the interval size each of the process is going to get which is 10^6
                 # I will split this into 10^4 size inside the worker process
@@ -209,16 +201,13 @@ class UserInterfaceSupport:
                     futures = [executor.submit(UserInterfaceSupport.single_worker, args,  _start, _stop)
                                for _start, _stop in all_intervals]
 
-                    pbar_subchr = tqdm(total=len(futures), ncols=100, desc=TextColor.GREEN + 'Contig ' + chr_name)
-
                     for fut in concurrent.futures.as_completed(futures):
                         if fut.exception() is None:
                             # get the results
                             images, labels, positions, chunk_ids, region = fut.result()
-                            # contig_name, region_start, region_end = region
-                            pbar_subchr.update(1)
-                            # sys.stderr.write(TextColor.GREEN + "INFO: Contig: " + contig_name + " Progress: "
-                            #                  + str(region_end) + "/" + str(interval_end) + "\n" + TextColor.END)
+                            contig_name, region_start, region_end = region
+                            sys.stderr.write(TextColor.GREEN + "INFO: Contig: " + contig_name + " Progress: "
+                                             + str(region_end) + "/" + str(interval_end) + "\n" + TextColor.END)
 
                             for i, image in enumerate(images):
                                 label = labels[i]
@@ -231,5 +220,7 @@ class UserInterfaceSupport:
                         else:
                             sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
                         fut._result = None  # python issue 27144
-                    pbar_subchr.clear()
-        sys.stderr.write(TextColor.GREEN + "\nFINISHED IMAGE GENERATION\n" + TextColor.END)
+
+        end_time = time.time()
+        sys.stderr.write(TextColor.YELLOW + "\nFINISHED IMAGE GENERATION\n" + TextColor.END)
+        sys.stderr.write(TextColor.GREEN + "\nELAPSED TIME: " + str(end_time-start_time) + "\n" + TextColor.END)
