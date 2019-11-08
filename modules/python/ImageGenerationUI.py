@@ -199,7 +199,6 @@ class UserInterfaceSupport:
 
                 args = (chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
                 current_completed_percent_marker = report_every_percent
-                current_count = 0
                 with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
                     futures = [executor.submit(UserInterfaceSupport.single_worker, args,  _start, _stop)
                                for _start, _stop in all_intervals]
@@ -221,11 +220,11 @@ class UserInterfaceSupport:
                                 output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
 
                             # reporting
-                            current_count += 1
-                            percent_completed = int(100 * (current_count/len(all_intervals)))
-                            if percent_completed >= current_completed_percent_marker:
+                            percent_completed = int(100 * (region_end/interval_end))
+                            if percent_completed > current_completed_percent_marker:
                                 sys.stderr.write(TextColor.GREEN + "INFO: Contig: " + contig_name + " Progress: "
-                                                 + str(region_end) + "/" + str(interval_end) + "\n" + TextColor.END)
+                                                 + str(region_end) + "/" + str(interval_end)
+                                                 + "(" + str(percent_completed) + ")%\n" + TextColor.END)
                                 current_completed_percent_marker += report_every_percent
                         else:
                             sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
