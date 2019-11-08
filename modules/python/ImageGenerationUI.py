@@ -221,7 +221,7 @@ class UserInterfaceSupport:
 
                             # reporting
                             percent_completed = int(100 * (region_end/interval_end))
-                            if percent_completed > current_completed_percent_marker:
+                            if percent_completed >= current_completed_percent_marker:
                                 sys.stderr.write(TextColor.GREEN + "INFO: Contig: " + contig_name + " Progress: "
                                                  + str(region_end) + "/" + str(interval_end)
                                                  + " (" + str(percent_completed) + "%)\n" + TextColor.END)
