@@ -177,6 +177,8 @@ class UserInterfaceSupport:
 
         file_name = output_path + "pepper_images" + ".hdf"
 
+        report_every_percent = 10
+
         with DataStore(file_name, 'w') as output_hdf_file:
             for chr_name, region in chr_list:
                 sys.stderr.write(TextColor.CYAN + "INFO: PROCESSING CONTIG " + str(chr_name) + "\n" + TextColor.END)
@@ -196,7 +198,8 @@ class UserInterfaceSupport:
                     all_intervals.append((pos_start, pos_end))
 
                 args = (chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
-
+                current_completed_percent_marker = report_every_percent
+                current_count = 0
                 with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
                     futures = [executor.submit(UserInterfaceSupport.single_worker, args,  _start, _stop)
                                for _start, _stop in all_intervals]
@@ -206,9 +209,8 @@ class UserInterfaceSupport:
                             # get the results
                             images, labels, positions, chunk_ids, region = fut.result()
                             contig_name, region_start, region_end = region
-                            sys.stderr.write(TextColor.GREEN + "INFO: Contig: " + contig_name + " Progress: "
-                                             + str(region_end) + "/" + str(interval_end) + "\n" + TextColor.END)
 
+                            # save the image to hdf
                             for i, image in enumerate(images):
                                 label = labels[i]
                                 position, index = zip(*positions[i])
@@ -217,6 +219,14 @@ class UserInterfaceSupport:
                                 summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
 
                                 output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
+
+                            # reporting
+                            current_count += 1
+                            percent_completed = int(100 * (current_count/len(all_intervals)))
+                            if percent_completed >= current_completed_percent_marker:
+                                sys.stderr.write(TextColor.GREEN + "INFO: Contig: " + contig_name + " Progress: "
+                                                 + str(region_end) + "/" + str(interval_end) + "\n" + TextColor.END)
+                                current_completed_percent_marker += report_every_percent
                         else:
                             sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
                         fut._result = None  # python issue 27144
