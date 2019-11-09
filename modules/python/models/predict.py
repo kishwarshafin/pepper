@@ -41,7 +41,7 @@ def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu
     transducer_model.eval()
 
     if gpu_mode:
-        transducer_model = torch.nn.DataParallel(transducer_model).cuda()
+        transducer_model = torch.nn.parallel.DistributedDataParallel(transducer_model).cuda()
     sys.stderr.write(TextColor.CYAN + 'MODEL LOADED\n')
 
     with torch.no_grad():
