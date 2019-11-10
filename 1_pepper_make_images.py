@@ -68,6 +68,12 @@ if __name__ == '__main__':
         help="Number of threads to use. Default is 5."
     )
     parser.add_argument(
+        "--thread_id",
+        type=int,
+        default=5,
+        help="Number of threads to use. Default is 5."
+    )
+    parser.add_argument(
         "--downsample_rate",
         type=float,
         required=False,
@@ -90,13 +96,14 @@ if __name__ == '__main__':
 
     output_dir = UserInterfaceSupport.handle_output_directory(os.path.abspath(FLAGS.output_dir))
 
-    UserInterfaceSupport.chromosome_level_parallelization(chr_list,
-                                                          FLAGS.bam,
-                                                          FLAGS.draft,
-                                                          FLAGS.truth_bam,
-                                                          output_dir,
-                                                          FLAGS.threads,
-                                                          FLAGS.train_mode,
-                                                          FLAGS.perform_realignment,
-                                                          FLAGS.downsample_rate,
-                                                          FLAGS.chunk_size)
+    UserInterfaceSupport.chromosome_level_parallelization2(chr_list,
+                                                           FLAGS.bam,
+                                                           FLAGS.draft,
+                                                           FLAGS.truth_bam,
+                                                           output_dir,
+                                                           FLAGS.threads,
+                                                           FLAGS.thread_id,
+                                                           FLAGS.train_mode,
+                                                           FLAGS.downsample_rate,
+                                                           FLAGS.perform_realignment,
+                                                           FLAGS.chunk_size)

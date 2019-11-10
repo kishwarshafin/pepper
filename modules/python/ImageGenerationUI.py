@@ -1,6 +1,7 @@
 import time
 import os
 import sys
+import math
 import concurrent.futures
 from datetime import datetime
 from build import PEPPER
@@ -8,7 +9,6 @@ from modules.python.TextColor import TextColor
 from modules.python.DataStore import DataStore
 from modules.python.AlignmentSummarizer import AlignmentSummarizer
 from modules.python.Options import ImageSizeOptions
-from tqdm import tqdm
 MIN_SEQUENCE_REQUIRED_FOR_MULTITHREADING = 10
 
 
@@ -147,8 +147,8 @@ class UserInterfaceSupport:
         return chromosome_name_list
 
     @staticmethod
-    def single_worker(args, chr_name, _start, _end):
-        bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate = args
+    def single_worker(args, _start, _end):
+        chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate = args
 
         view = UserInterfaceView(chromosome_name=chr_name,
                                  bam_file_path=bam_file,
@@ -204,7 +204,8 @@ class UserInterfaceSupport:
                          + "INFO: TOTAL CONTIGS: " + str(len(chr_list))
                          + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n" + TextColor.END)
 
-        pbar = tqdm(total=len(all_intervals), ncols=100)
+        total_intervals = len(all_intervals)
+        completed_intervals = 0
         with DataStore(file_name, 'w') as output_hdf_file:
             args = (bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
             current_completed_percent_marker = report_every_percent
@@ -216,6 +217,7 @@ class UserInterfaceSupport:
                     if fut.exception() is None:
                         # get the results
                         images, labels, positions, chunk_ids, region = fut.result()
+                        contig_name, region_start, region_end = region
 
                         # save the image to hdf
                         for i, image in enumerate(images):
@@ -228,14 +230,83 @@ class UserInterfaceSupport:
                             output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
 
                         # reporting of progress
-                        pbar.update(1)
-                        pbar.set_description(TextColor.BLUE + "Contig: " + str(region[0]) + TextColor.END +
-                                             TextColor.PURPLE + " Overall Progress: ")
+                        completed_intervals += 1
+                        percent_completed = int(100 * (completed_intervals/total_intervals))
+                        elapsed_time_min = int((time.time() - start_time) / 60)
+                        elapsed_time_sec = int((time.time() - start_time) % 60)
+                        elt = str(elapsed_time_min) + "min " + str(elapsed_time_sec) + " sec"
+                        sys.stderr.write(TextColor.GREEN + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
+                                         + "INFO: Region: " + str(region)
+                                         + " Progress: " + " (" + str(percent_completed) + "%)"
+                                         + " Time elapsed: " + elt + TextColor.END)
+                        current_completed_percent_marker += report_every_percent
                     else:
                         sys.stderr.write(TextColor.RED + "ERROR: " + str(fut.exception()) + "\n" + TextColor.END)
                     fut._result = None  # python issue 27144
-        pbar.close()
 
         end_time = time.time()
         sys.stderr.write(TextColor.YELLOW + "FINISHED IMAGE GENERATION\n" + TextColor.END)
         sys.stderr.write(TextColor.GREEN + "\nELAPSED TIME: " + str((end_time-start_time)/60) + " mins\n" + TextColor.END)
+
+    @staticmethod
+    def chromosome_level_parallelization2(chr_list,
+                                          bam_file,
+                                          draft_file,
+                                          truth_bam,
+                                          output_path,
+                                          total_threads,
+                                          thread_id,
+                                          train_mode,
+                                          downsample_rate,
+                                          perform_realignment,
+                                          max_size):
+        start_time = time.time()
+        fasta_handler = PEPPER.FASTA_handler(draft_file)
+
+        file_name = output_path + "pepper_images_" + str(thread_id) + ".hdf"
+        thread_prefix = "{:02d}".format(thread_id) + "/" + "{:02d}".format(total_threads) + ":"
+
+        with DataStore(file_name, 'w') as output_hdf_file:
+            for chr_name, region in chr_list:
+                sys.stderr.write(TextColor.CYAN + "INFO: " + thread_prefix + " GENERATING IMAGE FROM CONTIG "
+                                 + str(chr_name) + "\n" + TextColor.END)
+                if not region:
+                    interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
+                    max_end = interval_end
+                else:
+                    interval_start, interval_end = tuple(region)
+                    interval_start = max(0, interval_start)
+                    interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
+                    max_end = interval_end
+
+                # this is the interval size each of the process is going to get which is 10^6
+                # I will split this into 10^4 size inside the worker process
+                all_intervals = []
+                for pos in range(interval_start, interval_end, max_size):
+                    pos_start = max(interval_start, pos - ImageSizeOptions.MIN_IMAGE_OVERLAP)
+                    pos_end = min(interval_end, pos + max_size + ImageSizeOptions.MIN_IMAGE_OVERLAP)
+                    all_intervals.append((pos_start, pos_end))
+
+                args = (chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
+
+                intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
+
+                for _start, _end in intervals:
+                    images, labels, positions, chunk_ids, region = UserInterfaceSupport.single_worker(args, _start, _end)
+
+                    log_prefix = "[" + str(region[0]) + ":" + str(region[1]) + "-" + str(region[2]) + "]"
+                    for i, image in enumerate(images):
+                        label = labels[i]
+                        position, index = zip(*positions[i])
+                        chunk_id = chunk_ids[i]
+
+                        summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
+
+                        output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
+
+                    sys.stderr.write(TextColor.GREEN + "INFO: " + thread_prefix + " " + log_prefix + " TOTAL "
+                                     + str(len(images)) + " IMAGES SAVED\n" + TextColor.END)
+
+                sys.stderr.write(TextColor.BLUE + "INFO: " + thread_prefix + " COMPLETED PROCESSING CHROMOSOME: " +
+                                 chr_name + " TOTAL TIME ELAPSED: " + str(int(math.floor(time.time()-start_time)/60))
+                                 + " MINS " + str(math.ceil(time.time()-start_time) % 60) + " SEC\n" + TextColor.END)
