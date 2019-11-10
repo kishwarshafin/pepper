@@ -177,7 +177,7 @@ class UserInterfaceSupport:
 
         file_name = output_path + "pepper_images" + ".hdf"
 
-        report_every_percent = 20
+        report_every_percent = 1
 
         with DataStore(file_name, 'w') as output_hdf_file:
             total_contigs = len(chr_list)
