@@ -2,12 +2,13 @@ import time
 import os
 import sys
 import concurrent.futures
-
+from datetime import datetime
 from build import PEPPER
 from modules.python.TextColor import TextColor
 from modules.python.DataStore import DataStore
 from modules.python.AlignmentSummarizer import AlignmentSummarizer
 from modules.python.Options import ImageSizeOptions
+from tqdm import tqdm
 MIN_SEQUENCE_REQUIRED_FOR_MULTITHREADING = 10
 
 
@@ -146,8 +147,8 @@ class UserInterfaceSupport:
         return chromosome_name_list
 
     @staticmethod
-    def single_worker(args, _start, _end):
-        chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate = args
+    def single_worker(args, chr_name, _start, _end):
+        bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate = args
 
         view = UserInterfaceView(chromosome_name=chr_name,
                                  bam_file_path=bam_file,
@@ -179,62 +180,61 @@ class UserInterfaceSupport:
 
         report_every_percent = 1
 
+        all_intervals = []
+        # first calculate all the intervals that we need to process
+        for chr_name, region in chr_list:
+            # contig update message
+            if not region:
+                interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
+            else:
+                interval_start, interval_end = tuple(region)
+                interval_start = max(0, interval_start)
+                interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
+
+            # this is the interval size each of the process is going to get which is 10^6
+            # I will split this into 10^4 size inside the worker process
+            for pos in range(interval_start, interval_end, max_size):
+                pos_start = max(interval_start, pos - ImageSizeOptions.MIN_IMAGE_OVERLAP)
+                pos_end = min(interval_end, pos + max_size + ImageSizeOptions.MIN_IMAGE_OVERLAP)
+                all_intervals.append((chr_name, pos_start, pos_end))
+
+        # all intervals calculated now
+        # contig update message
+        sys.stderr.write(TextColor.CYAN + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
+                         + "INFO: TOTAL CONTIGS: " + str(len(chr_list))
+                         + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n" + TextColor.END)
+
+        pbar = tqdm(total=len(all_intervals), ncols=100)
         with DataStore(file_name, 'w') as output_hdf_file:
-            total_contigs = len(chr_list)
-            contig_count = 1
-            for chr_name, region in chr_list:
-                # contig update message
-                sys.stderr.write(TextColor.CYAN + "INFO: PROCESSING CONTIG " + str(chr_name) + " "
-                                 + str(contig_count) + "/" + str(total_contigs) + "\n" + TextColor.END)
-                contig_count += 1
+            args = (bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
+            current_completed_percent_marker = report_every_percent
+            with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
+                futures = [executor.submit(UserInterfaceSupport.single_worker, args, chr_name, _start, _stop)
+                           for chr_name, _start, _stop in all_intervals]
 
-                if not region:
-                    interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
-                else:
-                    interval_start, interval_end = tuple(region)
-                    interval_start = max(0, interval_start)
-                    interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
+                for fut in concurrent.futures.as_completed(futures):
+                    if fut.exception() is None:
+                        # get the results
+                        images, labels, positions, chunk_ids, region = fut.result()
 
-                # this is the interval size each of the process is going to get which is 10^6
-                # I will split this into 10^4 size inside the worker process
-                all_intervals = []
-                for pos in range(interval_start, interval_end, max_size):
-                    pos_start = max(interval_start, pos - ImageSizeOptions.MIN_IMAGE_OVERLAP)
-                    pos_end = min(interval_end, pos + max_size + ImageSizeOptions.MIN_IMAGE_OVERLAP)
-                    all_intervals.append((pos_start, pos_end))
+                        # save the image to hdf
+                        for i, image in enumerate(images):
+                            label = labels[i]
+                            position, index = zip(*positions[i])
+                            chunk_id = chunk_ids[i]
 
-                args = (chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
-                current_completed_percent_marker = report_every_percent
-                with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
-                    futures = [executor.submit(UserInterfaceSupport.single_worker, args,  _start, _stop)
-                               for _start, _stop in all_intervals]
+                            summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
 
-                    for fut in concurrent.futures.as_completed(futures):
-                        if fut.exception() is None:
-                            # get the results
-                            images, labels, positions, chunk_ids, region = fut.result()
-                            contig_name, region_start, region_end = region
+                            output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
 
-                            # save the image to hdf
-                            for i, image in enumerate(images):
-                                label = labels[i]
-                                position, index = zip(*positions[i])
-                                chunk_id = chunk_ids[i]
-
-                                summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
-
-                                output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
-
-                            # reporting
-                            percent_completed = int(100 * (region_end/interval_end))
-                            if percent_completed >= current_completed_percent_marker:
-                                sys.stderr.write(TextColor.GREEN + "INFO: Contig: " + contig_name + " Progress: "
-                                                 + str(region_end) + "/" + str(interval_end)
-                                                 + " (" + str(percent_completed) + "%)\n" + TextColor.END)
-                                current_completed_percent_marker += report_every_percent
-                        else:
-                            sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
-                        fut._result = None  # python issue 27144
+                        # reporting of progress
+                        pbar.update(1)
+                        pbar.set_description(TextColor.BLUE + "Contig: " + str(region[0]) + TextColor.END +
+                                             TextColor.PURPLE + " Overall Progress: ")
+                    else:
+                        sys.stderr.write(TextColor.RED + "ERROR: " + str(fut.exception()) + "\n" + TextColor.END)
+                    fut._result = None  # python issue 27144
+        pbar.close()
 
         end_time = time.time()
         sys.stderr.write(TextColor.YELLOW + "FINISHED IMAGE GENERATION\n" + TextColor.END)
