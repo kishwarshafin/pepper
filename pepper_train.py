@@ -34,8 +34,9 @@ class TrainModule:
         self.stats_dir = stats_dir
         self.hidden_size = TrainOptions.HIDDEN_SIZE
         self.gru_layers = TrainOptions.GRU_LAYERS
-        self.learning_rate = 0.0001
-        self.weight_decay = 0
+        # these parameters are learned through hyperbad for batch size 1024 for microbial data
+        self.learning_rate = 0.0013356789695140973
+        self.weight_decay = 1.4529937690796112e-05
 
     def train_model(self):
         # train a model
