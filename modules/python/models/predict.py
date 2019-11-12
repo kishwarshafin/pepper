@@ -2,7 +2,6 @@ import argparse
 import sys
 import torch
 import torch.nn as nn
-import torch.distributed as dist
 from torch.utils.data import DataLoader
 from modules.python.models.dataloader_predict import SequenceDataset
 from modules.python.TextColor import TextColor
@@ -11,7 +10,6 @@ import numpy as np
 from modules.python.models.ModelHander import ModelHandler
 from modules.python.Options import ImageSizeOptions, TrainOptions
 from modules.python.DataStorePredict import DataStore
-from torch.nn.parallel import DistributedDataParallel
 
 
 def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu_mode):
@@ -43,9 +41,7 @@ def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu
     transducer_model.eval()
 
     if gpu_mode:
-        dist.init_process_group(backend="nccl")
-        transducer_model = DistributedDataParallel(transducer_model).cuda()
-        # transducer_model = torch.nn.DataParallel(transducer_model).cuda()
+        transducer_model = torch.nn.DataParallel(transducer_model).cuda()
     sys.stderr.write(TextColor.CYAN + 'MODEL LOADED\n')
 
     with torch.no_grad():
