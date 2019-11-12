@@ -163,6 +163,33 @@ class UserInterfaceSupport:
         return images, labels, positions, image_chunk_ids, region
 
     @staticmethod
+    def image_generator(args, intervals, thread_id):
+        thread_prefix = "[THREAD " + "{:02d}".format(thread_id) + "]"
+        output_path, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate = args
+        file_name = output_path + "pepper_images_thread_" + str(thread_id) + ".hdf"
+
+        with DataStore(file_name, 'w') as output_hdf_file:
+            for counter, chr_name, _start, _end in enumerate(intervals):
+                img_args = (chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
+                images, labels, positions, chunk_ids, region = UserInterfaceSupport.single_worker(img_args, _start, _end)
+
+                for i, image in enumerate(images):
+                    label = labels[i]
+                    position, index = zip(*positions[i])
+                    chunk_id = chunk_ids[i]
+
+                    summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
+
+                    output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
+
+                if counter > 0 and counter % 10 == 0:
+                    sys.stderr.write(TextColor.GREEN + "INFO: " + thread_prefix + " " + str(counter) + "/"
+                                     + str(len(intervals)) + "INTERVALS PROCESSED" + TextColor.END)
+
+        return True, thread_id
+
+
+    @staticmethod
     def chromosome_level_parallelization(chr_list,
                                          bam_file,
                                          draft_file,
@@ -175,10 +202,6 @@ class UserInterfaceSupport:
                                          max_size):
         start_time = time.time()
         fasta_handler = PEPPER.FASTA_handler(draft_file)
-
-        file_name = output_path + "pepper_images" + ".hdf"
-
-        report_every_percent = 1
 
         all_intervals = []
         # first calculate all the intervals that we need to process
@@ -203,46 +226,22 @@ class UserInterfaceSupport:
         sys.stderr.write(TextColor.CYAN + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
                          + "INFO: TOTAL CONTIGS: " + str(len(chr_list))
                          + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n" + TextColor.END)
+        interval_chunks = UserInterfaceSupport.chunks(all_intervals, max(MIN_SEQUENCE_REQUIRED_FOR_MULTITHREADING,
+                                                                         int(len(all_intervals) / total_threads) + 1))
 
-        total_intervals = len(all_intervals)
-        completed_intervals = 0
-        with DataStore(file_name, 'w') as output_hdf_file:
-            args = (bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
-            current_completed_percent_marker = report_every_percent
-            with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
-                futures = [executor.submit(UserInterfaceSupport.single_worker, args, chr_name, _start, _stop)
-                           for chr_name, _start, _stop in all_intervals]
+        args = (output_path, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
+        with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
+            futures = [executor.submit(UserInterfaceSupport.image_generator, args, regions, thread_id)
+                       for thread_id, regions in enumerate(interval_chunks)]
 
-                for fut in concurrent.futures.as_completed(futures):
-                    if fut.exception() is None:
-                        # get the results
-                        images, labels, positions, chunk_ids, region = fut.result()
-                        contig_name, region_start, region_end = region
-
-                        # save the image to hdf
-                        for i, image in enumerate(images):
-                            label = labels[i]
-                            position, index = zip(*positions[i])
-                            chunk_id = chunk_ids[i]
-
-                            summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
-
-                            output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
-
-                        # reporting of progress
-                        completed_intervals += 1
-                        percent_completed = int(100 * (completed_intervals/total_intervals))
-                        elapsed_time_min = int((time.time() - start_time) / 60)
-                        elapsed_time_sec = int((time.time() - start_time) % 60)
-                        elt = str(elapsed_time_min) + "min " + str(elapsed_time_sec) + " sec"
-                        sys.stderr.write(TextColor.GREEN + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
-                                         + "INFO: Region: " + str(region)
-                                         + " Progress: " + " (" + str(percent_completed) + "%)"
-                                         + " Time elapsed: " + elt + TextColor.END)
-                        current_completed_percent_marker += report_every_percent
-                    else:
-                        sys.stderr.write(TextColor.RED + "ERROR: " + str(fut.exception()) + "\n" + TextColor.END)
-                    fut._result = None  # python issue 27144
+            for fut in concurrent.futures.as_completed(futures):
+                if fut.exception() is None:
+                    # get the results
+                    thread_id = fut.result()
+                    sys.stderr.write("Thread " + str(thread_id) + " finished successfully.\n")
+                else:
+                    sys.stderr.write(TextColor.RED + "ERROR: " + str(fut.exception()) + "\n" + TextColor.END)
+                fut._result = None  # python issue 27144
 
         end_time = time.time()
         sys.stderr.write(TextColor.YELLOW + "FINISHED IMAGE GENERATION\n" + TextColor.END)
