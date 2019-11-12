@@ -169,7 +169,8 @@ class UserInterfaceSupport:
         file_name = output_path + "pepper_images_thread_" + str(thread_id) + ".hdf"
 
         with DataStore(file_name, 'w') as output_hdf_file:
-            for counter, chr_name, _start, _end in enumerate(intervals):
+            for counter, interval in enumerate(intervals):
+                chr_name, _start, _end = interval
                 img_args = (chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
                 images, labels, positions, chunk_ids, region = UserInterfaceSupport.single_worker(img_args, _start, _end)
 
@@ -182,11 +183,14 @@ class UserInterfaceSupport:
 
                     output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
 
-                if counter > 0 and counter % 10 == 0:
+                if counter > 0 and counter % 50 == 0:
+                    percent_complete = int(counter/len(intervals))
                     sys.stderr.write(TextColor.GREEN + "INFO: " + thread_prefix + " " + str(counter) + "/"
-                                     + str(len(intervals)) + "INTERVALS PROCESSED" + TextColor.END)
+                                     + str(len(intervals)) + "INTERVALS PROCESSED (" + str(percent_complete) + "%)"
+                                     + TextColor.END)
+                    sys.stderr.flush()
 
-        return True, thread_id
+        return thread_id
 
 
     @staticmethod
@@ -226,6 +230,7 @@ class UserInterfaceSupport:
         sys.stderr.write(TextColor.CYAN + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
                          + "INFO: TOTAL CONTIGS: " + str(len(chr_list))
                          + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n" + TextColor.END)
+        sys.stderr.flush()
         interval_chunks = UserInterfaceSupport.chunks(all_intervals, max(MIN_SEQUENCE_REQUIRED_FOR_MULTITHREADING,
                                                                          int(len(all_intervals) / total_threads) + 1))
 
