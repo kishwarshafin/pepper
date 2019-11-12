@@ -243,7 +243,8 @@ class UserInterfaceSupport:
                 if fut.exception() is None:
                     # get the results
                     thread_id = fut.result()
-                    sys.stderr.write("Thread " + str(thread_id) + " finished successfully.\n")
+                    sys.stderr.write(TextColor.PURPLE + "THREAD " + str(thread_id) + " FINISHED SUCCESSFULLY.\n"
+                                     + TextColor.END)
                 else:
                     sys.stderr.write(TextColor.RED + "ERROR: " + str(fut.exception()) + "\n" + TextColor.END)
                 fut._result = None  # python issue 27144
