@@ -163,10 +163,12 @@ class UserInterfaceSupport:
         return images, labels, positions, image_chunk_ids, region
 
     @staticmethod
-    def image_generator(args, intervals, thread_id):
+    def image_generator(args, all_intervals, total_threads, thread_id):
         thread_prefix = "[THREAD " + "{:02d}".format(thread_id) + "]"
         output_path, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate = args
         file_name = output_path + "pepper_images_thread_" + str(thread_id) + ".hdf"
+
+        intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
 
         with DataStore(file_name, 'w') as output_hdf_file:
             for counter, interval in enumerate(intervals):
@@ -231,13 +233,11 @@ class UserInterfaceSupport:
                          + "INFO: TOTAL CONTIGS: " + str(len(chr_list))
                          + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n" + TextColor.END)
         sys.stderr.flush()
-        interval_chunks = UserInterfaceSupport.chunks(all_intervals, max(MIN_SEQUENCE_REQUIRED_FOR_MULTITHREADING,
-                                                                         int(len(all_intervals) / total_threads) + 1))
 
         args = (output_path, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
-            futures = [executor.submit(UserInterfaceSupport.image_generator, args, regions, thread_id)
-                       for thread_id, regions in enumerate(interval_chunks)]
+            futures = [executor.submit(UserInterfaceSupport.image_generator, args, all_intervals, total_threads, thread_id)
+                       for thread_id in range(0, total_threads)]
 
             for fut in concurrent.futures.as_completed(futures):
                 if fut.exception() is None:
