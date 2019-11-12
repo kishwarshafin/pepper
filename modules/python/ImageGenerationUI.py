@@ -184,9 +184,9 @@ class UserInterfaceSupport:
                     output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
 
                 if counter > 0 and counter % 50 == 0:
-                    percent_complete = int(counter/len(intervals))
+                    percent_complete = int((100 * counter) / len(intervals))
                     sys.stderr.write(TextColor.GREEN + "INFO: " + thread_prefix + " " + str(counter) + "/"
-                                     + str(len(intervals)) + "INTERVALS PROCESSED (" + str(percent_complete) + "%)"
+                                     + str(len(intervals)) + "INTERVALS PROCESSED (" + str(percent_complete) + "%)\n"
                                      + TextColor.END)
                     sys.stderr.flush()
 
