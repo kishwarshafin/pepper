@@ -131,11 +131,6 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         with tqdm(total=len(train_loader), desc='Loss', leave=True, ncols=100) as progress_bar:
             transducer_model.train()
             for images, labels in train_loader:
-                # from modules.python.helper.tensor_analyzer import analyze_tensor
-                # for label in labels[0].data:
-                #     print(label.item(), end='')
-                # print()
-                # analyze_tensor(images[0])
                 labels = labels.type(torch.LongTensor)
                 images = images.type(torch.FloatTensor)
 
@@ -203,11 +198,11 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             train_loss_logger.flush()
             test_loss_logger.flush()
             confusion_matrix_logger.flush()
-        # else:
-        #     # this setup is for hyperband
-        #     if epoch + 1 >= 2 and stats['accuracy'] < 90:
-        #         sys.stderr.write(TextColor.PURPLE + 'EARLY STOPPING AS THE MODEL NOT DOING WELL\n' + TextColor.END)
-        #         return transducer_model, model_optimizer, stats
+        else:
+            # this setup is for hyperband
+            if epoch + 1 >= 10 and stats['accuracy'] < 98:
+                sys.stderr.write(TextColor.PURPLE + 'EARLY STOPPING AS THE MODEL NOT DOING WELL\n' + TextColor.END)
+                return transducer_model, model_optimizer, stats
 
     sys.stderr.write(TextColor.PURPLE + 'Finished training\n' + TextColor.END)
 

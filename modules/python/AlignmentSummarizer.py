@@ -6,6 +6,7 @@ import numpy as np
 from operator import itemgetter
 from modules.python.TextColor import TextColor
 from modules.python.Options import ImageSizeOptions, AlingerOptions
+from modules.python.helper import generate_pileup_from_reads
 
 
 class AlignmentSummarizer:
@@ -162,7 +163,7 @@ class AlignmentSummarizer:
         if not reads:
             return []
 
-        ref_start = region_start - AlingerOptions.ALIGNMENT_SAFE_BASES
+        ref_start = region_start
         ref_end = region_end + AlingerOptions.ALIGNMENT_SAFE_BASES
 
         ref_sequence = self.fasta_handler.get_reference_sequence(self.chromosome_name,
@@ -172,6 +173,8 @@ class AlignmentSummarizer:
         aligner = PEPPER.ReadAligner(ref_start, ref_end, ref_sequence)
 
         realigned_reads = aligner.align_reads_to_reference(reads)
+
+        # generate_pileup_from_reads.pileup_from_reads(ref_sequence, ref_start, ref_end, realigned_reads)
 
         return realigned_reads
 
@@ -187,8 +190,8 @@ class AlignmentSummarizer:
             # get the reads from the bam file
             include_supplementary = False
             truth_reads = truth_bam_handler.get_reads(self.chromosome_name,
-                                                      self.region_start_position - AlingerOptions.ALIGNMENT_SAFE_BASES,
-                                                      self.region_end_position + AlingerOptions.ALIGNMENT_SAFE_BASES,
+                                                      self.region_start_position,
+                                                      self.region_end_position,
                                                       include_supplementary,
                                                       0,
                                                       0)
@@ -226,9 +229,9 @@ class AlignmentSummarizer:
                                                                     ref_start,
                                                                     ref_end)
 
-                read_start = max(0, region_start - AlingerOptions.ALIGNMENT_SAFE_BASES)
-                read_end = region_end + AlingerOptions.ALIGNMENT_SAFE_BASES
-                include_supplementary = True
+                read_start = max(0, region_start)
+                read_end = region_end
+                include_supplementary = False
                 all_reads = self.bam_handler.get_reads(self.chromosome_name,
                                                        read_start,
                                                        read_end,
@@ -254,8 +257,8 @@ class AlignmentSummarizer:
                                 sample[j] = read
                     all_reads = sample
 
-                sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(total_reads)
-                                 + " READS FOUND.\n" + TextColor.END)
+                # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(total_reads)
+                #                  + " READS FOUND.\n" + TextColor.END)
 
                 start_time = time.time()
 
@@ -263,9 +266,9 @@ class AlignmentSummarizer:
                     all_reads = self.reads_to_reference_realignment(read_start,
                                                                     read_end,
                                                                     all_reads)
-                    sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL "
-                                     + str(total_reads) + " READS TOOK: " + str(round(time.time()-start_time, 5))
-                                     + " secs\n" + TextColor.END)
+                    # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL "
+                    #                  + str(total_reads) + " READS TOOK: " + str(round(time.time()-start_time, 5))
+                    #                  + " secs\n" + TextColor.END)
 
                 summary_generator = PEPPER.SummaryGenerator(ref_seq,
                                                             self.chromosome_name,
@@ -287,9 +290,9 @@ class AlignmentSummarizer:
                 all_image_chunk_ids.extend(chunk_ids)
         else:
             # HERE REALIGN THE READS TO THE REFERENCE THEN GENERATE THE SUMMARY TO GET A POLISHED HAPLOTYPE
-            read_start = max(0, self.region_start_position - AlingerOptions.ALIGNMENT_SAFE_BASES)
-            read_end = self.region_end_position + AlingerOptions.ALIGNMENT_SAFE_BASES
-            include_supplementary = True
+            read_start = max(0, self.region_start_position)
+            read_end = self.region_end_position
+            include_supplementary = False
             all_reads = self.bam_handler.get_reads(self.chromosome_name,
                                                    read_start,
                                                    read_end,
@@ -315,16 +318,16 @@ class AlignmentSummarizer:
                             sample[j] = read
                 all_reads = sample
 
-            sys.stderr.write(TextColor.PURPLE + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND\n"
-                             + TextColor.END)
+            # sys.stderr.write(TextColor.PURPLE + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND\n"
+            #                  + TextColor.END)
 
             if realignment_flag:
                 start_time = time.time()
                 all_reads = self.reads_to_reference_realignment(self.region_start_position,
                                                                 self.region_end_position,
                                                                 all_reads)
-                sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL " + str(total_reads) +
-                                 " READS TOOK: " + str(round(time.time()-start_time, 5)) + " secs\n" + TextColor.END)
+                # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL " + str(total_reads)
+                #                 + " READS TOOK: " + str(round(time.time()-start_time, 5)) + " secs\n" + TextColor.END)
 
             # ref_seq should contain region_end_position base
             ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,

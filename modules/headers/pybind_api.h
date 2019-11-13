@@ -7,9 +7,8 @@
 
 #include "dataio/fasta_handler.h"
 #include "dataio/bam_handler.h"
-#include "realignment/aligner.h"
+#include "realignment/simple_aligner.h"
 #include "pileup_summary/summary_generator.h"
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/operators.h>
@@ -59,9 +58,7 @@ PYBIND11_MODULE(PEPPER, m) {
         // SSW alignment class
         py::class_<ReadAligner>(m, "ReadAligner")
             .def(py::init<const int &, const int &, const string &>())
-            .def("align_reads_to_reference", &ReadAligner::align_reads_to_reference)
-            .def("align_reads", &ReadAligner::align_reads)
-            .def("align_haplotypes_to_reference", &ReadAligner::align_haplotypes_to_reference);
+            .def("align_reads_to_reference", &ReadAligner::align_reads_to_reference);
 
         // data structure for sequence name and their length
         py::class_<type_sequence>(m, "type_sequence")

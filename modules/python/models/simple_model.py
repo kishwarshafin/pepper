@@ -26,8 +26,9 @@ class TransducerGRU(nn.Module):
 
     def forward(self, x, hidden):
         hidden = hidden.transpose(0, 1).contiguous()
-        # self.gru.flatten_parameters()
+        self.gru_encoder.flatten_parameters()
         x_out, hidden_out = self.gru_encoder(x, hidden)
+        self.gru_decoder.flatten_parameters()
         x_out, hidden_final = self.gru_decoder(x_out, hidden_out)
 
         x_out = self.dense1(x_out)

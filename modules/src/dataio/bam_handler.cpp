@@ -119,7 +119,7 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                                                    int min_mapq=0,
                                                    int min_baseq = 0) {
     // safe bases
-    stop += 5;
+//    stop += 0;
 
     vector <type_read> all_reads;
 
@@ -136,16 +136,16 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
         //get read flags
         type_read_flags read_flags = get_read_flags(alignment->core.flag);
 
-        if(read_flags.is_qc_failed || read_flags.is_duplicate || read_flags.is_secondary
-           || read_flags.is_unmapped){
+        if (read_flags.is_qc_failed || read_flags.is_duplicate || read_flags.is_secondary
+            || read_flags.is_unmapped) {
             continue;
         }
-        if(!include_supplementary && read_flags.is_supplementary) {
+        if (!include_supplementary && read_flags.is_supplementary) {
             continue;
         }
 
         // mapping quality
-        if(alignment->core.qual < min_mapq){
+        if (alignment->core.qual < min_mapq) {
             continue;
         }
 
@@ -177,13 +177,13 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
 
         // this is a bit ambitious, we are cutting all the reads to desired regions so we don't have to deal with ultra-long reads
         // I am not sure if there are any downside to it, but I would really love the speed-up
-        for(int k = 0; k < alignment->core.n_cigar; k++) {
+        for (int k = 0; k < alignment->core.n_cigar; k++) {
             // we are going on all cigar operations to cut the reads short
             int cigar_op = bam_cigar_op(cigar[k]);
             int cigar_len = bam_cigar_oplen(cigar[k]);
             int modified_cigar_length;
             int cigar_index;
-            if(current_read_pos > stop) {
+            if (current_read_pos > stop) {
                 break;
             }
 
@@ -193,17 +193,17 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                 case BAM_CEQUAL:
                     cigar_index = 0;
                     // if the current read position is to the left then we jump forward
-                    if(current_read_pos < start) {
+                    if (current_read_pos < start) {
                         // jump as much as we can but not more than the boundary of start
-                        cigar_index = min(start - current_read_pos, (long long)cigar_len);
+                        cigar_index = min(start - current_read_pos, (long long) cigar_len);
                         current_read_index += cigar_index;
                         current_read_pos += cigar_index;
                     }
                     // once we've made the jump now add each of the elements
                     modified_cigar_length = 0;
-                    for(int i=cigar_index; i < cigar_len ; i++) {
-                        if(current_read_pos <= stop) {
-                            if(pos_start == -1){
+                    for (int i = cigar_index; i < cigar_len; i++) {
+                        if (current_read_pos <= stop) {
+                            if (pos_start == -1) {
                                 pos_start = current_read_pos;
                                 pos_end = pos_start;
                             }
@@ -213,11 +213,11 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                             char base = ::toupper(seq_nt16_str[bam_seqi(seqi, current_read_index)]);
                             read_seq += base;
 
-                            if(base_quality < min_baseq or
-                               (base != 'A' &&
-                                base != 'C' &&
-                                base != 'G' &&
-                                base != 'T')) {
+                            if (base_quality < min_baseq or
+                                (base != 'A' &&
+                                 base != 'C' &&
+                                 base != 'G' &&
+                                 base != 'T')) {
                                 bad_bases.push_back(running_sequence_index);
                             }
                             running_sequence_index += 1;
@@ -228,7 +228,7 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                         current_read_index += 1;
                         current_read_pos += 1;
                     }
-                    if(modified_cigar_length > 0) {
+                    if (modified_cigar_length > 0) {
                         // save the cigar tuple now
                         CigarOp cigar_instance;
 
@@ -241,19 +241,19 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                 case BAM_CINS:
                     modified_cigar_length = 0;
                     // this only happens after the first position, I am also forcing an anchor
-                    if(current_read_pos >= start && current_read_pos <= stop && pos_start != -1) {
-                        for(int i=0; i < cigar_len ; i++) {
+                    if (current_read_pos >= start && current_read_pos <= stop && pos_start != -1) {
+                        for (int i = 0; i < cigar_len; i++) {
                             // we are adding the base and quality
                             int base_quality = (int) qual[current_read_index];
                             base_qualities.push_back(base_quality);
                             char base = ::toupper(seq_nt16_str[bam_seqi(seqi, current_read_index)]);
                             read_seq += base;
 
-                            if(base_quality < min_baseq or
-                               (base != 'A' &&
-                                base != 'C' &&
-                                base != 'G' &&
-                                base != 'T')) {
+                            if (base_quality < min_baseq or
+                                (base != 'A' &&
+                                 base != 'C' &&
+                                 base != 'G' &&
+                                 base != 'T')) {
                                 bad_bases.push_back(running_sequence_index);
                             }
                             running_sequence_index += 1;
@@ -264,7 +264,7 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                     } else {
                         current_read_index += cigar_len;
                     }
-                    if(modified_cigar_length > 0) {
+                    if (modified_cigar_length > 0) {
                         // save the cigar tuple now
                         CigarOp cigar_instance;
 
@@ -276,10 +276,10 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                 case BAM_CREF_SKIP:
                 case BAM_CDEL:
                     modified_cigar_length = 0;
-                    if(current_read_pos >= start && current_read_pos <= stop && pos_start != -1) {
+                    if (current_read_pos >= start && current_read_pos <= stop && pos_start != -1) {
                         modified_cigar_length = 0;
-                        for(int i=0; i < cigar_len ; i++) {
-                            if(current_read_pos <= stop) {
+                        for (int i = 0; i < cigar_len; i++) {
+                            if (current_read_pos <= stop) {
                                 modified_cigar_length += 1;
                                 pos_end += 1;
                             } else break;
@@ -290,7 +290,7 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                     } else {
                         current_read_pos += cigar_len;
                     }
-                    if(modified_cigar_length > 0) {
+                    if (modified_cigar_length > 0) {
                         // save the cigar tuple now
                         CigarOp cigar_instance;
 
@@ -310,8 +310,8 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
         int map_quality = alignment->core.qual;
 
         // handle auxiliary data
-        uint8_t* s = bam_get_aux(alignment);
-        const uint8_t* aux_end = alignment->data + alignment->l_data;
+        uint8_t *s = bam_get_aux(alignment);
+        const uint8_t *aux_end = alignment->data + alignment->l_data;
         int HP_tag = 0;
         // FORMAT OF TAG IS: TAG:TYPE:VALUE
         // WE ARE ONLY INTERESTED IN HP TAG WHICH SHOULD ALWAYS HAVE INTEGER VALUE
@@ -321,7 +321,7 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
             // Each block is encoded like (each element is a byte):
             // [tag char 1, tag char 2, type byte, ...]
             // where the ... contents depends on the 2-character tag and type.
-            const string tag = string(reinterpret_cast<char*>(s), 2);
+            const string tag = string(reinterpret_cast<char *>(s), 2);
             s += 2;
             const uint8_t tag_type = *s++;
 
@@ -329,13 +329,19 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                 // An 'A' is just a single character string.
                 case 'A': {
                     // Safe since we know s is at least 4 bytes from the end.
-                    const string value = string(reinterpret_cast<char*>(s), 1);
+                    const string value = string(reinterpret_cast<char *>(s), 1);
                     s += 1;
-                    if(tag == "HP")
-                        cerr<<"HP TAG HAS INVALID TYPE: "<<tag_type<<" "<<query_name<<endl;
-                } break;
-                // These are all different byte-sized integers.
-                case 'C': case 'c': case 'S': case 's': case 'I': case 'i': {
+                    if (tag == "HP")
+                        cerr << "HP TAG HAS INVALID TYPE: " << tag_type << " " << query_name << endl;
+                }
+                    break;
+                    // These are all different byte-sized integers.
+                case 'C':
+                case 'c':
+                case 'S':
+                case 's':
+                case 'I':
+                case 'i': {
                     // MOST OF THE TIMES HP WILL BE OF THIS TYPE
                     const int size = HtslibAuxSize(tag_type);
                     if (size < 0 || aux_end - s < size) {
@@ -352,28 +358,31 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                     }
                     // VALID TAG
 
-                    if(tag == "HP") {
+                    if (tag == "HP") {
                         HP_tag = value;
                     }
 
                     s += size;
-                } break;
+                }
+                    break;
                     // A 4-byte floating point.
                 case 'f': {
-                    if (aux_end - s < 4){
+                    if (aux_end - s < 4) {
                         tag_state_ok = false;
                         cerr << "INVALID TAG: " << tag << endl;
                         break;
                     }
                     const float value = le_to_float(s);
                     // VALID TAG
-                    if(tag == "HP")
-                        cerr<<"HP TAG HAS INVALID TYPE: "<<tag_type<<" "<<query_name<<endl;
+                    if (tag == "HP")
+                        cerr << "HP TAG HAS INVALID TYPE: " << tag_type << " " << query_name << endl;
                     s += 4;
-                } break;
+                }
+                    break;
                     // Z and H are null-terminated strings.
-                case 'Z': case 'H': {
-                    char* value = reinterpret_cast<char*>(s);
+                case 'Z':
+                case 'H': {
+                    char *value = reinterpret_cast<char *>(s);
                     for (; s < aux_end && *s; ++s) {}  // Loop to the end.
                     if (s >= aux_end) {
                         tag_state_ok = false;
@@ -381,16 +390,17 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                     }
                     s++;
                     // VALID TAG
-                    if(tag == "HP")
-                        cerr<<"HP TAG HAS INVALID TYPE: "<<tag_type<<" "<<query_name<<endl;
+                    if (tag == "HP")
+                        cerr << "HP TAG HAS INVALID TYPE: " << tag_type << " " << query_name << endl;
 //                    if (type == 'Z') {
 //                        SetInfoField(tag, value, read_message);
 //                    }
-                } break;
+                }
+                    break;
                     // B is an array of atomic types (strings, ints, floats).
                 case 'B': {
-                    if(tag == "HP")
-                        cerr<<"HP TAG HAS INVALID TYPE: "<<tag_type<<" "<<query_name<<endl;
+                    if (tag == "HP")
+                        cerr << "HP TAG HAS INVALID TYPE: " << tag_type << " " << query_name << endl;
 
                     const uint8_t sub_type = *s++;
                     const int element_size = HtslibAuxSize(sub_type);
@@ -405,9 +415,10 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
                         break;
                     }
                     const int n_elements = le_to_u32(s);
-                    if (n_elements == 0) cerr<<"READ TAG: n_elements is zero"<<endl;
+                    if (n_elements == 0) cerr << "READ TAG: n_elements is zero" << endl;
                     s += 4 + n_elements * element_size;
-                } break;
+                }
+                    break;
                 default: {
                     tag_state_ok = false;
                     cerr << "UNKNOWN TAG: " << tag << endl;
@@ -418,19 +429,20 @@ vector<type_read> BAM_handler::get_reads(string chromosome,
 
         // set all fetched attributes
         type_read read;
-        read.query_name = query_name;
-        read.pos = pos_start;
-        read.pos_end = pos_end;
-        read.pos_end = pos_end;
-        read.sequence = read_seq;
-        read.flags = read_flags;
-        read.mapping_quality = map_quality;
-        read.base_qualities = base_qualities;
-        read.cigar_tuples = cigar_tuples;
-        read.bad_indicies = bad_bases;
-        read.hp_tag = HP_tag;
+        if (read_seq.length() > 0) {
+            read.query_name = query_name;
+            read.pos = pos_start;
+            read.pos_end = pos_end;
+            read.sequence = read_seq;
+            read.flags = read_flags;
+            read.mapping_quality = map_quality;
+            read.base_qualities = base_qualities;
+            read.cigar_tuples = cigar_tuples;
+            read.bad_indicies = bad_bases;
+            read.hp_tag = HP_tag;
 
-        all_reads.push_back(read);
+            all_reads.push_back(read);
+        }
     }
     bam_destroy1(alignment);
     hts_itr_destroy(iter);

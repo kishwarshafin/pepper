@@ -10,7 +10,7 @@ def boolean_string(s):
     :param s: string holding boolean value
     :return:
     """
-    if s.lower() not in {'false', 'true', '1', 't'}:
+    if s.lower() not in {'false', 'true', '1', 't', '0', 'f'}:
         raise ValueError('Not a valid boolean string')
     return s.lower() == 'true' or s.lower() == 't' or s.lower() == '1'
 
@@ -50,6 +50,12 @@ if __name__ == '__main__':
         help="If true then labeled images will be generated."
     )
     parser.add_argument(
+        "--perform_realignment",
+        type=boolean_string,
+        default=True,
+        help="If true then labeled images will be generated."
+    )
+    parser.add_argument(
         "--output_dir",
         type=str,
         default="candidate_finder_output/",
@@ -61,18 +67,25 @@ if __name__ == '__main__':
         default=5,
         help="Number of threads to use. Default is 5."
     )
-    parser.add_argument(
-        "--thread_id",
-        type=int,
-        required=False,
-        help="Thread ID."
-    )
+    # parser.add_argument(
+    #     "--thread_id",
+    #     type=int,
+    #     default=5,
+    #     help="Number of threads to use. Default is 5."
+    # )
     parser.add_argument(
         "--downsample_rate",
         type=float,
         required=False,
         default=1.0,
         help="Downsample reads by this margin."
+    )
+    parser.add_argument(
+        "--chunk_size",
+        type=int,
+        required=False,
+        default=1000,
+        help="Chunk size for multi-threading."
     )
     FLAGS, unparsed = parser.parse_known_args()
     chr_list = UserInterfaceSupport.get_chromosome_list(FLAGS.chromosome_name, FLAGS.draft)
@@ -89,6 +102,7 @@ if __name__ == '__main__':
                                                           FLAGS.truth_bam,
                                                           output_dir,
                                                           FLAGS.threads,
-                                                          FLAGS.thread_id,
                                                           FLAGS.train_mode,
-                                                          FLAGS.downsample_rate)
+                                                          FLAGS.downsample_rate,
+                                                          FLAGS.perform_realignment,
+                                                          FLAGS.chunk_size)

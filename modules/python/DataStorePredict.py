@@ -67,7 +67,7 @@ class DataStore(object):
         if name not in self.meta['predictions']:
             self.meta['predictions'].add(name)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                      chunk_name_suffix, 'position')] = position.numpy().astype(np.uint32)
+                                                      chunk_name_suffix, 'position')] = position
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
                                                       chunk_name_suffix, 'index')] = index
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
