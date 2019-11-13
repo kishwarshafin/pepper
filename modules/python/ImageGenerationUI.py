@@ -1,7 +1,6 @@
 import time
 import os
 import sys
-import math
 import concurrent.futures
 from datetime import datetime
 from build import PEPPER
@@ -9,7 +8,6 @@ from modules.python.TextColor import TextColor
 from modules.python.DataStore import DataStore
 from modules.python.AlignmentSummarizer import AlignmentSummarizer
 from modules.python.Options import ImageSizeOptions
-MIN_SEQUENCE_REQUIRED_FOR_MULTITHREADING = 10
 
 
 class UserInterfaceView:
@@ -66,14 +64,6 @@ class UserInterfaceSupport:
     """
     THIS CLASS HOLDS STATIC METHODS THAT HELP AS USER INTERFACE FOR IMAGE GENERATION
     """
-    @staticmethod
-    def chunks(intervals, max_chunk_size):
-        """Yield successive n-sized chunks from l."""
-        chunks = []
-        for i in range(0, len(intervals), max_chunk_size):
-            chunks.append(intervals[i:i + max_chunk_size])
-        return chunks
-
     @staticmethod
     def handle_output_directory(output_directory):
         """
@@ -165,11 +155,19 @@ class UserInterfaceSupport:
     @staticmethod
     def image_generator(args, all_intervals, total_threads, thread_id):
         thread_prefix = "[THREAD " + "{:02d}".format(thread_id) + "]"
+
         output_path, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate = args
         file_name = output_path + "pepper_images_thread_" + str(thread_id) + ".hdf"
 
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
 
+        # initial notification
+        sys.stderr.write(TextColor.BLUE + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
+                         + "STARTING THREAD: " + str(thread_id)
+                         + " FOR " + str(len(intervals)) + " INTERVALS\n" + TextColor.END)
+        sys.stderr.flush()
+
+        start_time = time.time()
         with DataStore(file_name, 'w') as output_hdf_file:
             for counter, interval in enumerate(intervals):
                 chr_name, _start, _end = interval
@@ -185,15 +183,19 @@ class UserInterfaceSupport:
 
                     output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
 
-                if counter > 0 and counter % 50 == 0:
+                if counter > 0 and counter % 1 == 0:
                     percent_complete = int((100 * counter) / len(intervals))
-                    sys.stderr.write(TextColor.GREEN + "INFO: " + thread_prefix + " " + str(counter) + "/"
-                                     + str(len(intervals)) + " INTERVALS PROCESSED (" + str(percent_complete) + "%)\n"
+                    time_now = time.time()
+                    mins = int((time_now - start_time) / 60)
+                    secs = int((time_now - start_time)) % 60
+                    sys.stderr.write(TextColor.GREEN + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "]"
+                                     + " INFO: " + thread_prefix + " " + str(counter) + "/" + str(len(intervals))
+                                     + " COMPLETE (" + str(percent_complete) + "%)" +
+                      TextColor.CYAN + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n"
                                      + TextColor.END)
                     sys.stderr.flush()
 
         return thread_id
-
 
     @staticmethod
     def chromosome_level_parallelization(chr_list,
@@ -243,75 +245,15 @@ class UserInterfaceSupport:
                 if fut.exception() is None:
                     # get the results
                     thread_id = fut.result()
-                    sys.stderr.write(TextColor.PURPLE + "THREAD " + str(thread_id) + " FINISHED SUCCESSFULLY.\n"
+                    sys.stderr.write(TextColor.PURPLE + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
+                                     + "THREAD " + str(thread_id) + " FINISHED SUCCESSFULLY.\n"
                                      + TextColor.END)
                 else:
                     sys.stderr.write(TextColor.RED + "ERROR: " + str(fut.exception()) + "\n" + TextColor.END)
                 fut._result = None  # python issue 27144
 
         end_time = time.time()
+        mins = int((end_time - start_time) / 60)
+        secs = int((end_time - start_time)) % 60
         sys.stderr.write(TextColor.YELLOW + "FINISHED IMAGE GENERATION\n" + TextColor.END)
-        sys.stderr.write(TextColor.GREEN + "\nELAPSED TIME: " + str((end_time-start_time)/60) + " mins\n" + TextColor.END)
-
-    @staticmethod
-    def chromosome_level_parallelization2(chr_list,
-                                          bam_file,
-                                          draft_file,
-                                          truth_bam,
-                                          output_path,
-                                          total_threads,
-                                          thread_id,
-                                          train_mode,
-                                          downsample_rate,
-                                          perform_realignment,
-                                          max_size):
-        start_time = time.time()
-        fasta_handler = PEPPER.FASTA_handler(draft_file)
-
-        file_name = output_path + "pepper_images_" + str(thread_id) + ".hdf"
-        thread_prefix = "{:02d}".format(thread_id) + "/" + "{:02d}".format(total_threads) + ":"
-
-        with DataStore(file_name, 'w') as output_hdf_file:
-            for chr_name, region in chr_list:
-                sys.stderr.write(TextColor.CYAN + "INFO: " + thread_prefix + " GENERATING IMAGE FROM CONTIG "
-                                 + str(chr_name) + "\n" + TextColor.END)
-                if not region:
-                    interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
-                    max_end = interval_end
-                else:
-                    interval_start, interval_end = tuple(region)
-                    interval_start = max(0, interval_start)
-                    interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
-                    max_end = interval_end
-
-                # this is the interval size each of the process is going to get which is 10^6
-                # I will split this into 10^4 size inside the worker process
-                all_intervals = []
-                for pos in range(interval_start, interval_end, max_size):
-                    pos_start = max(interval_start, pos - ImageSizeOptions.MIN_IMAGE_OVERLAP)
-                    pos_end = min(interval_end, pos + max_size + ImageSizeOptions.MIN_IMAGE_OVERLAP)
-                    all_intervals.append((pos_start, pos_end))
-
-                args = (chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
-
-                intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
-
-                for _start, _end in intervals:
-                    images, labels, positions, chunk_ids, region = UserInterfaceSupport.single_worker(args, _start, _end)
-
-                    log_prefix = "[" + str(region[0]) + ":" + str(region[1]) + "-" + str(region[2]) + "]"
-                    for i, image in enumerate(images):
-                        label = labels[i]
-                        position, index = zip(*positions[i])
-                        chunk_id = chunk_ids[i]
-
-                        summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
-
-                        output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
-
-                    sys.stderr.write(TextColor.GREEN + "INFO: " + thread_prefix + " " + log_prefix + " TOTAL "
-                                     + str(len(images)) + " IMAGES SAVED\n" + TextColor.END)
-
-                sys.stderr.write(TextColor.BLUE + "INFO: " + thread_prefix + " COMPLETED PROCESSING CHROMOSOME: " +
-                                 chr_name + " TOTAL TIME ELAPSED: " + str(int(math.floor(time.time()-start_time)/60))
-                                 + " MINS " + str(math.ceil(time.time()-start_time) % 60) + " SEC\n" + TextColor.END)
+        sys.stderr.write(TextColor.GREEN + "ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n" + TextColor.END)
