@@ -14,7 +14,7 @@ class UserInterfaceView:
     """
     Process manager that runs sequence of processes to generate images and their labels.
     """
-    def __init__(self, chromosome_name, bam_file_path, draft_file_path, truth_bam, train_mode, downsample_rate):
+    def __init__(self, chromosome_name, bam_file_path, draft_file_path, truth_bam, train_mode):
         """
         Initialize a manager object
         :param chromosome_name: Name of the chromosome
@@ -29,7 +29,7 @@ class UserInterfaceView:
         self.bam_handler = PEPPER.BAM_handler(bam_file_path)
         self.fasta_handler = PEPPER.FASTA_handler(draft_file_path)
         self.train_mode = train_mode
-        self.downsample_rate = downsample_rate
+        self.downsample_rate = 1.0
         self.truth_bam_handler = None
 
         if self.train_mode:
@@ -39,7 +39,7 @@ class UserInterfaceView:
         # name of the chromosome
         self.chromosome_name = chromosome_name
 
-    def parse_region(self, start_position, end_position, realignment_flag):
+    def parse_region(self, start_position, end_position):
         """
         Generate labeled images of a given region of the genome
         :param start_position: Start position of the region
@@ -54,8 +54,7 @@ class UserInterfaceView:
                                                    end_position)
 
         images, lables, positions, image_chunk_ids = alignment_summarizer.create_summary(self.truth_bam_handler,
-                                                                                         self.train_mode,
-                                                                                         realignment_flag)
+                                                                                         self.train_mode)
 
         return images, lables, positions, image_chunk_ids
 
@@ -138,16 +137,15 @@ class UserInterfaceSupport:
 
     @staticmethod
     def single_worker(args, _start, _end):
-        chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate = args
+        chr_name, bam_file, draft_file, truth_bam, train_mode = args
 
         view = UserInterfaceView(chromosome_name=chr_name,
                                  bam_file_path=bam_file,
                                  draft_file_path=draft_file,
                                  truth_bam=truth_bam,
-                                 train_mode=train_mode,
-                                 downsample_rate=downsample_rate)
+                                 train_mode=train_mode)
 
-        images, labels, positions, image_chunk_ids = view.parse_region(_start, _end, perform_realignment)
+        images, labels, positions, image_chunk_ids = view.parse_region(_start, _end)
         region = (chr_name, _start, _end)
 
         return images, labels, positions, image_chunk_ids, region
@@ -156,7 +154,7 @@ class UserInterfaceSupport:
     def image_generator(args, all_intervals, total_threads, thread_id):
         thread_prefix = "[THREAD " + "{:02d}".format(thread_id) + "]"
 
-        output_path, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate = args
+        output_path, bam_file, draft_file, truth_bam, train_mode = args
         file_name = output_path + "pepper_images_thread_" + str(thread_id) + ".hdf"
 
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
@@ -171,7 +169,7 @@ class UserInterfaceSupport:
         with DataStore(file_name, 'w') as output_hdf_file:
             for counter, interval in enumerate(intervals):
                 chr_name, _start, _end = interval
-                img_args = (chr_name, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
+                img_args = (chr_name, bam_file, draft_file, truth_bam, train_mode)
                 images, labels, positions, chunk_ids, region = UserInterfaceSupport.single_worker(img_args, _start, _end)
 
                 for i, image in enumerate(images):
@@ -204,10 +202,8 @@ class UserInterfaceSupport:
                                          truth_bam,
                                          output_path,
                                          total_threads,
-                                         train_mode,
-                                         perform_realignment,
-                                         downsample_rate,
-                                         max_size):
+                                         train_mode):
+        max_size = 1000
         start_time = time.time()
         fasta_handler = PEPPER.FASTA_handler(draft_file)
 
@@ -236,7 +232,7 @@ class UserInterfaceSupport:
                          + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n" + TextColor.END)
         sys.stderr.flush()
 
-        args = (output_path, bam_file, draft_file, truth_bam, train_mode, perform_realignment, downsample_rate)
+        args = (output_path, bam_file, draft_file, truth_bam, train_mode)
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
             futures = [executor.submit(UserInterfaceSupport.image_generator, args, all_intervals, total_threads, thread_id)
                        for thread_id in range(0, total_threads)]

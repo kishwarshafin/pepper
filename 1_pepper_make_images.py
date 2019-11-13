@@ -19,76 +19,57 @@ if __name__ == '__main__':
     '''
     Processes arguments and performs tasks.
     '''
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="1_pepper_make_images.py script generates ")
     parser.add_argument(
+        "-b",
         "--bam",
         type=str,
         required=True,
         help="BAM file containing mapping between reads and the draft assembly."
     )
     parser.add_argument(
+        "-d",
         "--draft",
         type=str,
         required=True,
         help="FASTA file containing the draft assembly."
     )
     parser.add_argument(
+        "-tb",
         "--truth_bam",
         type=str,
         default=None,
         help="BAM file containing mapping of true assembly to the draft assembly."
     )
     parser.add_argument(
-        "--chromosome_name",
+        "-r",
+        "--region",
         type=str,
         help="Region in [chr_name:start-end] format"
     )
     parser.add_argument(
+        "-m",
         "--train_mode",
         type=boolean_string,
         default=False,
         help="If true then labeled images will be generated."
     )
     parser.add_argument(
-        "--perform_realignment",
-        type=boolean_string,
-        default=True,
-        help="If true then labeled images will be generated."
-    )
-    parser.add_argument(
+        "-o",
         "--output_dir",
         type=str,
         default="candidate_finder_output/",
         help="Path to output directory, if it doesn't exist it will be created."
     )
     parser.add_argument(
+        "-t",
         "--threads",
         type=int,
         default=5,
         help="Number of threads to use. Default is 5."
     )
-    # parser.add_argument(
-    #     "--thread_id",
-    #     type=int,
-    #     default=5,
-    #     help="Number of threads to use. Default is 5."
-    # )
-    parser.add_argument(
-        "--downsample_rate",
-        type=float,
-        required=False,
-        default=1.0,
-        help="Downsample reads by this margin."
-    )
-    parser.add_argument(
-        "--chunk_size",
-        type=int,
-        required=False,
-        default=1000,
-        help="Chunk size for multi-threading."
-    )
     FLAGS, unparsed = parser.parse_known_args()
-    chr_list = UserInterfaceSupport.get_chromosome_list(FLAGS.chromosome_name, FLAGS.draft)
+    chr_list = UserInterfaceSupport.get_chromosome_list(FLAGS.region, FLAGS.draft)
 
     if FLAGS.train_mode:
         if not FLAGS.truth_bam:
@@ -102,7 +83,4 @@ if __name__ == '__main__':
                                                           FLAGS.truth_bam,
                                                           output_dir,
                                                           FLAGS.threads,
-                                                          FLAGS.train_mode,
-                                                          FLAGS.downsample_rate,
-                                                          FLAGS.perform_realignment,
-                                                          FLAGS.chunk_size)
+                                                          FLAGS.train_mode)
