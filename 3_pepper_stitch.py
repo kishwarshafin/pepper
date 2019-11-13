@@ -56,4 +56,4 @@ if __name__ == '__main__':
     )
 
     FLAGS, unparsed = parser.parse_known_args()
-    perform_stitch(FLAGS.sequence_hdf, FLAGS.output_dir, FLAGS.threads)
+    perform_stitch(FLAGS.input_hdf, FLAGS.output_dir, FLAGS.threads)
