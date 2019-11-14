@@ -21,7 +21,7 @@ def perform_stitch(hdf_file_path, output_path, threads):
                          + str(len(consensus_sequence)) + ".\n" + TextColor.END)
 
         # TODO: I should write a FASTA handler here. This is too sloppy.
-        if consensus_sequence is not None:
+        if consensus_sequence is not None and len(consensus_sequence) > 0:
             consensus_fasta_file.write('>' + contig + "\n")
             consensus_fasta_file.write(consensus_sequence+"\n")
 
