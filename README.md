@@ -129,8 +129,8 @@ ARGUMENT DETAILS:
 
 ## Results
 
-#### PEPPER achieves lower error rate for both complex diploid human and small microbial genome.
-We compared `PEPPER` against suggested pipeline `Racon-Medaka` and we demonstrate significantly better results for both complex human genome and microbial genomes. We used HG00733 human genome and Staphylococcus Aureus samples to evaluate these two pipelines. The PEPPER human model is trained on HG002 and the microbial model was trained on samples excluding Staphylococcus Aureus. We used `r941_prom_high` model to run `Medaka`.
+#### PEPPER achieves lower error rate than ONT suggested pipeline.
+We compared `PEPPER` against `Racon-Medaka` pipeline and we demonstrate significantly better results for microbial genomes. We used Staphylococcus Aureus samples to evaluate these two pipelines. The PEPPER microbial model was trained on samples excluding Staphylococcus Aureus. We used `r941_prom_high` model to run `Medaka`.
 <p align="center">
 <img src="img/PEPPER_error_rate.png" alt="PEPPER_error_rate.png" height="420">
 </p>
