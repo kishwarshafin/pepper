@@ -156,4 +156,4 @@ We are thankful to the developers of these packages: </br>
 The name "P.E.P.P.E.R." is also inspired from an A.I. created by Tony Stark in the  Marvel Comics (Earth-616). PEPPER is named after Tony Stark's then friend and the CEO of Resilient, Pepper Potts.
 
 
-© 2019 Kishwar Shafin, Trevor Pesout, Benedict Paten.
+© 2019 Kishwar Shafin, Trevor Pesout, Miten Jain, Benedict Paten.
