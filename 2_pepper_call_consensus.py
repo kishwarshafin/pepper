@@ -16,20 +16,21 @@ if __name__ == '__main__':
     '''
     Processes arguments and performs tasks.
     '''
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="2_pepper_call_consensus.py performs inference on images "
+                                                 "using a trained model.")
     parser.add_argument(
         "-i",
         "--image_dir",
         type=str,
         required=True,
-        help="Path to directory containing all HDF5 image segments for prediction."
+        help="Path to directory containing all HDF5 images."
     )
     parser.add_argument(
         "-m",
         "--model_path",
         type=str,
         required=True,
-        help="Path to the trained model."
+        help="Path to a trained model."
     )
     parser.add_argument(
         "-b",
@@ -37,7 +38,7 @@ if __name__ == '__main__':
         type=int,
         required=False,
         default=100,
-        help="Batch size for testing, default is 100."
+        help="Batch size for testing, default is 100. Suggested values: 256/512/1024."
     )
     parser.add_argument(
         "-w",
@@ -45,22 +46,22 @@ if __name__ == '__main__':
         type=int,
         required=False,
         default=4,
-        help="Batch size for testing, default is 100."
+        help="Number of workers for loading images. Default is 4."
     )
     parser.add_argument(
         "-o",
         "--output_dir",
         type=str,
         required=False,
-        default='vcf_output',
-        help="Output directory."
+        default='output',
+        help="Path to the output directory."
     )
     parser.add_argument(
         "-g",
         "--gpu_mode",
         default=False,
         action='store_true',
-        help="If set then PyTorch will use GPUs for inference."
+        help="If set then PyTorch will use GPUs for inference. CUDA required."
     )
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.output_dir = UserInterfaceSupport.handle_output_directory(FLAGS.output_dir)

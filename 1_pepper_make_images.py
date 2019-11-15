@@ -19,7 +19,8 @@ if __name__ == '__main__':
     '''
     Processes arguments and performs tasks.
     '''
-    parser = argparse.ArgumentParser(description="1_pepper_make_images.py script generates ")
+    parser = argparse.ArgumentParser(description="1_pepper_make_images.py script generates summary statistics "
+                                                 "from the aligment of reads to the draft assembly.")
     parser.add_argument(
         "-b",
         "--bam",
@@ -48,7 +49,7 @@ if __name__ == '__main__':
         help="Region in [chr_name:start-end] format"
     )
     parser.add_argument(
-        "-m",
+        "-tm",
         "--train_mode",
         type=boolean_string,
         default=False,
