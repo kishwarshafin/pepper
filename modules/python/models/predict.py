@@ -29,6 +29,7 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
     torch.set_num_threads(threads)
     sys.stderr.write(TextColor.GREEN + 'INFO: TORCH THREADS SET TO: ' + str(torch.get_num_threads()) + ".\n"
                      + TextColor.END)
+    sys.stderr.flush()
 
     # data loader
     test_data = SequenceDataset(test_file)
