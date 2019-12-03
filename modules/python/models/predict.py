@@ -51,6 +51,7 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
 
     with torch.no_grad():
         for contig, contig_start, contig_end, chunk_id, images, position, index in tqdm(test_loader, ncols=50):
+            sys.stderr.flush()
             images = images.type(torch.FloatTensor)
             if gpu_mode:
                 # encoder_hidden = encoder_hidden.cuda()
