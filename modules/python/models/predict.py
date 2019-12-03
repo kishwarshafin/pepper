@@ -12,18 +12,23 @@ from modules.python.Options import ImageSizeOptions, TrainOptions
 from modules.python.DataStorePredict import DataStore
 
 
-def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu_mode):
+def predict(test_file, output_filename, model_path, batch_size, threads, num_workers, gpu_mode):
     """
     Create a prediction table/dictionary of an images set using a trained model.
     :param test_file: File to predict on
     :param batch_size: Batch size used for prediction
     :param model_path: Path to a trained model
     :param gpu_mode: If true, predictions will be done over GPU
+    :param threads: Number of threads to set for pytorch
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
     prediction_data_file = DataStore(output_filename, mode='w')
     sys.stderr.write(TextColor.PURPLE + 'Loading data\n' + TextColor.END)
+
+    torch.set_num_threads(threads)
+    sys.stderr.write(TextColor.GREEN + 'INFO: TORCH THREADS SET TO: ' + str(torch.get_num_threads()) + ".\n"
+                     + TextColor.END)
 
     # data loader
     test_data = SequenceDataset(test_file)
