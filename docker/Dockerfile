@@ -21,8 +21,9 @@ RUN mkdir /opt/cmake && \
 
 # get PEPPER
 WORKDIR /opt
-RUN git clone https://github.com/kishwarshafin/pepper.git && \
-    cd /opt/pepper && \
+ADD https://api.github.com/repos/kishwarshafin/pepper/git/refs/heads/master version.json
+RUN git clone https://github.com/kishwarshafin/pepper.git pepper/
+RUN cd /opt/pepper && \
     git fetch && \
     git submodule update --init && \
     git pull origin master
