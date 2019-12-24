@@ -6,7 +6,7 @@ RUN apt-get update && \
     apt-get -y install time git make wget autoconf gcc g++ && \
     apt-get -y install autoconf bzip2 lzma-dev zlib1g-dev && \
     apt-get -y install libcurl4-openssl-dev libpthread-stubs0-dev libbz2-dev && \
-    apt-get -y install liblzma-dev libhdf5-dev && \
+    apt-get -y install liblzma-dev libhdf5-dev libncurses5-dev libncursesw5-dev && \
     apt-get -y install python3 python3-dev python3-pip && \
     apt-get clean && \
     apt-get purge && \
@@ -43,8 +43,6 @@ RUN cd /opt/pepper && \
 
 WORKDIR /opt/pepper/build
 RUN cmake .. -Wno-deprecated && make
-
-
 
 WORKDIR /opt/pepper
 # setup entrypoint
