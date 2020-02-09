@@ -54,16 +54,15 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
         for contig, contig_start, contig_end, chunk_id, images, position, index in tqdm(test_loader, ncols=50):
             sys.stderr.flush()
             images = images.type(torch.FloatTensor)
-            if gpu_mode:
-                # encoder_hidden = encoder_hidden.cuda()
-                images = images.cuda()
 
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
-            if gpu_mode:
-                hidden = hidden.cuda()
+            prediction_base_tensor = torch.zeros((images.size(0), images.size(1), ImageSizeOptions.TOTAL_LABELS))
 
-            prediction_base_dict = np.zeros((images.size(0), images.size(1), ImageSizeOptions.TOTAL_LABELS))
+            if gpu_mode:
+                images = images.cuda()
+                hidden = hidden.cuda()
+                prediction_base_tensor = prediction_base_tensor.cuda()
 
             for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
                 if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
@@ -76,24 +75,32 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
                 # run inference
                 output_base, hidden = transducer_model(image_chunk, hidden)
 
+                # now calculate how much padding is on the top and bottom of this chunk so we can do a simple
+                # add operation
+                top_zeros = chunk_start
+                bottom_zeros = ImageSizeOptions.SEQ_LENGTH - chunk_end
+
                 # do softmax and get prediction
-                m = nn.Softmax(dim=2)
-                soft_probs = m(output_base)
-                output_preds = soft_probs.cpu()
-                base_max_value, predicted_base_label = torch.max(output_preds, dim=2)
+                # we run a softmax a padding to make the output tensor compatible for adding
+                inference_layers = nn.Sequential(
+                    nn.Softmax(dim=2),
+                    nn.ZeroPad2d((0, 0, top_zeros, bottom_zeros))
+                )
+                if gpu_mode:
+                    inference_layers = inference_layers.cuda()
 
-                # convert everything to list
-                base_max_value = base_max_value.numpy().tolist()
-                predicted_base_label = predicted_base_label.numpy().tolist()
+                # run the softmax and padding layers
+                if gpu_mode:
+                    base_prediction = (inference_layers(output_base) * 10).type(torch.IntTensor).cuda()
+                else:
+                    base_prediction = (inference_layers(output_base) * 10).type(torch.IntTensor)
 
-                assert(len(base_max_value) == len(predicted_base_label))
+                # now simply add the tensor to the global counter
+                prediction_base_tensor = torch.add(prediction_base_tensor, base_prediction)
 
-                for ii in range(0, len(predicted_base_label)):
-                    chunk_pos = chunk_start
-                    for p_base, base in zip(base_max_value[ii], predicted_base_label[ii]):
-                        prediction_base_dict[ii][chunk_pos][base] += p_base
-                        chunk_pos += 1
-            predicted_base_labels = np.argmax(np.array(prediction_base_dict), axis=2)
+            base_values, base_labels = torch.max(prediction_base_tensor, 2)
+
+            predicted_base_labels = base_labels.cpu().numpy()
 
             for i in range(images.size(0)):
                 prediction_data_file.write_prediction(contig[i], contig_start[i], contig_end[i], chunk_id[i],
