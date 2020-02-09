@@ -91,9 +91,9 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
 
                 # run the softmax and padding layers
                 if gpu_mode:
-                    base_prediction = (inference_layers(output_base) * 10).type(torch.IntTensor).cuda()
+                    base_prediction = inference_layers(output_base).cuda()
                 else:
-                    base_prediction = (inference_layers(output_base) * 10).type(torch.IntTensor)
+                    base_prediction = inference_layers(output_base)
 
                 # now simply add the tensor to the global counter
                 prediction_base_tensor = torch.add(prediction_base_tensor, base_prediction)
