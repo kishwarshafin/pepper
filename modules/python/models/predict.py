@@ -19,13 +19,14 @@ def to_numpy(tensor):
     return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
 
 
-def predict(test_file, output_filename, model_path, batch_size, threads, num_workers, gpu_mode, onnx_mode):
+def predict(test_file, output_filename, model_path, batch_size, threads, num_workers, gpu_mode, mkldnn_mode, onnx_mode):
     """
     Create a prediction table/dictionary of an images set using a trained model.
     :param test_file: File to predict on
     :param batch_size: Batch size used for prediction
     :param model_path: Path to a trained model
     :param gpu_mode: If true, predictions will be done over GPU
+    :param mkldnn_mode: If true, mkldnn mode is on for cpu
     :param onnx_mode: If true, onnx mode is on for cpu
     :param threads: Number of threads to set for pytorch
     :param num_workers: Number of workers to be used by the dataloader
@@ -33,6 +34,7 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
     """
     if gpu_mode:
         onnx_mode = False
+        mkldnn_mode = False
 
     prediction_data_file = DataStore(output_filename, mode='w')
     sys.stderr.write(TextColor.PURPLE + 'Loading data\n' + TextColor.END)
@@ -60,6 +62,9 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
 
     if gpu_mode:
         transducer_model = torch.nn.DataParallel(transducer_model).cuda()
+    elif mkldnn_mode:
+        sys.stderr.write("INFO: MODEL LOADING TO MKLDNN\n")
+        transducer_model = mkldnn.to_mkldnn(transducer_model)
     elif onnx_mode:
         sys.stderr.write("INFO: MODEL LOADING TO ONNX\n")
         x = torch.zeros(1, TrainOptions.TRAIN_WINDOW, ImageSizeOptions.IMAGE_HEIGHT)
@@ -133,10 +138,10 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
                 )
                 if gpu_mode:
                     inference_layers = inference_layers.cuda()
-
-                # run the softmax and padding layers
-                if gpu_mode:
                     base_prediction = inference_layers(output_base).cuda()
+                elif mkldnn_mode:
+                    inference_layers = mkldnn.to_mkldnn(inference_layers)
+                    base_prediction = inference_layers(output_base)
                 else:
                     base_prediction = inference_layers(output_base)
 
