@@ -1,14 +1,52 @@
 import argparse
 import sys
+import torch
 from modules.python.TextColor import TextColor
 from modules.python.ImageGenerationUI import UserInterfaceSupport
 from modules.python.models.predict import predict
+from modules.python.models.predict_distributed_gpu import predict_distributed_gpu
+from os.path import isfile, join
+from os import listdir
+
+
+def get_file_paths_from_directory(directory_path):
+    """
+    Returns all paths of files given a directory path
+    :param directory_path: Path to the directory
+    :return: A list of paths of files
+    """
+    file_paths = [join(directory_path, file) for file in listdir(directory_path) if isfile(join(directory_path, file))
+                  and file[-3:] == 'hdf']
+    return file_paths
 
 
 def polish_genome(csv_file, model_path, batch_size, num_workers, output_dir, gpu_mode, onnx_mode):
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "OUTPUT DIRECTORY: " + output_dir + "\n")
     output_filename = output_dir + "pepper_predictions.hdf"
     predict(csv_file, output_filename, model_path, batch_size, num_workers, gpu_mode, onnx_mode)
+    sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "PREDICTION GENERATED SUCCESSFULLY.\n")
+
+
+def polish_genome_distributed_gpu(image_dir, model_path, batch_size, num_workers, output_dir):
+    sys.stderr.write(TextColor.GREEN + "INFO: DISTRIBUTED GPU SETUP\n" + TextColor.END)
+    total_gpu_devices = torch.cuda.device_count()
+    sys.stderr.write(TextColor.GREEN + "INFO: TOTAL GPU AVAILABLE: " + str(total_gpu_devices) + "\n" + TextColor.END)
+    total_callers = total_gpu_devices
+
+    if threads == 0:
+        sys.stderr.write(TextColor.RED + "ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n" + TextColor.END)
+        exit()
+
+    # chunk the inputs
+    input_files = get_file_paths_from_directory(image_dir)
+
+    file_chunks = [[] for i in range(total_callers)]
+    for i in range(0, len(input_files)):
+        file_chunks[i % total_callers].append(input_files[i])
+
+    threads = min(total_callers, len(file_chunks))
+    sys.stderr.write(TextColor.GREEN + "INFO: TOTAL THREADS: " + str(total_callers) + "\n" + TextColor.END)
+    predict_distributed_gpu(image_dir, file_chunks, output_dir, model_path, batch_size, total_callers, num_workers)
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "PREDICTION GENERATED SUCCESSFULLY.\n")
 
 
@@ -64,6 +102,13 @@ if __name__ == '__main__':
         help="If set then PyTorch will use GPUs for inference. CUDA required."
     )
     parser.add_argument(
+        "-d",
+        "--distributed_on",
+        default=False,
+        action='store_true',
+        help="If set then PyTorch will use GPUs for inference. CUDA required."
+    )
+    parser.add_argument(
         "-onnx_off",
         "--onnx_off",
         default=True,
@@ -73,11 +118,17 @@ if __name__ == '__main__':
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.output_dir = UserInterfaceSupport.handle_output_directory(FLAGS.output_dir)
 
-    polish_genome(FLAGS.image_dir,
-                  FLAGS.model_path,
-                  FLAGS.batch_size,
-                  FLAGS.num_workers,
-                  FLAGS.output_dir,
-                  FLAGS.gpu_mode,
-                  FLAGS.onnx_off)
-
+    if FLAGS.gpu_mode and FLAGS.distributed_on:
+        polish_genome_distributed_gpu(FLAGS.image_dir,
+                                      FLAGS.model_path,
+                                      FLAGS.batch_size,
+                                      FLAGS.num_workers,
+                                      FLAGS.output_dir)
+    else:
+        polish_genome(FLAGS.image_dir,
+                      FLAGS.model_path,
+                      FLAGS.batch_size,
+                      FLAGS.num_workers,
+                      FLAGS.output_dir,
+                      FLAGS.gpu_mode,
+                      FLAGS.onnx_off)
