@@ -1,6 +1,7 @@
 import h5py
 import argparse
 import sys
+import re
 from modules.python.TextColor import TextColor
 from modules.python.StitchV2 import create_consensus_sequence
 from os.path import isfile, join
@@ -18,6 +19,21 @@ def get_file_paths_from_directory(directory_path):
     return file_paths
 
 
+def number_key(name):
+    """
+    Sorting: https://stackoverflow.com/questions/4287209/sort-list-of-strings-by-integer-suffix-in-python
+    :param name:
+    :return:
+    """
+    parts = re.findall('[^0-9]+|[0-9]+', name)
+    L = []
+    for part in parts:
+        try:
+            L.append(int(part))
+        except ValueError:
+            L.append(part)
+    return L
+
 def perform_stitch(hdf_file_path, output_path, threads):
     all_prediction_files = get_file_paths_from_directory(hdf_file_path)
 
@@ -29,7 +45,8 @@ def perform_stitch(hdf_file_path, output_path, threads):
             all_contigs.update(contigs)
 
     consensus_fasta_file = open(output_path+'consensus.fa', 'w')
-    for contig in all_contigs:
+
+    for contig in sorted(all_contigs):
         sys.stderr.write(TextColor.YELLOW + "INFO: PROCESSING CONTIG: " + contig + "\n" + TextColor.END)
 
         # get all the chunk keys from all the files
