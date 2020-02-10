@@ -165,11 +165,11 @@ def alignment_stitch(sequence_chunks):
     return contig, running_start, running_end, running_sequence
 
 
-def small_chunk_stitch(file_name, contig, small_chunk_keys):
+def small_chunk_stitch(contig, small_chunk_keys):
     # for chunk_key in small_chunk_keys:
     name_sequence_tuples = list()
 
-    for contig_name, _st, _end in small_chunk_keys:
+    for file_name, contig_name, _st, _end in small_chunk_keys:
         chunk_name = contig_name + '-' + str(_st) + '-' + str(_end)
 
         with h5py.File(file_name, 'r') as hdf5_file:
@@ -210,14 +210,15 @@ def small_chunk_stitch(file_name, contig, small_chunk_keys):
     return contig, running_start, running_end, running_sequence
 
 
-def create_consensus_sequence(hdf5_file_path, contig, sequence_chunk_keys, threads):
-    sequence_chunk_keys = sorted(sequence_chunk_keys)
-    sequence_chunk_key_list = list()
-    for sequence_chunk_key in sequence_chunk_keys:
-        contig, st, end = sequence_chunk_key.split('-')
-        sequence_chunk_key_list.append((contig, int(st), int(end)))
+def create_consensus_sequence(contig, sequence_chunk_keys, threads):
+    sequence_chunk_keys = sorted(sequence_chunk_keys, key=lambda element: (element[1]))
 
-    sequence_chunk_key_list = sorted(sequence_chunk_key_list, key=lambda element: (element[1], element[2]))
+    sequence_chunk_key_list = list()
+    for file_name, sequence_chunk_key in sequence_chunk_keys:
+        contig, st, end = sequence_chunk_key.split('-')
+        sequence_chunk_key_list.append((file_name, contig, int(st), int(end)))
+
+    sequence_chunk_key_list = sorted(sequence_chunk_key_list, key=lambda element: (element[2], element[3]))
 
     sequence_chunks = list()
     # generate the dictionary in parallel
@@ -225,7 +226,7 @@ def create_consensus_sequence(hdf5_file_path, contig, sequence_chunk_keys, threa
         file_chunks = chunks(sequence_chunk_key_list, max(MIN_SEQUENCE_REQUIRED_FOR_MULTITHREADING,
                                                           int(len(sequence_chunk_key_list) / threads) + 1))
 
-        futures = [executor.submit(small_chunk_stitch, hdf5_file_path, contig, file_chunk) for file_chunk in file_chunks]
+        futures = [executor.submit(small_chunk_stitch, contig, file_chunk) for file_chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
                 contig, contig_start, contig_end, sequence = fut.result()

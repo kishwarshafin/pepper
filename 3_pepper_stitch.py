@@ -3,20 +3,46 @@ import argparse
 import sys
 from modules.python.TextColor import TextColor
 from modules.python.StitchV2 import create_consensus_sequence
+from os.path import isfile, join
+from os import listdir
+
+
+def get_file_paths_from_directory(directory_path):
+    """
+    Returns all paths of files given a directory path
+    :param directory_path: Path to the directory
+    :return: A list of paths of files
+    """
+    file_paths = [join(directory_path, file) for file in listdir(directory_path) if isfile(join(directory_path, file))
+                  and file[-3:] == 'hdf']
+    return file_paths
 
 
 def perform_stitch(hdf_file_path, output_path, threads):
-    with h5py.File(hdf_file_path, 'r') as hdf5_file:
-        contigs = list(hdf5_file['predictions'].keys())
+    all_prediction_files = get_file_paths_from_directory(hdf_file_path)
+
+    all_contigs = set()
+    # get contigs from all of the files
+    for prediction_file in sorted(all_prediction_files):
+        with h5py.File(prediction_file, 'r') as hdf5_file:
+            contigs = list(hdf5_file['predictions'].keys())
+            all_contigs.update(contigs)
 
     consensus_fasta_file = open(output_path+'consensus.fa', 'w')
-    for contig in contigs:
+    for contig in all_contigs:
         sys.stderr.write(TextColor.YELLOW + "INFO: PROCESSING CONTIG: " + contig + "\n" + TextColor.END)
 
-        with h5py.File(hdf_file_path, 'r') as hdf5_file:
-            chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
+        # get all the chunk keys from all the files
+        all_chunk_keys = list()
+        for prediction_file in all_prediction_files:
+            with h5py.File(prediction_file, 'r') as hdf5_file:
+                chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
+                for chunk_key in chunk_keys:
+                    all_chunk_keys.append((prediction_file, chunk_key))
 
-        consensus_sequence = create_consensus_sequence(hdf_file_path, contig, chunk_keys, threads)
+        consensus_sequence = create_consensus_sequence(contig,
+                                                       all_chunk_keys,
+                                                       threads)
         sys.stderr.write(TextColor.BLUE + "INFO: FINISHED PROCESSING " + contig + ", POLISHED SEQUENCE LENGTH: "
                          + str(len(consensus_sequence)) + ".\n" + TextColor.END)
 
@@ -36,10 +62,10 @@ if __name__ == '__main__':
                                                  "the polished sequences.")
     parser.add_argument(
         "-i",
-        "--input_hdf",
+        "--input_dir",
         type=str,
         required=True,
-        help="Input hdf prediction file."
+        help="Input dir containing hdf prediction file."
     )
     parser.add_argument(
         "-o",
@@ -57,4 +83,4 @@ if __name__ == '__main__':
     )
 
     FLAGS, unparsed = parser.parse_known_args()
-    perform_stitch(FLAGS.input_hdf, FLAGS.output_dir, FLAGS.threads)
+    perform_stitch(FLAGS.input_dir, FLAGS.output_dir, FLAGS.threads)
