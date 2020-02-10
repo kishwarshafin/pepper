@@ -72,6 +72,8 @@ def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu
         onnx.checker.check_model(onnx_model)
 
         sess_options = onnxruntime.SessionOptions()
+        print(torch.__config__.parallel_info())
+        print(*torch.__config__.show().split("\n"), sep="\n")
         print(dir(sess_options))
         print(sess_options.intra_op_num_threads)
         print(sess_options.execution_mode)
