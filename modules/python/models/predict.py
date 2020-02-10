@@ -9,22 +9,30 @@ from modules.python.models.ModelHander import ModelHandler
 from modules.python.Options import ImageSizeOptions, TrainOptions
 from modules.python.DataStorePredict import DataStore
 from torch.utils import mkldnn
+import torch.onnx
+import os
+import onnx
+import onnxruntime
 
 
-def predict(test_file, output_filename, model_path, batch_size, threads, num_workers, gpu_mode, mkldnn_mode):
+def to_numpy(tensor):
+    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+
+
+def predict(test_file, output_filename, model_path, batch_size, threads, num_workers, gpu_mode, onnx_mode):
     """
     Create a prediction table/dictionary of an images set using a trained model.
     :param test_file: File to predict on
     :param batch_size: Batch size used for prediction
     :param model_path: Path to a trained model
     :param gpu_mode: If true, predictions will be done over GPU
-    :param mkldnn_mode: If true, mkldnn mode on
+    :param onnx_mode: If true, onnx mode is on for cpu
     :param threads: Number of threads to set for pytorch
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
     if gpu_mode:
-        mkldnn_mode = False
+        onnx_mode = False
 
     prediction_data_file = DataStore(output_filename, mode='w')
     sys.stderr.write(TextColor.PURPLE + 'Loading data\n' + TextColor.END)
@@ -52,15 +60,33 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
 
     if gpu_mode:
         transducer_model = torch.nn.DataParallel(transducer_model).cuda()
-    elif mkldnn_mode:
-        sys.stderr.write("INFO: MODEL LOADING TO MKLDNN\n")
-        transducer_model = mkldnn.to_mkldnn(transducer_model)
+    elif onnx_mode:
+        sys.stderr.write("INFO: MODEL LOADING TO ONNX\n")
+        x = torch.zeros(1, TrainOptions.TRAIN_WINDOW, ImageSizeOptions.IMAGE_HEIGHT)
+        h = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
-    sys.stderr.write(TextColor.CYAN + 'MODEL LOADED\n')
+        if not os.path.isfile(model_path + ".onnx"):
+            sys.stderr.write("INFO: MODEL LOADING TO ONNX\n")
+            torch.onnx.export(transducer_model, (x, h), model_path + ".onnx", training=False,
+                              opset_version=10,
+                              do_constant_folding=True,
+                              input_names=['input_image', 'input_hidden'],
+                              output_names=['output_pred', 'output_hidden'],
+                              dynamic_axes={'input_image': {0: 'batch_size'},
+                                            'input_hidden': {0: 'batch_size'},
+                                            'output_pred': {0: 'batch_size'},
+                                            'output_hidden': {0: 'batch_size'}})
+
+        sys.stderr.write("INFO: LOADING ONNX MODEL\n")
+        onnx_model = onnx.load(model_path + ".onnx")
+        onnx.checker.check_model(onnx_model)
+        sys.stderr.write("INFO: ONNX SESSION INITIALIZING\n")
+        ort_session = onnxruntime.InferenceSession(model_path + ".onnx")
+
+    sys.stderr.write(TextColor.CYAN + 'STARTING INFERENCE\n' + TextColor.END)
 
     with torch.no_grad():
         for contig, contig_start, contig_end, chunk_id, images, position, index in tqdm(test_loader, ncols=50):
-            sys.stderr.flush()
             images = images.type(torch.FloatTensor)
 
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
@@ -80,8 +106,16 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
                 # chunk all the data
                 image_chunk = images[:, chunk_start:chunk_end]
 
-                # run inference
-                output_base, hidden = transducer_model(image_chunk, hidden)
+                if onnx_mode:
+                    # run inference on onnx mode, which takes numpy inputs
+                    ort_inputs = {ort_session.get_inputs()[0].name: image_chunk.cpu().numpy(),
+                                  ort_session.get_inputs()[1].name: hidden.cpu().numpy()}
+                    output_base, hidden = ort_session.run(None, ort_inputs)
+                    output_base = torch.from_numpy(output_base)
+                    hidden = torch.from_numpy(hidden)
+                else:
+                    # run inference
+                    output_base, hidden = transducer_model(image_chunk, hidden)
 
                 # now calculate how much padding is on the top and bottom of this chunk so we can do a simple
                 # add operation
@@ -96,8 +130,6 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
                 )
                 if gpu_mode:
                     inference_layers = inference_layers.cuda()
-                elif mkldnn_mode:
-                    inference_layers = mkldnn.to_mkldnn(inference_layers)
 
                 # run the softmax and padding layers
                 if gpu_mode:

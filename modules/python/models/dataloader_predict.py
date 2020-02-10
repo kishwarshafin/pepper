@@ -1,11 +1,9 @@
 from os.path import isfile, join
 from os import listdir
-import numpy as np
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 import h5py
 import sys
-from modules.python.Options import ImageSizeOptions
 from modules.python.TextColor import TextColor
 
 

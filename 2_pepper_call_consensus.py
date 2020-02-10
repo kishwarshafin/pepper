@@ -72,11 +72,11 @@ if __name__ == '__main__':
         help="If set then PyTorch will use GPUs for inference. CUDA required."
     )
     parser.add_argument(
-        "-mkl_off",
-        "--mkldnn_off",
+        "-onnx_off",
+        "--onnx_off",
         default=True,
         action='store_false',
-        help="Turn off mkldnn mode which provides CPU acceleration."
+        help="Turn off cpu acceleration mode (Disabled when GPU is in use)."
     )
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.output_dir = UserInterfaceSupport.handle_output_directory(FLAGS.output_dir)
@@ -88,5 +88,5 @@ if __name__ == '__main__':
                   FLAGS.num_workers,
                   FLAGS.output_dir,
                   FLAGS.gpu_mode,
-                  FLAGS.mkldnn_off)
+                  FLAGS.onnx_off)
 
