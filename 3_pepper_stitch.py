@@ -36,6 +36,8 @@ def perform_stitch(hdf_file_path, output_path, threads):
         all_chunk_keys = list()
         for prediction_file in all_prediction_files:
             with h5py.File(prediction_file, 'r') as hdf5_file:
+                if contig not in hdf5_file['predictions'].keys():
+                    continue
                 chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
                 for chunk_key in chunk_keys:
                     all_chunk_keys.append((prediction_file, chunk_key))
