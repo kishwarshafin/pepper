@@ -28,8 +28,7 @@ def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu
     if gpu_mode:
         onnx_mode = False
 
-    # prediction_data_file = DataStore(output_filename, mode='w')
-    sys.stderr.write(TextColor.PURPLE + 'Loading data\n' + TextColor.END)
+    prediction_data_file = DataStore(output_filename, mode='w')
 
     # data loader
     test_data = SequenceDataset(test_file)
@@ -132,6 +131,6 @@ def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu
 
             predicted_base_labels = base_labels.cpu().numpy()
 
-            # for i in range(images.size(0)):
-            #     prediction_data_file.write_prediction(contig[i], contig_start[i], contig_end[i], chunk_id[i],
-            #                                           position[i], index[i], predicted_base_labels[i])
+            for i in range(images.size(0)):
+                prediction_data_file.write_prediction(contig[i], contig_start[i], contig_end[i], chunk_id[i],
+                                                      position[i], index[i], predicted_base_labels[i])
