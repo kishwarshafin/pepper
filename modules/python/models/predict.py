@@ -1,4 +1,3 @@
-import argparse
 import sys
 import torch
 import torch.nn as nn
@@ -6,23 +5,27 @@ from torch.utils.data import DataLoader
 from modules.python.models.dataloader_predict import SequenceDataset
 from modules.python.TextColor import TextColor
 from tqdm import tqdm
-import numpy as np
 from modules.python.models.ModelHander import ModelHandler
 from modules.python.Options import ImageSizeOptions, TrainOptions
 from modules.python.DataStorePredict import DataStore
+from torch.utils import mkldnn
 
 
-def predict(test_file, output_filename, model_path, batch_size, threads, num_workers, gpu_mode):
+def predict(test_file, output_filename, model_path, batch_size, threads, num_workers, gpu_mode, mkldnn_mode):
     """
     Create a prediction table/dictionary of an images set using a trained model.
     :param test_file: File to predict on
     :param batch_size: Batch size used for prediction
     :param model_path: Path to a trained model
     :param gpu_mode: If true, predictions will be done over GPU
+    :param mkldnn_mode: If true, mkldnn mode on
     :param threads: Number of threads to set for pytorch
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
+    if gpu_mode:
+        mkldnn_mode = False
+
     prediction_data_file = DataStore(output_filename, mode='w')
     sys.stderr.write(TextColor.PURPLE + 'Loading data\n' + TextColor.END)
 
@@ -48,6 +51,10 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
 
     if gpu_mode:
         transducer_model = torch.nn.DataParallel(transducer_model).cuda()
+    elif mkldnn_mode:
+        sys.stderr.write("INFO: MODEL LOADING TO MKLDNN\n")
+        transducer_model = mkldnn.to_mkldnn(transducer_model)
+
     sys.stderr.write(TextColor.CYAN + 'MODEL LOADED\n')
 
     with torch.no_grad():
@@ -88,6 +95,8 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
                 )
                 if gpu_mode:
                     inference_layers = inference_layers.cuda()
+                elif mkldnn_mode:
+                    inference_layers = mkldnn.to_mkldnn(inference_layers)
 
                 # run the softmax and padding layers
                 if gpu_mode:
