@@ -66,7 +66,7 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
         h = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
         if not os.path.isfile(model_path + ".onnx"):
-            sys.stderr.write("INFO: MODEL LOADING TO ONNX\n")
+            sys.stderr.write("INFO: SAVING MODEL TO ONNX\n")
             torch.onnx.export(transducer_model, (x, h), model_path + ".onnx", training=False,
                               opset_version=10,
                               do_constant_folding=True,
@@ -79,6 +79,7 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
 
         sys.stderr.write("INFO: LOADING ONNX MODEL\n")
         onnx_model = onnx.load(model_path + ".onnx")
+        sys.stderr.write("INFO: CHECKING ONNX MODEL\n")
         onnx.checker.check_model(onnx_model)
         sys.stderr.write("INFO: ONNX SESSION INITIALIZING\n")
         ort_session = onnxruntime.InferenceSession(model_path + ".onnx")
