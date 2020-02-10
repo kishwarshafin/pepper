@@ -70,8 +70,18 @@ def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu
         onnx_model = onnx.load(model_path + ".onnx")
         sys.stderr.write("INFO: CHECKING ONNX MODEL\n")
         onnx.checker.check_model(onnx_model)
+
+        sess_options = onnxruntime.SessionOptions()
+        print(dir(sess_options))
+        print(sess_options.intra_op_num_threads)
+        print(sess_options.execution_mode)
+        print(sess_options.graph_optimization_level)
+
         sys.stderr.write("INFO: ONNX SESSION INITIALIZING\n")
         ort_session = onnxruntime.InferenceSession(model_path + ".onnx")
+        exit()
+
+
 
     sys.stderr.write(TextColor.CYAN + 'STARTING INFERENCE\n' + TextColor.END)
 
