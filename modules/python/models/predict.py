@@ -72,16 +72,12 @@ def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu
         onnx.checker.check_model(onnx_model)
 
         sess_options = onnxruntime.SessionOptions()
-        print(torch.__config__.parallel_info())
-        print(*torch.__config__.show().split("\n"), sep="\n")
-        print(dir(sess_options))
-        print(sess_options.intra_op_num_threads)
-        print(sess_options.execution_mode)
-        print(sess_options.graph_optimization_level)
+        sess_options.intra_op_num_threads = 40
+        sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_PARALLEL
+        sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
 
         sys.stderr.write("INFO: ONNX SESSION INITIALIZING\n")
-        ort_session = onnxruntime.InferenceSession(model_path + ".onnx")
-        exit()
+        ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
 
 
 
