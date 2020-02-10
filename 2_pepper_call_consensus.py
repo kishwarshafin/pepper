@@ -33,7 +33,7 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, num_workers
     sys.stderr.write(TextColor.GREEN + "INFO: TOTAL GPU AVAILABLE: " + str(total_gpu_devices) + "\n" + TextColor.END)
     total_callers = total_gpu_devices
 
-    if threads == 0:
+    if total_callers == 0:
         sys.stderr.write(TextColor.RED + "ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n" + TextColor.END)
         exit()
 
@@ -44,7 +44,7 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, num_workers
     for i in range(0, len(input_files)):
         file_chunks[i % total_callers].append(input_files[i])
 
-    threads = min(total_callers, len(file_chunks))
+    total_callers = min(total_callers, len(file_chunks))
     sys.stderr.write(TextColor.GREEN + "INFO: TOTAL THREADS: " + str(total_callers) + "\n" + TextColor.END)
     predict_distributed_gpu(image_dir, file_chunks, output_dir, model_path, batch_size, total_callers, num_workers)
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "PREDICTION GENERATED SUCCESSFULLY.\n")
