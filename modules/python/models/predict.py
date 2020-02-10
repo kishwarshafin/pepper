@@ -72,7 +72,8 @@ def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu
         onnx.checker.check_model(onnx_model)
 
         sess_options = onnxruntime.SessionOptions()
-        sess_options.intra_op_num_threads = 40
+        sess_options.intra_op_num_threads = 2
+        sess_options.intra_op_num_threads = 20
         sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_PARALLEL
         sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
 
