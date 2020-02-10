@@ -1,4 +1,7 @@
+import onnx
+import onnxruntime
 import sys
+import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -10,9 +13,7 @@ from modules.python.Options import ImageSizeOptions, TrainOptions
 from modules.python.DataStorePredict import DataStore
 from torch.utils import mkldnn
 import torch.onnx
-import os
-import onnx
-import onnxruntime
+
 
 
 def to_numpy(tensor):
@@ -86,8 +87,8 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
 
         sys.stderr.write("INFO: LOADING ONNX MODEL\n")
         onnx_model = onnx.load(model_path + ".onnx")
-        # sys.stderr.write("INFO: CHECKING ONNX MODEL\n")
-        # onnx.checker.check_model(onnx_model)
+        sys.stderr.write("INFO: CHECKING ONNX MODEL\n")
+        onnx.checker.check_model(onnx_model)
         sys.stderr.write("INFO: ONNX SESSION INITIALIZING\n")
         ort_session = onnxruntime.InferenceSession(model_path + ".onnx")
 
