@@ -22,8 +22,6 @@ RUN mkdir /opt/cmake && \
 
 # install requirements
 RUN python3 -m pip install h5py tqdm numpy pyyaml
-# install torch
-RUN python3 -m pip install torch==1.3.1+cpu torchvision==0.4.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
 
 # install samtools, this is for kubernetes
 WORKDIR /opt
@@ -49,4 +47,4 @@ WORKDIR /opt/pepper
 COPY pepper_wrapper.sh /opt/pepper_wrapper.sh
 
 WORKDIR /data
-ENTRYPOINT ["sh", "/opt/pepper_wrapper.sh"]
+ENTRYPOINT ["sh"]
