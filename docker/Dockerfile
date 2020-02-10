@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM pytorch:1.4-cuda10.1-cudnn7-devel
 MAINTAINER Kishwar Shafin, kishwar.shafin@gmail.com
 
 # update and install dependencies
