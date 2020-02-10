@@ -5,10 +5,10 @@ from modules.python.ImageGenerationUI import UserInterfaceSupport
 from modules.python.models.predict import predict
 
 
-def polish_genome(csv_file, model_path, batch_size, threads, num_workers, output_dir, gpu_mode, mkldnn_mode, onnx_mode):
+def polish_genome(csv_file, model_path, batch_size, num_workers, output_dir, gpu_mode, onnx_mode):
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "OUTPUT DIRECTORY: " + output_dir + "\n")
     output_filename = output_dir + "pepper_predictions.hdf"
-    predict(csv_file, output_filename, model_path, batch_size, threads, num_workers, gpu_mode, mkldnn_mode, onnx_mode)
+    predict(csv_file, output_filename, model_path, batch_size, num_workers, gpu_mode, onnx_mode)
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "PREDICTION GENERATED SUCCESSFULLY.\n")
 
 
@@ -49,14 +49,6 @@ if __name__ == '__main__':
         help="Number of workers for loading images. Default is 4."
     )
     parser.add_argument(
-        "-t",
-        "--threads",
-        type=int,
-        required=False,
-        default=1,
-        help="Number threads for pytorch."
-    )
-    parser.add_argument(
         "-o",
         "--output_dir",
         type=str,
@@ -72,13 +64,6 @@ if __name__ == '__main__':
         help="If set then PyTorch will use GPUs for inference. CUDA required."
     )
     parser.add_argument(
-        "-mkldnn_off",
-        "--mkldnn_off",
-        default=True,
-        action='store_false',
-        help="Turn off cpu acceleration mode (Disabled when GPU is in use)."
-    )
-    parser.add_argument(
         "-onnx_off",
         "--onnx_off",
         default=True,
@@ -91,10 +76,8 @@ if __name__ == '__main__':
     polish_genome(FLAGS.image_dir,
                   FLAGS.model_path,
                   FLAGS.batch_size,
-                  FLAGS.threads,
                   FLAGS.num_workers,
                   FLAGS.output_dir,
                   FLAGS.gpu_mode,
-                  FLAGS.mkldnn_off,
                   FLAGS.onnx_off)
 

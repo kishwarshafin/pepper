@@ -11,40 +11,25 @@ from tqdm import tqdm
 from modules.python.models.ModelHander import ModelHandler
 from modules.python.Options import ImageSizeOptions, TrainOptions
 from modules.python.DataStorePredict import DataStore
-from torch.utils import mkldnn
 import torch.onnx
 
 
-
-def to_numpy(tensor):
-    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
-
-
-def predict(test_file, output_filename, model_path, batch_size, threads, num_workers, gpu_mode, mkldnn_mode, onnx_mode):
+def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu_mode, onnx_mode):
     """
     Create a prediction table/dictionary of an images set using a trained model.
     :param test_file: File to predict on
     :param batch_size: Batch size used for prediction
     :param model_path: Path to a trained model
     :param gpu_mode: If true, predictions will be done over GPU
-    :param mkldnn_mode: If true, mkldnn mode is on for cpu
     :param onnx_mode: If true, onnx mode is on for cpu
-    :param threads: Number of threads to set for pytorch
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
     if gpu_mode:
         onnx_mode = False
-        mkldnn_mode = False
 
-    prediction_data_file = DataStore(output_filename, mode='w')
+    # prediction_data_file = DataStore(output_filename, mode='w')
     sys.stderr.write(TextColor.PURPLE + 'Loading data\n' + TextColor.END)
-
-    torch.set_num_threads(threads)
-    sys.stderr.write(TextColor.GREEN + 'INFO: TORCH THREADS SET TO: ' + str(torch.get_num_threads()) + ".\n"
-                     + TextColor.END)
-
-    sys.stderr.flush()
 
     # data loader
     test_data = SequenceDataset(test_file)
@@ -63,9 +48,6 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
 
     if gpu_mode:
         transducer_model = torch.nn.DataParallel(transducer_model).cuda()
-    elif mkldnn_mode:
-        sys.stderr.write("INFO: MODEL LOADING TO MKLDNN\n")
-        transducer_model = mkldnn.to_mkldnn(transducer_model)
     elif onnx_mode:
         sys.stderr.write("INFO: MODEL LOADING TO ONNX\n")
         x = torch.zeros(1, TrainOptions.TRAIN_WINDOW, ImageSizeOptions.IMAGE_HEIGHT)
@@ -140,9 +122,6 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
                 if gpu_mode:
                     inference_layers = inference_layers.cuda()
                     base_prediction = inference_layers(output_base).cuda()
-                elif mkldnn_mode:
-                    inference_layers = mkldnn.to_mkldnn(inference_layers)
-                    base_prediction = inference_layers(output_base)
                 else:
                     base_prediction = inference_layers(output_base)
 
@@ -153,6 +132,6 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
 
             predicted_base_labels = base_labels.cpu().numpy()
 
-            for i in range(images.size(0)):
-                prediction_data_file.write_prediction(contig[i], contig_start[i], contig_end[i], chunk_id[i],
-                                                      position[i], index[i], predicted_base_labels[i])
+            # for i in range(images.size(0)):
+            #     prediction_data_file.write_prediction(contig[i], contig_start[i], contig_end[i], chunk_id[i],
+            #                                           position[i], index[i], predicted_base_labels[i])
