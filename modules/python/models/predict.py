@@ -80,7 +80,7 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
         sys.stderr.write("INFO: LOADING ONNX MODEL\n")
         onnx_model = onnx.load(model_path + ".onnx")
         sys.stderr.write("INFO: CHECKING ONNX MODEL\n")
-        onnx.checker.check_model(onnx_model)
+        print(onnx.checker.check_model(onnx_model))
         sys.stderr.write("INFO: ONNX SESSION INITIALIZING\n")
         ort_session = onnxruntime.InferenceSession(model_path + ".onnx")
 
