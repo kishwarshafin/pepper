@@ -5,6 +5,7 @@ from modules.python.TextColor import TextColor
 from modules.python.ImageGenerationUI import UserInterfaceSupport
 from modules.python.models.predict import predict
 from modules.python.models.predict_distributed_gpu import predict_distributed_gpu
+from modules.python.models.predict_distributed_cpu import predict_distributed_cpu
 from os.path import isfile, join
 from os import listdir
 
@@ -25,6 +26,36 @@ def polish_genome(csv_file, model_path, batch_size, num_workers, output_dir, gpu
     output_filename = output_dir + "pepper_predictions.hdf"
     predict(csv_file, output_filename, model_path, batch_size, num_workers, gpu_mode, onnx_mode)
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "PREDICTION GENERATED SUCCESSFULLY.\n")
+
+
+def polish_genome_distributed_cpu(image_dir, model_path, batch_size, num_workers, output_dir, total_callers, threads):
+    sys.stderr.write(TextColor.GREEN + "INFO: DISTRIBUTED CPU SETUP\n" + TextColor.END)
+
+    # chunk the inputs
+    input_files = get_file_paths_from_directory(image_dir)
+
+    file_chunks = [[] for i in range(total_callers)]
+    for i in range(0, len(input_files)):
+        file_chunks[i % total_callers].append(input_files[i])
+    file_chunks = [file_chunks[i] for i in range(len(file_chunks)) if len(file_chunks[i]) > 0]
+
+    total_callers = min(total_callers, len(file_chunks))
+
+    sys.stderr.write(TextColor.GREEN + "INFO: SETUP: " + "\n" + TextColor.END)
+    sys.stderr.write(TextColor.GREEN + "INFO: TOTAL CALLERS: " + str(total_callers) + "\n" + TextColor.END)
+    sys.stderr.write(TextColor.GREEN + "INFO: THREADS PER CALLER: " + str(threads) + "\n" + TextColor.END)
+    sys.stderr.write(TextColor.GREEN + "INFO: DATA-LOADER PER CALLER: " + str(num_workers) + "\n" + TextColor.END)
+    sys.stderr.flush()
+    predict_distributed_cpu(image_dir,
+                            file_chunks,
+                            output_dir,
+                            model_path,
+                            batch_size,
+                            total_callers,
+                            threads,
+                            num_workers)
+    sys.stderr.flush()
+    sys.stderr.write(TextColor.GREEN + "\nINFO: " + TextColor.END + "PREDICTION GENERATED SUCCESSFULLY.\n")
 
 
 def polish_genome_distributed_gpu(image_dir, model_path, batch_size, num_workers, output_dir, device_ids):
@@ -91,22 +122,6 @@ if __name__ == '__main__':
         help="Path to a trained model."
     )
     parser.add_argument(
-        "-b",
-        "--batch_size",
-        type=int,
-        required=False,
-        default=128,
-        help="Batch size for testing, default is 100. Suggested values: 256/512/1024."
-    )
-    parser.add_argument(
-        "-w",
-        "--num_workers",
-        type=int,
-        required=False,
-        default=4,
-        help="Number of workers for loading images. Default is 4."
-    )
-    parser.add_argument(
         "-o",
         "--output_dir",
         type=str,
@@ -114,6 +129,15 @@ if __name__ == '__main__':
         default='output',
         help="Path to the output directory."
     )
+    parser.add_argument(
+        "-b",
+        "--batch_size",
+        type=int,
+        required=False,
+        default=512,
+        help="Batch size for testing, default is 100. Suggested values: 256/512/1024."
+    )
+
     parser.add_argument(
         "-g",
         "--gpu",
@@ -145,6 +169,30 @@ if __name__ == '__main__':
         action='store_false',
         help="Turn off cpu acceleration mode (Disabled when GPU is in use)."
     )
+    parser.add_argument(
+        "-w",
+        "--num_workers",
+        type=int,
+        required=False,
+        default=4,
+        help="Number of workers for loading images. Default is 4."
+    )
+    parser.add_argument(
+        "-t",
+        "--threads",
+        type=int,
+        required=False,
+        default=4,
+        help="Total threads to be used per caller."
+    )
+    parser.add_argument(
+        "-c",
+        "--callers",
+        type=int,
+        required=False,
+        default=4,
+        help="Total number of callers to spawn while doing CPU inference in distributed mode."
+    )
 
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.output_dir = UserInterfaceSupport.handle_output_directory(FLAGS.output_dir)
@@ -159,6 +207,17 @@ if __name__ == '__main__':
                                       FLAGS.num_workers,
                                       FLAGS.output_dir,
                                       FLAGS.device_ids)
+    elif FLAGS.distributed:
+        """
+        DO DISTRIBUTED CPU INFERENCE. THIS MODE WILL CREATE MULTIPLE CALLERS.
+        """
+        polish_genome_distributed_cpu(FLAGS.image_dir,
+                                      FLAGS.model_path,
+                                      FLAGS.batch_size,
+                                      FLAGS.num_workers,
+                                      FLAGS.output_dir,
+                                      FLAGS.callers,
+                                      FLAGS.threads)
     else:
         polish_genome(FLAGS.image_dir,
                       FLAGS.model_path,
