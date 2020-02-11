@@ -5,7 +5,6 @@ import os
 import torch
 import torch.distributed as dist
 import torch.nn as nn
-import torch.onnx
 from torch.utils.data import DataLoader
 import torch.multiprocessing as mp
 from modules.python.models.dataloader_predict import SequenceDataset
@@ -13,6 +12,7 @@ from tqdm import tqdm
 from modules.python.models.ModelHander import ModelHandler
 from modules.python.Options import ImageSizeOptions, TrainOptions
 from modules.python.DataStorePredict import DataStore
+import torch.onnx
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 
 
