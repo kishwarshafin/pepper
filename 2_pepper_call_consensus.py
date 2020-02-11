@@ -165,5 +165,5 @@ if __name__ == '__main__':
                       FLAGS.batch_size,
                       FLAGS.num_workers,
                       FLAGS.output_dir,
-                      FLAGS.gpu_mode,
+                      FLAGS.gpu,
                       FLAGS.onnx_off)
