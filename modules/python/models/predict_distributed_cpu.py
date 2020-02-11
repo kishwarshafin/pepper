@@ -17,7 +17,13 @@ os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 
 
 def predict(input_filepath, file_chunks, output_filepath, batch_size, num_workers, rank, threads, model_path):
-    ort_session = onnxruntime.InferenceSession(model_path + ".onnx")
+    # session options
+    sess_options = onnxruntime.SessionOptions()
+    sess_options.intra_op_num_threads = threads
+    sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL
+    sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+    ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
     torch.set_num_threads(threads)
 
     # create output file
