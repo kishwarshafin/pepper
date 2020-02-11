@@ -134,7 +134,7 @@ if __name__ == '__main__':
         "--batch_size",
         type=int,
         required=False,
-        default=512,
+        default=128,
         help="Batch size for testing, default is 100. Suggested values: 256/512/1024."
     )
 
@@ -182,7 +182,7 @@ if __name__ == '__main__':
         "--threads",
         type=int,
         required=False,
-        default=4,
+        default=8,
         help="Total threads to be used per caller."
     )
     parser.add_argument(
@@ -190,7 +190,7 @@ if __name__ == '__main__':
         "--callers",
         type=int,
         required=False,
-        default=4,
+        default=8,
         help="Total number of callers to spawn while doing CPU inference in distributed mode."
     )
 
