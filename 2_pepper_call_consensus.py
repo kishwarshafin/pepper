@@ -45,7 +45,7 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, num_workers
                                                    ">>> import torch \n"
                                                    ">>> torch.cuda.get_device_capability(device=" + str(device_id) + ")\n" + TextColor.END)
             else:
-                sys.stderr.write(TextColor.GREEN + "INFO: GPU#" + str(device_id) +":\t" + str(major_capable)
+                sys.stderr.write(TextColor.GREEN + "INFO: CAPABILITY OF GPU#" + str(device_id) +":\t" + str(major_capable)
                                  + "-" + str(minor_capable) + "\n" + TextColor.END)
         total_callers = len(device_ids)
 
@@ -65,7 +65,8 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, num_workers
     total_callers = min(total_callers, len(file_chunks))
     sys.stderr.write(TextColor.GREEN + "INFO: TOTAL THREADS: " + str(total_callers) + "\n" + TextColor.END)
     predict_distributed_gpu(image_dir, file_chunks, output_dir, model_path, batch_size, device_ids, num_workers)
-    sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "PREDICTION GENERATED SUCCESSFULLY.\n")
+    sys.stderr.flush()
+    sys.stderr.write(TextColor.GREEN + "\nINFO: " + TextColor.END + "PREDICTION GENERATED SUCCESSFULLY.\n")
 
 
 if __name__ == '__main__':
