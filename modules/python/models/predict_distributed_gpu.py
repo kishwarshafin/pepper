@@ -14,7 +14,7 @@ from modules.python.DataStorePredict import DataStore
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 
 
-def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, device_id):
+def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, rank, device_id):
     transducer_model, hidden_size, gru_layers, prev_ite = \
         ModelHandler.load_simple_model_for_training(model_path,
                                                     input_channels=ImageSizeOptions.IMAGE_CHANNELS,
@@ -43,7 +43,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
         total=len(data_loader),
         ncols=100,
         leave=False,
-        position=device_id,
+        position=rank,
         desc="GPU #" + str(device_id),
     )
 
@@ -128,6 +128,7 @@ def setup(rank, device_ids, args, all_input_files):
             model_path,
             batch_size,
             num_workers,
+            rank,
             device_ids[rank])
     cleanup()
 
