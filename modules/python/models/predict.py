@@ -46,7 +46,7 @@ def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu
     transducer_model.eval()
 
     if gpu_mode:
-        transducer_model = torch.nn.DataParallel(transducer_model).cuda()
+        transducer_model = transducer_model.cuda()
     elif onnx_mode:
         sys.stderr.write("INFO: MODEL LOADING TO ONNX\n")
         x = torch.zeros(1, TrainOptions.TRAIN_WINDOW, ImageSizeOptions.IMAGE_HEIGHT)
