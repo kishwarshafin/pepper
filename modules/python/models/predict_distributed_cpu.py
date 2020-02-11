@@ -163,8 +163,6 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
 
     sys.stderr.write("INFO: LOADING ONNX MODEL\n")
     onnx_model = onnx.load(model_path + ".onnx")
-    sys.stderr.write("INFO: CHECKING ONNX MODEL\n")
-    onnx.checker.check_model(onnx_model)
 
     args = (filepath, output_filepath, model_path, batch_size, num_workers, threads)
     mp.spawn(setup,
