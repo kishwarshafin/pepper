@@ -98,17 +98,17 @@ def add_train_model_arguments(parser):
         help="Epoch size for training iteration."
     )
     parser.add_argument(
-        "--model_out",
+        "--output_dir",
         type=str,
         required=False,
-        default='./model',
-        help="Path and file_name to save model, default is ./model"
+        default='./pepper_model_out',
+        help="Path to output directory."
     )
     parser.add_argument(
         "--retrain_model",
-        type=bool,
         default=False,
-        help="If true then retrain a pre-trained mode."
+        action='store_true',
+        help="If set then retrain a pre-trained mode."
     )
     parser.add_argument(
         "--retrain_model_path",
@@ -118,10 +118,11 @@ def add_train_model_arguments(parser):
     )
     parser.add_argument(
         "--gpu",
-        type=bool,
         default=False,
-        help="If true then cuda is on."
+        action='store_true',
+        help="If set then PyTorch will use GPUs for inference. CUDA required."
     )
+
     parser.add_argument(
         "--num_workers",
         type=int,
@@ -162,13 +163,13 @@ def add_test_model_arguments(parser):
     )
     parser.add_argument(
         "--gpu",
-        type=bool,
         default=False,
-        help="If true then cuda is on."
+        action='store_true',
+        help="If set then PyTorch will use GPUs for inference. CUDA required."
     )
     parser.add_argument(
         "--print_details",
-        type=bool,
+        action='store_true',
         default=False,
         help="If true then prints debug messages."
     )
@@ -190,9 +191,9 @@ def add_run_hyperband_arguments(parser):
     )
     parser.add_argument(
         "--gpu",
-        type=bool,
         default=False,
-        help="If true then cuda is on."
+        action='store_true',
+        help="If set then PyTorch will use GPUs for inference. CUDA required."
     )
     parser.add_argument(
         "--output_dir",
