@@ -7,11 +7,11 @@ from modules.python.models.train import train
 from modules.python.Options import TrainOptions
 """
 Input:
-- A train CSV file
-- A test CSV file
+- A directory containing labeled HDF5 files
+- A directory containing labeled HDF5 files
 
 Output:
-- A model with tuned hyper-parameters
+- A set of trained models, one per epoch
 """
 
 
@@ -20,7 +20,7 @@ class TrainModule:
     Train module
     """
     def __init__(self, train_file, test_file, gpu_mode, max_epochs, batch_size, num_workers,
-                 retrain_model, retrain_model_path, model_dir, stats_dir):
+                 retrain_model, retrain_model_path, model_dir, log_dir, stats_dir):
         self.train_file = train_file
         self.test_file = test_file
         self.gpu_mode = gpu_mode
@@ -85,71 +85,26 @@ def handle_output_directory(output_dir):
     return model_save_dir, stats_directory
 
 
-if __name__ == '__main__':
-    '''
-    Processes arguments and performs tasks.
-    '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--train_file",
-        type=str,
-        required=True,
-        help="Training data directory containing HDF files."
-    )
-    parser.add_argument(
-        "--test_file",
-        type=str,
-        required=True,
-        help="Testing data directory containing HDF files."
-    )
-    parser.add_argument(
-        "--batch_size",
-        type=int,
-        required=False,
-        default=100,
-        help="Batch size for training, default is 100."
-    )
-    parser.add_argument(
-        "--epoch_size",
-        type=int,
-        required=False,
-        default=10,
-        help="Epoch size for training iteration."
-    )
-    parser.add_argument(
-        "--model_out",
-        type=str,
-        required=False,
-        default='./model',
-        help="Path and file_name to save model, default is ./model"
-    )
-    parser.add_argument(
-        "--retrain_model",
-        type=bool,
-        default=False,
-        help="If true then retrain a pre-trained mode."
-    )
-    parser.add_argument(
-        "--retrain_model_path",
-        type=str,
-        default=False,
-        help="Path to the model that will be retrained."
-    )
-    parser.add_argument(
-        "--gpu_mode",
-        type=bool,
-        default=False,
-        help="If true then cuda is on."
-    )
-    parser.add_argument(
-        "--num_workers",
-        type=int,
-        required=False,
-        default=40,
-        help="Epoch size for training iteration."
-    )
-    FLAGS, unparsed = parser.parse_known_args()
-    model_out_dir, log_dir = handle_output_directory(FLAGS.model_out)
-    tm = TrainModule(FLAGS.train_file, FLAGS.test_file, FLAGS.gpu_mode, FLAGS.epoch_size, FLAGS.batch_size,
-                     FLAGS.num_workers, FLAGS.retrain_model, FLAGS.retrain_model_path, model_out_dir, log_dir)
+def train_models(train_image_dir,
+                 test_image_dir,
+                 output_directory,
+                 epoch_size,
+                 batch_size,
+                 num_workers,
+                 retrain_model,
+                 retrain_model_path,
+                 gpu_mode):
+
+    model_out_dir, log_dir = handle_output_directory(output_directory)
+    tm = TrainModule(train_image_dir,
+                     test_image_dir,
+                     gpu_mode,
+                     epoch_size,
+                     batch_size,
+                     num_workers,
+                     retrain_model,
+                     retrain_model_path,
+                     model_out_dir,
+                     log_dir,
+                     log_dir)
     tm.train_model()

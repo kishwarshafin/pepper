@@ -153,59 +153,17 @@ def handle_output_directory(output_dir):
     return model_output_dir, log_output_dir
 
 
-if __name__ == '__main__':
-    '''
+def run_hyperband(train_image_dir, test_image_dir, output_dir, max_epochs, batch_size, num_workers, gpu_mode):
+    """
     Processes arguments and performs tasks.
-    '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--train_file",
-        type=str,
-        required=True,
-        help="Training data description csv file."
-    )
-    parser.add_argument(
-        "--test_file",
-        type=str,
-        required=True,
-        help="Training data description csv file."
-    )
-    parser.add_argument(
-        "--gpu_mode",
-        type=bool,
-        default=False,
-        help="If true then cuda is on."
-    )
-    parser.add_argument(
-        "--output_dir",
-        type=str,
-        required=False,
-        default='./hyperband_output/',
-        help="Directory to save the model"
-    )
-    parser.add_argument(
-        "--batch_size",
-        type=int,
-        required=False,
-        default=100,
-        help="Batch size for training, default is 100."
-    )
-    parser.add_argument(
-        "--max_epochs",
-        type=int,
-        required=False,
-        default=10,
-        help="Epoch size for training iteration."
-    )
-    parser.add_argument(
-        "--num_workers",
-        type=int,
-        required=False,
-        default=40,
-        help="Epoch size for training iteration."
-    )
-    FLAGS, unparsed = parser.parse_known_args()
-    model_dir, log_dir = handle_output_directory(FLAGS.output_dir)
-    wh = WrapHyperband(FLAGS.train_file, FLAGS.test_file, FLAGS.gpu_mode, model_dir, log_dir, FLAGS.max_epochs,
-                       FLAGS.batch_size, FLAGS.num_workers)
+    """
+    model_dir, log_dir = handle_output_directory(output_dir)
+    wh = WrapHyperband(train_image_dir,
+                       test_image_dir,
+                       gpu_mode,
+                       model_dir,
+                       log_dir,
+                       max_epochs,
+                       batch_size,
+                       num_workers)
     wh.run(save_output=True)

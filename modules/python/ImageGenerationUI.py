@@ -87,9 +87,13 @@ class UserInterfaceSupport:
         :return: LIST OF CHROMOSOME IN REGION SPECIFIC FORMAT
         """
         if not chromosome_names:
+            # nothing specified, so process all contigs
             fasta_handler = PEPPER.FASTA_handler(ref_file)
-            chromosome_names = fasta_handler.get_chromosome_names()
-            chromosome_names = ','.join(chromosome_names)
+            contig_names = fasta_handler.get_chromosome_names()
+            contig_list = []
+            for contig_name in contig_names:
+                contig_list.append((contig_name, None))
+            return contig_list
 
         split_names = chromosome_names.strip().split(',')
         split_names = [name.strip() for name in split_names]

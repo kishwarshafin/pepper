@@ -1,13 +1,12 @@
-import argparse
 import sys
 import torch
 from modules.python.TextColor import TextColor
-from modules.python.ImageGenerationUI import UserInterfaceSupport
 from modules.python.models.predict import predict
 from modules.python.models.predict_distributed_gpu import predict_distributed_gpu
 from modules.python.models.predict_distributed_cpu import predict_distributed_cpu
 from os.path import isfile, join
 from os import listdir
+import os
 
 
 def get_file_paths_from_directory(directory_path):
@@ -100,129 +99,82 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, num_workers
     sys.stderr.write(TextColor.GREEN + "\nINFO: " + TextColor.END + "PREDICTION GENERATED SUCCESSFULLY.\n")
 
 
-if __name__ == '__main__':
-    '''
-    Processes arguments and performs tasks.
-    '''
-    parser = argparse.ArgumentParser(description="2_pepper_call_consensus.py performs inference on images "
-                                                 "using a trained model.",
-                                     formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument(
-        "-i",
-        "--image_dir",
-        type=str,
-        required=True,
-        help="Path to directory containing all HDF5 images."
-    )
-    parser.add_argument(
-        "-m",
-        "--model_path",
-        type=str,
-        required=True,
-        help="Path to a trained model."
-    )
-    parser.add_argument(
-        "-o",
-        "--output_dir",
-        type=str,
-        required=False,
-        default='output',
-        help="Path to the output directory."
-    )
-    parser.add_argument(
-        "-b",
-        "--batch_size",
-        type=int,
-        required=False,
-        default=128,
-        help="Batch size for testing, default is 100. Suggested values: 256/512/1024."
-    )
+def call_consensus(image_dir, model_path, batch_size, num_workers, output_dir, device_ids, gpu, distributed,
+                   callers, threads):
 
-    parser.add_argument(
-        "-g",
-        "--gpu",
-        default=False,
-        action='store_true',
-        help="If set then PyTorch will use GPUs for inference. CUDA required."
-    )
-    parser.add_argument(
-        "-d",
-        "--distributed",
-        default=False,
-        action='store_true',
-        help="Distributed gpu inference. This mode will enable one caller per GPU."
-    )
-    parser.add_argument(
-        "-d_ids",
-        "--device_ids",
-        type=str,
-        required=False,
-        default=None,
-        help="List of gpu device ids to use for inference. Only used in distributed setting.\n"
-             "Example usage: --device_ids 0,1,2 (this will create three callers in id 'cuda:0, cuda:1 and cuda:2'\n"
-             "If none then it will use all available devices."
-    )
-    parser.add_argument(
-        "-onnx_off",
-        "--onnx_off",
-        default=True,
-        action='store_false',
-        help="Turn off cpu acceleration mode (Disabled when GPU is in use)."
-    )
-    parser.add_argument(
-        "-w",
-        "--num_workers",
-        type=int,
-        required=False,
-        default=4,
-        help="Number of workers for loading images. Default is 4."
-    )
-    parser.add_argument(
-        "-t",
-        "--threads",
-        type=int,
-        required=False,
-        default=8,
-        help="Total threads to be used per caller."
-    )
-    parser.add_argument(
-        "-c",
-        "--callers",
-        type=int,
-        required=False,
-        default=8,
-        help="Total number of callers to spawn while doing CPU inference in distributed mode."
-    )
+    # check the model file
+    if not os.path.isfile(model_path):
+        sys.stderr.write(TextColor.RED + "ERROR: CAN NOT LOCATE MODEL FILE.\n" + TextColor.END)
+        exit(1)
+    # check the input directory
+    if not os.path.isdir(image_dir):
+        sys.stderr.write(TextColor.RED + "ERROR: CAN NOT LOCATE IMAGE DIRECTORY.\n" + TextColor.END)
+        exit(1)
 
-    FLAGS, unparsed = parser.parse_known_args()
-    FLAGS.output_dir = UserInterfaceSupport.handle_output_directory(FLAGS.output_dir)
+    # check batch_size
+    if batch_size <= 0:
+        sys.stderr.write(TextColor.RED + "ERROR: batch_size NEEDS TO BE >0.\n" + TextColor.END)
+        exit(1)
 
-    if FLAGS.gpu and FLAGS.distributed:
+    # check num_workers
+    if num_workers < 0:
+        sys.stderr.write(TextColor.RED + "ERROR: num_workers NEEDS TO BE >=0.\n" + TextColor.END)
+        exit(1)
+
+    # check number of threads
+    if threads <= 0:
+        sys.stderr.write(TextColor.RED + "ERROR: THREAD NEEDS TO BE >=0.\n" + TextColor.END)
+        exit(1)
+
+    if gpu:
         """
         DO DISTRIBUTED GPU INFERENCE. THIS MODE WILL ENABLE ONE MODEL PER GPU
         """
-        polish_genome_distributed_gpu(FLAGS.image_dir,
-                                      FLAGS.model_path,
-                                      FLAGS.batch_size,
-                                      FLAGS.num_workers,
-                                      FLAGS.output_dir,
-                                      FLAGS.device_ids)
-    elif FLAGS.distributed:
+        if not torch.cuda.is_available():
+            sys.stderr.write(TextColor.RED + "ERROR: TORCH IS NOT BUILT WITH CUDA.\n" + TextColor.END)
+            sys.stderr.write(TextColor.RED + "SEE TORCH CAPABILITY:\n$ python3\n"
+                                             ">>> import torch \n"
+                                             ">>> torch.cuda.is_available()\n If true then cuda is avilable"
+                             + TextColor.END)
+            exit(1)
+
+        total_gpu_devices = torch.cuda.device_count()
+
+        if distributed and total_gpu_devices > 1:
+            # Distributed GPU setup
+            polish_genome_distributed_gpu(image_dir,
+                                          model_path,
+                                          batch_size,
+                                          num_workers,
+                                          output_dir,
+                                          device_ids)
+        else:
+            # Normal GPU setup
+            polish_genome(image_dir,
+                          model_path,
+                          batch_size,
+                          num_workers,
+                          output_dir,
+                          gpu,
+                          False)
+    elif distributed:
         """
         DO DISTRIBUTED CPU INFERENCE. THIS MODE WILL CREATE MULTIPLE CALLERS.
         """
-        polish_genome_distributed_cpu(FLAGS.image_dir,
-                                      FLAGS.model_path,
-                                      FLAGS.batch_size,
-                                      FLAGS.num_workers,
-                                      FLAGS.output_dir,
-                                      FLAGS.callers,
-                                      FLAGS.threads)
+        # distributed CPU setup
+        polish_genome_distributed_cpu(image_dir,
+                                      model_path,
+                                      batch_size,
+                                      num_workers,
+                                      output_dir,
+                                      callers,
+                                      threads)
     else:
-        polish_genome(FLAGS.image_dir,
-                      FLAGS.model_path,
-                      FLAGS.batch_size,
-                      FLAGS.num_workers,
-                      FLAGS.output_dir,
-                      FLAGS.gpu,
-                      FLAGS.onnx_off)
+        # normal CPU setup
+        polish_genome(image_dir,
+                      model_path,
+                      batch_size,
+                      num_workers,
+                      output_dir,
+                      gpu,
+                      False)

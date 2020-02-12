@@ -9,15 +9,7 @@ from modules.python.models.ModelHander import ModelHandler
 from modules.python.TextColor import TextColor
 from modules.python.Options import ImageSizeOptions
 """
-FREEZE THIS BRANCH TO HAVE 1 WINDOW!!
-Train a model and save the model that performs best.
-
-Input:
-- A train CSV containing training image set information (usually chr1-18)
-- A test CSV containing testing image set information (usually chr19)
-
-Output:
-- A trained model
+TEST A TRAINED MODEL
 """
 
 
@@ -29,7 +21,7 @@ def do_test(test_file, batch_size, gpu_mode, num_workers, model_path, print_deta
     :param gpu_mode: If true the model will be trained on GPU
     :param num_workers: Number of workers for data loading
     :param model_path: Path to a saved model
-    :param num_classes: Number of output classes
+    :param print_details: Print debug stuff
     :return:
     """
     sys.stderr.write(TextColor.PURPLE + 'Loading data\n' + TextColor.END)
@@ -59,49 +51,13 @@ def do_test(test_file, batch_size, gpu_mode, num_workers, model_path, print_deta
     sys.stderr.write(TextColor.PURPLE + 'DONE\n' + TextColor.END)
 
 
-if __name__ == '__main__':
-    '''
+def test_models(image_dir, model_path, num_workers, batch_size, gpu_mode, print_details):
+    """
     Processes arguments and performs tasks.
-    '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--test_file",
-        type=str,
-        required=True,
-        help="Training data description csv file."
-    )
-    parser.add_argument(
-        "--batch_size",
-        type=int,
-        required=False,
-        default=100,
-        help="Batch size for training, default is 100."
-    )
-    parser.add_argument(
-        "--model_path",
-        type=str,
-        required=False,
-        default='./model',
-        help="Path of the model to load and retrain"
-    )
-    parser.add_argument(
-        "--gpu_mode",
-        type=bool,
-        default=False,
-        help="If true then cuda is on."
-    )
-    parser.add_argument(
-        "--print_details",
-        type=bool,
-        default=True,
-        help="If true then cuda is on."
-    )
-    parser.add_argument(
-        "--num_workers",
-        type=int,
-        required=False,
-        default=40,
-        help="Epoch size for training iteration."
-    )
-    FLAGS, not_parsed = parser.parse_known_args()
-    do_test(FLAGS.test_file, FLAGS.batch_size, FLAGS.gpu_mode, FLAGS.num_workers, FLAGS.model_path, FLAGS.print_details)
+    """
+    do_test(image_dir,
+            batch_size,
+            gpu_mode,
+            num_workers,
+            model_path,
+            print_details)

@@ -1,10 +1,10 @@
 import h5py
-import argparse
 import sys
 import re
 from modules.python.TextColor import TextColor
 from modules.python.StitchV2 import create_consensus_sequence
 from os.path import isfile, join
+from pathlib import Path
 from os import listdir
 
 
@@ -34,6 +34,7 @@ def number_key(name):
             L.append(part)
     return L
 
+
 def perform_stitch(hdf_file_path, output_path, threads):
     all_prediction_files = get_file_paths_from_directory(hdf_file_path)
 
@@ -44,7 +45,10 @@ def perform_stitch(hdf_file_path, output_path, threads):
             contigs = list(hdf5_file['predictions'].keys())
             all_contigs.update(contigs)
 
-    consensus_fasta_file = open(output_path+'consensus.fa', 'w')
+    output_directory = Path(output_path).resolve().parents[0]
+    output_directory.mkdir(parents=True, exist_ok=True)
+
+    consensus_fasta_file = open(output_path + '.fa', 'w')
 
     for contig in sorted(all_contigs):
         sys.stderr.write(TextColor.YELLOW + "INFO: PROCESSING CONTIG: " + contig + "\n" + TextColor.END)
@@ -71,35 +75,3 @@ def perform_stitch(hdf_file_path, output_path, threads):
             consensus_fasta_file.write(consensus_sequence+"\n")
 
     hdf5_file.close()
-
-
-if __name__ == '__main__':
-    '''
-    Processes arguments and performs tasks.
-    '''
-    parser = argparse.ArgumentParser(description="3_pepper_stitch.py performs the final stitching to generate  "
-                                                 "the polished sequences.")
-    parser.add_argument(
-        "-i",
-        "--input_dir",
-        type=str,
-        required=True,
-        help="Input dir containing hdf prediction file."
-    )
-    parser.add_argument(
-        "-o",
-        "--output_dir",
-        type=str,
-        required=True,
-        help="Path to output directory."
-    )
-    parser.add_argument(
-        "-t",
-        "--threads",
-        type=int,
-        default=5,
-        help="Number of threads."
-    )
-
-    FLAGS, unparsed = parser.parse_known_args()
-    perform_stitch(FLAGS.input_dir, FLAGS.output_dir, FLAGS.threads)
