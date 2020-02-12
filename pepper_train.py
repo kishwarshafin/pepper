@@ -120,7 +120,7 @@ def add_train_model_arguments(parser):
         "--gpu",
         default=False,
         action='store_true',
-        help="If set then PyTorch will use GPUs for inference. CUDA required."
+        help="If set then PyTorch will use GPUs. CUDA required."
     )
 
     parser.add_argument(
@@ -165,7 +165,7 @@ def add_test_model_arguments(parser):
         "--gpu",
         default=False,
         action='store_true',
-        help="If set then PyTorch will use GPUs for inference. CUDA required."
+        help="If set then PyTorch will use GPUs. CUDA required."
     )
     parser.add_argument(
         "--print_details",
@@ -193,7 +193,7 @@ def add_run_hyperband_arguments(parser):
         "--gpu",
         default=False,
         action='store_true',
-        help="If set then PyTorch will use GPUs for inference. CUDA required."
+        help="If set then PyTorch will use GPUs. CUDA required."
     )
     parser.add_argument(
         "--output_dir",
