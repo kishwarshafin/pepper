@@ -1,0 +1,6 @@
+include CMakeLists.txt build.sh LICENSE MANIFEST.in
+include README.md requirements.txt modules/htslib.cmake modules/pybind11.cmake
+recursive-include img/ *
+recursive-include docker/ *
+recursive-include modules/headers *
+recursive-include modules/src *

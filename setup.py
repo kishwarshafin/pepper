@@ -118,12 +118,12 @@ if __name__ == '__main__':
     pymajor, pyminor = sys.version_info[0:2]
     if (pymajor < 3) or (pymajor <= 3 and pyminor < 5):
         raise RuntimeError(
-            'PEPPER requires 3.5 higher.')
+            'P.E.P.P.E.R. requires 3.5 higher.')
     python_dependencies = get_dependencies()
     __long_description__, __long_description_content_type__ = get_long_description()
 
     setup(
-        name=__pkg_name__,
+        name='p.e.p.p.e.r',
         version=get_version(),
         packages=['', 'modules/python', 'modules/python/models', 'modules/python/helper'],
         package_dir={'modules/python': 'modules/python',
@@ -134,7 +134,7 @@ if __name__ == '__main__':
         author_email="kishwar.shafin@gmail.com",
         description=__description__,
         long_description=__long_description__,
-        __long_description_content_type__=__long_description_content_type__,
+        long_description_content_type=__long_description_content_type__,
         python_requires='>=3.5.*',
         install_requires=python_dependencies,
         entry_points={
@@ -143,7 +143,6 @@ if __name__ == '__main__':
                 '{0}_train = {0}_train:main'.format(__pkg_name__),
             ]
         },
-        include_package_data=True,
         ext_modules=[CMakeExtension('PEPPER')],
         cmdclass={
             'build_ext': CMakeBuild

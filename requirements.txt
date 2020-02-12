@@ -1,6 +1,6 @@
-h5py==2.10.0
-tqdm==4.42.1
-numpy==1.18.1
+h5py
+tqdm
+numpy
 wget
 torch
 torchvision
