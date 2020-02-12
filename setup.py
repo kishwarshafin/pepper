@@ -1,11 +1,7 @@
 import os
 import re
 import sys
-from glob import glob
-import shutil
-from setuptools import setup, find_packages, Extension
-from setuptools import Distribution
-from setuptools.command.install import install
+from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 import subprocess
@@ -13,7 +9,7 @@ from pathlib import Path
 
 __pkg_name__ = 'pepper'
 __author__ = 'Kishwar Shafin'
-__description__ = 'RNN based assembly polisher.'
+__description__ = 'RNN based standalone assembly polisher.'
 
 
 class CMakeExtension(Extension):
@@ -99,6 +95,24 @@ def get_dependencies():
     return install_requires
 
 
+def get_version():
+    version = {}
+    with open("version.py") as fp:
+        exec(fp.read(), version)
+    return version['__version__']
+
+
+def get_long_description():
+    from os import path
+    this_directory = path.abspath(path.dirname(__file__))
+    kwargs = {'encoding':'utf-8'} if sys.version_info.major == 3 else {}
+    with open(path.join(this_directory, 'README.md'), **kwargs) as f:
+        long_description = f.read()
+    long_description_content_type = 'text/markdown'
+
+    return long_description, long_description_content_type
+
+
 if __name__ == '__main__':
     # check python3 version
     pymajor, pyminor = sys.version_info[0:2]
@@ -106,24 +120,30 @@ if __name__ == '__main__':
         raise RuntimeError(
             'PEPPER requires 3.5 higher.')
     python_dependencies = get_dependencies()
+    __long_description__, __long_description_content_type__ = get_long_description()
+
     setup(
-        name='PEPPER',
-        version='1.0',
+        name=__pkg_name__,
+        version=get_version(),
         packages=['', 'modules/python', 'modules/python/models', 'modules/python/helper'],
         package_dir={'modules/python': 'modules/python',
                      'modules/python/models': 'modules/python/models',
                      'modules/python/helper': 'modules/python/helper'},
         url='https://github.com/kishwarshafin/pepper',
         author=__author__,
+        author_email="kishwar.shafin@gmail.com",
         description=__description__,
+        long_description=__long_description__,
+        __long_description_content_type__=__long_description_content_type__,
         python_requires='>=3.5.*',
         install_requires=python_dependencies,
         entry_points={
             'console_scripts': [
-                '{0} = pepper:main'.format(__pkg_name__),
-                '{0}_train = pepper_train:main'.format(__pkg_name__),
+                '{0} = {0}:main'.format(__pkg_name__),
+                '{0}_train = {0}_train:main'.format(__pkg_name__),
             ]
         },
+        include_package_data=True,
         ext_modules=[CMakeExtension('PEPPER')],
         cmdclass={
             'build_ext': CMakeBuild

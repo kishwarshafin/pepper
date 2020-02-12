@@ -5,6 +5,7 @@ from modules.python.TextColor import TextColor
 from modules.python.make_images import make_images
 from modules.python.call_consensus import call_consensus
 from modules.python.perform_stitch import perform_stitch
+from modules.python.download_model import download_models
 
 
 def boolean_string(s):
@@ -187,6 +188,17 @@ def add_stitch_arguments(parser):
     return parser
 
 
+def add_download_models_arguments(parser):
+    parser.add_argument(
+        "-o",
+        "--output_dir",
+        type=str,
+        required=True,
+        help="Path to directory where models will be saved."
+    )
+    return parser
+
+
 def main():
     """
     Main interface for PEPPER. The submodules supported as of now are these:
@@ -218,6 +230,10 @@ def main():
     parser_stitch = subparsers.add_parser('stitch', help="Stitch the polished genome to generate a contiguous polished"
                                                          "assembly.")
     add_stitch_arguments(parser_stitch)
+
+    parser_download_model = subparsers.add_parser('download_models', help="Download available models.")
+    add_download_models_arguments(parser_download_model)
+
     parser_torch_stat = subparsers.add_parser('torch_stat', help="See PyTorch configuration.")
 
     FLAGS, unparsed = parser.parse_known_args()
@@ -248,6 +264,10 @@ def main():
         perform_stitch(FLAGS.input_dir,
                        FLAGS.output_file,
                        FLAGS.threads)
+
+    elif FLAGS.sub_command == 'download_models':
+        sys.stderr.write(TextColor.GREEN + "INFO: DOWNLOAD MODELS SELECTED\n" + TextColor.END)
+        download_models(FLAGS.output_dir)
 
     elif FLAGS.sub_command == 'torch_stat':
         sys.stderr.write(TextColor.YELLOW + "TORCH VERSION: " + TextColor.END + str(torch.__version__) + "\n\n")
