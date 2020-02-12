@@ -1,5 +1,6 @@
 import sys
 import torch
+from modules.python.ImageGenerationUI import UserInterfaceSupport
 from modules.python.TextColor import TextColor
 from modules.python.models.predict import predict
 from modules.python.models.predict_distributed_gpu import predict_distributed_gpu
@@ -125,6 +126,8 @@ def call_consensus(image_dir, model_path, batch_size, num_workers, output_dir, d
     if threads <= 0:
         sys.stderr.write(TextColor.RED + "ERROR: THREAD NEEDS TO BE >=0.\n" + TextColor.END)
         exit(1)
+
+    output_dir = UserInterfaceSupport.handle_output_directory(output_dir)
 
     if gpu:
         """
