@@ -172,10 +172,10 @@ def add_stitch_arguments(parser):
     )
     parser.add_argument(
         "-o",
-        "--output_dir",
+        "--output_file",
         type=str,
         required=True,
-        help="Path to output directory."
+        help="Path to output file with an expected prefix (i.e. -o ./outputs/polished_genome)"
     )
     parser.add_argument(
         "-t",
@@ -229,6 +229,7 @@ def main():
                     FLAGS.region,
                     FLAGS.output_dir,
                     FLAGS.threads)
+
     elif FLAGS.sub_command == 'call_consensus':
         sys.stderr.write(TextColor.GREEN + "INFO: CALL CONSENSUS MODULE SELECTED\n" + TextColor.END)
         call_consensus(FLAGS.image_dir,
@@ -241,9 +242,13 @@ def main():
                        FLAGS.distributed,
                        FLAGS.callers,
                        FLAGS.threads)
+
     elif FLAGS.sub_command == 'stitch':
         sys.stderr.write(TextColor.GREEN + "INFO: STITCH MODULE SELECTED\n" + TextColor.END)
-        perform_stitch(FLAGS.input_dir, FLAGS.output_dir, FLAGS.threads)
+        perform_stitch(FLAGS.input_dir,
+                       FLAGS.output_file,
+                       FLAGS.threads)
+
     elif FLAGS.sub_command == 'torch_stat':
         sys.stderr.write(TextColor.YELLOW + "TORCH VERSION: " + TextColor.END + str(torch.__version__) + "\n\n")
         sys.stderr.write(TextColor.YELLOW + "PARALLEL CONFIG:\n" + TextColor.END)
