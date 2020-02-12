@@ -127,8 +127,8 @@ def add_train_model_arguments(parser):
         "--num_workers",
         type=int,
         required=False,
-        default=40,
-        help="Epoch size for training iteration."
+        default=16,
+        help="Number of data loaders to use."
     )
     return parser
 
