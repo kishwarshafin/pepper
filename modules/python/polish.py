@@ -5,8 +5,6 @@ import sys
 import torch
 import time
 from pathlib import Path
-from os import listdir
-from modules.python.ImageGenerationUI import UserInterfaceSupport
 from modules.python.make_images import make_images
 from modules.python.call_consensus import call_consensus
 from modules.python.perform_stitch import perform_stitch

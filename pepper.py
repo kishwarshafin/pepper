@@ -85,7 +85,7 @@ def add_polish_arguments(parser):
     parser.add_argument(
         "-dx",
         "--distributed_off",
-        default=True,
+        default=False,
         action='store_true',
         help="Turn off distributed inference. This mode will disable the use of multiple callers."
     )
