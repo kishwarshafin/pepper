@@ -87,7 +87,7 @@ def add_polish_arguments(parser):
         "--distributed_off",
         default=True,
         action='store_true',
-        help="Distributed gpu inference. This mode will enable one caller per GPU."
+        help="Turn off distributed inference. This mode will disable the use of multiple callers."
     )
     parser.add_argument(
         "-d_ids",
@@ -120,7 +120,7 @@ def add_polish_arguments(parser):
         "--callers",
         type=int,
         required=False,
-        default=None,
+        default=8,
         help="Total number of callers to spawn if doing CPU inference in distributed mode."
     )
     return parser

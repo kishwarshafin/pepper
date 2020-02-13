@@ -48,6 +48,8 @@ def polish(bam_filepath, fasta_filepath, output_path, threads, region,
         sys.stderr.write(TextColor.RED + "ERROR: num_workers NEEDS TO BE >=0.\n" + TextColor.END)
         exit(1)
 
+    if threads_per_caller is None:
+        threads_per_caller = threads_per_caller / callers
     # check number of threads
     if threads_per_caller <= 0:
         sys.stderr.write(TextColor.RED + "ERROR: THREAD PER CALLER NEEDS TO BE >=0.\n" + TextColor.END)
