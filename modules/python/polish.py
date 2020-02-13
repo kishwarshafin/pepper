@@ -83,7 +83,7 @@ def polish(bam_filepath, fasta_filepath, output_path, threads, region,
     timestr = time.strftime("%m%d%Y_%H%M%S")
 
     # run directories
-    output_parent_directory = (Path(output_path).resolve().parents[0]) + "/"
+    output_parent_directory = str(Path(output_path).resolve().parents[0]) + "/"
     image_output_directory = str(Path(output_parent_directory + "images_" + str(timestr)).resolve()) + "/"
     prediction_output_directory = str(Path(output_parent_directory + "predictions_" + str(timestr)).resolve()) + "/"
 
