@@ -83,9 +83,13 @@ def polish(bam_filepath, fasta_filepath, output_path, threads, region,
     timestr = time.strftime("%m%d%Y_%H%M%S")
 
     # run directories
-    output_parent_directory = str(Path(output_path).resolve().parents[0]) + "/"
-    image_output_directory = str(Path(output_parent_directory + "images_" + str(timestr)).resolve()) + "/"
-    prediction_output_directory = str(Path(output_parent_directory + "predictions_" + str(timestr)).resolve()) + "/"
+    if output_path[-1] != "/":
+        output_parent_directory = str(Path(output_path).resolve().parents[0]) + "/"
+    else:
+        output_parent_directory = output_path
+
+    image_output_directory = output_parent_directory + "images_" + str(timestr) + "/"
+    prediction_output_directory = output_parent_directory + "predictions_" + str(timestr) + "/"
 
     sys.stderr.write(TextColor.GREEN + "INFO: RUN-ID: " + str(timestr) + "\n" + TextColor.END)
     sys.stderr.write(TextColor.GREEN + "INFO: IMAGE OUTPUT: " + str(image_output_directory) + "\n" + TextColor.END)
