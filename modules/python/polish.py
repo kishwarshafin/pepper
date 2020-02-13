@@ -47,7 +47,7 @@ def polish(bam_filepath, fasta_filepath, output_path, threads, region,
         exit(1)
 
     if threads_per_caller is None:
-        threads_per_caller = threads / callers
+        threads_per_caller = int(threads / max(1, callers))
     # check number of threads
     if threads_per_caller <= 0:
         sys.stderr.write(TextColor.RED + "ERROR: THREAD PER CALLER NEEDS TO BE >=0.\n" + TextColor.END)
@@ -102,6 +102,7 @@ def polish(bam_filepath, fasta_filepath, output_path, threads, region,
 
     sys.stderr.write(TextColor.GREEN + "STEP 2: RUNNING INFERENCE\n" + TextColor.END)
     sys.stderr.write(TextColor.GREEN + "INFO: PREDICTION OUTPUT: " + str(prediction_output_directory) + "\n" + TextColor.END)
+    print(threads_per_caller)
     call_consensus(image_output_directory,
                    model_path,
                    batch_size,

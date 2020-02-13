@@ -112,7 +112,7 @@ def add_polish_arguments(parser):
         "--threads_per_caller",
         type=int,
         required=False,
-        default=None,
+        default=8,
         help="Total threads to be used per caller. A sane value would be num_callers * threads <= total_threads."
     )
     parser.add_argument(
