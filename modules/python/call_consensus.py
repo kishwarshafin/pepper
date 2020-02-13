@@ -21,10 +21,10 @@ def get_file_paths_from_directory(directory_path):
     return file_paths
 
 
-def polish_genome(csv_file, model_path, batch_size, num_workers, output_dir, gpu_mode, onnx_mode):
+def polish_genome(csv_file, model_path, batch_size, num_workers, output_dir, gpu_mode):
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "OUTPUT DIRECTORY: " + output_dir + "\n")
     output_filename = output_dir + "pepper_predictions.hdf"
-    predict(csv_file, output_filename, model_path, batch_size, num_workers, gpu_mode, onnx_mode)
+    predict(csv_file, output_filename, model_path, batch_size, num_workers, gpu_mode)
     sys.stderr.write(TextColor.GREEN + "INFO: " + TextColor.END + "PREDICTION GENERATED SUCCESSFULLY.\n")
 
 
@@ -158,8 +158,7 @@ def call_consensus(image_dir, model_path, batch_size, num_workers, output_dir, d
                           batch_size,
                           num_workers,
                           output_dir,
-                          gpu,
-                          False)
+                          gpu)
     elif distributed:
         """
         DO DISTRIBUTED CPU INFERENCE. THIS MODE WILL CREATE MULTIPLE CALLERS.
@@ -179,5 +178,4 @@ def call_consensus(image_dir, model_path, batch_size, num_workers, output_dir, d
                       batch_size,
                       num_workers,
                       output_dir,
-                      gpu,
-                      False)
+                      gpu)

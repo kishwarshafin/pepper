@@ -48,7 +48,7 @@ def perform_stitch(hdf_file_path, output_path, threads):
     output_directory = Path(output_path).resolve().parents[0]
     output_directory.mkdir(parents=True, exist_ok=True)
 
-    consensus_fasta_file = open(output_path + '.fa', 'w')
+    consensus_fasta_file = open(output_path + '_pepper.fa', 'w')
 
     for contig in sorted(all_contigs):
         sys.stderr.write(TextColor.YELLOW + "INFO: PROCESSING CONTIG: " + contig + "\n" + TextColor.END)
