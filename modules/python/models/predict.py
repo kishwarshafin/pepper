@@ -1,35 +1,31 @@
-import argparse
+import onnx
+import onnxruntime
 import sys
+import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from modules.python.models.dataloader_predict import SequenceDataset
 from modules.python.TextColor import TextColor
 from tqdm import tqdm
-import numpy as np
 from modules.python.models.ModelHander import ModelHandler
 from modules.python.Options import ImageSizeOptions, TrainOptions
 from modules.python.DataStorePredict import DataStore
+import torch.onnx
 
 
-def predict(test_file, output_filename, model_path, batch_size, threads, num_workers, gpu_mode):
+def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu_mode):
     """
     Create a prediction table/dictionary of an images set using a trained model.
     :param test_file: File to predict on
+    :param output_filename: Name of output file
     :param batch_size: Batch size used for prediction
     :param model_path: Path to a trained model
     :param gpu_mode: If true, predictions will be done over GPU
-    :param threads: Number of threads to set for pytorch
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
     prediction_data_file = DataStore(output_filename, mode='w')
-    sys.stderr.write(TextColor.PURPLE + 'Loading data\n' + TextColor.END)
-
-    torch.set_num_threads(threads)
-    sys.stderr.write(TextColor.GREEN + 'INFO: TORCH THREADS SET TO: ' + str(torch.get_num_threads()) + ".\n"
-                     + TextColor.END)
-    sys.stderr.flush()
 
     # data loader
     test_data = SequenceDataset(test_file)
@@ -47,23 +43,22 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
     transducer_model.eval()
 
     if gpu_mode:
-        transducer_model = torch.nn.DataParallel(transducer_model).cuda()
-    sys.stderr.write(TextColor.CYAN + 'MODEL LOADED\n')
+        transducer_model = transducer_model.cuda()
+
+    sys.stderr.write(TextColor.CYAN + 'STARTING INFERENCE\n' + TextColor.END)
 
     with torch.no_grad():
         for contig, contig_start, contig_end, chunk_id, images, position, index in tqdm(test_loader, ncols=50):
-            sys.stderr.flush()
             images = images.type(torch.FloatTensor)
-            if gpu_mode:
-                # encoder_hidden = encoder_hidden.cuda()
-                images = images.cuda()
 
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
-            if gpu_mode:
-                hidden = hidden.cuda()
+            prediction_base_tensor = torch.zeros((images.size(0), images.size(1), ImageSizeOptions.TOTAL_LABELS))
 
-            prediction_base_dict = np.zeros((images.size(0), images.size(1), ImageSizeOptions.TOTAL_LABELS))
+            if gpu_mode:
+                images = images.cuda()
+                hidden = hidden.cuda()
+                prediction_base_tensor = prediction_base_tensor.cuda()
 
             for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
                 if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
@@ -76,24 +71,29 @@ def predict(test_file, output_filename, model_path, batch_size, threads, num_wor
                 # run inference
                 output_base, hidden = transducer_model(image_chunk, hidden)
 
+                # now calculate how much padding is on the top and bottom of this chunk so we can do a simple
+                # add operation
+                top_zeros = chunk_start
+                bottom_zeros = ImageSizeOptions.SEQ_LENGTH - chunk_end
+
                 # do softmax and get prediction
-                m = nn.Softmax(dim=2)
-                soft_probs = m(output_base)
-                output_preds = soft_probs.cpu()
-                base_max_value, predicted_base_label = torch.max(output_preds, dim=2)
+                # we run a softmax a padding to make the output tensor compatible for adding
+                inference_layers = nn.Sequential(
+                    nn.Softmax(dim=2),
+                    nn.ZeroPad2d((0, 0, top_zeros, bottom_zeros))
+                )
+                if gpu_mode:
+                    inference_layers = inference_layers.cuda()
+                    base_prediction = inference_layers(output_base).cuda()
+                else:
+                    base_prediction = inference_layers(output_base)
 
-                # convert everything to list
-                base_max_value = base_max_value.numpy().tolist()
-                predicted_base_label = predicted_base_label.numpy().tolist()
+                # now simply add the tensor to the global counter
+                prediction_base_tensor = torch.add(prediction_base_tensor, base_prediction)
 
-                assert(len(base_max_value) == len(predicted_base_label))
+            base_values, base_labels = torch.max(prediction_base_tensor, 2)
 
-                for ii in range(0, len(predicted_base_label)):
-                    chunk_pos = chunk_start
-                    for p_base, base in zip(base_max_value[ii], predicted_base_label[ii]):
-                        prediction_base_dict[ii][chunk_pos][base] += p_base
-                        chunk_pos += 1
-            predicted_base_labels = np.argmax(np.array(prediction_base_dict), axis=2)
+            predicted_base_labels = base_labels.cpu().numpy()
 
             for i in range(images.size(0)):
                 prediction_data_file.write_prediction(contig[i], contig_start[i], contig_end[i], chunk_id[i],

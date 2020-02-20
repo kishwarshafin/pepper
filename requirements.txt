@@ -1,5 +1,10 @@
 h5py
 tqdm
-torchnet
 numpy
+wget
+torch
+torchvision
+torchnet
 pyyaml
+onnx
+onnxruntime
