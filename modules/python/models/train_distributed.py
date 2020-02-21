@@ -1,9 +1,10 @@
 import sys
 import torch
-import torch.nn as nn
 import os
 from tqdm import tqdm
-
+import torch.distributed as dist
+import torch.nn as nn
+import torch.multiprocessing as mp
 # Custom generator for our dataset
 from torch.utils.data import DataLoader
 from modules.python.models.dataloader import SequenceDataset
@@ -11,6 +12,9 @@ from modules.python.TextColor import TextColor
 from modules.python.models.ModelHander import ModelHandler
 from modules.python.models.test import test
 from modules.python.Options import ImageSizeOptions, TrainOptions
+
+os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
+
 """
 Train a model and return the model and optimizer trained.
 
@@ -208,3 +212,51 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
     return transducer_model, model_optimizer, stats
 
+
+def cleanup():
+    dist.destroy_process_group()
+
+
+def setup(rank, device_ids, args, all_input_files):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+
+    # initialize the process group
+    dist.init_process_group("gloo", rank=rank, world_size=len(device_ids))
+
+    filepath, output_filepath, model_path, batch_size, num_workers = args
+
+    # issue with semaphore lock: https://github.com/pytorch/pytorch/issues/2517
+    # mp.set_start_method('spawn')
+
+    # Explicitly setting seed to make sure that models created in two processes
+    # start from same random weights and biases. https://github.com/pytorch/pytorch/issues/2517
+    torch.manual_seed(42)
+    predict(filepath,
+            all_input_files[rank],
+            output_filepath,
+            model_path,
+            batch_size,
+            num_workers,
+            rank,
+            device_ids[rank])
+    cleanup()
+
+
+def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, batch_size, device_ids, num_workers):
+    """
+    Create a prediction table/dictionary of an images set using a trained model.
+    :param filepath: Path to image files to predict on
+    :param file_chunks: Path to chunked files
+    :param batch_size: Batch size used for prediction
+    :param model_path: Path to a trained model
+    :param output_filepath: Path to output directory
+    :param device_ids: List of GPU devices to use
+    :param num_workers: Number of workers to be used by the dataloader
+    :return: Prediction dictionary
+    """
+    args = (filepath, output_filepath, model_path, batch_size, num_workers)
+    mp.spawn(setup,
+             args=(device_ids, args, file_chunks),
+             nprocs=len(device_ids),
+             join=True)

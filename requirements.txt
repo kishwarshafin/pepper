@@ -8,3 +8,4 @@ torchnet
 pyyaml
 onnx
 onnxruntime
+hyperopt
