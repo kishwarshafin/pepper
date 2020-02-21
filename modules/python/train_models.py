@@ -1,10 +1,13 @@
-import argparse
 import os
 import time
+import torch
+import sys
 
 # Custom generator for our dataset
 from modules.python.models.train import train
+from modules.python.models.train_distributed import train_distributed
 from modules.python.Options import TrainOptions
+from modules.python.TextColor import TextColor
 """
 Input:
 - A directory containing labeled HDF5 files
@@ -40,6 +43,7 @@ class TrainModule:
 
     def train_model(self):
         # train a model
+        sys.stderr.write(TextColor.GREEN + "REGULAR TRAIN MODULE SELECTED\n" + TextColor.END)
         model, optimizer, stats_dictionary = train(self.train_file,
                                                    self.test_file,
                                                    self.batch_size,
@@ -57,6 +61,53 @@ class TrainModule:
                                                    train_mode=True)
 
         return model, optimizer, stats_dictionary
+
+    def train_model_distributed(self, device_ids):
+        # train a model
+        sys.stderr.write(TextColor.GREEN + "INFO: DISTRIBUTED GPU SETUP\n" + TextColor.END)
+
+        if device_ids is None:
+            total_gpu_devices = torch.cuda.device_count()
+            sys.stderr.write(TextColor.GREEN + "INFO: TOTAL GPU AVAILABLE: " + str(total_gpu_devices) + "\n" + TextColor.END)
+            device_ids = [i for i in range(0, total_gpu_devices)]
+            total_callers = total_gpu_devices
+        else:
+            device_ids = [int(i) for i in device_ids.split(',')]
+            for device_id in device_ids:
+                major_capable, minor_capable = torch.cuda.get_device_capability(device=device_id)
+                if major_capable < 0:
+                    sys.stderr.write(TextColor.RED + "ERROR: GPU DEVICE: " + str(device_id) + " IS NOT CUDA CAPABLE.\n" + TextColor.END)
+                    sys.stderr.write(TextColor.GREEN + "Try running: $ python3\n"
+                                                       ">>> import torch \n"
+                                                       ">>> torch.cuda.get_device_capability(device=" + str(device_id) + ")\n" + TextColor.END)
+                else:
+                    sys.stderr.write(TextColor.GREEN + "INFO: CAPABILITY OF GPU#" + str(device_id) + ":\t" + str(major_capable)
+                                     + "-" + str(minor_capable) + "\n" + TextColor.END)
+            total_callers = len(device_ids)
+
+        sys.stderr.write(TextColor.GREEN + "INFO: AVAILABLE GPU DEVICES: " + str(device_ids) + "\n" + TextColor.END)
+
+        if total_callers == 0:
+            sys.stderr.write(TextColor.RED + "ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n" + TextColor.END)
+            exit()
+
+        train_distributed(self.train_file,
+                          self.test_file,
+                          self.batch_size,
+                          self.epochs,
+                          self.gpu_mode,
+                          self.num_workers,
+                          self.retrain_model,
+                          self.retrain_model_path,
+                          self.gru_layers,
+                          self.hidden_size,
+                          self.learning_rate,
+                          self.weight_decay,
+                          self.model_dir,
+                          self.stats_dir,
+                          device_ids,
+                          total_callers,
+                          train_mode=True)
 
 
 def handle_output_directory(output_dir):
@@ -93,18 +144,67 @@ def train_models(train_image_dir,
                  num_workers,
                  retrain_model,
                  retrain_model_path,
-                 gpu_mode):
+                 gpu_mode,
+                 distributed,
+                 device_ids):
 
-    model_out_dir, log_dir = handle_output_directory(output_directory)
-    tm = TrainModule(train_image_dir,
-                     test_image_dir,
-                     gpu_mode,
-                     epoch_size,
-                     batch_size,
-                     num_workers,
-                     retrain_model,
-                     retrain_model_path,
-                     model_out_dir,
-                     log_dir,
-                     log_dir)
-    tm.train_model()
+    if gpu_mode:
+        """
+        DO DISTRIBUTED GPU INFERENCE. THIS MODE WILL ENABLE ONE MODEL PER GPU
+        """
+        if not torch.cuda.is_available():
+            sys.stderr.write(TextColor.RED + "ERROR: TORCH IS NOT BUILT WITH CUDA.\n" + TextColor.END)
+            sys.stderr.write(TextColor.RED + "SEE TORCH CAPABILITY:\n$ python3\n"
+                                             ">>> import torch \n"
+                                             ">>> torch.cuda.is_available()\n If true then cuda is avilable"
+                             + TextColor.END)
+            exit(1)
+
+        total_gpu_devices = torch.cuda.device_count()
+
+        if distributed and total_gpu_devices > 1:
+            sys.stderr.write(TextColor.GREEN + "INFO: DISTRIBUTED TRAINING MODE.\n" + TextColor.END)
+            # Distributed GPU setup
+            model_out_dir, log_dir = handle_output_directory(output_directory)
+            tm = TrainModule(train_image_dir,
+                             test_image_dir,
+                             gpu_mode,
+                             epoch_size,
+                             batch_size,
+                             num_workers,
+                             retrain_model,
+                             retrain_model_path,
+                             model_out_dir,
+                             log_dir,
+                             log_dir)
+            tm.train_model_distributed(device_ids)
+        else:
+            # Normal GPU setup
+            model_out_dir, log_dir = handle_output_directory(output_directory)
+            tm = TrainModule(train_image_dir,
+                             test_image_dir,
+                             gpu_mode,
+                             epoch_size,
+                             batch_size,
+                             num_workers,
+                             retrain_model,
+                             retrain_model_path,
+                             model_out_dir,
+                             log_dir,
+                             log_dir)
+            tm.train_model()
+    else:
+        # Normal GPU setup
+        model_out_dir, log_dir = handle_output_directory(output_directory)
+        tm = TrainModule(train_image_dir,
+                         test_image_dir,
+                         gpu_mode,
+                         epoch_size,
+                         batch_size,
+                         num_workers,
+                         retrain_model,
+                         retrain_model_path,
+                         model_out_dir,
+                         log_dir,
+                         log_dir)
+        tm.train_model()

@@ -6,6 +6,7 @@ from modules.python.make_images import make_train_images
 from modules.python.train_models import train_models
 from modules.python.test_models import test_models
 from modules.python.run_hyperband import run_hyperband
+from version import __version__
 
 
 def boolean_string(s):
@@ -84,6 +85,13 @@ def add_train_model_arguments(parser):
         help="Testing data directory containing HDF files."
     )
     parser.add_argument(
+        "--output_dir",
+        type=str,
+        required=False,
+        default='./pepper_model_out',
+        help="Path to output directory."
+    )
+    parser.add_argument(
         "--batch_size",
         type=int,
         required=False,
@@ -98,11 +106,35 @@ def add_train_model_arguments(parser):
         help="Epoch size for training iteration."
     )
     parser.add_argument(
-        "--output_dir",
+        "--num_workers",
+        type=int,
+        required=False,
+        default=16,
+        help="Number of data loaders to use."
+    )
+    parser.add_argument(
+        "-g",
+        "--gpu",
+        default=False,
+        action='store_true',
+        help="If set then PyTorch will use GPUs for inference. CUDA required."
+    )
+    parser.add_argument(
+        "-dx",
+        "--distributed_off",
+        default=False,
+        action='store_true',
+        help="Turn off distributed inference. This mode will disable the use of multiple callers."
+    )
+    parser.add_argument(
+        "-d_ids",
+        "--device_ids",
         type=str,
         required=False,
-        default='./pepper_model_out',
-        help="Path to output directory."
+        default=None,
+        help="List of gpu device ids to use for inference. Only used in distributed setting.\n"
+             "Example usage: --device_ids 0,1,2 (this will create three callers in id 'cuda:0, cuda:1 and cuda:2'\n"
+             "If none then it will use all available devices."
     )
     parser.add_argument(
         "--retrain_model",
@@ -116,20 +148,7 @@ def add_train_model_arguments(parser):
         default=False,
         help="Path to the model that will be retrained."
     )
-    parser.add_argument(
-        "--gpu",
-        default=False,
-        action='store_true',
-        help="If set then PyTorch will use GPUs. CUDA required."
-    )
 
-    parser.add_argument(
-        "--num_workers",
-        type=int,
-        required=False,
-        default=16,
-        help="Number of data loaders to use."
-    )
     return parser
 
 
@@ -241,9 +260,14 @@ def main():
                                                  "3) test_model: Test a model on a set of training samples.\n"
                                                  "4) run_hyperband: Hyper-parameter tuning [in development].\n",
                                      formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument(
+        "--version",
+        default=False,
+        action='store_true',
+        help="Show version."
+    )
 
     subparsers = parser.add_subparsers(dest='sub_command')
-    subparsers.required = True
 
     parser_make_images = subparsers.add_parser('make_train_images', help="Generate training samples")
     add_make_train_images_arguments(parser_make_images)
@@ -271,6 +295,7 @@ def main():
                           FLAGS.threads)
     elif FLAGS.sub_command == 'train_model':
         sys.stderr.write(TextColor.GREEN + "INFO: TRAIN MODEL MODULE SELECTED\n" + TextColor.END)
+        distributed = not FLAGS.distributed_off
         train_models(FLAGS.train_image_dir,
                      FLAGS.test_image_dir,
                      FLAGS.output_dir,
@@ -279,7 +304,9 @@ def main():
                      FLAGS.num_workers,
                      FLAGS.retrain_model,
                      FLAGS.retrain_model_path,
-                     FLAGS.gpu)
+                     FLAGS.gpu,
+                     distributed,
+                     FLAGS.device_ids)
     elif FLAGS.sub_command == 'test_model':
         sys.stderr.write(TextColor.GREEN + "INFO: TEST MODEL MODULE SELECTED\n" + TextColor.END)
         test_models(FLAGS.test_image_dir,
@@ -308,6 +335,14 @@ def main():
 
         sys.stderr.write(TextColor.GREEN + "CUDA AVAILABLE: " + TextColor.END + str(torch.cuda.is_available()) + "\n")
         sys.stderr.write(TextColor.GREEN + "GPU DEVICES: " + TextColor.END + str(torch.cuda.device_count()) + "\n")
+
+    elif FLAGS.version is True:
+        print("PEPPER VERSION: ", __version__)
+
+    else:
+        sys.stderr.write(TextColor.RED + "ERROR: NO SUBCOMMAND SELECTED. PLEASE SELECT ONE OF THE AVAIABLE SUB-COMMANDS.\n"
+                         + TextColor.END)
+        parser.print_help()
 
 
 if __name__ == '__main__':

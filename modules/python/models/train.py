@@ -104,7 +104,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         sys.stderr.write(TextColor.GREEN + "INFO: OPTIMIZER LOADED\n" + TextColor.END)
 
     if gpu_mode:
-        transducer_model = torch.nn.DataParallel(transducer_model).cuda()
+        transducer_model = transducer_model.cuda()
 
     class_weights = torch.Tensor(CLASS_WEIGHTS)
     # Loss

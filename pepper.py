@@ -1,6 +1,7 @@
 import argparse
 import sys
 import torch
+from version import __version__
 from modules.python.TextColor import TextColor
 from modules.python.polish import polish
 from modules.python.make_images import make_images
@@ -315,9 +316,15 @@ def main():
                                                  "3) stitch: This module takes the inference files as input and "
                                                  "stitches them to generate a polished assembly.\n",
                                      formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument(
+        "--version",
+        default=False,
+        action='store_true',
+        help="Show version."
+    )
 
     subparsers = parser.add_subparsers(dest='sub_command')
-    subparsers.required = True
+    # subparsers.required = True
 
     parser_polish = subparsers.add_parser('polish', help="Run the polishing pipeline. This will run "
                                                          "make images-> inference -> stitch one after another.\n"
@@ -341,6 +348,7 @@ def main():
     add_download_models_arguments(parser_download_model)
 
     parser_torch_stat = subparsers.add_parser('torch_stat', help="See PyTorch configuration.")
+    parser_torch_stat = subparsers.add_parser('version', help="Show program version.")
 
     FLAGS, unparsed = parser.parse_known_args()
 
@@ -405,6 +413,14 @@ def main():
 
         sys.stderr.write(TextColor.GREEN + "CUDA AVAILABLE: " + TextColor.END + str(torch.cuda.is_available()) + "\n")
         sys.stderr.write(TextColor.GREEN + "GPU DEVICES: " + TextColor.END + str(torch.cuda.device_count()) + "\n")
+
+    elif FLAGS.version is True:
+        print("PEPPER VERSION: ", __version__)
+
+    else:
+        sys.stderr.write(TextColor.RED + "ERROR: NO SUBCOMMAND SELECTED. PLEASE SELECT ONE OF THE AVAIABLE SUB-COMMANDS.\n"
+                         + TextColor.END)
+        parser.print_help()
 
 
 if __name__ == '__main__':
