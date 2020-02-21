@@ -136,11 +136,14 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
     start_epoch = prev_ite
 
     # Train the Model
-    sys.stderr.write(TextColor.PURPLE + 'Training starting\n' + TextColor.END)
+    if rank == 0:
+        sys.stderr.write(TextColor.PURPLE + 'Training starting\n' + TextColor.END)
+        sys.stderr.write(TextColor.BLUE + 'Start: ' + str(start_epoch + 1) + ' End: ' + str(epoch_limit) + "\n")
+
     stats = dict()
     stats['loss_epoch'] = []
     stats['accuracy_epoch'] = []
-    sys.stderr.write(TextColor.BLUE + 'Start: ' + str(start_epoch + 1) + ' End: ' + str(epoch_limit) + "\n")
+
     for epoch in range(start_epoch, epoch_limit, 1):
         total_loss = 0
         total_images = 0
@@ -202,9 +205,10 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                 progress_bar.set_description("Loss: " + str(avg_loss))
                 progress_bar.refresh()
                 progress_bar.update(1)
-                progress_bar.close()
                 batch_no += 1
 
+        if rank == 0:
+            progress_bar.close()
         dist.barrier()
 
         if rank == 0:
@@ -215,7 +219,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             stats['loss_epoch'].append((epoch, stats_dictioanry['loss']))
             stats['accuracy_epoch'].append((epoch, stats_dictioanry['accuracy']))
 
-        lr_scheduler.step(stats['loss'])
+        # lr_scheduler.step(stats['loss'])
 
         # update the loggers
         if train_mode is True and rank == 0:
