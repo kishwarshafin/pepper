@@ -156,7 +156,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             progress_bar = tqdm(
                 total=len(train_loader),
                 ncols=100,
-                leave=False,
+                leave=True,
                 position=rank,
                 desc="Loss: ",
             )
