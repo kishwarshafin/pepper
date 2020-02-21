@@ -91,25 +91,23 @@ class TrainModule:
             sys.stderr.write(TextColor.RED + "ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n" + TextColor.END)
             exit()
 
-        model, optimizer, stats_dictionary = train_distributed(self.train_file,
-                                                               self.test_file,
-                                                               self.batch_size,
-                                                               self.epochs,
-                                                               self.gpu_mode,
-                                                               self.num_workers,
-                                                               self.retrain_model,
-                                                               self.retrain_model_path,
-                                                               self.gru_layers,
-                                                               self.hidden_size,
-                                                               self.learning_rate,
-                                                               self.weight_decay,
-                                                               self.model_dir,
-                                                               self.stats_dir,
-                                                               device_ids,
-                                                               total_callers,
-                                                               train_mode=True)
-
-        return model, optimizer, stats_dictionary
+        train_distributed(self.train_file,
+                          self.test_file,
+                          self.batch_size,
+                          self.epochs,
+                          self.gpu_mode,
+                          self.num_workers,
+                          self.retrain_model,
+                          self.retrain_model_path,
+                          self.gru_layers,
+                          self.hidden_size,
+                          self.learning_rate,
+                          self.weight_decay,
+                          self.model_dir,
+                          self.stats_dir,
+                          device_ids,
+                          total_callers,
+                          train_mode=True)
 
 
 def handle_output_directory(output_dir):
