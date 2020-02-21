@@ -243,7 +243,7 @@ def setup(rank, device_ids, args, all_input_files):
     cleanup()
 
 
-def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, batch_size, device_ids, num_workers):
+def train_distributed(filepath, file_chunks, output_filepath, model_path, batch_size, device_ids, num_workers):
     """
     Create a prediction table/dictionary of an images set using a trained model.
     :param filepath: Path to image files to predict on

@@ -166,12 +166,19 @@ def train_models(train_image_dir,
         if distributed and total_gpu_devices > 1:
             sys.stderr.write(TextColor.GREEN + "INFO: DISTRIBUTED TRAINING MODE.\n" + TextColor.END)
             # Distributed GPU setup
-            polish_genome_distributed_gpu(image_dir,
-                                          model_path,
-                                          batch_size,
-                                          num_workers,
-                                          output_dir,
-                                          device_ids)
+            model_out_dir, log_dir = handle_output_directory(output_directory)
+            tm = TrainModule(train_image_dir,
+                             test_image_dir,
+                             gpu_mode,
+                             epoch_size,
+                             batch_size,
+                             num_workers,
+                             retrain_model,
+                             retrain_model_path,
+                             model_out_dir,
+                             log_dir,
+                             log_dir)
+            tm.train_model_distributed(device_ids)
         else:
             # Normal GPU setup
             model_out_dir, log_dir = handle_output_directory(output_directory)
