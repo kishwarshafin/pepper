@@ -112,10 +112,10 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         prev_ite = 0
 
     param_count = sum(p.numel() for p in transducer_model.parameters() if p.requires_grad)
-    sys.stderr.write(TextColor.RED + "INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n" + TextColor.END)
+    if rank == 0:
+        sys.stderr.write(TextColor.RED + "INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n" + TextColor.END)
 
     model_optimizer = torch.optim.Adam(transducer_model.parameters(), lr=lr, weight_decay=decay)
-    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(model_optimizer, 'min')
 
     if retrain_model is True:
         sys.stderr.write(TextColor.GREEN + "INFO: OPTIMIZER LOADING\n" + TextColor.END)
@@ -219,8 +219,6 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             stats['loss_epoch'].append((epoch, stats_dictioanry['loss']))
             stats['accuracy_epoch'].append((epoch, stats_dictioanry['accuracy']))
         dist.barrier()
-
-        # lr_scheduler.step(stats['loss'])
 
         # update the loggers
         if train_mode is True and rank == 0:

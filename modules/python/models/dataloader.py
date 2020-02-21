@@ -30,7 +30,7 @@ class SequenceDataset(Dataset):
 
         hdf_files = get_file_paths_from_directory(image_directory)
 
-        sys.stderr.write(TextColor.GREEN + "INFO: READING FROM HDF5 FILES\n" + TextColor.END)
+        # sys.stderr.write(TextColor.GREEN + "INFO: READING FROM HDF5 FILES\n" + TextColor.END)
         for hdf5_file_path in hdf_files:
             with h5py.File(hdf5_file_path, 'r') as hdf5_file:
                 if 'summaries' in hdf5_file:
