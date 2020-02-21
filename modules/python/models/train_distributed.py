@@ -218,6 +218,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             stats['accuracy'] = stats_dictioanry['accuracy']
             stats['loss_epoch'].append((epoch, stats_dictioanry['loss']))
             stats['accuracy_epoch'].append((epoch, stats_dictioanry['accuracy']))
+        dist.barrier()
 
         # lr_scheduler.step(stats['loss'])
 
