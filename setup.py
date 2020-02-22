@@ -24,8 +24,8 @@ class CMakeBuild(build_ext):
             cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)',
                                                    out.decode()).group(1))
             print("CMAKE VERSION: ", cmake_version)
-            if cmake_version < '3.11':
-                raise RuntimeError("CMake >= 3.1.0 is required on Windows")
+            if cmake_version < '3':
+                raise RuntimeError("CMake >= 3 is required.")
         except OSError:
             raise RuntimeError(
                 "CMake must be installed to build the following extensions: " +
