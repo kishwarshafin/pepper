@@ -88,22 +88,15 @@ class CMakeBuild(build_ext):
 
     def move_output(self, ext):
         print("IN MOVE")
+        dest_directory = os.path.abspath(os.path.join(os.path.dirname(self.get_ext_fullpath(ext.name)), ".."))
         build_temp = Path(self.build_temp).resolve()
-        print("1", build_temp)
-        print("1.1", str(Path(self.get_ext_fullpath(ext.name))))
-        print("1.2", self.get_ext_filename(ext.name))
-        print("1.3", Path(self.get_ext_filename(ext.name)))
-        print("1.4", Path(self.get_ext_filename(ext.name)).resolve())
-        print("1.5", Path(self.get_ext_filename(ext.name)).resolve().parents[0])
-
-        dest_path = Path(self.get_ext_fullpath(ext.name)).resolve().parents[0] / "build" / self.get_ext_filename(ext.name)
-        print("2", str(dest_path))
         source_path = build_temp / self.get_ext_filename(ext.name)
         print("3", str(source_path))
-        dest_directory = dest_path.parents[0]
         print("4", str(dest_directory))
-        dest_directory.mkdir(parents=True, exist_ok=True)
+        os.makedirs(dest_directory, exist_ok=True)
         print("SOURCE: ", source_path)
+
+        dest_path = Path(self.get_ext_fullpath(ext.name))
         print("DEST: ", dest_path)
         exit()
         self.copy_file(source_path, dest_path)
