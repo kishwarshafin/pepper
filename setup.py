@@ -92,6 +92,10 @@ class CMakeBuild(build_ext):
         print("1", build_temp)
         print("1.1", str(Path(self.get_ext_fullpath(ext.name))))
         print("1.2", self.get_ext_filename(ext.name))
+        print("1.3", Path(self.get_ext_filename(ext.name)))
+        print("1.4", Path(self.get_ext_filename(ext.name)).resolve())
+        print("1.5", Path(self.get_ext_filename(ext.name)).resolve().parents[0])
+
         dest_path = Path(self.get_ext_fullpath(ext.name)).resolve().parents[0] / "build" / self.get_ext_filename(ext.name)
         print("2", str(dest_path))
         source_path = build_temp / self.get_ext_filename(ext.name)
@@ -101,6 +105,7 @@ class CMakeBuild(build_ext):
         dest_directory.mkdir(parents=True, exist_ok=True)
         print("SOURCE: ", source_path)
         print("DEST: ", dest_path)
+        exit()
         self.copy_file(source_path, dest_path)
 
 
