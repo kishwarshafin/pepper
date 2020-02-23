@@ -68,6 +68,7 @@ class CMakeBuild(build_ext):
 
         # Move from build temp to final position
         for ext in self.extensions:
+            print("MOVING EXT: ", ext)
             self.move_output(ext)
 
     def move_output(self, ext):
@@ -76,6 +77,7 @@ class CMakeBuild(build_ext):
         source_path = build_temp / self.get_ext_filename(ext.name)
         dest_directory = dest_path.parents[0]
         dest_directory.mkdir(parents=True, exist_ok=True)
+        print("moving happening: ", source_path, dest_path)
         self.copy_file(source_path, dest_path)
 
 
