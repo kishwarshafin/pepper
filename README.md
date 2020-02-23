@@ -5,16 +5,14 @@
 
 `P.E.P.P.E.R.` is a deep neural network based polisher designed to work with Oxford Nanopore Sequencing technology. `P.E.P.P.E.R.` uses a Recurrent Neural Network (RNN) based encoder-decoder model to call a consensus sequence from the summary statistics of each genomic position. The local realignment process using [SSW](https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library) library enables the module to be standalone and not require any prior polishing with other tools.
 
-© 2019 Kishwar Shafin, Trevor Pesout, Miten Jain, Benedict Paten. <br/>
+© 2020 Kishwar Shafin, Trevor Pesout, Miten Jain, Benedict Paten. <br/>
 Computational Genomics Lab (CGL), University of California, Santa Cruz.
 
 ## Workflow
  * Sequence a genome and get a basecalled reads file (`reads.fastq`).
  * Use an assembler to get an assembly from the basecalled data (`assembly.fa`).
  * Use [minimap2](https://github.com/lh3/minimap2) to map `reads.fastq` to `assembly.fa` and get a bam file (`reads_2_assembly.bam`).
- * Use `1_pepper_make_images.py` to generate pileup summaries.
- * Use `2_pepper_call_consensus.py` to generate a consensus sequence.
- * Use `3_pepper_stitch.py` to stitch chunks and get the polished sequence.
+ * Use `pepper polish` to polish a genome.
  <p align="center">
  <img src="img/PEPPER_pipeline.svg" alt="pipeline.svg" height="640p">
  </p>
@@ -23,11 +21,10 @@ Computational Genomics Lab (CGL), University of California, Santa Cruz.
 ## Installation
 We recommend using `Linux` environment to run `PEPPER`.
 ```bash
-sudo apt-get -y install cmake make gcc g++ autoconf bzip2 lzma-dev zlib1g-dev \
+sudo apt-get -y install cmake make git gcc g++ autoconf bzip2 lzma-dev zlib1g-dev \
 libcurl4-openssl-dev libpthread-stubs0-dev libbz2-dev \
 liblzma-dev libhdf5-dev
 ```
-
 We also require `CMake>=3.11`. To install `CMake 3.14` on Ubuntu follow this:
 ```bash
 # https://cmake.org/install/
@@ -156,4 +153,4 @@ We are thankful to the developers of these packages: </br>
 The name "P.E.P.P.E.R." is also inspired from an A.I. created by Tony Stark in the  Marvel Comics (Earth-616). PEPPER is named after Tony Stark's then friend and the CEO of Resilient, Pepper Potts.
 
 
-© 2019 Kishwar Shafin, Trevor Pesout, Miten Jain, Benedict Paten.
+© 2020 Kishwar Shafin, Trevor Pesout, Miten Jain, Benedict Paten.
