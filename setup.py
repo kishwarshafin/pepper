@@ -3,7 +3,7 @@ import re
 import sys
 import pathlib
 from setuptools import setup, Extension
-from setuptools.command.build_ext import build_ext as build_ext_orig
+from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 import subprocess
 from pathlib import Path
@@ -101,48 +101,93 @@ __description__ = 'RNN based standalone assembly polisher.'
 #         print("SOURCE: ", source_path)
 #         print("DEST: ", dest_path)
 #         self.copy_file(source_path, dest_path)
+from distutils.command.install_data import install_data
+from setuptools import find_packages, setup, Extension
+from setuptools.command.build_ext import build_ext
+from setuptools.command.install_lib import install_lib
+from setuptools.command.install_scripts import install_scripts
+import struct
+BITS = struct.calcsize("P") * 8
+PACKAGE_NAME = "PEPPER"
+
 
 class CMakeExtension(Extension):
+    """
+    An extension to run the cmake build
 
-    def __init__(self, name):
-        # don't invoke the original build_ext for this special extension
-        super().__init__(name, sources=[])
+    This simply overrides the base extension class so that setuptools
+    doesn't try to build your sources for you
+    """
 
+    def __init__(self, name, sources=[]):
 
-class build_ext(build_ext_orig):
+        super().__init__(name = name, sources = sources)
+
+class BuildCMakeExt(build_ext):
+    """
+    Builds using cmake instead of the python setuptools implicit build
+    """
+
     def run(self):
-        for ext in self.extensions:
-            self.build_cmake(ext)
+        """
+        Perform build_cmake before doing the 'normal' stuff
+        """
+
+        for extension in self.extensions:
+
+            if extension.name == 'example_extension':
+
+                self.build_cmake(extension)
+
         super().run()
 
-    def build_cmake(self, ext):
-        cwd = pathlib.Path().absolute()
+    def build_cmake(self, extension: Extension):
+        """
+        The steps required to build the extension
+        """
 
-        # these dirs will be created in build_py, so if you don't have
-        # any python sources to bundle, the dirs will be missing
-        build_temp = pathlib.Path(self.build_temp)
-        build_temp.mkdir(parents=True, exist_ok=True)
-        extdir = pathlib.Path(self.get_ext_fullpath(ext.name))
-        extdir.mkdir(parents=True, exist_ok=True)
+        self.announce("Preparing the build environment", level=3)
 
-        # example of cmake args
-        config = 'Debug' if self.debug else 'Release'
-        cmake_args = [
-            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + str(extdir.parent.absolute()),
-            '-DCMAKE_BUILD_TYPE=' + config
-        ]
+        build_dir = pathlib.Path(self.build_temp)
 
-        # example of build args
-        build_args = [
-            '--config', config,
-            '--', '-j4'
-        ]
+        extension_path = pathlib.Path(self.get_ext_fullpath(extension.name))
 
-        os.chdir(str(build_temp))
-        self.spawn(['cmake', str(cwd)] + cmake_args)
-        if not self.dry_run:
-            self.spawn(['cmake', '--build', '.'] + build_args)
-        os.chdir(str(cwd))
+        os.makedirs(build_dir, exist_ok=True)
+        os.makedirs(extension_path.parent.absolute(), exist_ok=True)
+
+        # Now that the necessary directories are created, build
+
+        self.announce("Configuring cmake project", level=3)
+
+        # Change your cmake arguments below as necessary
+        # Below is just an example set of arguments for building Blender as a Python module
+
+        self.spawn(['cmake', '-H'+SOURCE_DIR, '-B'+self.build_temp,
+                    '-DWITH_PLAYER=OFF', '-DWITH_PYTHON_INSTALL=OFF',
+                    '-DWITH_PYTHON_MODULE=ON',
+                    f"-DCMAKE_GENERATOR_PLATFORM=x"
+                    f"{'86' if BITS == 32 else '64'}"])
+
+        self.announce("Building binaries", level=3)
+
+        self.spawn(["cmake", "--build", self.build_temp, "--target", "INSTALL",
+                    "--config", "Release"])
+
+        # Build finished, now copy the files into the copy directory
+        # The copy directory is the parent directory of the extension (.pyd)
+
+        self.announce("Moving built python module", level=3)
+
+        bin_dir = os.path.join(build_dir, 'bin', 'Release')
+        self.distribution.bin_dir = bin_dir
+
+        pyd_path = [os.path.join(bin_dir, _pyd) for _pyd in
+                    os.listdir(bin_dir) if
+                    os.path.isfile(os.path.join(bin_dir, _pyd)) and
+                    os.path.splitext(_pyd)[0].startswith(PACKAGE_NAME) and
+                    os.path.splitext(_pyd)[1] in [".pyd", ".so"]][0]
+
+        shutil.move(pyd_path, extension_path)
 
 
 def get_dependencies():
@@ -211,7 +256,7 @@ if __name__ == '__main__':
         },
         ext_modules=[CMakeExtension('PEPPER')],
         cmdclass={
-            'build_ext': CMakeBuild
+            'build_ext': BuildCMakeExt
         },
         zip_safe=False,
     )
