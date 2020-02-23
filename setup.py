@@ -1,12 +1,11 @@
 import os
 import re
 import sys
-import pathlib
+
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 import subprocess
-from pathlib import Path
 
 __pkg_name__ = 'pepper'
 __author__ = 'Kishwar Shafin'
@@ -69,15 +68,15 @@ class CMakeBuild(build_ext):
 
         # Move from build temp to final position
         for ext in self.extensions:
-            print("MOVING EXT: ", ext)
             self.move_output(ext)
 
     def move_output(self, ext):
-        dest_directory = os.path.abspath(os.path.join(os.path.dirname(self.get_ext_fullpath(ext.name)), ".."))
+        source_path = os.path.abspath(self.build_temp + "/" + self.get_ext_filename(ext.name))
+
+        dest_directory = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name))) + "/build/"
         os.makedirs(dest_directory, exist_ok=True)
 
-        source_path = os.path.abspath(self.build_temp + "/" + self.get_ext_filename(ext.name))
-        dest_path = os.path.abspath(self.get_ext_fullpath(ext.name))
+        dest_path = dest_directory + self.get_ext_filename(ext.name)
 
         self.copy_file(source_path, dest_path)
 
