@@ -74,11 +74,11 @@ class CMakeBuild(build_ext):
 
     def move_output(self, ext):
         dest_directory = os.path.abspath(os.path.join(os.path.dirname(self.get_ext_fullpath(ext.name)), ".."))
-        build_temp = Path(self.build_temp).resolve()
-        source_path = build_temp / self.get_ext_filename(ext.name)
         os.makedirs(dest_directory, exist_ok=True)
 
-        dest_path = Path(os.path.abspath(self.get_ext_fullpath(ext.name)))
+        source_path = os.path.abspath(self.build_temp + "/" + self.get_ext_filename(ext.name))
+        dest_path = os.path.abspath(self.get_ext_fullpath(ext.name))
+
         self.copy_file(source_path, dest_path)
 
 
