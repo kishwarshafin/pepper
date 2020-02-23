@@ -2,6 +2,7 @@
 ###### Program for Evaluating Patterns in the Pileups of Erroneous Reads
 
 [![Build Status](https://travis-ci.com/kishwarshafin/pepper.svg?branch=master)](https://travis-ci.com/kishwarshafin/pepper)
+[![PyPI version](https://badge.fury.io/py/pepper-polish.svg)](https://badge.fury.io/py/pepper-polish)
 
 `P.E.P.P.E.R.` is a deep neural network based polisher designed to work with Oxford Nanopore Sequencing technology. `P.E.P.P.E.R.` uses a Recurrent Neural Network (RNN) based encoder-decoder model to call a consensus sequence from the summary statistics of each genomic position. The local realignment process using [SSW](https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library) is used and the module does not require any prior polishing with other tools (i.e. racon).
 
@@ -20,12 +21,34 @@ Computational Genomics Lab (CGL), University of California, Santa Cruz.
 
 ## Installation
 We recommend using `Linux` environment to run `PEPPER`.
+
+### Install dependencies
 ```bash
 sudo apt-get -y install cmake make git gcc g++ autoconf bzip2 lzma-dev zlib1g-dev \
 libcurl4-openssl-dev libpthread-stubs0-dev libbz2-dev \
 liblzma-dev libhdf5-dev python3-pip python-virtualenv
 ```
 
+### Install using PyPi
+```bash
+python3 -m pip install pepper-polish
+
+python3 -m pepper --help
+```
+
+You can invoke the pipeline using `python3 -m`. See Usage for details.
+```bash
+python3 -m pepper polish \
+--bam </path/to/reads_2_draft_assembly.bam> \
+--fasta <path/to/draft_assembly.fasta> \
+--model_path <path/to/pepper/models/XXX.pkl> \
+--output_file <path/to/output_polished_sequence/output_file_prefix> \
+--threads <number_of_threads> \
+--batch_size 512 \
+--gpu \
+--num_workers <num_workers>
+```
+### Install from source
 We recommend using `virtualenv` to run pepper:
 ```bash
 git clone https://github.com/kishwarshafin/pepper.git

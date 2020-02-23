@@ -125,7 +125,7 @@ if __name__ == '__main__':
     __long_description__, __long_description_content_type__ = get_long_description()
 
     setup(
-        name='p.e.p.p.e.r',
+        name='pepper_polish',
         version=get_version(),
         packages=['', 'modules/python', 'modules/python/models', 'modules/python/helper'],
         package_dir={'modules/python': 'modules/python',
