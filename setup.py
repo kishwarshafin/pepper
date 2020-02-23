@@ -44,7 +44,7 @@ class CMakeBuild(build_ext):
         cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
 
         # Assuming Makefiles
-        # build_args += ['--', '-j2']
+        build_args += ['--', '-j2']
 
         self.build_args = build_args
 
@@ -75,6 +75,8 @@ class CMakeBuild(build_ext):
         print("IN MOVE")
         build_temp = Path(self.build_temp).resolve()
         print("1", build_temp)
+        print("1.1", str(Path(self.get_ext_fullpath(ext.name)).resolve().parents[0]))
+        print("1.2", self.get_ext_filename(ext.name))
         dest_path = Path(self.get_ext_fullpath(ext.name)).resolve().parents[0] / "build" / self.get_ext_filename(ext.name)
         print("2", str(dest_path))
         source_path = build_temp / self.get_ext_filename(ext.name)
