@@ -15,7 +15,10 @@ script:
   - $CXX_COMPILER -v
   - python3 --version
   - python --version
-  - make install
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
 
 env:
   global:
