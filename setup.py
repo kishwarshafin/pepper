@@ -162,11 +162,11 @@ class BuildCMakeExt(build_ext):
         # Change your cmake arguments below as necessary
         # Below is just an example set of arguments for building Blender as a Python module
 
-        self.spawn(['cmake', '-H'+SOURCE_DIR, '-B'+self.build_temp,
-                    '-DWITH_PLAYER=OFF', '-DWITH_PYTHON_INSTALL=OFF',
-                    '-DWITH_PYTHON_MODULE=ON',
-                    f"-DCMAKE_GENERATOR_PLATFORM=x"
-                    f"{'86' if BITS == 32 else '64'}"])
+        # self.spawn(['cmake', '-H'+SOURCE_DIR, '-B'+self.build_temp,
+        #             '-DWITH_PLAYER=OFF', '-DWITH_PYTHON_INSTALL=OFF',
+        #             '-DWITH_PYTHON_MODULE=ON',
+        #             f"-DCMAKE_GENERATOR_PLATFORM=x"
+        #             f"{'86' if BITS == 32 else '64'}"])
 
         self.announce("Building binaries", level=3)
 
