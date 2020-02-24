@@ -15,7 +15,7 @@ Computational Genomics Lab (CGL), University of California, Santa Cruz.
  * Use [minimap2](https://github.com/lh3/minimap2) to map `reads.fastq` to `assembly.fa` and get a bam file (`reads_2_assembly.bam`).
  * Use `pepper polish` to polish a genome.
  <p align="center">
- <img src="img/PEPPER_pipeline2.svg" alt="pipeline.svg" height="640p">
+ <img src="img/PEPPER_pipeline.svg" alt="pipeline.svg" height="640p">
  </p>
 
 
@@ -26,36 +26,37 @@ We recommend using `Linux` environment to run `PEPPER`.
 ```bash
 sudo apt-get -y install cmake make git gcc g++ autoconf bzip2 lzma-dev zlib1g-dev \
 libcurl4-openssl-dev libpthread-stubs0-dev libbz2-dev \
-liblzma-dev libhdf5-dev python3-pip python-virtualenv
+liblzma-dev libhdf5-dev python3-pip python3-virtualenv
 ```
 
-### Install using PyPi
+### <img src="img/pip_logo.svg" alt="" height="50p"> Install using pip
 ```bash
 python3 -m pip install pepper-polish
+# if you get permission error, then try:
+python3 -m pip install --user pepper-polish
 
 python3 -m pepper --help
+python3 -m pepper polish --help
 ```
-
-You can invoke the pipeline using `python3 -m`. See Usage for details.
+If you want to directly call `PEPPER`. You can do:
 ```bash
-python3 -m pepper polish \
---bam </path/to/reads_2_draft_assembly.bam> \
---fasta <path/to/draft_assembly.fasta> \
---model_path <path/to/pepper/models/XXX.pkl> \
---output_file <path/to/output_polished_sequence/output_file_prefix> \
---threads <number_of_threads> \
---batch_size 512 \
---gpu \
---num_workers <num_workers>
+export PATH="$HOME/.local/bin:$PATH" >> ~/.bashrc
+source ~/.bashrc
+
+pepper --version
+pepper --help
+pepper polish --help
 ```
-### Install from source
+### <img src="img/terminal.svg" alt="" height="50p"> Install from source
 We recommend using `virtualenv` to run pepper:
 ```bash
 git clone https://github.com/kishwarshafin/pepper.git
 cd pepper
 make install
 . ./vnev/bin/activate
+
 pepper --help
+pepper polish --help
 ```
 
 ## Usage
