@@ -29,7 +29,7 @@ libcurl4-openssl-dev libpthread-stubs0-dev libbz2-dev \
 liblzma-dev libhdf5-dev python3-pip python3-virtualenv
 ```
 
-### <img src="img/pip_logo.svg" alt="" height="50p"> Install using pip
+### <img src="img/pip_logo.svg" alt="" height="20p"> Install using pip
 ```bash
 python3 -m pip install pepper-polish
 # if you get permission error, then try:
@@ -47,7 +47,7 @@ pepper --version
 pepper --help
 pepper polish --help
 ```
-### <img src="img/terminal.svg" alt="" height="50p"> Install from source
+### <img src="img/terminal.svg" alt="" height="20p"> Install from source
 We recommend using `virtualenv` to run pepper:
 ```bash
 git clone https://github.com/kishwarshafin/pepper.git
@@ -155,7 +155,6 @@ The new `R10` data is now available for `MinION` and we polished the assembly ge
 ## Acknowledgement
 We are thankful to the developers of these packages: </br>
 * [Medaka](https://github.com/nanoporetech/medaka)
-* [GNU Parallel](https://www.gnu.org/software/parallel/)
 * [htslib & samtools](http://www.htslib.org/)
 * [ssw library](https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library)
 * [hdf5 python (h5py)](https://www.h5py.org/)
