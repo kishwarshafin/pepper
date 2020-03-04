@@ -4,10 +4,9 @@ from tqdm import tqdm
 import torchnet.meter as meter
 import torch.nn as nn
 from torch.utils.data import DataLoader
-import numpy as np
-from modules.python.models.dataloader import SequenceDataset
-from modules.python.TextColor import TextColor
-from modules.python.Options import ImageSizeOptions, TrainOptions
+from pepper.modules.python.models.dataloader import SequenceDataset
+from pepper.modules.python.TextColor import TextColor
+from pepper.modules.python.Options import ImageSizeOptions, TrainOptions
 """
 This script will evaluate a model and return the loss value.
 

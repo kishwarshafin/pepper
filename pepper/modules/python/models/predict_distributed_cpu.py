@@ -1,30 +1,32 @@
+import onnxruntime
 import sys
 import os
 import torch
 import torch.distributed as dist
 import torch.nn as nn
-from torch.utils.data import DataLoader
 import torch.multiprocessing as mp
-from torch.nn.parallel import DistributedDataParallel
-from modules.python.models.dataloader_predict import SequenceDataset
+from torch.utils.data import DataLoader
+from pepper.modules.python.models.dataloader_predict import SequenceDataset
 from tqdm import tqdm
-from modules.python.models.ModelHander import ModelHandler
-from modules.python.Options import ImageSizeOptions, TrainOptions
-from modules.python.DataStorePredict import DataStore
+from pepper.modules.python.models.ModelHander import ModelHandler
+from pepper.modules.python.Options import ImageSizeOptions, TrainOptions
+from pepper.modules.python.DataStorePredict import DataStore
+import torch.onnx
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 
 
-def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, rank, device_id):
-    transducer_model, hidden_size, gru_layers, prev_ite = \
-        ModelHandler.load_simple_model_for_training(model_path,
-                                                    input_channels=ImageSizeOptions.IMAGE_CHANNELS,
-                                                    image_features=ImageSizeOptions.IMAGE_HEIGHT,
-                                                    seq_len=ImageSizeOptions.SEQ_LENGTH,
-                                                    num_classes=ImageSizeOptions.TOTAL_LABELS)
-    transducer_model.eval()
-    transducer_model = transducer_model.eval()
+def predict(input_filepath, file_chunks, output_filepath, batch_size, num_workers, rank, threads, model_path):
+    # session options
+    sess_options = onnxruntime.SessionOptions()
+    sess_options.intra_op_num_threads = threads
+    sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL
+    sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
+
+    ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
+    torch.set_num_threads(threads)
+
     # create output file
-    output_filename = output_filepath + "pepper_prediction_" + str(device_id) + ".hdf"
+    output_filename = output_filepath + "pepper_prediction_" + str(rank) + ".hdf"
     prediction_data_file = DataStore(output_filename, mode='w')
 
     # data loader
@@ -34,30 +36,21 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                              shuffle=False,
                              num_workers=num_workers)
 
-    torch.cuda.set_device(device_id)
-    transducer_model.to(device_id)
-    transducer_model.eval()
-    transducer_model = DistributedDataParallel(transducer_model, device_ids=[device_id])
-
     progress_bar = tqdm(
         total=len(data_loader),
         ncols=100,
         leave=False,
         position=rank,
-        desc="GPU #" + str(device_id),
+        desc="CALLER #" + str(rank),
     )
 
     with torch.no_grad():
         for contig, contig_start, contig_end, chunk_id, images, position, index in data_loader:
-            sys.stderr.flush()
             images = images.type(torch.FloatTensor)
+
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
             prediction_base_tensor = torch.zeros((images.size(0), images.size(1), ImageSizeOptions.TOTAL_LABELS))
-
-            images = images.to(device_id)
-            hidden = hidden.to(device_id)
-            prediction_base_tensor = prediction_base_tensor.to(device_id)
 
             for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
                 if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
@@ -67,8 +60,12 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                 # chunk all the data
                 image_chunk = images[:, chunk_start:chunk_end]
 
-                # run inference
-                output_base, hidden = transducer_model(image_chunk, hidden)
+                # run inference on onnx mode, which takes numpy inputs
+                ort_inputs = {ort_session.get_inputs()[0].name: image_chunk.cpu().numpy(),
+                              ort_session.get_inputs()[1].name: hidden.cpu().numpy()}
+                output_base, hidden = ort_session.run(None, ort_inputs)
+                output_base = torch.from_numpy(output_base)
+                hidden = torch.from_numpy(hidden)
 
                 # now calculate how much padding is on the top and bottom of this chunk so we can do a simple
                 # add operation
@@ -81,18 +78,13 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                     nn.Softmax(dim=2),
                     nn.ZeroPad2d((0, 0, top_zeros, bottom_zeros))
                 )
-                inference_layers = inference_layers.to(device_id)
-
-                # run the softmax and padding layers
-                base_prediction = inference_layers(output_base).to(device_id)
+                base_prediction = inference_layers(output_base)
 
                 # now simply add the tensor to the global counter
                 prediction_base_tensor = torch.add(prediction_base_tensor, base_prediction)
 
-                del inference_layers
-                torch.cuda.empty_cache()
-
             base_values, base_labels = torch.max(prediction_base_tensor, 2)
+
             predicted_base_labels = base_labels.cpu().numpy()
 
             for i in range(images.size(0)):
@@ -107,14 +99,14 @@ def cleanup():
     dist.destroy_process_group()
 
 
-def setup(rank, device_ids, args, all_input_files):
+def setup(rank, total_callers, args, all_input_files):
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '12355'
 
     # initialize the process group
-    dist.init_process_group("gloo", rank=rank, world_size=len(device_ids))
+    dist.init_process_group("gloo", rank=rank, world_size=total_callers)
 
-    filepath, output_filepath, model_path, batch_size, num_workers = args
+    filepath, output_filepath, model_path, batch_size, num_workers, threads = args
 
     # issue with semaphore lock: https://github.com/pytorch/pytorch/issues/2517
     # mp.set_start_method('spawn')
@@ -125,15 +117,16 @@ def setup(rank, device_ids, args, all_input_files):
     predict(filepath,
             all_input_files[rank],
             output_filepath,
-            model_path,
             batch_size,
             num_workers,
             rank,
-            device_ids[rank])
+            threads,
+            model_path)
     cleanup()
 
 
-def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, batch_size, device_ids, num_workers):
+def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads,
+                            num_workers):
     """
     Create a prediction table/dictionary of an images set using a trained model.
     :param filepath: Path to image files to predict on
@@ -141,12 +134,40 @@ def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, 
     :param batch_size: Batch size used for prediction
     :param model_path: Path to a trained model
     :param output_filepath: Path to output directory
-    :param device_ids: List of GPU devices to use
+    :param total_callers: Number of callers to spawn
+    :param threads: Number of threads to use per caller
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
-    args = (filepath, output_filepath, model_path, batch_size, num_workers)
+    # load the model and create an ONNX session
+    transducer_model, hidden_size, gru_layers, prev_ite = \
+        ModelHandler.load_simple_model_for_training(model_path,
+                                                    input_channels=ImageSizeOptions.IMAGE_CHANNELS,
+                                                    image_features=ImageSizeOptions.IMAGE_HEIGHT,
+                                                    seq_len=ImageSizeOptions.SEQ_LENGTH,
+                                                    num_classes=ImageSizeOptions.TOTAL_LABELS)
+    transducer_model.eval()
+
+    sys.stderr.write("INFO: MODEL LOADING TO ONNX\n")
+    x = torch.zeros(1, TrainOptions.TRAIN_WINDOW, ImageSizeOptions.IMAGE_HEIGHT)
+    h = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+
+    if not os.path.isfile(model_path + ".onnx"):
+        sys.stderr.write("INFO: SAVING MODEL TO ONNX\n")
+        torch.onnx.export(transducer_model, (x, h),
+                          model_path + ".onnx",
+                          training=False,
+                          opset_version=10,
+                          do_constant_folding=True,
+                          input_names=['input_image', 'input_hidden'],
+                          output_names=['output_pred', 'output_hidden'],
+                          dynamic_axes={'input_image': {0: 'batch_size'},
+                                        'input_hidden': {0: 'batch_size'},
+                                        'output_pred': {0: 'batch_size'},
+                                        'output_hidden': {0: 'batch_size'}})
+
+    args = (filepath, output_filepath, model_path, batch_size, num_workers, threads)
     mp.spawn(setup,
-             args=(device_ids, args, file_chunks),
-             nprocs=len(device_ids),
+             args=(total_callers, args, file_chunks),
+             nprocs=total_callers,
              join=True)

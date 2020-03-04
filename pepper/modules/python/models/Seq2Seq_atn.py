@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-from modules.python.models.resnet import resnet18_custom
+from pepper.modules.python.models.resnet import resnet18_custom
 
 
 def reverse_onehot(one_hot_vector):

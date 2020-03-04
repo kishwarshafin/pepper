@@ -1,8 +1,8 @@
 import h5py
 import sys
 import re
-from modules.python.TextColor import TextColor
-from modules.python.StitchV2 import create_consensus_sequence
+from pepper.modules.python.TextColor import TextColor
+from pepper.modules.python.StitchV2 import create_consensus_sequence
 from os.path import isfile, join
 from pathlib import Path
 from os import listdir

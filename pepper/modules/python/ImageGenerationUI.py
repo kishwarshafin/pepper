@@ -3,11 +3,11 @@ import os
 import sys
 import concurrent.futures
 from datetime import datetime
-from build import PEPPER
-from modules.python.TextColor import TextColor
-from modules.python.DataStore import DataStore
-from modules.python.AlignmentSummarizer import AlignmentSummarizer
-from modules.python.Options import ImageSizeOptions
+from pepper.build import PEPPER
+from pepper.modules.python.TextColor import TextColor
+from pepper.modules.python.DataStore import DataStore
+from pepper.modules.python.AlignmentSummarizer import AlignmentSummarizer
+from pepper.modules.python.Options import ImageSizeOptions
 
 
 class UserInterfaceView:

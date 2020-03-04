@@ -1,13 +1,13 @@
-from modules.python.TextColor import TextColor
-from build import PEPPER
+from pepper.modules.python.TextColor import TextColor
+from pepper.build import PEPPER
 import os
 import sys
 import torch
 import time
 from pathlib import Path
-from modules.python.make_images import make_images
-from modules.python.call_consensus import call_consensus
-from modules.python.perform_stitch import perform_stitch
+from pepper.modules.python.make_images import make_images
+from pepper.modules.python.call_consensus import call_consensus
+from pepper.modules.python.perform_stitch import perform_stitch
 
 
 def polish(bam_filepath, fasta_filepath, output_path, threads, region,

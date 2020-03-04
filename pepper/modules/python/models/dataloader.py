@@ -4,8 +4,7 @@ from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 import h5py
 import sys
-from tqdm import tqdm
-from modules.python.TextColor import TextColor
+from pepper.modules.python.TextColor import TextColor
 
 
 def get_file_paths_from_directory(directory_path):

@@ -1,16 +1,13 @@
-import onnx
-import onnxruntime
 import sys
-import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from modules.python.models.dataloader_predict import SequenceDataset
-from modules.python.TextColor import TextColor
+from pepper.modules.python.models.dataloader_predict import SequenceDataset
+from pepper.modules.python.TextColor import TextColor
 from tqdm import tqdm
-from modules.python.models.ModelHander import ModelHandler
-from modules.python.Options import ImageSizeOptions, TrainOptions
-from modules.python.DataStorePredict import DataStore
+from pepper.modules.python.models.ModelHander import ModelHandler
+from pepper.modules.python.Options import ImageSizeOptions, TrainOptions
+from pepper.modules.python.DataStorePredict import DataStore
 import torch.onnx
 
 

@@ -6,11 +6,12 @@ from tqdm import tqdm
 
 # Custom generator for our dataset
 from torch.utils.data import DataLoader
-from modules.python.models.dataloader import SequenceDataset
-from modules.python.TextColor import TextColor
-from modules.python.models.ModelHander import ModelHandler
-from modules.python.models.test import test
-from modules.python.Options import ImageSizeOptions, TrainOptions
+from pepper.modules.python.models.dataloader import SequenceDataset
+from pepper.modules.python.TextColor import TextColor
+from pepper.modules.python.models.ModelHander import ModelHandler
+from pepper.modules.python.models.test import test
+from pepper.modules.python.Options import ImageSizeOptions, TrainOptions
+
 """
 Train a model and return the model and optimizer trained.
 

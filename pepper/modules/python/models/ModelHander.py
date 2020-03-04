@@ -1,6 +1,7 @@
 import torch
-from modules.python.models.Seq2Seq_atn import EncoderCRNN, AttnDecoderRNN
-from modules.python.models.simple_model import TransducerGRU
+from pepper.modules.python.models.Seq2Seq_atn import EncoderCRNN, AttnDecoderRNN
+from pepper.modules.python.models.simple_model import TransducerGRU
+
 
 class ModelHandler:
     @staticmethod

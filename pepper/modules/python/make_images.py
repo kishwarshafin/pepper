@@ -1,8 +1,8 @@
-from modules.python.TextColor import TextColor
-from build import PEPPER
+from pepper.modules.python.TextColor import TextColor
+from pepper.build import PEPPER
 import os
 import sys
-from modules.python.ImageGenerationUI import UserInterfaceSupport
+from pepper.modules.python.ImageGenerationUI import UserInterfaceSupport
 
 
 def make_images(bam_filepath, fasta_filepath, region, output_dir, threads):

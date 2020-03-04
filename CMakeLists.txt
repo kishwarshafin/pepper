@@ -22,11 +22,11 @@ option(INSTALL_DEPENDENCIES
         "Install project dependencies"
         ON)
 
-INCLUDE(modules/htslib.cmake)
-INCLUDE(modules/pybind11.cmake)
+INCLUDE(pepper/modules/htslib.cmake)
+INCLUDE(pepper/modules/pybind11.cmake)
 
 # pybind11 to interface
-pybind11_add_module(PEPPER ${CMAKE_CURRENT_SOURCE_DIR}/modules/src/pybind_api.cpp)
+pybind11_add_module(PEPPER pepper/modules/src/pybind_api.cpp)
 
 add_dependencies(PEPPER htslib)
 

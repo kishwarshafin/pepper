@@ -1,13 +1,13 @@
 import argparse
 import sys
 import torch
-from version import __version__
-from modules.python.TextColor import TextColor
-from modules.python.polish import polish
-from modules.python.make_images import make_images
-from modules.python.call_consensus import call_consensus
-from modules.python.perform_stitch import perform_stitch
-from modules.python.download_model import download_models
+from pepper.version import __version__
+from pepper.modules.python.TextColor import TextColor
+from pepper.modules.python.polish import polish
+from pepper.modules.python.make_images import make_images
+from pepper.modules.python.call_consensus import call_consensus
+from pepper.modules.python.perform_stitch import perform_stitch
+from pepper.modules.python.download_model import download_models
 
 
 def boolean_string(s):

@@ -3,7 +3,7 @@ import numpy as np
 from math import log, ceil
 from time import time, ctime
 import sys
-from modules.python.TextColor import TextColor
+from pepper.modules.python.TextColor import TextColor
 import logging
 from datetime import datetime
 """

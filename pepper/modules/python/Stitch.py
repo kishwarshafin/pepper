@@ -6,8 +6,8 @@ import concurrent.futures
 import numpy as np
 from collections import defaultdict
 import operator
-from modules.python.TextColor import TextColor
-from modules.python.Options import ImageSizeOptions
+from pepper.modules.python.TextColor import TextColor
+from pepper.modules.python.Options import ImageSizeOptions
 
 
 label_decoder = {1: 'A', 2: 'C', 3: 'G', 4: 'T', 0: ''}

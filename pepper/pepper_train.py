@@ -1,12 +1,12 @@
 import argparse
 import sys
 import torch
-from modules.python.TextColor import TextColor
-from modules.python.make_images import make_train_images
-from modules.python.train_models import train_models
-from modules.python.test_models import test_models
-from modules.python.run_hyperband import run_hyperband
-from version import __version__
+from pepper.modules.python.TextColor import TextColor
+from pepper.modules.python.make_images import make_train_images
+from pepper.modules.python.train_models import train_models
+from pepper.modules.python.test_models import test_models
+from pepper.modules.python.run_hyperband import run_hyperband
+from pepper.version import __version__
 
 
 def boolean_string(s):

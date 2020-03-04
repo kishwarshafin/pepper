@@ -1,13 +1,12 @@
-import argparse
 import os
 import sys
 
 import torch
 import torch.nn.parallel
-from modules.python.models.test import test
-from modules.python.models.ModelHander import ModelHandler
-from modules.python.TextColor import TextColor
-from modules.python.Options import ImageSizeOptions
+from pepper.modules.python.models.test import test
+from pepper.modules.python.models.ModelHander import ModelHandler
+from pepper.modules.python.TextColor import TextColor
+from pepper.modules.python.Options import ImageSizeOptions
 """
 TEST A TRAINED MODEL
 """

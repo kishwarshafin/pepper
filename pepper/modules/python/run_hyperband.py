@@ -1,5 +1,4 @@
 from __future__ import print_function
-import argparse
 from hyperopt import hp
 from hyperopt.pyll.stochastic import sample
 import pickle
@@ -8,10 +7,10 @@ import os
 import time
 
 # Custom generator for our dataset
-from modules.python.models.hyperband import Hyperband
-from modules.python.TextColor import TextColor
-from modules.python.models.train import train, save_best_model
-from modules.python.Options import TrainOptions
+from pepper.modules.python.models.hyperband import Hyperband
+from pepper.modules.python.TextColor import TextColor
+from pepper.modules.python.models.train import train, save_best_model
+from pepper.modules.python.Options import TrainOptions
 """
 Tune hyper-parameters of a model using hyperband.
 Input:

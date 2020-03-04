@@ -73,7 +73,7 @@ class CMakeBuild(build_ext):
     def move_output(self, ext):
         source_path = os.path.abspath(self.build_temp + "/" + self.get_ext_filename(ext.name))
 
-        dest_directory = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name))) + "/build/"
+        dest_directory = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name))) + "/pepper/build/"
         os.makedirs(dest_directory, exist_ok=True)
 
         dest_path = dest_directory + self.get_ext_filename(ext.name)
@@ -99,7 +99,7 @@ def get_dependencies():
 
 def get_version():
     version = {}
-    with open("version.py") as fp:
+    with open("./pepper/version.py") as fp:
         exec(fp.read(), version)
     return version['__version__']
 
@@ -120,17 +120,18 @@ if __name__ == '__main__':
     pymajor, pyminor = sys.version_info[0:2]
     if (pymajor < 3) or (pymajor <= 3 and pyminor < 5):
         raise RuntimeError(
-            'P.E.P.P.E.R. requires 3.5 higher.')
+            'PEPPER requires 3.5 higher.')
     python_dependencies = get_dependencies()
     __long_description__, __long_description_content_type__ = get_long_description()
 
     setup(
         name='pepper_polish',
         version=get_version(),
-        packages=['', 'modules/python', 'modules/python/models', 'modules/python/helper'],
-        package_dir={'modules/python': 'modules/python',
-                     'modules/python/models': 'modules/python/models',
-                     'modules/python/helper': 'modules/python/helper'},
+        packages=['pepper/', 'pepper/modules/python', 'pepper/modules/python/models', 'pepper/modules/python/helper'],
+        package_dir={'pepper': 'pepper',
+                     'pepper/modules/python': 'pepper/modules/python',
+                     'pepper/modules/python/models': 'pepper/modules/python/models',
+                     'pepper/modules/python/helper': 'pepper/modules/python/helper'},
         url='https://github.com/kishwarshafin/pepper',
         author=__author__,
         author_email="kishwar.shafin@gmail.com",
@@ -141,8 +142,8 @@ if __name__ == '__main__':
         install_requires=python_dependencies,
         entry_points={
             'console_scripts': [
-                '{0} = {0}:main'.format(__pkg_name__),
-                '{0}_train = {0}_train:main'.format(__pkg_name__),
+                '{0} = {0}.{0}:main'.format(__pkg_name__),
+                '{0}_train = {0}.{0}_train:main'.format(__pkg_name__),
             ]
         },
         ext_modules=[CMakeExtension('PEPPER')],

@@ -35,12 +35,12 @@ python3 -m pip install pepper-polish
 # if you get permission error, then try:
 python3 -m pip install --user pepper-polish
 
-python3 -m pepper --help
-python3 -m pepper polish --help
+python3 -m pepper.pepper --help
+python3 -m pepper.pepper polish --help
 ```
 If you want to directly call `PEPPER`. You can do:
 ```bash
-export PATH="$HOME/.local/bin:$PATH" >> ~/.bashrc
+echo 'export PATH="$(python3 -m site --user-base)/bin":$PATH' >> ~/.bashrc
 source ~/.bashrc
 
 pepper --version

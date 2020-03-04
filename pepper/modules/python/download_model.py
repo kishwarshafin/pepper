@@ -1,8 +1,8 @@
 import wget
 import sys
 import os
-from modules.python.ImageGenerationUI import UserInterfaceSupport
-from modules.python.TextColor import TextColor
+from pepper.modules.python.ImageGenerationUI import UserInterfaceSupport
+from pepper.modules.python.TextColor import TextColor
 
 
 def download_models(output_dir):

@@ -1,5 +1,4 @@
 import h5py
-import argparse
 import sys
 from os.path import isfile, join
 from os import listdir
@@ -7,8 +6,8 @@ import concurrent.futures
 import numpy as np
 from collections import defaultdict
 import operator
-from modules.python.TextColor import TextColor
-from build import PEPPER
+from pepper.modules.python.TextColor import TextColor
+from pepper.build import PEPPER
 import re
 
 

@@ -1,10 +1,10 @@
 import sys
 import torch
-from modules.python.ImageGenerationUI import UserInterfaceSupport
-from modules.python.TextColor import TextColor
-from modules.python.models.predict import predict
-from modules.python.models.predict_distributed_gpu import predict_distributed_gpu
-from modules.python.models.predict_distributed_cpu import predict_distributed_cpu
+from pepper.modules.python.ImageGenerationUI import UserInterfaceSupport
+from pepper.modules.python.TextColor import TextColor
+from pepper.modules.python.models.predict import predict
+from pepper.modules.python.models.predict_distributed_gpu import predict_distributed_gpu
+from pepper.modules.python.models.predict_distributed_cpu import predict_distributed_cpu
 from os.path import isfile, join
 from os import listdir
 import os

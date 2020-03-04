@@ -4,10 +4,10 @@ import torch
 import sys
 
 # Custom generator for our dataset
-from modules.python.models.train import train
-from modules.python.models.train_distributed import train_distributed
-from modules.python.Options import TrainOptions
-from modules.python.TextColor import TextColor
+from pepper.modules.python.models.train import train
+from pepper.modules.python.models.train_distributed import train_distributed
+from pepper.modules.python.Options import TrainOptions
+from pepper.modules.python.TextColor import TextColor
 """
 Input:
 - A directory containing labeled HDF5 files

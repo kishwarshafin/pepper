@@ -1,12 +1,9 @@
-from build import PEPPER
+from pepper.build import PEPPER
 import itertools
-import sys
 import time
 import numpy as np
 from operator import itemgetter
-from modules.python.TextColor import TextColor
-from modules.python.Options import ImageSizeOptions, AlingerOptions
-from modules.python.helper import generate_pileup_from_reads
+from pepper.modules.python.Options import ImageSizeOptions, AlingerOptions
 
 
 class AlignmentSummarizer:
