@@ -59,6 +59,32 @@ pepper --help
 pepper polish --help
 ```
 
+### Use Docker container
+
+##### CPU based docker container
+```bash
+# SEE INSTALLATION CONFIGURATION
+docker run --rm -it --ipc=host kishwars/pepper:latest pepper torch_stat
+
+# RUN PEPPER
+docker run -it --ipc=host --user=`id -u`:`id -g` --cpus="16" \
+-v </directory/with/inputs_outputs>:/data kishwars/pepper:latest \
+pepper --help
+```
+
+##### GPU based docker container
+```bash
+sudo apt-get install -y nvidia-docker2
+
+# CHECK GPU STATE:
+nvidia-docker run -it --ipc=host kishwars/pepper:latest pepper torch_stat
+
+# RUN PEPPER
+nvidia-docker run -it --ipc=host --user=`id -u`:`id -g` --cpus="16" \
+-v </directory/with/inputs_outputs>:/data kishwars/pepper:latest \
+pepper --help
+```
+
 ## Usage
 
 Polishing involves three sub-processes `make_images`, `call_consensus`, `stitch`. You can run all three steps using `pepper polish` or run each step separately.
