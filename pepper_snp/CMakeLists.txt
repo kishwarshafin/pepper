@@ -1,6 +1,6 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.11)
 
-# name of the project is PEPPER
+# name of the project is PEPPER_SNP
 PROJECT(pepper)
 set (CMAKE_CXX_FLAGS "-fPIC -O3 -pipe")
 set (CMAKE_C_FLAGS "-fPIC -O3 -pipe -shared -rdynamic")
@@ -22,11 +22,11 @@ option(INSTALL_DEPENDENCIES
         "Install project dependencies"
         ON)
 
-INCLUDE(pepper/modules/htslib.cmake)
-INCLUDE(pepper/modules/pybind11.cmake)
+INCLUDE(modules/htslib.cmake)
+INCLUDE(modules/pybind11.cmake)
 
 # pybind11 to interface
-pybind11_add_module(PEPPER pepper/modules/src/pybind_api.cpp)
+pybind11_add_module(PEPPER ${CMAKE_CURRENT_SOURCE_DIR}/modules/src/pybind_api.cpp)
 
 add_dependencies(PEPPER htslib)
 
@@ -36,21 +36,6 @@ target_link_libraries(PEPPER PRIVATE bz2)
 target_link_libraries(PEPPER PRIVATE curl)
 target_link_libraries(PEPPER PRIVATE lzma)
 target_link_libraries(PEPPER PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
-
-## PEPPER SNP PROJECT
-PROJECT(pepper_snp)
-
-# PEPPER_SNP
-pybind11_add_module(PEPPER_SNP pepper_snp/modules/src/pybind_api.cpp)
-
-add_dependencies(PEPPER_SNP htslib)
-
-# add all the external libraries
-target_link_libraries(PEPPER_SNP PRIVATE z)
-target_link_libraries(PEPPER_SNP PRIVATE bz2)
-target_link_libraries(PEPPER_SNP PRIVATE curl)
-target_link_libraries(PEPPER_SNP PRIVATE lzma)
-target_link_libraries(PEPPER_SNP PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
 
 #-------------------
 # Test
