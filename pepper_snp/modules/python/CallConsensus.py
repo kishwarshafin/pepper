@@ -1,5 +1,6 @@
 import sys
 import torch
+import time
 from datetime import datetime
 from pepper_snp.modules.python.ImageGenerationUI import UserInterfaceSupport
 from pepper_snp.modules.python.models.predict import predict
@@ -28,6 +29,8 @@ def polish_genome(image_dir, model_path, batch_size, threads, num_workers, outpu
 
 
 def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, num_workers, output_dir, callers_per_gpu, device_ids):
+    start_time = time.time()
+
     if device_ids is None:
         total_gpu_devices = torch.cuda.device_count()
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL GPU AVAILABLE: " + str(total_gpu_devices) + "\n")
@@ -63,7 +66,7 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, nu
 
         total_callers = len(device_ids)
 
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: AVAILABLE GPU DEVICES: " + str(device_ids) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: AVAILABLE GPU DEVICES: " + str(list(set(device_ids))) + "\n")
     if total_callers == 0:
         sys.stderr.write("ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n")
         exit()
@@ -84,8 +87,14 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, nu
     predict_distributed_gpu(image_dir, file_chunks, output_dir, model_path, batch_size, total_callers, threads_per_caller, device_ids, num_workers)
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION GENERATED SUCCESSFULLY.\n")
 
+    end_time = time.time()
+    mins = int((end_time - start_time) / 60)
+    secs = int((end_time - start_time)) % 60
+    sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
+
 
 def polish_genome_distributed_cpu(image_dir, model_path, batch_size, threads, num_workers, output_dir):
+    start_time = time.time()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DISTRIBUTED CPU SETUP.\n")
 
     # chunk the inputs
@@ -106,6 +115,11 @@ def polish_genome_distributed_cpu(image_dir, model_path, batch_size, threads, nu
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREADS PER CALLER: " + str(threads_per_caller) + "\n")
     predict_distributed_cpu(image_dir, file_chunks, output_dir, model_path, batch_size, callers, threads_per_caller, num_workers)
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION FINISHED SUCCESSFULLY. \n")
+
+    end_time = time.time()
+    mins = int((end_time - start_time) / 60)
+    secs = int((end_time - start_time)) % 60
+    sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
 
 def call_consensus(image_dir,
