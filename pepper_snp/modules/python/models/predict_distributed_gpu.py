@@ -24,7 +24,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     transducer_model.eval()
     transducer_model = transducer_model.eval()
     # create output file
-    output_filename = output_filepath + "pepper_prediction_" + str(device_id) + ".hdf"
+    output_filename = output_filepath + "pepper_prediction_" + str(rank) + ".hdf"
     prediction_data_file = DataStore(output_filename, mode='w')
 
     # data loader
