@@ -14,7 +14,7 @@ from pepper_snp.modules.python.DataStorePredict import DataStore
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 
 
-def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, total_callers, device_id, rank):
+def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, theads_per_caller, device_id, rank):
     transducer_model, hidden_size, gru_layers, prev_ite = \
         ModelHandler.load_simple_model_for_training(model_path,
                                                     input_channels=ImageSizeOptions.IMAGE_CHANNELS,
@@ -33,6 +33,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                              batch_size=batch_size,
                              shuffle=False,
                              num_workers=num_workers)
+    torch.set_num_threads(theads_per_caller)
 
     torch.cuda.set_device(device_id)
     transducer_model.to(device_id)
@@ -91,9 +92,12 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
             for i in range(images.size(0)):
                 prediction_data_file.write_prediction(contig[i], contig_start[i], contig_end[i], chunk_id[i],
                                                       position[i], index[i], prediction_base_tensor[i], ref_seq[i])
+            batch_completed += 1
+
             if rank == 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
+
 
 
 def cleanup():
@@ -115,7 +119,7 @@ def setup(rank, total_callers, args, all_input_files):
     # Explicitly setting seed to make sure that models created in two processes
     # start from same random weights and biases. https://github.com/pytorch/pytorch/issues/2517
     # torch.manual_seed(42)
-    predict(filepath, all_input_files[rank],  output_filepath, model_path, batch_size, num_workers, total_callers, device_ids[rank], rank)
+    predict(filepath, all_input_files[rank],  output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[rank], rank)
     cleanup()
 
 
