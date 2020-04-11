@@ -49,7 +49,6 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, nu
         total_callers = len(device_ids)
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: AVAILABLE GPU DEVICES: " + str(device_ids) + "\n")
-
     if total_callers == 0:
         sys.stderr.write("ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n")
         exit()
@@ -57,15 +56,17 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, nu
     # chunk the inputs
     input_files = get_file_paths_from_directory(image_dir)
 
-    file_chunks = [[] for i in range(threads)]
+    file_chunks = [[] for i in range(total_callers)]
     for i in range(0, len(input_files)):
         file_chunks[i % threads].append(input_files[i])
 
-    threads = min(threads, len(file_chunks))
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL THREADS: " + str(threads) + "\n")
-    print(threads, device_ids)
-    exit()
-    predict_distributed_gpu(image_dir, file_chunks, output_dir, model_path, batch_size, threads, num_workers)
+    file_chunks = [x for x in file_chunks if x]
+
+    total_callers = min(total_callers, len(file_chunks))
+    threads_per_caller = max(1, int(threads/total_callers))
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(total_callers) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL THREADS PER CALLER: " + str(threads_per_caller) + "\n")
+    predict_distributed_gpu(image_dir, file_chunks, output_dir, model_path, batch_size, total_callers, threads_per_caller, device_ids, num_workers)
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION GENERATED SUCCESSFULLY.\n")
 
 
