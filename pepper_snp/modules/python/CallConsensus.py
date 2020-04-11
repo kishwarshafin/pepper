@@ -58,7 +58,7 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, nu
 
     file_chunks = [[] for i in range(total_callers)]
     for i in range(0, len(input_files)):
-        file_chunks[i % threads].append(input_files[i])
+        file_chunks[i % total_callers].append(input_files[i])
 
     file_chunks = [x for x in file_chunks if x]
 
