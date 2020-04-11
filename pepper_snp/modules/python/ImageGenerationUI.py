@@ -212,7 +212,7 @@ class UserInterfaceSupport:
                     secs = int((time_now - start_time)) % 60
                     if thread_id == 0:
                         sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "]"
-                                         + " INFO: " + thread_prefix + " " + str(counter) + "/" + str(len(intervals))
+                                         + " INFO: " + " " + str(counter) + "/" + str(len(intervals))
                                          + " COMPLETE (" + str(percent_complete) + "%)"
                                          + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                         sys.stderr.flush()

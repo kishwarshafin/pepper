@@ -30,7 +30,7 @@ def polish_genome(image_dir, model_path, batch_size, threads, num_workers, outpu
 def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, num_workers, output_dir, device_ids):
     if device_ids is None:
         total_gpu_devices = torch.cuda.device_count()
-        sys.stderr.write("INFO: TOTAL GPU AVAILABLE: " + str(total_gpu_devices) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL GPU AVAILABLE: " + str(total_gpu_devices) + "\n")
         device_ids = [i for i in range(0, total_gpu_devices)]
         total_callers = total_gpu_devices
     else:
@@ -43,11 +43,12 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, nu
                                  ">>> import torch \n"
                                  ">>> torch.cuda.get_device_capability(device=" + str(device_id) + ")\n")
             else:
-                sys.stderr.write("INFO: CAPABILITY OF GPU#" + str(device_id) +":\t" + str(major_capable)
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CAPABILITY OF GPU#"
+                                 + str(device_id) + ":\t" + str(major_capable)
                                  + "-" + str(minor_capable) + "\n")
         total_callers = len(device_ids)
 
-    sys.stderr.write("INFO: AVAILABLE GPU DEVICES: " + str(device_ids) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: AVAILABLE GPU DEVICES: " + str(device_ids) + "\n")
 
     if total_callers == 0:
         sys.stderr.write("ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n")
@@ -61,9 +62,11 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, nu
         file_chunks[i % threads].append(input_files[i])
 
     threads = min(threads, len(file_chunks))
-    sys.stderr.write("INFO: TOTAL THREADS: " + str(threads) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL THREADS: " + str(threads) + "\n")
+    print(threads, device_ids)
+    exit()
     predict_distributed_gpu(image_dir, file_chunks, output_dir, model_path, batch_size, threads, num_workers)
-    sys.stderr.write("INFO: PREDICTION GENERATED SUCCESSFULLY.\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION GENERATED SUCCESSFULLY.\n")
 
 
 def polish_genome_distributed_cpu(image_dir, model_path, batch_size, threads, num_workers, output_dir):
