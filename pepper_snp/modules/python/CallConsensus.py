@@ -27,14 +27,22 @@ def polish_genome(image_dir, model_path, batch_size, threads, num_workers, outpu
     sys.stderr.write("INFO: PREDICTION GENERATED SUCCESSFULLY.\n")
 
 
-def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, num_workers, output_dir, device_ids):
+def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, num_workers, output_dir, callers_per_gpu, device_ids):
     if device_ids is None:
         total_gpu_devices = torch.cuda.device_count()
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL GPU AVAILABLE: " + str(total_gpu_devices) + "\n")
         device_ids = [i for i in range(0, total_gpu_devices)]
-        total_callers = total_gpu_devices
+
+        multiplied_device_ids = []
+        for device_id in device_ids:
+            for i in range(0, callers_per_gpu):
+                multiplied_device_ids.append(device_id)
+        device_ids = multiplied_device_ids
+
+        total_callers = len(device_ids)
     else:
         device_ids = [int(i) for i in device_ids.split(',')]
+        device_ids = list(set(device_ids))
         for device_id in device_ids:
             major_capable, minor_capable = torch.cuda.get_device_capability(device=device_id)
             if major_capable < 0:
@@ -46,6 +54,13 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, nu
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CAPABILITY OF GPU#"
                                  + str(device_id) + ":\t" + str(major_capable)
                                  + "-" + str(minor_capable) + "\n")
+
+        multiplied_device_ids = []
+        for device_id in device_ids:
+            for i in range(0, callers_per_gpu):
+                multiplied_device_ids.append(device_id)
+        device_ids = multiplied_device_ids
+
         total_callers = len(device_ids)
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: AVAILABLE GPU DEVICES: " + str(device_ids) + "\n")
@@ -120,6 +135,7 @@ def call_consensus(image_dir,
                                           threads,
                                           num_workers,
                                           output_dir,
+                                          callers_per_gpu,
                                           device_ids)
         else:
             polish_genome_distributed_cpu(image_dir,

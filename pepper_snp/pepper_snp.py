@@ -225,7 +225,15 @@ def add_call_consensus_arguments(parser):
         default=None,
         help="List of gpu device ids to use for inference. Only used in distributed setting.\n"
              "Example usage: --device_ids 0,1,2 (this will create three callers in id 'cuda:0, cuda:1 and cuda:2'\n"
-             "If none then it will use all available devices. Default is False."
+             "If none then it will use all available devices. Default is None."
+    )
+    parser.add_argument(
+        "-per_gpu",
+        "--callers_per_gpu",
+        type=int,
+        required=False,
+        default=4,
+        help="Number of callers to initialize per GPU, on a 11GB GPU, you can go up to 10. Default is 4."
     )
     parser.add_argument(
         "-w",
@@ -376,6 +384,7 @@ def main():
                        FLAGS.num_workers,
                        FLAGS.output_dir,
                        FLAGS.device_ids,
+                       FLAGS.callers_per_gpu,
                        FLAGS.gpu,
                        distributed,
                        FLAGS.threads)
