@@ -105,7 +105,7 @@ def setup(rank, total_callers, args, all_input_files):
     os.environ['MASTER_PORT'] = '12355'
 
     # initialize the process group
-    dist.init_process_group("gloo", rank=rank, world_size=total_threads)
+    dist.init_process_group("gloo", rank=rank, world_size=total_callers)
 
     filepath, output_filepath, model_path, batch_size, threads_per_caller, device_ids, num_workers = args
 
