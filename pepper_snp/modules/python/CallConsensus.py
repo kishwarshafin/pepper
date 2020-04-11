@@ -114,6 +114,7 @@ def call_consensus(image_dir,
                    num_workers,
                    output_dir,
                    device_ids,
+                   callers_per_gpu,
                    gpu_mode,
                    distributed,
                    threads):
