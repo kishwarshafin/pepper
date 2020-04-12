@@ -114,7 +114,7 @@ def call_variant(bam_filepath,
                   threads)
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3: RUNNING STITCH\n" + TextColor.END)
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION OUTPUT: " + str(output_parent_directory) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION OUTPUT: " + str(output_dir) + "\n")
     find_candidates(prediction_output_directory,
                     fasta_filepath,
                     output_dir,
