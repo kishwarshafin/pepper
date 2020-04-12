@@ -5,7 +5,7 @@ import sys
 import torch
 import time
 from datetime import datetime
-from pepper.modules.python.ImageGenerationUI import UserInterfaceSupport
+from pepper_snp.modules.python.ImageGenerationUI import UserInterfaceSupport
 from pepper_snp.modules.python.MakeImages import make_images
 from pepper_snp.modules.python.RunInference import run_inference
 from pepper_snp.modules.python.FindSNPCandidates import find_candidates
