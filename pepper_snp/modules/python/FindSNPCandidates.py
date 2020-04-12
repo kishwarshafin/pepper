@@ -62,7 +62,7 @@ def find_candidates(input_dir, reference_path, output_dir, threads, sample_name,
         end_time = time.time()
         mins = int((end_time - start_time) / 60)
         secs = int((end_time - start_time)) % 60
-        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] TOTAL ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
+        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] TOTAL ELAPSED TIME FOR CANDIDATE FINDING: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
     hdf5_file.close()
 

@@ -27,6 +27,7 @@ def call_variant(bam_filepath,
     """
     Run all the sub-modules to polish an input assembly.
     """
+    start_time = time.time()
     # check the bam file
     if not os.path.isfile(bam_filepath) or not PEPPER_SNP.BAM_handler(bam_filepath):
         sys.stderr.write("ERROR: CAN NOT LOCATE BAM FILE.\n")
@@ -120,3 +121,8 @@ def call_variant(bam_filepath,
                     threads,
                     sample_name,
                     probability_threshold)
+
+    end_time = time.time()
+    mins = int((end_time - start_time) / 60)
+    secs = int((end_time - start_time)) % 60
+    sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] TOTAL ELAPSED TIME FOR VARIANT CALLING: " + str(mins) + " Min " + str(secs) + " Sec\n")

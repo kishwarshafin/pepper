@@ -379,7 +379,7 @@ def main():
     FLAGS, unparsed = parser.parse_known_args()
 
     if FLAGS.sub_command == 'call_variant':
-        sys.stderr.write("INFO: POLISH MODULE SELECTED\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CALL VARIANT MODULE SELECTED\n")
         distributed = not FLAGS.distributed_off
         call_variant(FLAGS.bam,
                      FLAGS.fasta,

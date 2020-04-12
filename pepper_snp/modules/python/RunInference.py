@@ -119,7 +119,7 @@ def polish_genome_distributed_cpu(image_dir, model_path, batch_size, threads, nu
     end_time = time.time()
     mins = int((end_time - start_time) / 60)
     secs = int((end_time - start_time)) % 60
-    sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
+    sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] TOTAL ELAPSED TIME FOR INFERENCE: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
 
 def run_inference(image_dir,

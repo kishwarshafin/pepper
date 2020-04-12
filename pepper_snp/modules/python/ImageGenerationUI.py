@@ -278,4 +278,4 @@ class UserInterfaceSupport:
         mins = int((end_time - start_time) / 60)
         secs = int((end_time - start_time)) % 60
         sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] FINISHED IMAGE GENERATION\n")
-        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
+        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] TOTAL ELAPSED TIME FOR IMAGE GENERATION: " + str(mins) + " Min " + str(secs) + " Sec\n")
