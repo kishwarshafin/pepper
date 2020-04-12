@@ -5,6 +5,7 @@ from datetime import datetime
 from pepper.version import __version__
 from pepper_snp.modules.python.MakeImages import make_images
 from pepper_snp.modules.python.CallConsensus import call_consensus
+from pepper_snp.modules.python.FindSNPCandidates import find_candidates
 
 
 def boolean_string(s):
@@ -167,7 +168,7 @@ def add_make_images_arguments(parser):
     return parser
 
 
-def add_call_consensus_arguments(parser):
+def add_run_inference_arguments(parser):
     """
     Add arguments to a parser for sub-command "call_consensus"
     :param parser: argeparse object
@@ -254,7 +255,7 @@ def add_call_consensus_arguments(parser):
     return parser
 
 
-def add_stitch_arguments(parser):
+def add_find_candidates_arguments(parser):
     """
     Add arguments to a parser for sub-command "stitch"
     :param parser: argeparse object
@@ -265,21 +266,44 @@ def add_stitch_arguments(parser):
         "--input_dir",
         type=str,
         required=True,
-        help="Input dir containing hdf prediction file."
+        help="Path to directory containing HDF files."
+    )
+    parser.add_argument(
+        "-r",
+        "--input_reference",
+        type=str,
+        required=True,
+        help="Input reference/assembly file."
+    )
+    parser.add_argument(
+        "-s",
+        "--sample_name",
+        type=str,
+        required=True,
+        help="Name of the sample."
     )
     parser.add_argument(
         "-o",
-        "--output_file",
+        "--output_dir",
         type=str,
         required=True,
-        help="Path to output file with an expected prefix (i.e. -o ./outputs/polished_genome)"
+        help="Path to output directory."
     )
     parser.add_argument(
         "-t",
         "--threads",
+        required=True,
         type=int,
-        default=5,
         help="Number of threads."
+    )
+    parser.add_argument(
+        "-p",
+        "--probability_threshold",
+        type=float,
+        required=False,
+        default=0.1,
+        help="Threshold value for reporting SNPs. Default is 0.1, "
+             "increasing the value will reduce FP and increase FN SNPs."
     )
     return parser
 
@@ -306,7 +330,7 @@ def main():
                                                  "It works in three steps:\n"
                                                  "1) make_images: This module takes alignment file and coverts them"
                                                  "to HDF5 files containing summary statistics.\n"
-                                                 "2) call_consensus: This module takes the summary images and a"
+                                                 "2) run_inference: This module takes the summary images and a"
                                                  "trained neural network and generates predictions per base.\n"
                                                  "3) find_snps: This module takes the inference files as input and "
                                                  "finds possible SNP sites.\n",
@@ -331,14 +355,13 @@ def main():
                                                                    "of reads aligned to an assembly.")
     add_make_images_arguments(parser_make_images)
 
-    parser_call_consensus = subparsers.add_parser('call_consensus', help="Perform inference on generated images using "
-                                                                         "a trained model.")
-    add_call_consensus_arguments(parser_call_consensus)
+    parser_run_inference = subparsers.add_parser('run_inference', help="Perform inference on generated images using "
+                                                                       "a trained model.")
+    add_run_inference_arguments(parser_run_inference)
 
-    # parser_stitch = subparsers.add_parser('stitch', help="Stitch the polished genome to generate a contiguous polished"
-    #                                                      "assembly.")
-    # add_stitch_arguments(parser_stitch)
-    #
+    parser_find_candidates = subparsers.add_parser('find_candidates', help="Find candidate SNP variants.")
+    add_find_candidates_arguments(parser_find_candidates)
+
     # parser_download_model = subparsers.add_parser('download_models', help="Download available models.")
     # add_download_models_arguments(parser_download_model)
 
@@ -368,15 +391,15 @@ def main():
     #            FLAGS.threads_per_caller)
 
     if FLAGS.sub_command == 'make_images':
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
         make_images(FLAGS.bam,
                     FLAGS.fasta,
                     FLAGS.region,
                     FLAGS.output_dir,
                     FLAGS.threads)
 
-    elif FLAGS.sub_command == 'call_consensus':
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CALL CONSENSUS MODULE SELECTED\n")
+    elif FLAGS.sub_command == 'run_inference':
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN INFERENCE MODULE SELECTED.\n")
         distributed = not FLAGS.distributed_off
         call_consensus(FLAGS.image_dir,
                        FLAGS.model_path,
@@ -388,13 +411,16 @@ def main():
                        FLAGS.gpu,
                        distributed,
                        FLAGS.threads)
-    #
-    # elif FLAGS.sub_command == 'stitch':
-    #     sys.stderr.write("INFO: STITCH MODULE SELECTED\n")
-    #     perform_stitch(FLAGS.input_dir,
-    #                    FLAGS.output_file,
-    #                    FLAGS.threads)
-    #
+
+    elif FLAGS.sub_command == 'find_candidates':
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STITCH MODULE SELECTED\n")
+        find_candidates(FLAGS.input_hdf,
+                        FLAGS.input_reference,
+                        FLAGS.output_dir,
+                        FLAGS.threads,
+                        FLAGS.sample_name,
+                        FLAGS.probability_threshold)
+
     # elif FLAGS.sub_command == 'download_models':
     #     sys.stderr.write("INFO: DOWNLOAD MODELS SELECTED\n")
     #     download_models(FLAGS.output_dir)

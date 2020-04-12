@@ -1,7 +1,7 @@
 from pysam import VariantFile, VariantHeader
 import time
 import collections
-from build import PEPPER
+from pepper_snp.build import PEPPER
 Candidate = collections.namedtuple('Candidate', 'chromosome_name pos_start pos_end ref '
                                                 'alternate_alleles allele_depths '
                                                 'allele_frequencies genotype qual gq predictions')

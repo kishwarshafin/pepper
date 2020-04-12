@@ -146,7 +146,7 @@ def find_candidates(contig, small_chunk_keys, p_threshold):
     return contig, reference_dict, candidate_variants
 
 
-def create_consensus_sequence(contig, sequence_chunk_keys, threads, p_threshold):
+def find_SNP_candidates(contig, sequence_chunk_keys, threads, p_threshold):
     all_candidates = defaultdict(list)
     global_reference_dict = defaultdict()
     positions_with_candidates = set()
