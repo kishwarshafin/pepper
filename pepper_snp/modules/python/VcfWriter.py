@@ -1,7 +1,7 @@
 from pysam import VariantFile, VariantHeader
 import time
 import collections
-from pepper_snp.build import PEPPER
+from pepper_snp.build import PEPPER_SNP
 Candidate = collections.namedtuple('Candidate', 'chromosome_name pos_start pos_end ref '
                                                 'alternate_alleles allele_depths '
                                                 'allele_frequencies genotype qual gq predictions')
@@ -9,7 +9,7 @@ Candidate = collections.namedtuple('Candidate', 'chromosome_name pos_start pos_e
 
 class VCFWriter:
     def __init__(self, reference_path, sample_name, output_dir, contigs):
-        self.fasta_handler = PEPPER.FASTA_handler(reference_path)
+        self.fasta_handler = PEPPER_SNP.FASTA_handler(reference_path)
         vcf_header = self.get_vcf_header(sample_name, contigs)
         time_str = time.strftime("%m%d%Y_%H%M%S")
 
