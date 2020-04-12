@@ -9,4 +9,4 @@ pyyaml
 onnx
 onnxruntime
 hyperopt
-pysam==0.15.2
+pysam
