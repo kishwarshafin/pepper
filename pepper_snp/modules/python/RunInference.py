@@ -122,16 +122,16 @@ def polish_genome_distributed_cpu(image_dir, model_path, batch_size, threads, nu
     sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
 
-def call_consensus(image_dir,
-                   model,
-                   batch_size,
-                   num_workers,
-                   output_dir,
-                   device_ids,
-                   callers_per_gpu,
-                   gpu_mode,
-                   distributed,
-                   threads):
+def run_inference(image_dir,
+                  model,
+                  batch_size,
+                  num_workers,
+                  output_dir,
+                  device_ids,
+                  callers_per_gpu,
+                  gpu_mode,
+                  distributed,
+                  threads):
     output_dir = UserInterfaceSupport.handle_output_directory(output_dir)
 
     if distributed is False:

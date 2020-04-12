@@ -4,9 +4,9 @@ import torch
 from datetime import datetime
 from pepper.version import __version__
 from pepper_snp.modules.python.MakeImages import make_images
-from pepper_snp.modules.python.CallConsensus import call_consensus
+from pepper_snp.modules.python.RunInference import run_inference
 from pepper_snp.modules.python.FindSNPCandidates import find_candidates
-
+from pepper_snp.modules.python.CallVariant import call_variant
 
 def boolean_string(s):
     """
@@ -19,7 +19,7 @@ def boolean_string(s):
     return s.lower() == 'true' or s.lower() == 't' or s.lower() == '1'
 
 
-def add_polish_arguments(parser):
+def add_call_variant_arguments(parser):
     """
     Add arguments to a parser for sub-command "polish"
     :param parser: argeparse object
@@ -48,17 +48,24 @@ def add_polish_arguments(parser):
     )
     parser.add_argument(
         "-o",
-        "--output_file",
+        "--output_dir",
         type=str,
         required=True,
-        help="Path to output file with an expected prefix (i.e. -o ./outputs/polished_genome)"
+        help="Path to output directory."
+    )
+    parser.add_argument(
+        "-s",
+        "--sample_name",
+        type=str,
+        required=True,
+        help="Name of the sample."
     )
     parser.add_argument(
         "-t",
         "--threads",
+        required=True,
         type=int,
-        default=5,
-        help="Number of threads to use. Default is 5."
+        help="Number of threads to use."
     )
     parser.add_argument(
         "-r",
@@ -80,6 +87,14 @@ def add_polish_arguments(parser):
         default=False,
         action='store_true',
         help="If set then PyTorch will use GPUs for inference. CUDA required."
+    )
+    parser.add_argument(
+        "-per_gpu",
+        "--callers_per_gpu",
+        type=int,
+        required=False,
+        default=4,
+        help="Number of callers to initialize per GPU, on a 11GB GPU, you can go up to 10. Default is 4."
     )
     parser.add_argument(
         "-dx",
@@ -107,20 +122,13 @@ def add_polish_arguments(parser):
         help="Number of workers for loading images. Default is 4."
     )
     parser.add_argument(
-        "-tpc",
-        "--threads_per_caller",
-        type=int,
+        "-p",
+        "--probability_threshold",
+        type=float,
         required=False,
-        default=8,
-        help="Total threads to be used per caller. A sane value would be num_callers * threads <= total_threads."
-    )
-    parser.add_argument(
-        "-c",
-        "--callers",
-        type=int,
-        required=False,
-        default=8,
-        help="Total number of callers to spawn if doing CPU inference in distributed mode."
+        default=0.1,
+        help="Threshold value for reporting SNPs. Default is 0.1, "
+             "increasing the value will reduce FP and increase FN SNPs."
     )
     return parser
 
@@ -345,11 +353,11 @@ def main():
     subparsers = parser.add_subparsers(dest='sub_command')
     subparsers.required = True
 
-    # parser_polish = subparsers.add_parser('polish', help="Run the polishing pipeline. This will run "
-    #                                                      "make images-> inference -> stitch one after another.\n"
-    #                                                      "The outputs of each step can be run separately using\n"
-    #                                                      "the appropriate sub-command.")
-    # add_polish_arguments(parser_polish)
+    parser_call_variant = subparsers.add_parser('call_variant', help="Run the variant calling pipeline. This will run "
+                                                                     "make images-> inference -> find_candidates one after another.\n"
+                                                                     "The outputs of each step can be run separately using\n"
+                                                                     "the appropriate sub-command.")
+    add_call_variant_arguments(parser_call_variant)
 
     parser_make_images = subparsers.add_parser('make_images', help="Generate images that encode summary statistics "
                                                                    "of reads aligned to an assembly.")
@@ -370,25 +378,23 @@ def main():
 
     FLAGS, unparsed = parser.parse_known_args()
 
-    # if FLAGS.sub_command == 'polish':
-    #     sys.stderr.write("INFO: POLISH MODULE SELECTED\n")
-    #     # bam_filepath, fasta_filepath, output_dir, threads, region,
-    #     # model_path, batch_size, gpu_mode, distributed, device_ids,
-    #     # num_workers, number_workers, callers, threads_per_caller
-    #     distributed = not FLAGS.distributed_off
-    #     polish(FLAGS.bam,
-    #            FLAGS.fasta,
-    #            FLAGS.output_file,
-    #            FLAGS.threads,
-    #            FLAGS.region,
-    #            FLAGS.model_path,
-    #            FLAGS.batch_size,
-    #            FLAGS.gpu,
-    #            distributed,
-    #            FLAGS.device_ids,
-    #            FLAGS.num_workers,
-    #            FLAGS.callers,
-    #            FLAGS.threads_per_caller)
+    if FLAGS.sub_command == 'call_variant':
+        sys.stderr.write("INFO: POLISH MODULE SELECTED\n")
+        distributed = not FLAGS.distributed_off
+        call_variant(FLAGS.bam,
+                     FLAGS.fasta,
+                     FLAGS.output_dir,
+                     FLAGS.threads,
+                     FLAGS.region,
+                     FLAGS.model_path,
+                     FLAGS.batch_size,
+                     FLAGS.gpu,
+                     FLAGS.callers_per_gpu,
+                     distributed,
+                     FLAGS.device_ids,
+                     FLAGS.num_workers,
+                     FLAGS.sample_name,
+                     FLAGS.probability_threshold)
 
     if FLAGS.sub_command == 'make_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
@@ -401,16 +407,16 @@ def main():
     elif FLAGS.sub_command == 'run_inference':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN INFERENCE MODULE SELECTED.\n")
         distributed = not FLAGS.distributed_off
-        call_consensus(FLAGS.image_dir,
-                       FLAGS.model_path,
-                       FLAGS.batch_size,
-                       FLAGS.num_workers,
-                       FLAGS.output_dir,
-                       FLAGS.device_ids,
-                       FLAGS.callers_per_gpu,
-                       FLAGS.gpu,
-                       distributed,
-                       FLAGS.threads)
+        run_inference(FLAGS.image_dir,
+                      FLAGS.model_path,
+                      FLAGS.batch_size,
+                      FLAGS.num_workers,
+                      FLAGS.output_dir,
+                      FLAGS.device_ids,
+                      FLAGS.callers_per_gpu,
+                      FLAGS.gpu,
+                      distributed,
+                      FLAGS.threads)
 
     elif FLAGS.sub_command == 'find_candidates':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STITCH MODULE SELECTED\n")
