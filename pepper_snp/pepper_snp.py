@@ -414,7 +414,7 @@ def main():
 
     elif FLAGS.sub_command == 'find_candidates':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STITCH MODULE SELECTED\n")
-        find_candidates(FLAGS.input_hdf,
+        find_candidates(FLAGS.input_dir,
                         FLAGS.input_reference,
                         FLAGS.output_dir,
                         FLAGS.threads,
