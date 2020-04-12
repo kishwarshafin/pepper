@@ -100,7 +100,7 @@ def polish_genome_distributed_cpu(image_dir, model_path, batch_size, threads, nu
     # chunk the inputs
     input_files = get_file_paths_from_directory(image_dir)
 
-    callers = min(8, threads)
+    callers = threads
 
     file_chunks = [[] for i in range(callers)]
     for i in range(0, len(input_files)):
