@@ -5,16 +5,6 @@ from os import listdir
 import concurrent.futures
 import numpy as np
 from collections import defaultdict
-from modules.python.Options import CandidateOptions
-
-
-BASE_ERROR_RATE = 0.0
-label_decoder = {1: 'A', 2: 'C', 3: 'G', 4: 'T', 0: ''}
-MATCH_PENALTY = 4
-MISMATCH_PENALTY = 6
-GAP_PENALTY = 8
-GAP_EXTEND_PENALTY = 2
-MIN_SEQUENCE_REQUIRED_FOR_MULTITHREADING = 2
 
 
 def decode_ref_base(ref_code):
@@ -153,7 +143,7 @@ def find_SNP_candidates(contig, sequence_chunk_keys, threads, p_threshold):
 
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
-        file_chunks = chunks(sequence_chunk_keys, max(MIN_SEQUENCE_REQUIRED_FOR_MULTITHREADING,
+        file_chunks = chunks(sequence_chunk_keys, max(2,
                                                       int(len(sequence_chunk_keys) / threads) + 1))
 
         futures = [executor.submit(find_candidates, contig, file_chunk, p_threshold)
