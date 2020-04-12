@@ -396,7 +396,7 @@ def main():
                      FLAGS.sample_name,
                      FLAGS.probability_threshold)
 
-    if FLAGS.sub_command == 'make_images':
+    elif FLAGS.sub_command == 'make_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
         make_images(FLAGS.bam,
                     FLAGS.fasta,

@@ -1,5 +1,3 @@
-from pepper.modules.python.TextColor import TextColor
-from pepper_snp.build import PEPPER_SNP
 import os
 import sys
 import torch
@@ -9,6 +7,7 @@ from pepper_snp.modules.python.ImageGenerationUI import UserInterfaceSupport
 from pepper_snp.modules.python.MakeImages import make_images
 from pepper_snp.modules.python.RunInference import run_inference
 from pepper_snp.modules.python.FindSNPCandidates import find_candidates
+from pepper_snp.build import PEPPER_SNP
 
 
 def call_variant(bam_filepath,
@@ -73,14 +72,14 @@ def call_variant(bam_filepath,
         for device_id in device_ids:
             major_capable, minor_capable = torch.cuda.get_device_capability(device=device_id)
             if major_capable < 0:
-                sys.stderr.write(TextColor.RED + "ERROR: GPU DEVICE: " + str(device_id) + " IS NOT CUDA CAPABLE.\n" + TextColor.END)
-                sys.stderr.write(TextColor.GREEN + "Try running: $ python3\n"
-                                                   ">>> import torch \n"
-                                                   ">>> torch.cuda.get_device_capability(device=" + str(device_id) + ")\n" + TextColor.END)
+                sys.stderr.write("ERROR: GPU DEVICE: " + str(device_id) + " IS NOT CUDA CAPABLE.\n")
+                sys.stderr.write("Try running: $ python3\n"
+                                 ">>> import torch \n"
+                                 ">>> torch.cuda.get_device_capability(device=" + str(device_id) + ")\n")
                 exit(1)
             else:
-                sys.stderr.write(TextColor.GREEN + "INFO: CAPABILITY OF GPU#" + str(device_id) +":\t" + str(major_capable)
-                                 + "-" + str(minor_capable) + "\n" + TextColor.END)
+                sys.stderr.write("INFO: CAPABILITY OF GPU#" + str(device_id) +":\t" + str(major_capable)
+                                 + "-" + str(minor_capable) + "\n")
 
     timestr = time.strftime("%m%d%Y_%H%M%S")
 
@@ -90,9 +89,9 @@ def call_variant(bam_filepath,
     prediction_output_directory = output_dir + "predictions_" + str(timestr) + "/"
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN-ID: " + str(timestr) + "\n")
-    sys.stderr.write(TextColor.GREEN + "INFO: IMAGE OUTPUT: " + str(image_output_directory) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: IMAGE OUTPUT: " + str(image_output_directory) + "\n")
 
-    sys.stderr.write(TextColor.GREEN + "STEP 1: GENERATING IMAGES\n" + TextColor.END)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 1: GENERATING IMAGES\n")
     # call the parallelization method to generate images in parallel
     make_images(bam_filepath,
                 fasta_filepath,
@@ -100,8 +99,8 @@ def call_variant(bam_filepath,
                 image_output_directory,
                 threads)
 
-    sys.stderr.write(TextColor.GREEN + "STEP 2: RUNNING INFERENCE\n" + TextColor.END)
-    sys.stderr.write(TextColor.GREEN + "INFO: PREDICTION OUTPUT: " + str(prediction_output_directory) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 2: RUNNING INFERENCE\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION OUTPUT: " + str(prediction_output_directory) + "\n")
     run_inference(image_output_directory,
                   model_path,
                   batch_size,
@@ -113,7 +112,7 @@ def call_variant(bam_filepath,
                   distributed,
                   threads)
 
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3: RUNNING STITCH\n" + TextColor.END)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3: RUNNING STITCH\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION OUTPUT: " + str(output_dir) + "\n")
     find_candidates(prediction_output_directory,
                     fasta_filepath,
