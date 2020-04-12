@@ -7,7 +7,7 @@ class ImageSizeOptions(object):
 
     TOTAL_LABELS = 15
     MIN_SEQUENCE_LENGTH = 1000
-    MIN_IMAGE_OVERLAP = 0
+    MIN_IMAGE_OVERLAP = 100
     decoded_labels = ['**', 'AA', 'AC', 'AT', 'AG', 'A*', 'CC', 'CT', 'CG', 'C*', 'TT', 'TG', 'T*', 'GG', 'G*']
     class_weights =  [0.1,  0.1,  1.0,  1.0,  1.0,  1.0,  0.1,  1.0,  1.0,  1.0,  0.1,  1.0,  1.0,  0.1,  1.0]
 
