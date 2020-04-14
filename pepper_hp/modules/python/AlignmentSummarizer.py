@@ -1,10 +1,10 @@
+from pepper_hp.build import PEPPER_HP
 import itertools
 import time
 import numpy as np
 from operator import itemgetter
 from pepper_hp.modules.python.Options import ImageSizeOptions, AlingerOptions, ReadFilterOptions
 
-from pepper_hp.build import PEPPER_HP
 
 class AlignmentSummarizer:
     def __init__(self, bam_handler, fasta_handler, chromosome_name, region_start, region_end):
@@ -199,20 +199,14 @@ class AlignmentSummarizer:
 
         return realigned_reads
 
-    def create_summary(self, truth_bam, train_mode, realignment_flag):
+    def create_summary(self, truth_bam, hp_tag, train_mode, realignment_flag):
         log_prefix = "[" + self.chromosome_name + ":" + str(self.region_start_position) + "-" \
                      + str(self.region_end_position) + "]"
-        all_images_hp1 = []
-        all_labels_hp1 = []
-        all_positions_hp1 = []
-        all_image_chunk_ids_hp1 = []
-        all_ref_seq_hp1 = []
-
-        all_images_hp2 = []
-        all_labels_hp2 = []
-        all_positions_hp2 = []
-        all_image_chunk_ids_hp2 = []
-        all_ref_seq_hp2 = []
+        all_images = []
+        all_labels = []
+        all_positions = []
+        all_image_chunk_ids = []
+        all_ref_seq = []
 
         if train_mode:
             # get the reads from the bam file
@@ -299,9 +293,9 @@ class AlignmentSummarizer:
                     #                  + " secs\n" + TextColor.END)
 
                 summary_generator = PEPPER_HP.SummaryGenerator(ref_seq,
-                                                               self.chromosome_name,
-                                                               ref_start,
-                                                               ref_end)
+                                                            self.chromosome_name,
+                                                            ref_start,
+                                                            ref_end)
 
                 summary_generator.generate_train_summary(all_reads,
                                                          region_start,
@@ -334,7 +328,7 @@ class AlignmentSummarizer:
             total_reads = len(all_reads)
 
             if total_reads == 0:
-                return [], [], [], [], [], [], [], [], [], []
+                return [], [], [], [], []
 
             if total_reads > AlingerOptions.MAX_READS_IN_REGION:
                 # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
@@ -366,49 +360,27 @@ class AlignmentSummarizer:
                                                                 self.region_start_position,
                                                                 self.region_end_position + 1)
 
-            summary_generator_hp1 = PEPPER_HP.SummaryGenerator(ref_seq,
-                                                               self.chromosome_name,
-                                                               self.region_start_position,
-                                                               self.region_end_position)
+            summary_generator = PEPPER_HP.SummaryGenerator(ref_seq,
+                                                        self.chromosome_name,
+                                                        self.region_start_position,
+                                                        self.region_end_position)
 
-            summary_generator_hp2 = PEPPER_HP.SummaryGenerator(ref_seq,
-                                                               self.chromosome_name,
-                                                               self.region_start_position,
-                                                               self.region_end_position)
+            summary_generator.generate_summary(all_reads,
+                                               self.region_start_position,
+                                               self.region_end_position,
+                                               hp_tag)
 
-            summary_generator_hp1.generate_summary(all_reads,
-                                                   self.region_start_position,
-                                                   self.region_end_position,
-                                                   1)
-            summary_generator_hp2.generate_summary(all_reads,
-                                                   self.region_start_position,
-                                                   self.region_end_position,
-                                                   2)
-
-            images_hp1, labels_hp1, positions_hp1, chunk_ids_hp1, ref_seqs_hp1 = \
-                self.chunk_images(summary_generator_hp1,
+            images, labels, positions, chunk_ids, ref_seqs = \
+                self.chunk_images(summary_generator,
                                   chunk_size=ImageSizeOptions.SEQ_LENGTH,
                                   chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
 
-            images_hp2, labels_hp2, positions_hp2, chunk_ids_hp2, ref_seqs_hp2 = \
-                self.chunk_images(summary_generator_hp1,
-                                  chunk_size=ImageSizeOptions.SEQ_LENGTH,
-                                  chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
+            all_images.extend(images)
+            all_labels.extend(labels)
+            all_positions.extend(positions)
+            all_image_chunk_ids.extend(chunk_ids)
+            all_ref_seq.extend(ref_seqs)
 
-            all_images_hp1.extend(images_hp1)
-            all_labels_hp1.extend(labels_hp1)
-            all_positions_hp1.extend(positions_hp1)
-            all_image_chunk_ids_hp1.extend(chunk_ids_hp1)
-            all_ref_seq_hp1.extend(ref_seqs_hp1)
+        assert(len(all_images) == len(all_labels) == len(all_image_chunk_ids) == len(all_ref_seq))
 
-            all_images_hp2.extend(images_hp2)
-            all_labels_hp2.extend(labels_hp2)
-            all_positions_hp2.extend(positions_hp2)
-            all_image_chunk_ids_hp2.extend(chunk_ids_hp2)
-            all_ref_seq_hp2.extend(ref_seqs_hp2)
-
-        assert(len(all_images_hp1) == len(all_labels_hp1) == len(all_image_chunk_ids_hp1) == len(all_ref_seq_hp1))
-        assert(len(all_images_hp2) == len(all_labels_hp2) == len(all_image_chunk_ids_hp2) == len(all_ref_seq_hp2))
-
-        return all_images_hp1, all_labels_hp1, all_positions_hp1, all_image_chunk_ids_hp1, all_ref_seq_hp1, \
-               all_images_hp2, all_labels_hp2, all_positions_hp2, all_image_chunk_ids_hp2, all_ref_seq_hp2
+        return all_images, all_labels, all_positions, all_image_chunk_ids, all_ref_seq

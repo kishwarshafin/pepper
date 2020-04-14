@@ -3,19 +3,18 @@ import os
 import sys
 import concurrent.futures
 from datetime import datetime
-
+from pepper_hp.build import PEPPER_HP
+from pepper_hp.modules.python.TextColor import TextColor
 from pepper_hp.modules.python.DataStore import DataStore
 from pepper_hp.modules.python.AlignmentSummarizer import AlignmentSummarizer
 from pepper_hp.modules.python.Options import ImageSizeOptions
-
-from pepper_hp.build import PEPPER_HP
 
 
 class UserInterfaceView:
     """
     Process manager that runs sequence of processes to generate images and their labels.
     """
-    def __init__(self, chromosome_name, bam_file_path, draft_file_path, truth_bam, train_mode):
+    def __init__(self, chromosome_name, bam_file_path, draft_file_path, truth_bam, hp_tag, train_mode):
         """
         Initialize a manager object
         :param chromosome_name: Name of the chromosome
@@ -30,6 +29,7 @@ class UserInterfaceView:
         self.bam_handler = PEPPER_HP.BAM_handler(bam_file_path)
         self.fasta_handler = PEPPER_HP.FASTA_handler(draft_file_path)
         self.train_mode = train_mode
+        self.hp_tag = hp_tag
         self.downsample_rate = 1.0
         self.truth_bam = None
 
@@ -54,14 +54,13 @@ class UserInterfaceView:
                                                    start_position,
                                                    end_position)
 
-        images_hp1, labels_hp1, positions_hp1, image_chunk_ids_hp1, all_ref_seq_hp1, \
-        images_hp2, labels_hp2, positions_hp2, image_chunk_ids_hp2, all_ref_seq_hp2 = \
+        images, labels, positions, image_chunk_ids, all_ref_seq = \
             alignment_summarizer.create_summary(self.truth_bam,
+                                                self.hp_tag,
                                                 self.train_mode,
                                                 realignment_flag)
 
-        return images_hp1, labels_hp1, positions_hp1, image_chunk_ids_hp1, all_ref_seq_hp1, \
-               images_hp2, labels_hp2, positions_hp2, image_chunk_ids_hp2, all_ref_seq_hp2
+        return images, labels, positions, image_chunk_ids, all_ref_seq
 
 
 class UserInterfaceSupport:
@@ -121,7 +120,7 @@ class UserInterfaceSupport:
                 name_region = name.strip().split(':')
 
                 if len(name_region) != 2:
-                    sys.stderr.write("ERROR: --region INVALID value.\n")
+                    sys.stderr.write(TextColor.RED + "ERROR: --region INVALID value.\n" + TextColor.END)
                     exit(0)
 
                 name, region = tuple(name_region)
@@ -129,7 +128,7 @@ class UserInterfaceSupport:
                 region = [int(pos) for pos in region]
 
                 if len(region) != 2 or not region[0] <= region[1]:
-                    sys.stderr.write("ERROR: --region INVALID value.\n")
+                    sys.stderr.write(TextColor.RED + "ERROR: --region INVALID value.\n" + TextColor.END)
                     exit(0)
 
             range_split = name.split('-')
@@ -156,74 +155,62 @@ class UserInterfaceSupport:
 
     @staticmethod
     def single_worker(args, _start, _end):
-        chr_name, bam_file, draft_file, truth_bam, train_mode, realignment_flag = args
+        chr_name, bam_file, draft_file, truth_bam, hp_tag, train_mode, realignment_flag = args
 
         view = UserInterfaceView(chromosome_name=chr_name,
                                  bam_file_path=bam_file,
                                  draft_file_path=draft_file,
                                  truth_bam=truth_bam,
+                                 hp_tag=hp_tag,
                                  train_mode=train_mode)
 
-        images_hp1, labels_hp1, positions_hp1, image_chunk_ids_hp1, ref_seq_hp1, \
-        images_hp2, labels_hp2, positions_hp2, image_chunk_ids_hp2, ref_seq_hp2 = view.parse_region(_start, _end, realignment_flag)
+        images, labels, positions, image_chunk_ids, ref_seq = view.parse_region(_start, _end, realignment_flag)
         region = (chr_name, _start, _end)
 
-        return images_hp1, labels_hp1, positions_hp1, image_chunk_ids_hp1, region, ref_seq_hp1, \
-               images_hp2, labels_hp2, positions_hp2, image_chunk_ids_hp2, region, ref_seq_hp2
+        return images, labels, positions, image_chunk_ids, region, ref_seq
 
     @staticmethod
     def image_generator(args, all_intervals, total_threads, thread_id):
         thread_prefix = "[THREAD " + "{:02d}".format(thread_id) + "]"
 
-        output_path, bam_file, draft_file, truth_bam, train_mode, realignment_flag = args
-        file_name_hp1 = output_path + "hp1_images/pepper_hp_images_thread_" + str(thread_id) + "_hp1.hdf"
-        file_name_hp2 = output_path + "hp2_images/pepper_hp_images_thread_" + str(thread_id) + "_hp2.hdf"
+        output_path, bam_file, draft_file, truth_bam, hp_tag, train_mode, realignment_flag = args
+        file_name = output_path + "pepper_hp_images_thread_" + str(thread_id) + "_hp" + str(hp_tag) + ".hdf"
 
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
 
         # initial notification
-        if thread_id == 0:
-            sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
-                             + "STARTING THREAD: " + str(thread_id)
-                             + " FOR " + str(len(intervals)) + " INTERVALS\n")
+        sys.stderr.write(TextColor.BLUE + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
+                         + "STARTING THREAD: " + str(thread_id)
+                         + " FOR " + str(len(intervals)) + " INTERVALS\n" + TextColor.END)
         sys.stderr.flush()
+
         start_time = time.time()
-        with DataStore(file_name_hp1, 'w') as output_hdf_file_hp1, DataStore(file_name_hp2, 'w') as output_hdf_file_hp2:
+        with DataStore(file_name, 'w') as output_hdf_file:
             for counter, interval in enumerate(intervals):
                 chr_name, _start, _end = interval
-                img_args = (chr_name, bam_file, draft_file, truth_bam, train_mode, realignment_flag)
-                images_hp1, labels_hp1, positions_hp1, chunk_ids_hp1, region_hp1, ref_seqs_hp1, \
-                images_hp2, labels_hp2, positions_hp2, chunk_ids_hp2, region_hp2, ref_seqs_hp2 = \
+                img_args = (chr_name, bam_file, draft_file, truth_bam, hp_tag, train_mode, realignment_flag)
+                images, labels, positions, chunk_ids, region, ref_seqs = \
                     UserInterfaceSupport.single_worker(img_args, _start, _end)
 
-                for i, image in enumerate(images_hp1):
-                    label = labels_hp1[i]
-                    position, index = zip(*positions_hp1[i])
-                    ref_seq = ref_seqs_hp1[i]
-                    chunk_id = chunk_ids_hp1[i]
-                    summary_name = str(region_hp1[0]) + "_" + str(region_hp1[1]) + "_" + str(region_hp1[2]) + "_" + str(chunk_id)
+                for i, image in enumerate(images):
+                    label = labels[i]
+                    position, index = zip(*positions[i])
+                    ref_seq = ref_seqs[i]
+                    chunk_id = chunk_ids[i]
+                    summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
 
-                    output_hdf_file_hp1.write_summary(region_hp1, image, label, position, index, chunk_id, summary_name, ref_seq)
+                    output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name, ref_seq)
 
-                for i, image in enumerate(images_hp2):
-                    label = labels_hp2[i]
-                    position, index = zip(*positions_hp2[i])
-                    ref_seq = ref_seqs_hp2[i]
-                    chunk_id = chunk_ids_hp2[i]
-                    summary_name = str(region_hp2[0]) + "_" + str(region_hp2[1]) + "_" + str(region_hp2[2]) + "_" + str(chunk_id)
-
-                    output_hdf_file_hp2.write_summary(region_hp2, image, label, position, index, chunk_id, summary_name, ref_seq)
-
-                if counter > 0 and counter % 10 == 0:
+                if counter > 0 and counter % 10 == 0 and thread_id == 0:
                     percent_complete = int((100 * counter) / len(intervals))
                     time_now = time.time()
                     mins = int((time_now - start_time) / 60)
                     secs = int((time_now - start_time)) % 60
-                    if thread_id == 0:
-                        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "]"
-                                         + " INFO: " + thread_prefix + " " + str(counter) + "/" + str(len(intervals))
-                                         + " COMPLETE (" + str(percent_complete) + "%)"
-                                         + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
+
+                    sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "]"
+                                     + " INFO: " + thread_prefix + " " + str(counter) + "/" + str(len(intervals))
+                                     + " COMPLETE (" + str(percent_complete) + "%)"
+                                     + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
 
         return thread_id
 
@@ -232,6 +219,7 @@ class UserInterfaceSupport:
                                          bam_file,
                                          draft_file,
                                          truth_bam,
+                                         hp_tag,
                                          output_path,
                                          total_threads,
                                          train_mode,
@@ -265,18 +253,18 @@ class UserInterfaceSupport:
                          + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n")
         sys.stderr.flush()
 
-        args = (output_path, bam_file, draft_file, truth_bam, train_mode, realignment_flag)
+        args = (output_path, bam_file, draft_file, truth_bam, hp_tag, train_mode, realignment_flag)
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
-            futures = [executor.submit(UserInterfaceSupport.image_generator, args, all_intervals, total_threads, thread_id)
+            futures = [executor.submit(UserInterfaceSupport.image_generator, args, all_intervals, total_threads,
+                                       thread_id)
                        for thread_id in range(0, total_threads)]
 
             for fut in concurrent.futures.as_completed(futures):
                 if fut.exception() is None:
                     # get the results
                     thread_id = fut.result()
-                    if thread_id == 0:
-                        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
-                                             + "THREAD " + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
+                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
+                                     + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
                 else:
                     sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
                 fut._result = None  # python issue 27144
@@ -284,5 +272,5 @@ class UserInterfaceSupport:
         end_time = time.time()
         mins = int((end_time - start_time) / 60)
         secs = int((end_time - start_time)) % 60
-        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] INFO: FINISHED IMAGE GENERATION\n")
-        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] INFO: ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED IMAGE GENERATION\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")

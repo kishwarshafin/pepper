@@ -85,7 +85,9 @@ def call_variant(bam_filepath,
 
     output_dir = UserInterfaceSupport.handle_output_directory(output_dir)
 
-    image_output_directory = output_dir + "images_" + str(timestr) + "/"
+    image_output_directory_hp1 = output_dir + "images_" + str(timestr) + "/hp1_images/"
+    image_output_directory_hp2 = output_dir + "images_" + str(timestr) + "/hp2_images/"
+
     prediction_output_directory_hp1 = output_dir + "predictions_" + str(timestr) + "/hp1/"
     prediction_output_directory_hp2 = output_dir + "predictions_" + str(timestr) + "/hp2/"
 
@@ -93,19 +95,30 @@ def call_variant(bam_filepath,
     candidate_output_directory_hp2 = output_dir + "candidate_variants_" + str(timestr) + "/hp2/"
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN-ID: " + str(timestr) + "\n")
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: IMAGE OUTPUT: " + str(image_output_directory) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: IMAGE OUTPUT: " + str(image_output_directory_hp1) + "\n")
 
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 1: GENERATING IMAGES FOR BOTH HAPLOTYPES\n")
-    # call the parallelization method to generate images in parallel
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 1.1: GENERATING IMAGES FOR HAPLOTYPE 1\n")
     make_images(bam_filepath,
                 fasta_filepath,
                 region,
-                image_output_directory,
+                image_output_directory_hp1,
+                1,
+                threads)
+
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN-ID: " + str(timestr) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: IMAGE OUTPUT: " + str(image_output_directory_hp2) + "\n")
+
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 1.2: GENERATING IMAGES FOR BOTH HAPLOTYPE 2\n")
+    make_images(bam_filepath,
+                fasta_filepath,
+                region,
+                image_output_directory_hp2,
+                2,
                 threads)
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 2.1: RUNNING INFERENCE ON HAPLOTYPE 1\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(prediction_output_directory_hp1) + "\n")
-    run_inference(image_output_directory + "/hp1_images/",
+    run_inference(image_output_directory_hp1,
                   model_path,
                   batch_size,
                   num_workers,
@@ -117,7 +130,7 @@ def call_variant(bam_filepath,
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 2.2: RUNNING INFERENCE ON HAPLOTYPE 2\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(prediction_output_directory_hp1) + "\n")
-    run_inference(image_output_directory + "/hp2_images/",
+    run_inference(image_output_directory_hp2,
                   model_path,
                   batch_size,
                   num_workers,
@@ -143,7 +156,7 @@ def call_variant(bam_filepath,
                        candidate_output_directory_hp2,
                        threads)
 
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 4: CALLING VARIANTS ON HAPLOTYPE 2\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 4: MERGING VARIANTS.\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(output_dir) + "\n")
     haploid2diploid(candidate_output_directory_hp1 + 'candidates_as_variants.vcf',
                     candidate_output_directory_hp2 + 'candidates_as_variants.vcf',
