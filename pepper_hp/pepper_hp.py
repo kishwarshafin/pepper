@@ -417,7 +417,7 @@ def main():
     elif FLAGS.sub_command == 'merge_candidates':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MERGE VCFs MODULE SELECTED\n")
         haploid2diploid(FLAGS.vcf_h1,
-                        FLAGS.vcf_h1,
+                        FLAGS.vcf_h2,
                         FLAGS.reference,
                         FLAGS.output_dir,
                         adjacent=False,
