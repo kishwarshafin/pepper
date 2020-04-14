@@ -37,9 +37,6 @@ target_link_libraries(PEPPER PRIVATE curl)
 target_link_libraries(PEPPER PRIVATE lzma)
 target_link_libraries(PEPPER PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
 
-## PEPPER SNP PROJECT
-PROJECT(pepper_snp)
-
 # PEPPER_SNP
 pybind11_add_module(PEPPER_SNP pepper_snp/modules/src/pybind_api.cpp)
 
@@ -51,6 +48,18 @@ target_link_libraries(PEPPER_SNP PRIVATE bz2)
 target_link_libraries(PEPPER_SNP PRIVATE curl)
 target_link_libraries(PEPPER_SNP PRIVATE lzma)
 target_link_libraries(PEPPER_SNP PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
+
+# PEPPER_HP
+pybind11_add_module(PEPPER_HP pepper_hp/modules/src/pybind_api.cpp)
+
+add_dependencies(PEPPER_HP htslib)
+
+# add all the external libraries
+target_link_libraries(PEPPER_HP PRIVATE z)
+target_link_libraries(PEPPER_HP PRIVATE bz2)
+target_link_libraries(PEPPER_HP PRIVATE curl)
+target_link_libraries(PEPPER_HP PRIVATE lzma)
+target_link_libraries(PEPPER_HP PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
 
 #-------------------
 # Test

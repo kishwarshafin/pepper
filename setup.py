@@ -130,7 +130,8 @@ if __name__ == '__main__':
         name='pepper_polish',
         version=get_version(),
         packages=['pepper/', 'pepper/modules/python', 'pepper/modules/python/models', 'pepper/modules/python/helper',
-                  'pepper_snp/', 'pepper_snp/modules/python', 'pepper_snp/modules/python/models', 'pepper_snp/modules/python/helper'],
+                  'pepper_snp/', 'pepper_snp/modules/python', 'pepper_snp/modules/python/models', 'pepper_snp/modules/python/helper',
+                  'pepper_hp/', 'pepper_hp/modules/python', 'pepper_hp/modules/python/models'],
         package_dir={'pepper': 'pepper',
                      'pepper/modules/python': 'pepper/modules/python',
                      'pepper/modules/python/models': 'pepper/modules/python/models',
@@ -138,7 +139,11 @@ if __name__ == '__main__':
                      'pepper_snp': 'pepper_snp',
                      'pepper_snp/modules/python': 'pepper_snp/modules/python',
                      'pepper_snp/modules/python/models': 'pepper_snp/modules/python/models',
-                     'pepper_snp/modules/python/helper': 'pepper_snp/modules/python/helper'
+                     'pepper_snp/modules/python/helper': 'pepper_snp/modules/python/helper',
+                     'pepper_hp': 'pepper_hp',
+                     'pepper_hp/modules/python': 'pepper_hp/modules/python',
+                     'pepper_hp/modules/python/models': 'pepper_hp/modules/python/models',
+                     'pepper_hp/modules/python/helper': 'pepper_hp/modules/python/helper'
                      },
         url='https://github.com/kishwarshafin/pepper',
         author=__author__,
@@ -153,10 +158,11 @@ if __name__ == '__main__':
                 '{0} = {0}.{0}:main'.format(__pkg_name__),
                 '{0}_train = {0}.{0}_train:main'.format(__pkg_name__),
                 '{0}_snp = {0}_snp.{0}_snp:main'.format(__pkg_name__),
+                '{0}_hp = {0}_hp.{0}_hp:main'.format(__pkg_name__),
                 # '{0}_snp_train = {0}_snp.{0}_snp_train:main'.format(__pkg_name__),
             ]
         },
-        ext_modules=[CMakeExtension('PEPPER'), CMakeExtension('PEPPER_SNP')],
+        ext_modules=[CMakeExtension('PEPPER'), CMakeExtension('PEPPER_SNP'), CMakeExtension('PEPPER_HP')],
         cmdclass={
             'build_ext': CMakeBuild
         },

@@ -10,3 +10,4 @@ onnx
 onnxruntime
 hyperopt
 pysam
+intervaltree
