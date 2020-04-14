@@ -4,7 +4,6 @@ import sys
 import concurrent.futures
 from datetime import datetime
 from pepper_hp.build import PEPPER_HP
-from pepper_hp.modules.python.TextColor import TextColor
 from pepper_hp.modules.python.DataStore import DataStore
 from pepper_hp.modules.python.AlignmentSummarizer import AlignmentSummarizer
 from pepper_hp.modules.python.Options import ImageSizeOptions
@@ -120,7 +119,7 @@ class UserInterfaceSupport:
                 name_region = name.strip().split(':')
 
                 if len(name_region) != 2:
-                    sys.stderr.write(TextColor.RED + "ERROR: --region INVALID value.\n" + TextColor.END)
+                    sys.stderr.write("ERROR: --region INVALID value.\n")
                     exit(0)
 
                 name, region = tuple(name_region)
@@ -128,7 +127,7 @@ class UserInterfaceSupport:
                 region = [int(pos) for pos in region]
 
                 if len(region) != 2 or not region[0] <= region[1]:
-                    sys.stderr.write(TextColor.RED + "ERROR: --region INVALID value.\n" + TextColor.END)
+                    sys.stderr.write("ERROR: --region INVALID value.\n")
                     exit(0)
 
             range_split = name.split('-')
@@ -179,9 +178,10 @@ class UserInterfaceSupport:
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
 
         # initial notification
-        sys.stderr.write(TextColor.BLUE + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
-                         + "STARTING THREAD: " + str(thread_id)
-                         + " FOR " + str(len(intervals)) + " INTERVALS\n" + TextColor.END)
+        if thread_id == 0:
+            sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
+                             + "STARTING THREAD: " + str(thread_id)
+                             + " FOR " + str(len(intervals)) + " INTERVALS\n")
         sys.stderr.flush()
 
         start_time = time.time()
