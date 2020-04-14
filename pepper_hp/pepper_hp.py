@@ -360,7 +360,7 @@ def main():
     parser_find_candidates = subparsers.add_parser('find_candidates', help="Find candidate variants.")
     add_find_candidates_arguments(parser_find_candidates)
 
-    parser_find_candidates = subparsers.add_parser('merge_vcf', help="Find candidate variants.")
+    parser_find_candidates = subparsers.add_parser('merge_vcf', help="Merge haplotype 1 and 2 variants to generate a phased VCF.")
     add_merge_vcf_arguments(parser_find_candidates)
 
     # parser_download_model = subparsers.add_parser('download_models', help="Download available models.")
@@ -414,7 +414,7 @@ def main():
                            FLAGS.output_dir,
                            FLAGS.threads)
 
-    elif FLAGS.sub_command == 'merge_candidates':
+    elif FLAGS.sub_command == 'merge_vcf':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MERGE VCFs MODULE SELECTED\n")
         haploid2diploid(FLAGS.vcf_h1,
                         FLAGS.vcf_h2,
