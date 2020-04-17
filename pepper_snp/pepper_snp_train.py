@@ -31,8 +31,8 @@ def add_make_train_images_arguments(parser):
         help="BAM file containing mapping between reads and the draft assembly."
     )
     parser.add_argument(
-        "-d",
-        "--draft",
+        "-f",
+        "--fasta",
         type=str,
         required=True,
         help="FASTA file containing the draft assembly."
