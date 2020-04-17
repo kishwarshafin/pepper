@@ -107,8 +107,6 @@ class TrainModule:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n")
                 exit()
 
-        print(device_ids, total_callers)
-        exit()
         # train a model
         train_distributed(self.train_file,
                           self.test_file,
