@@ -2,10 +2,9 @@ from os.path import isfile, join
 from os import listdir
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
+from datetime import datetime
 import h5py
 import sys
-from tqdm import tqdm
-from modules.python.TextColor import TextColor
 
 
 def get_file_paths_from_directory(directory_path):
@@ -30,7 +29,7 @@ class SequenceDataset(Dataset):
 
         hdf_files = get_file_paths_from_directory(image_directory)
 
-        sys.stderr.write(TextColor.GREEN + "INFO: READING FROM HDF5 FILES\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: READING FROM HDF5 FILES\n")
         for hdf5_file_path in hdf_files:
             with h5py.File(hdf5_file_path, 'r') as hdf5_file:
                 if 'summaries' in hdf5_file:
@@ -39,8 +38,8 @@ class SequenceDataset(Dataset):
                     for image_name in image_names:
                         file_image_pair.append((hdf5_file_path, image_name))
                 else:
-                    sys.stderr.write(TextColor.YELLOW + "WARN: NO IMAGES FOUND IN FILE: "
-                                     + hdf5_file_path + "\n" + TextColor.END)
+                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] WARN: NO IMAGES FOUND IN FILE: "
+                                     + hdf5_file_path + "\n")
 
         self.all_images = file_image_pair
 

@@ -1,14 +1,13 @@
 import sys
 import torch
 import os
-from tqdm import tqdm
 import torch.distributed as dist
 import torch.nn as nn
 import torch.multiprocessing as mp
+from datetime import datetime
 # Custom generator for our dataset
 from torch.utils.data import DataLoader
 from pepper_snp.modules.python.models.dataloader import SequenceDataset
-from pepper_snp.modules.python.TextColor import TextColor
 from pepper_snp.modules.python.models.ModelHander import ModelHandler
 from pepper_snp.modules.python.models.test import test
 from pepper_snp.modules.python.Options import ImageSizeOptions, TrainOptions
@@ -47,7 +46,7 @@ def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoc
         'gru_layers': layers,
         'epochs': epoch,
     }, file_name)
-    sys.stderr.write(TextColor.RED + "\nMODEL SAVED SUCCESSFULLY.\n" + TextColor.END)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL" + file_name + " SAVED SUCCESSFULLY.\n")
 
 
 def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers, retrain_model,
@@ -66,7 +65,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
     torch.cuda.set_device(device_id)
 
     if rank == 0:
-        sys.stderr.write(TextColor.PURPLE + 'Loading data\n' + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOADING DATA\n")
 
     train_data_set = SequenceDataset(train_file)
 
@@ -88,9 +87,9 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
     if retrain_model is True:
         if os.path.isfile(retrain_model_path) is False:
-            sys.stderr.write(TextColor.RED + "ERROR: INVALID PATH TO RETRAIN PATH MODEL --retrain_model_path\n")
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: INVALID PATH TO RETRAIN PATH MODEL --retrain_model_path\n")
             exit(1)
-        sys.stderr.write(TextColor.GREEN + "INFO: RETRAIN MODEL LOADING\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RETRAIN MODEL LOADING\n")
         transducer_model, hidden_size, gru_layers, prev_ite = \
             ModelHandler.load_simple_model_for_training(retrain_model_path,
                                                         input_channels=ImageSizeOptions.IMAGE_CHANNELS,
@@ -101,7 +100,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         if train_mode is True:
             epoch_limit = prev_ite + epoch_limit
 
-        sys.stderr.write(TextColor.GREEN + "INFO: RETRAIN MODEL LOADED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RETRAIN MODEL LOADED\n")
     else:
         transducer_model = ModelHandler.get_new_gru_model(input_channels=ImageSizeOptions.IMAGE_CHANNELS,
                                                           image_features=ImageSizeOptions.IMAGE_HEIGHT,
@@ -112,14 +111,14 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
     param_count = sum(p.numel() for p in transducer_model.parameters() if p.requires_grad)
     if rank == 0:
-        sys.stderr.write(TextColor.RED + "INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n")
 
     model_optimizer = torch.optim.Adam(transducer_model.parameters(), lr=lr, weight_decay=decay)
 
     if retrain_model is True:
-        sys.stderr.write(TextColor.GREEN + "INFO: OPTIMIZER LOADING\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OPTIMIZER LOADING\n")
         model_optimizer = ModelHandler.load_simple_optimizer(model_optimizer, retrain_model_path, gpu_mode)
-        sys.stderr.write(TextColor.GREEN + "INFO: OPTIMIZER LOADED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OPTIMIZER LOADED\n")
 
     if gpu_mode:
         transducer_model = transducer_model.to(device_id)
@@ -136,8 +135,8 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
     # Train the Model
     if rank == 0:
-        sys.stderr.write(TextColor.PURPLE + 'Training starting\n' + TextColor.END)
-        sys.stderr.write(TextColor.BLUE + 'Start: ' + str(start_epoch + 1) + ' End: ' + str(epoch_limit) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAINING STARTING\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: START: " + str(start_epoch + 1) + " END: " + str(epoch_limit) + "\n")
 
     stats = dict()
     stats['loss_epoch'] = []
@@ -147,21 +146,10 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         total_loss = 0
         total_images = 0
         if rank == 0:
-            sys.stderr.write(TextColor.BLUE + 'Train epoch: ' + str(epoch + 1) + "\n")
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN EPOCH: " + str(epoch + 1) + "\n")
         # make sure the model is in train mode. BN is different in train and eval.
 
         batch_no = 1
-        if rank == 0:
-            progress_bar = tqdm(
-                total=len(train_loader),
-                ncols=100,
-                leave=True,
-                position=rank,
-                desc="Loss: ",
-            )
-        else:
-            progress_bar = None
-
         transducer_model.train()
         for images, labels in train_loader:
             labels = labels.type(torch.LongTensor)
@@ -201,13 +189,12 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                 train_loss_logger.write(str(epoch + 1) + "," + str(batch_no) + "," + str(avg_loss) + "\n")
 
             if rank == 0:
-                progress_bar.set_description("Loss: " + str(avg_loss))
-                progress_bar.refresh()
-                progress_bar.update(1)
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
+                                 + "EPOCH: " + str(epoch + 1)
+                                 + " BATCH: " + str(batch_no) + "/" + str(len(train_loader))
+                                 + " LOSS: " + str(avg_loss) + "\n")
                 batch_no += 1
 
-        if rank == 0:
-            progress_bar.close()
         dist.barrier()
 
         if rank == 0:
@@ -217,6 +204,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             stats['accuracy'] = stats_dictioanry['accuracy']
             stats['loss_epoch'].append((epoch, stats_dictioanry['loss']))
             stats['accuracy_epoch'].append((epoch, stats_dictioanry['accuracy']))
+
         dist.barrier()
 
         # update the loggers
@@ -235,11 +223,11 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         elif train_mode is False:
             # this setup is for hyperband
             if epoch + 1 >= 10 and stats['accuracy'] < 98:
-                sys.stderr.write(TextColor.PURPLE + 'EARLY STOPPING AS THE MODEL NOT DOING WELL\n' + TextColor.END)
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: EARLY STOPPING AS THE MODEL NOT DOING WELL\n")
                 return transducer_model, model_optimizer, stats
 
     if rank == 0:
-        sys.stderr.write(TextColor.PURPLE + 'Finished training\n' + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED TRAINING\n")
 
     return transducer_model, model_optimizer, stats
 
