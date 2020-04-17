@@ -108,7 +108,6 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
         sys.stderr.write(str(ImageSizeOptions.decoded_labels[i]) + '   ')
         for j, val in enumerate(row):
             sys.stderr.write("{0:9d}".format(val) + '  ')
-            sys.stderr.write("{0:9d}".format(val) + '  ')
         sys.stderr.write("\n")
 
     return {'loss': avg_loss, 'accuracy': accuracy, 'confusion_matrix': str(confusion_matrix.conf)}
