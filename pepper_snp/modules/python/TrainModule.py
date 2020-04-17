@@ -67,14 +67,6 @@ class TrainModule:
             total_gpu_devices = torch.cuda.device_count()
             sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL GPU AVAILABLE: " + str(total_gpu_devices) + "\n")
             device_ids = [i for i in range(0, total_gpu_devices)]
-
-            multiplied_device_ids = []
-            for device_id in device_ids:
-                for i in range(0, callers_per_gpu):
-                    multiplied_device_ids.append(device_id)
-            device_ids = multiplied_device_ids
-
-            total_callers = len(device_ids)
         else:
             device_ids = [int(i) for i in device_ids.split(',')]
             device_ids = list(set(device_ids))

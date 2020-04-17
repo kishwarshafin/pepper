@@ -117,7 +117,7 @@ def add_train_model_arguments(parser):
         type=int,
         required=False,
         default=64,
-        help="Batch size for training, default is 100."
+        help="Batch size for training, default is 64."
     )
     parser.add_argument(
         "-e",
