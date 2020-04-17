@@ -89,9 +89,10 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
             accuracy = (100.0 * total_accurate) / denom
 
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
-                             + " BATCH: " + str(ii) + "/" + str(len(test_loader))
-                             + " ACCURACY: " + str(round(accuracy, 5)) + "\n")
+            if ii % 10 == 0:
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
+                                 + " BATCH: " + str(ii) + "/" + str(len(test_loader))
+                                 + " ACCURACY: " + str(round(accuracy, 5)) + "\n")
 
     avg_loss = total_loss / total_images if total_images else 0
 
@@ -100,11 +101,11 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     sys.stderr.write("Confusion Matrix:" + "\n")
     sys.stderr.write('  ', end='          ')
     for label in ImageSizeOptions.decoded_labels:
-        sys.stderr.write(label + '         ')
+        sys.stderr.write(str(label) + '         ')
     sys.stderr.write("\n")
 
     for i, row in enumerate(confusion_matrix.value()):
-        sys.stderr.write(ImageSizeOptions.decoded_labels[i] + '   ')
+        sys.stderr.write(str(ImageSizeOptions.decoded_labels[i]) + '   ')
         for j, val in enumerate(row):
             sys.stderr.write("{0:9d}".format(val) + '  ')
             sys.stderr.write("{0:9d}".format(val) + '  ')

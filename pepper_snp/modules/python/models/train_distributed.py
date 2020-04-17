@@ -188,17 +188,17 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             if train_mode is True and rank == 0:
                 train_loss_logger.write(str(epoch + 1) + "," + str(batch_no) + "," + str(avg_loss) + "\n")
 
-            if rank == 0:
+            if rank == 0 and batch_no % 10 == 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
                                  + "EPOCH: " + str(epoch + 1)
                                  + " BATCH: " + str(batch_no) + "/" + str(len(train_loader))
                                  + " LOSS: " + str(avg_loss) + "\n")
-                batch_no += 1
+            batch_no += 1
 
         dist.barrier()
 
         if rank == 0:
-            stats_dictioanry = test(test_file, batch_size, gpu_mode, transducer_model, num_workers,
+            stats_dictioanry = test(test_file, batch_size * world_size, gpu_mode, transducer_model, num_workers,
                                     gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS)
             stats['loss'] = stats_dictioanry['loss']
             stats['accuracy'] = stats_dictioanry['accuracy']
