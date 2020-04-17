@@ -305,9 +305,9 @@ def main():
     parser_make_images = subparsers.add_parser('make_train_images', help="Generate training samples")
     add_make_train_images_arguments(parser_make_images)
 
-    # parser_train_model = subparsers.add_parser('train_model', help="Train a model.")
-    # add_train_model_arguments(parser_train_model)
-    #
+    parser_train_model = subparsers.add_parser('train_model', help="Train a model.")
+    add_train_model_arguments(parser_train_model)
+
     # parser_test_model = subparsers.add_parser('test_model', help="Test a pre-trained model.")
     # add_test_model_arguments(parser_test_model)
     #
