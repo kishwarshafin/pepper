@@ -215,7 +215,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             stats['accuracy_epoch'].append((epoch, stats_dictioanry['accuracy']))
 
         dist.barrier()
-
+        print(train_mode)
         # update the loggers
         if train_mode is True and rank == 0:
             # save the model after each epoch
