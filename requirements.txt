@@ -9,5 +9,6 @@ pyyaml
 onnx
 onnxruntime
 hyperopt
+Cython
 pysam
 intervaltree

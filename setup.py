@@ -158,8 +158,8 @@ if __name__ == '__main__':
                 '{0} = {0}.{0}:main'.format(__pkg_name__),
                 '{0}_train = {0}.{0}_train:main'.format(__pkg_name__),
                 '{0}_snp = {0}_snp.{0}_snp:main'.format(__pkg_name__),
+                '{0}_snp_train = {0}_snp.{0}_snp_train:main'.format(__pkg_name__),
                 '{0}_hp = {0}_hp.{0}_hp:main'.format(__pkg_name__),
-                # '{0}_snp_train = {0}_snp.{0}_snp_train:main'.format(__pkg_name__),
             ]
         },
         ext_modules=[CMakeExtension('PEPPER'), CMakeExtension('PEPPER_SNP'), CMakeExtension('PEPPER_HP')],

@@ -334,7 +334,7 @@ def main():
     2) Call consensus
     3) Stitch
     """
-    parser = argparse.ArgumentParser(description="PEPPER is a RNN based polisher for polishing ONT-based assemblies. "
+    parser = argparse.ArgumentParser(description="PEPPER SNP is a RNN based sensitive SNP caller for ONT-based reads. "
                                                  "It works in three steps:\n"
                                                  "1) make_images: This module takes alignment file and coverts them"
                                                  "to HDF5 files containing summary statistics.\n"
