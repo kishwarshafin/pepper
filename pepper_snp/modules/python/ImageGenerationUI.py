@@ -231,7 +231,7 @@ class UserInterfaceSupport:
                                          train_mode):
 
         if train_mode:
-            max_size = 10000
+            max_size = 1000
         else:
             max_size = 10000
 
