@@ -1,6 +1,7 @@
 import sys
 import torch
 import os
+import time
 import torch.distributed as dist
 import torch.nn as nn
 import torch.multiprocessing as mp
@@ -143,6 +144,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
     stats['accuracy_epoch'] = []
 
     for epoch in range(start_epoch, epoch_limit, 1):
+        start_time = time.time()
         total_loss = 0
         total_images = 0
         if rank == 0:
@@ -189,10 +191,17 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                 train_loss_logger.write(str(epoch + 1) + "," + str(batch_no) + "," + str(avg_loss) + "\n")
 
             if rank == 0 and batch_no % 10 == 0:
+                percent_complete = int((100 * batch_no) / len(train_loader))
+                time_now = time.time()
+                mins = int((time_now - start_time) / 60)
+                secs = int((time_now - start_time)) % 60
+
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
                                  + "EPOCH: " + str(epoch + 1)
                                  + " BATCH: " + str(batch_no) + "/" + str(len(train_loader))
-                                 + " LOSS: " + str(avg_loss) + "\n")
+                                 + " LOSS: " + str(avg_loss)
+                                 + " COMPLETE (" + str(percent_complete) + "%)"
+                                 + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
             batch_no += 1
 
         dist.barrier()
@@ -225,6 +234,12 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             if epoch + 1 >= 10 and stats['accuracy'] < 98:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: EARLY STOPPING AS THE MODEL NOT DOING WELL\n")
                 return transducer_model, model_optimizer, stats
+
+        if rank == 0:
+            time_now = time.time()
+            mins = int((time_now - start_time) / 60)
+            secs = int((time_now - start_time)) % 60
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME FOR ONE EPOCH: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
     if rank == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED TRAINING\n")

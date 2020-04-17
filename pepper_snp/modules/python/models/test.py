@@ -1,6 +1,6 @@
 import sys
 import torch
-from tqdm import tqdm
+import time
 import torchnet.meter as meter
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -23,7 +23,7 @@ label_decoder = {0: '*', 1: 'A', 2: 'C', 3: 'G', 4: 'T', 5: '#'}
 
 def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_layers, hidden_size,
          num_classes=ImageSizeOptions.TOTAL_LABELS, print_details=False):
-    # transformations = transforms.Compose([transforms.ToTensor()])
+    start_time = time.time()
 
     # data loader
     test_data = SequenceDataset(data_file)
@@ -89,10 +89,17 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
             accuracy = (100.0 * total_accurate) / denom
 
-            if ii % 10 == 0:
+            if (ii + 1) % 10 == 0:
+                percent_complete = int((100 * (ii+1)) / len(test_loader))
+                time_now = time.time()
+                mins = int((time_now - start_time) / 60)
+                secs = int((time_now - start_time)) % 60
+
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
-                                 + " BATCH: " + str(ii) + "/" + str(len(test_loader))
-                                 + " ACCURACY: " + str(round(accuracy, 5)) + "\n")
+                                 + " BATCH: " + str(ii+1) + "/" + str(len(test_loader))
+                                 + " ACCURACY: " + str(round(accuracy, 5))
+                                 + " COMPLETE (" + str(percent_complete) + "%)"
+                                 + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
 
     avg_loss = total_loss / total_images if total_images else 0
 
