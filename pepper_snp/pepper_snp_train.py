@@ -3,6 +3,7 @@ import sys
 import torch
 from pepper_snp.modules.python.MakeImages import make_train_images
 from pepper_snp.modules.python.TrainModule import train_pepper_snp_model
+from pepper_snp.modules.python.TestModule import do_test
 from datetime import datetime
 from pepper.version import __version__
 
@@ -308,9 +309,9 @@ def main():
     parser_train_model = subparsers.add_parser('train_model', help="Train a model.")
     add_train_model_arguments(parser_train_model)
 
-    # parser_test_model = subparsers.add_parser('test_model', help="Test a pre-trained model.")
-    # add_test_model_arguments(parser_test_model)
-    #
+    parser_test_model = subparsers.add_parser('test_model', help="Test a pre-trained model.")
+    add_test_model_arguments(parser_test_model)
+
     # parser_test_model = subparsers.add_parser('run_hyperband', help="Run hyperband to find best set of parameters.")
     # add_test_model_arguments(parser_test_model)
 
@@ -343,15 +344,14 @@ def main():
                                distributed,
                                FLAGS.device_ids,
                                FLAGS.callers_per_gpu)
-    # elif FLAGS.sub_command == 'test_model':
-    #     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST MODEL MODULE SELECTED\n")
-    #     test_models(FLAGS.test_image_dir,
-    #                 FLAGS.model_path,
-    #                 FLAGS.num_workers,
-    #                 FLAGS.batch_size,
-    #                 FLAGS.gpu,
-    #                 FLAGS.print_details)
-    #
+    elif FLAGS.sub_command == 'test_model':
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST MODEL MODULE SELECTED\n")
+        do_test(FLAGS.test_image_dir,
+                FLAGS.batch_size,
+                FLAGS.gpu,
+                FLAGS.num_workers,
+                FLAGS.model_path)
+
     # elif FLAGS.sub_command == 'run_hyperband':
     #     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN HYPERBAND MODULE SELECTED\n")
     #     run_hyperband(FLAGS.train_image_dir,

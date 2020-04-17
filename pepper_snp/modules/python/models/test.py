@@ -22,7 +22,7 @@ label_decoder = {0: '*', 1: 'A', 2: 'C', 3: 'G', 4: 'T', 5: '#'}
 
 
 def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_layers, hidden_size,
-         num_classes=ImageSizeOptions.TOTAL_LABELS, print_details=False):
+         num_classes=ImageSizeOptions.TOTAL_LABELS):
     start_time = time.time()
 
     # data loader
@@ -95,7 +95,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                 mins = int((time_now - start_time) / 60)
                 secs = int((time_now - start_time)) % 60
 
-                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO:"
                                  + " BATCH: " + str(ii+1) + "/" + str(len(test_loader))
                                  + " ACCURACY: " + str(round(accuracy, 5))
                                  + " COMPLETE (" + str(percent_complete) + "%)"
