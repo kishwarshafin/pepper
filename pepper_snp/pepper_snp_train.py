@@ -2,6 +2,7 @@ import argparse
 import sys
 import torch
 from pepper_snp.modules.python.MakeImages import make_train_images
+from pepper_snp.modules.python.TrainModule import train_pepper_snp_model
 from datetime import datetime
 from pepper.version import __version__
 
@@ -89,18 +90,21 @@ def add_make_train_images_arguments(parser):
 
 def add_train_model_arguments(parser):
     parser.add_argument(
+        "-train",
         "--train_image_dir",
         type=str,
         required=True,
         help="Training data directory containing HDF files."
     )
     parser.add_argument(
+        "-test",
         "--test_image_dir",
         type=str,
         required=True,
         help="Testing data directory containing HDF files."
     )
     parser.add_argument(
+        "-o",
         "--output_dir",
         type=str,
         required=False,
@@ -108,6 +112,7 @@ def add_train_model_arguments(parser):
         help="Path to output directory."
     )
     parser.add_argument(
+        "-bs",
         "--batch_size",
         type=int,
         required=False,
@@ -115,6 +120,7 @@ def add_train_model_arguments(parser):
         help="Batch size for training, default is 100."
     )
     parser.add_argument(
+        "-e",
         "--epoch_size",
         type=int,
         required=False,
@@ -122,6 +128,7 @@ def add_train_model_arguments(parser):
         help="Epoch size for training iteration."
     )
     parser.add_argument(
+        "-w",
         "--num_workers",
         type=int,
         required=False,
@@ -161,12 +168,14 @@ def add_train_model_arguments(parser):
              "If none then it will use all available devices."
     )
     parser.add_argument(
+        "-rm",
         "--retrain_model",
         default=False,
         action='store_true',
         help="If set then retrain a pre-trained mode."
     )
     parser.add_argument(
+        "-rmp",
         "--retrain_model_path",
         type=str,
         default=False,
@@ -318,20 +327,22 @@ def main():
                           FLAGS.region,
                           FLAGS.output_dir,
                           FLAGS.threads)
-    # elif FLAGS.sub_command == 'train_model':
-    #     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN MODEL MODULE SELECTED\n")
-    #     distributed = not FLAGS.distributed_off
-    #     train_models(FLAGS.train_image_dir,
-    #                  FLAGS.test_image_dir,
-    #                  FLAGS.output_dir,
-    #                  FLAGS.epoch_size,
-    #                  FLAGS.batch_size,
-    #                  FLAGS.num_workers,
-    #                  FLAGS.retrain_model,
-    #                  FLAGS.retrain_model_path,
-    #                  FLAGS.gpu,
-    #                  distributed,
-    #                  FLAGS.device_ids)
+    elif FLAGS.sub_command == 'train_model':
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN MODEL MODULE SELECTED\n")
+        distributed = not FLAGS.distributed_off
+
+        train_pepper_snp_model(FLAGS.train_image_dir,
+                               FLAGS.test_image_dir,
+                               FLAGS.output_dir,
+                               FLAGS.gpu,
+                               FLAGS.epoch_size,
+                               FLAGS.batch_size,
+                               FLAGS.num_workers,
+                               FLAGS.retrain_model,
+                               FLAGS.retrain_model_path,
+                               distributed,
+                               FLAGS.device_ids,
+                               FLAGS.callers_per_gpu)
     # elif FLAGS.sub_command == 'test_model':
     #     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST MODEL MODULE SELECTED\n")
     #     test_models(FLAGS.test_image_dir,
