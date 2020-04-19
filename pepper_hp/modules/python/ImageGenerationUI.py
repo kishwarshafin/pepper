@@ -224,7 +224,12 @@ class UserInterfaceSupport:
                                          total_threads,
                                          train_mode,
                                          realignment_flag):
-        max_size = 10000
+
+        if train_mode:
+            max_size = 1000
+        else:
+            max_size = 10000
+
         start_time = time.time()
         fasta_handler = PEPPER_HP.FASTA_handler(draft_file)
 
