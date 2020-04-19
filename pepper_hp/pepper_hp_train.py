@@ -43,6 +43,7 @@ def add_make_train_images_arguments(parser):
         "-tb",
         "--truth_bam",
         type=str,
+        required=True,
         default=None,
         help="BAM file containing mapping of true assembly to the draft assembly."
     )
@@ -67,20 +68,6 @@ def add_make_train_images_arguments(parser):
         default=None,
         type=str,
         help="Region in [chr_name:start-end] format"
-    )
-    parser.add_argument(
-        "-tm",
-        "--train_mode",
-        type=boolean_string,
-        default=False,
-        help="If true then labeled images will be generated."
-    )
-    parser.add_argument(
-        "-rf",
-        "--realignment_flag",
-        type=boolean_string,
-        default=False,
-        help="If true then local realignment will be performed."
     )
     parser.add_argument(
         "-o",
