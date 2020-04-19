@@ -4,7 +4,6 @@ from datetime import datetime
 import torch
 import sys
 
-from pepper_hp.modules.python.models.train import train
 from pepper_hp.modules.python.models.train_distributed import train_distributed
 from pepper_hp.modules.python.Options import TrainOptions
 
@@ -31,24 +30,6 @@ class TrainModule:
         # {'l2': 1.4946789574136535e-05, 'lr': 0.000541365592065579}
         self.learning_rate = 0.0001
         self.weight_decay = 0
-
-    def train_model(self):
-        # train a model
-        model, optimizer, stats_dictionary = train(self.train_file,
-                                                   self.test_file,
-                                                   self.batch_size,
-                                                   self.epochs,
-                                                   self.gpu_mode,
-                                                   self.num_workers,
-                                                   self.retrain_model,
-                                                   self.retrain_model_path,
-                                                   self.gru_layers,
-                                                   self.hidden_size,
-                                                   self.learning_rate,
-                                                   self.weight_decay,
-                                                   self.model_dir,
-                                                   self.stats_dir,
-                                                   train_mode=True)
 
     def train_model_distributed(self, device_ids, callers_per_gpu):
         """
@@ -167,7 +148,4 @@ def train_pepper_hp_model(train_file, test_file, output_dir, gpu_mode, epoch_siz
                      model_out_dir,
                      log_dir)
 
-    if distributed:
-        tm.train_model_distributed(device_ids, per_gpu_callers)
-    else:
-        tm.train_model()
+    tm.train_model_distributed(device_ids, per_gpu_callers)
