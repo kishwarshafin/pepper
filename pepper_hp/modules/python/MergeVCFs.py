@@ -8,6 +8,7 @@ import intervaltree
 import pysam
 import sys
 import os
+import re
 from pepper_hp.modules.python.ImageGenerationUI import UserInterfaceSupport
 
 """Reading and writing of Variant Call Format files."""
@@ -558,7 +559,10 @@ class VCFReader(object):
                 self._tree = collections.defaultdict(intervaltree.IntervalTree)
                 for variant in self._parse():
                     self._tree[variant.chrom][
-                    variant.pos:variant.pos + len(variant.ref)] = variant
+                    variant.pos:variant.pos + 1] = variant
+                    # this is where I can control the merging of multiple variants into one
+                    # variant.pos:variant.pos + len(variant.ref)] = variant // default line should use this in general use-case
+
             except Exception:
                 raise
             else:
@@ -714,6 +718,11 @@ def _merge_variants(
         genotype_data=genotype_data).trim()
 
 
+def natural_key(string_):
+    """See http://www.codinghorror.com/blog/archives/001018.html"""
+    return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
+
+
 class Haploid2DiploidConverter(object):
     """Conversion of multiple haploid `.vcf` files to a single `.vcf`."""
 
@@ -744,7 +753,7 @@ class Haploid2DiploidConverter(object):
         for vcf in self.vcfs:
             vcf.index()  # create tree
         self.fasta = pysam.FastaFile(ref_fasta)
-        self.chroms = set(itertools.chain(*[v.chroms for v in self.vcfs]))
+        self.chroms = set(itertools.chain(*sorted([v.chroms for v in self.vcfs], key=natural_key)))
 
     def variants(self):
         """Yield diploid variants.
