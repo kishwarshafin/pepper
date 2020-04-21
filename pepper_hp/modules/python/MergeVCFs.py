@@ -753,7 +753,9 @@ class Haploid2DiploidConverter(object):
         for vcf in self.vcfs:
             vcf.index()  # create tree
         self.fasta = pysam.FastaFile(ref_fasta)
-        self.chroms = set(itertools.chain(*sorted([v.chroms for v in self.vcfs], key=natural_key)))
+        all_contigs = list(set(itertools.chain(*[v.chroms for v in self.vcfs])))
+        all_contigs = sorted(all_contigs, key=natural_key)
+        self.chroms = all_contigs
 
     def variants(self):
         """Yield diploid variants.
