@@ -670,6 +670,7 @@ def _merge_variants(
                 raise ValueError('Only single-allele variants from two vcfs can be merged')
             start_i = v.pos - interval.begin
             end_i = start_i + len(v.ref)
+            print(v.ref, ref_seq[start_i:end_i])
             if v.ref != ref_seq[start_i:end_i]:
                 msg = 'Variant ref {} does not match ref {} at {}:{}'
                 raise ValueError(msg.format(v.ref, ref[start_i:end_i], v.chrom, v.pos))
