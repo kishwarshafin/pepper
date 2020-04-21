@@ -326,6 +326,7 @@ def main():
                           FLAGS.truth_bam_h1,
                           FLAGS.truth_bam_h2,
                           FLAGS.region,
+                          FLAGS.region_bed,
                           FLAGS.output_dir,
                           FLAGS.threads)
     elif FLAGS.sub_command == 'train_model':
