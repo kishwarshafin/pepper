@@ -46,9 +46,10 @@ def find_candidates(input_dir, reference_path, output_dir, threads, sample_name,
         all_chunk_keys = list()
         for prediction_file in all_prediction_files:
             with h5py.File(prediction_file, 'r') as hdf5_file:
-                chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
-                for chunk_key in chunk_keys:
-                    all_chunk_keys.append((prediction_file, chunk_key))
+                if contig in hdf5_file['predictions'].keys():
+                    chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
+                    for chunk_key in chunk_keys:
+                        all_chunk_keys.append((prediction_file, chunk_key))
 
         all_candidates, reference_dict, positions = find_SNP_candidates(contig,
                                                                         all_chunk_keys,

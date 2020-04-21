@@ -97,9 +97,10 @@ def candidate_finder(input_dir, reference_file, sample_name, output_path, thread
         for prediction_file in all_prediction_files:
             with h5py.File(prediction_file, 'r') as hdf5_file:
                 if 'predictions' in hdf5_file.keys():
-                    chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
-                    for chunk_key in chunk_keys:
-                        all_chunk_keys.append((prediction_file, chunk_key))
+                    if contig in hdf5_file['predictions'].keys():
+                        chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
+                        for chunk_key in chunk_keys:
+                            all_chunk_keys.append((prediction_file, chunk_key))
 
         all_candidate_positions, candidate_positional_map = \
             find_candidates(input_dir,  reference_file, contig, all_chunk_keys, threads)
