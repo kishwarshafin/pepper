@@ -559,9 +559,7 @@ class VCFReader(object):
                 self._tree = collections.defaultdict(intervaltree.IntervalTree)
                 for variant in self._parse():
                     self._tree[variant.chrom][
-                    variant.pos:variant.pos + 1] = variant
-                    # this is where I can control the merging of multiple variants into one
-                    # variant.pos:variant.pos + len(variant.ref)] = variant // default line should use this in general use-case
+                    variant.pos:variant.pos + len(variant.ref)] = variant
 
             except Exception:
                 raise
@@ -672,7 +670,7 @@ def _merge_variants(
                 raise ValueError('Only single-allele variants from two vcfs can be merged')
             start_i = v.pos - interval.begin
             end_i = start_i + len(v.ref)
-            if v.ref != ref[start_i:end_i]:
+            if v.ref != ref_seq[start_i:end_i]:
                 msg = 'Variant ref {} does not match ref {} at {}:{}'
                 raise ValueError(msg.format(v.ref, ref[start_i:end_i], v.chrom, v.pos))
             # also check ref is correct within unsliced ref seq
