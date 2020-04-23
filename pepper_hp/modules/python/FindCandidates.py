@@ -42,6 +42,30 @@ def candidates_to_variants(candidates, contig):
     return contig, ref_start, ref_end, ref_seq, alleles, genotype
 
 
+def simplify_variants(variant):
+    contig, ref_start, ref_end, ref_seq, alleles, genotype = variant
+    if len(alleles) > 1:
+        print("ERROR: OBSERVED MORE THAN 1 CANDIDATES AT SITE: ", contig, ref_start, alleles)
+        exit(1)
+    allele = alleles[0]
+
+    if len(allele) == 1 or len(ref_seq) == 1:
+        return [(contig, ref_start, ref_end, ref_seq, alleles, genotype)]
+
+    window_move = min(len(ref_seq), len(allele))
+    simplified_variants = []
+    for pos in range(ref_start, ref_start + window_move - 1):
+        indx = pos - ref_start
+        ref_base = ref_seq[indx]
+        alt_base = allele[indx]
+        if ref_base == alt_base:
+            continue
+        simplified_variants.append((contig, pos, pos+1, ref_base, [alt_base], genotype))
+
+    simplified_variants.append((contig, ref_start+window_move-1, ref_end, ref_seq[window_move-1:], [allele[window_move-1:]], genotype))
+    return simplified_variants
+
+
 def write_vcf(contig, all_candidate_positions, candidate_positional_map, vcf_file):
     # print(candidate_map)
     # candidate_map = {2931716: {(2931716, 2931719, 'CTT', 'C', 1, 'DEL'), (2931716, 2931718, 'CT', 'C', 2, 'DEL')}}
@@ -58,7 +82,10 @@ def write_vcf(contig, all_candidate_positions, candidate_positional_map, vcf_fil
             exit(1)
 
         variant = candidates_to_variants(list(candidates), contig)
-        vcf_file.write_vcf_records(variant)
+        variant_list = simplify_variants(variant)
+
+        for variant in variant_list:
+            vcf_file.write_vcf_records(variant)
 
 
 def natural_key(string_):
