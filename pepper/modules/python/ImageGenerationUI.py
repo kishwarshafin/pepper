@@ -4,7 +4,6 @@ import sys
 import concurrent.futures
 from datetime import datetime
 from pepper.build import PEPPER
-from pepper.modules.python.TextColor import TextColor
 from pepper.modules.python.DataStore import DataStore
 from pepper.modules.python.AlignmentSummarizer import AlignmentSummarizer
 from pepper.modules.python.Options import ImageSizeOptions
@@ -106,7 +105,7 @@ class UserInterfaceSupport:
                 name_region = name.strip().split(':')
 
                 if len(name_region) != 2:
-                    sys.stderr.print(TextColor.RED + "ERROR: --chromosome_name INVALID value.\n" + TextColor.END)
+                    sys.stderr.print("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: --chromosome_name INVALID value.\n")
                     exit(0)
 
                 name, region = tuple(name_region)
@@ -114,7 +113,7 @@ class UserInterfaceSupport:
                 region = [int(pos) for pos in region]
 
                 if len(region) != 2 or not region[0] <= region[1]:
-                    sys.stderr.print(TextColor.RED + "ERROR: --chromosome_name INVALID value.\n" + TextColor.END)
+                    sys.stderr.print("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: --chromosome_name INVALID value.\n")
                     exit(0)
 
             range_split = name.split('-')
@@ -164,9 +163,8 @@ class UserInterfaceSupport:
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
 
         # initial notification
-        sys.stderr.write(TextColor.BLUE + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
-                         + "STARTING THREAD: " + str(thread_id)
-                         + " FOR " + str(len(intervals)) + " INTERVALS\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING THREAD: " + str(thread_id)
+                         + " FOR " + str(len(intervals)) + " INTERVALS\n")
         sys.stderr.flush()
 
         start_time = time.time()
@@ -190,11 +188,10 @@ class UserInterfaceSupport:
                     time_now = time.time()
                     mins = int((time_now - start_time) / 60)
                     secs = int((time_now - start_time)) % 60
-                    sys.stderr.write(TextColor.GREEN + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "]"
+                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]"
                                      + " INFO: " + thread_prefix + " " + str(counter) + "/" + str(len(intervals))
-                                     + " COMPLETE (" + str(percent_complete) + "%)" +
-                      TextColor.CYAN + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n"
-                                     + TextColor.END)
+                                     + " COMPLETE (" + str(percent_complete) + "%)"
+                                     + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                     sys.stderr.flush()
 
         return thread_id
@@ -207,7 +204,11 @@ class UserInterfaceSupport:
                                          output_path,
                                          total_threads,
                                          train_mode):
-        max_size = 1000
+        if train_mode:
+            max_size = 1000
+        else:
+            max_size = 10000
+
         start_time = time.time()
         fasta_handler = PEPPER.FASTA_handler(draft_file)
 
@@ -231,9 +232,9 @@ class UserInterfaceSupport:
 
         # all intervals calculated now
         # contig update message
-        sys.stderr.write(TextColor.CYAN + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
+        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
                          + "INFO: TOTAL CONTIGS: " + str(len(chr_list))
-                         + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n" + TextColor.END)
+                         + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n")
         sys.stderr.flush()
 
         args = (output_path, bam_file, draft_file, truth_bam, train_mode)
@@ -245,15 +246,14 @@ class UserInterfaceSupport:
                 if fut.exception() is None:
                     # get the results
                     thread_id = fut.result()
-                    sys.stderr.write(TextColor.PURPLE + "[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
-                                     + "THREAD " + str(thread_id) + " FINISHED SUCCESSFULLY.\n"
-                                     + TextColor.END)
+                    sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
+                                     + "INFO: THREAD " + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
                 else:
-                    sys.stderr.write(TextColor.RED + "ERROR: " + str(fut.exception()) + "\n" + TextColor.END)
+                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: " + str(fut.exception()) + "\n")
                 fut._result = None  # python issue 27144
 
         end_time = time.time()
         mins = int((end_time - start_time) / 60)
         secs = int((end_time - start_time)) % 60
-        sys.stderr.write(TextColor.YELLOW + "FINISHED IMAGE GENERATION\n" + TextColor.END)
-        sys.stderr.write(TextColor.GREEN + "ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED IMAGE GENERATION\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")

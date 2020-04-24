@@ -2,12 +2,11 @@ import os
 import time
 import torch
 import sys
-
+from datetime import datetime
 # Custom generator for our dataset
 from pepper.modules.python.models.train import train
 from pepper.modules.python.models.train_distributed import train_distributed
 from pepper.modules.python.Options import TrainOptions
-from pepper.modules.python.TextColor import TextColor
 """
 Input:
 - A directory containing labeled HDF5 files
@@ -43,7 +42,7 @@ class TrainModule:
 
     def train_model(self):
         # train a model
-        sys.stderr.write(TextColor.GREEN + "REGULAR TRAIN MODULE SELECTED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: REGULAR TRAIN MODULE SELECTED\n")
         model, optimizer, stats_dictionary = train(self.train_file,
                                                    self.test_file,
                                                    self.batch_size,
@@ -64,11 +63,11 @@ class TrainModule:
 
     def train_model_distributed(self, device_ids):
         # train a model
-        sys.stderr.write(TextColor.GREEN + "INFO: DISTRIBUTED GPU SETUP\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]  INFO: DISTRIBUTED GPU SETUP\n")
 
         if device_ids is None:
             total_gpu_devices = torch.cuda.device_count()
-            sys.stderr.write(TextColor.GREEN + "INFO: TOTAL GPU AVAILABLE: " + str(total_gpu_devices) + "\n" + TextColor.END)
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]  INFO: TOTAL GPU AVAILABLE: " + str(total_gpu_devices) + "\n")
             device_ids = [i for i in range(0, total_gpu_devices)]
             total_callers = total_gpu_devices
         else:
@@ -76,19 +75,19 @@ class TrainModule:
             for device_id in device_ids:
                 major_capable, minor_capable = torch.cuda.get_device_capability(device=device_id)
                 if major_capable < 0:
-                    sys.stderr.write(TextColor.RED + "ERROR: GPU DEVICE: " + str(device_id) + " IS NOT CUDA CAPABLE.\n" + TextColor.END)
-                    sys.stderr.write(TextColor.GREEN + "Try running: $ python3\n"
-                                                       ">>> import torch \n"
-                                                       ">>> torch.cuda.get_device_capability(device=" + str(device_id) + ")\n" + TextColor.END)
+                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]  ERROR: GPU DEVICE: " + str(device_id) + " IS NOT CUDA CAPABLE.\n")
+                    sys.stderr.write("Try running: $ python3\n"
+                                     ">>> import torch \n"
+                                     ">>> torch.cuda.get_device_capability(device=" + str(device_id) + ")\n")
                 else:
-                    sys.stderr.write(TextColor.GREEN + "INFO: CAPABILITY OF GPU#" + str(device_id) + ":\t" + str(major_capable)
-                                     + "-" + str(minor_capable) + "\n" + TextColor.END)
+                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CAPABILITY OF GPU#" + str(device_id) + ":\t" + str(major_capable)
+                                     + "-" + str(minor_capable) + "\n")
             total_callers = len(device_ids)
 
-        sys.stderr.write(TextColor.GREEN + "INFO: AVAILABLE GPU DEVICES: " + str(device_ids) + "\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]  INFO: AVAILABLE GPU DEVICES: " + str(device_ids) + "\n")
 
         if total_callers == 0:
-            sys.stderr.write(TextColor.RED + "ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n" + TextColor.END)
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n")
             exit()
 
         train_distributed(self.train_file,
@@ -153,17 +152,16 @@ def train_models(train_image_dir,
         DO DISTRIBUTED GPU INFERENCE. THIS MODE WILL ENABLE ONE MODEL PER GPU
         """
         if not torch.cuda.is_available():
-            sys.stderr.write(TextColor.RED + "ERROR: TORCH IS NOT BUILT WITH CUDA.\n" + TextColor.END)
-            sys.stderr.write(TextColor.RED + "SEE TORCH CAPABILITY:\n$ python3\n"
-                                             ">>> import torch \n"
-                                             ">>> torch.cuda.is_available()\n If true then cuda is avilable"
-                             + TextColor.END)
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]  ERROR: TORCH IS NOT BUILT WITH CUDA.\n")
+            sys.stderr.write("SEE TORCH CAPABILITY:\n$ python3\n"
+                             ">>> import torch \n"
+                             ">>> torch.cuda.is_available()\n If true then cuda is avilable")
             exit(1)
 
         total_gpu_devices = torch.cuda.device_count()
 
         if distributed and total_gpu_devices > 1:
-            sys.stderr.write(TextColor.GREEN + "INFO: DISTRIBUTED TRAINING MODE.\n" + TextColor.END)
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DISTRIBUTED TRAINING MODE.\n")
             # Distributed GPU setup
             model_out_dir, log_dir = handle_output_directory(output_directory)
             tm = TrainModule(train_image_dir,

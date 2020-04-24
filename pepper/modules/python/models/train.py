@@ -7,7 +7,7 @@ from tqdm import tqdm
 # Custom generator for our dataset
 from torch.utils.data import DataLoader
 from pepper.modules.python.models.dataloader import SequenceDataset
-from pepper.modules.python.TextColor import TextColor
+from datetime import datetime
 from pepper.modules.python.models.ModelHander import ModelHandler
 from pepper.modules.python.models.test import test
 from pepper.modules.python.Options import ImageSizeOptions, TrainOptions
@@ -45,7 +45,7 @@ def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoc
         'gru_layers': layers,
         'epochs': epoch,
     }, file_name)
-    sys.stderr.write(TextColor.RED + "\nMODEL SAVED SUCCESSFULLY.\n" + TextColor.END)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]  INFO: MODEL SAVED SUCCESSFULLY.\n")
 
 
 def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers, retrain_model,
@@ -60,7 +60,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         test_loss_logger = None
         confusion_matrix_logger = None
 
-    sys.stderr.write(TextColor.PURPLE + 'Loading data\n' + TextColor.END)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOADING DATA\n")
     train_data_set = SequenceDataset(train_file)
     train_loader = DataLoader(train_data_set,
                               batch_size=batch_size,
@@ -71,9 +71,9 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
     if retrain_model is True:
         if os.path.isfile(retrain_model_path) is False:
-            sys.stderr.write(TextColor.RED + "ERROR: INVALID PATH TO RETRAIN PATH MODEL --retrain_model_path\n")
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: INVALID PATH TO RETRAIN PATH MODEL --retrain_model_path\n")
             exit(1)
-        sys.stderr.write(TextColor.GREEN + "INFO: RETRAIN MODEL LOADING\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RETRAIN MODEL LOADING\n")
         transducer_model, hidden_size, gru_layers, prev_ite = \
             ModelHandler.load_simple_model_for_training(retrain_model_path,
                                                         input_channels=ImageSizeOptions.IMAGE_CHANNELS,
@@ -84,7 +84,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         if train_mode is True:
             epoch_limit = prev_ite + epoch_limit
 
-        sys.stderr.write(TextColor.GREEN + "INFO: RETRAIN MODEL LOADED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RETRAIN MODEL LOADED\n")
     else:
         transducer_model = ModelHandler.get_new_gru_model(input_channels=ImageSizeOptions.IMAGE_CHANNELS,
                                                           image_features=ImageSizeOptions.IMAGE_HEIGHT,
@@ -94,15 +94,15 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         prev_ite = 0
 
     param_count = sum(p.numel() for p in transducer_model.parameters() if p.requires_grad)
-    sys.stderr.write(TextColor.RED + "INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n" + TextColor.END)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n")
 
     model_optimizer = torch.optim.Adam(transducer_model.parameters(), lr=lr, weight_decay=decay)
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(model_optimizer, 'min')
 
     if retrain_model is True:
-        sys.stderr.write(TextColor.GREEN + "INFO: OPTIMIZER LOADING\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OPTIMIZER LOADING\n")
         model_optimizer = ModelHandler.load_simple_optimizer(model_optimizer, retrain_model_path, gpu_mode)
-        sys.stderr.write(TextColor.GREEN + "INFO: OPTIMIZER LOADED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OPTIMIZER LOADED\n")
 
     if gpu_mode:
         transducer_model = transducer_model.cuda()
@@ -117,15 +117,15 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
     start_epoch = prev_ite
 
     # Train the Model
-    sys.stderr.write(TextColor.PURPLE + 'Training starting\n' + TextColor.END)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: Training starting\n")
     stats = dict()
     stats['loss_epoch'] = []
     stats['accuracy_epoch'] = []
-    sys.stderr.write(TextColor.BLUE + 'Start: ' + str(start_epoch + 1) + ' End: ' + str(epoch_limit) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] Start: " + str(start_epoch + 1) + " End: " + str(epoch_limit) + "\n")
     for epoch in range(start_epoch, epoch_limit, 1):
         total_loss = 0
         total_images = 0
-        sys.stderr.write(TextColor.BLUE + 'Train epoch: ' + str(epoch + 1) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] Train epoch: " + str(epoch + 1) + "\n")
         # make sure the model is in train mode. BN is different in train and eval.
 
         batch_no = 1
@@ -202,10 +202,10 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         else:
             # this setup is for hyperband
             if epoch + 1 >= 10 and stats['accuracy'] < 98:
-                sys.stderr.write(TextColor.PURPLE + 'EARLY STOPPING AS THE MODEL NOT DOING WELL\n' + TextColor.END)
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: EARLY STOPPING AS THE MODEL NOT DOING WELL\n")
                 return transducer_model, model_optimizer, stats
 
-    sys.stderr.write(TextColor.PURPLE + 'Finished training\n' + TextColor.END)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: Finished training\n")
 
     return transducer_model, model_optimizer, stats
 

@@ -2,8 +2,8 @@ import argparse
 import sys
 import torch
 from pepper.version import __version__
-from pepper.modules.python.TextColor import TextColor
 from pepper.modules.python.polish import polish
+from datetime import datetime
 from pepper.modules.python.make_images import make_images
 from pepper.modules.python.call_consensus import call_consensus
 from pepper.modules.python.perform_stitch import perform_stitch
@@ -215,13 +215,6 @@ def add_call_consensus_arguments(parser):
         help="If set then PyTorch will use GPUs for inference. CUDA required."
     )
     parser.add_argument(
-        "-dx",
-        "--distributed_off",
-        default=False,
-        action='store_true',
-        help="Turn off distributed mode of inference. Default is true."
-    )
-    parser.add_argument(
         "-d_ids",
         "--device_ids",
         type=str,
@@ -240,21 +233,13 @@ def add_call_consensus_arguments(parser):
         help="Number of workers for loading images. Default is 4."
     )
     parser.add_argument(
-        "-tpc",
-        "--threads_per_caller",
+        "-t",
+        "--threads",
         type=int,
         required=False,
         default=8,
         help="Total threads to be used per caller. A sane value would be num_callers * threads <= total_threads."
              "If distributed_off is passed then consider num_callers to be 1."
-    )
-    parser.add_argument(
-        "-c",
-        "--callers",
-        type=int,
-        required=False,
-        default=8,
-        help="Total number of callers to spawn while doing CPU inference in distributed mode."
     )
     return parser
 
@@ -353,7 +338,7 @@ def main():
     FLAGS, unparsed = parser.parse_known_args()
 
     if FLAGS.sub_command == 'polish':
-        sys.stderr.write(TextColor.GREEN + "INFO: POLISH MODULE SELECTED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]  INFO: POLISH MODULE SELECTED\n")
         # bam_filepath, fasta_filepath, output_dir, threads, region,
         # model_path, batch_size, gpu_mode, distributed, device_ids,
         # num_workers, number_workers, callers, threads_per_caller
@@ -373,7 +358,7 @@ def main():
                FLAGS.threads_per_caller)
 
     elif FLAGS.sub_command == 'make_images':
-        sys.stderr.write(TextColor.GREEN + "INFO: MAKE IMAGE MODULE SELECTED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED\n")
         make_images(FLAGS.bam,
                     FLAGS.fasta,
                     FLAGS.region,
@@ -381,8 +366,7 @@ def main():
                     FLAGS.threads)
 
     elif FLAGS.sub_command == 'call_consensus':
-        sys.stderr.write(TextColor.GREEN + "INFO: CALL CONSENSUS MODULE SELECTED\n" + TextColor.END)
-        distributed = not FLAGS.distributed_off
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]  INFO: CALL CONSENSUS MODULE SELECTED\n")
         call_consensus(FLAGS.image_dir,
                        FLAGS.model_path,
                        FLAGS.batch_size,
@@ -390,36 +374,33 @@ def main():
                        FLAGS.output_dir,
                        FLAGS.device_ids,
                        FLAGS.gpu,
-                       distributed,
-                       FLAGS.callers,
-                       FLAGS.threads_per_caller)
+                       FLAGS.threads)
 
     elif FLAGS.sub_command == 'stitch':
-        sys.stderr.write(TextColor.GREEN + "INFO: STITCH MODULE SELECTED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STITCH MODULE SELECTED\n")
         perform_stitch(FLAGS.input_dir,
                        FLAGS.output_file,
                        FLAGS.threads)
 
     elif FLAGS.sub_command == 'download_models':
-        sys.stderr.write(TextColor.GREEN + "INFO: DOWNLOAD MODELS SELECTED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DOWNLOAD MODELS SELECTED\n")
         download_models(FLAGS.output_dir)
 
     elif FLAGS.sub_command == 'torch_stat':
-        sys.stderr.write(TextColor.YELLOW + "TORCH VERSION: " + TextColor.END + str(torch.__version__) + "\n\n")
-        sys.stderr.write(TextColor.YELLOW + "PARALLEL CONFIG:\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TORCH VERSION: " + str(torch.__version__) + "\n\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PARALLEL CONFIG:\n")
         print(torch.__config__.parallel_info())
-        sys.stderr.write(TextColor.YELLOW + "BUILD CONFIG:\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: BUILD CONFIG:\n")
         print(*torch.__config__.show().split("\n"), sep="\n")
 
-        sys.stderr.write(TextColor.GREEN + "CUDA AVAILABLE: " + TextColor.END + str(torch.cuda.is_available()) + "\n")
-        sys.stderr.write(TextColor.GREEN + "GPU DEVICES: " + TextColor.END + str(torch.cuda.device_count()) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CUDA AVAILABLE: " + TextColor.END + str(torch.cuda.is_available()) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: GPU DEVICES: " + TextColor.END + str(torch.cuda.device_count()) + "\n")
 
     elif FLAGS.version is True:
         print("PEPPER VERSION: ", __version__)
 
     else:
-        sys.stderr.write(TextColor.RED + "ERROR: NO SUBCOMMAND SELECTED. PLEASE SELECT ONE OF THE AVAIABLE SUB-COMMANDS.\n"
-                         + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO SUBCOMMAND SELECTED. PLEASE SELECT ONE OF THE AVAIABLE SUB-COMMANDS.\n")
         parser.print_help()
 
 

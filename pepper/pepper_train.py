@@ -1,7 +1,6 @@
 import argparse
 import sys
 import torch
-from pepper.modules.python.TextColor import TextColor
 from pepper.modules.python.make_images import make_train_images
 from pepper.modules.python.train_models import train_models
 from pepper.modules.python.test_models import test_models
@@ -286,7 +285,7 @@ def main():
     FLAGS, unparsed = parser.parse_known_args()
 
     if FLAGS.sub_command == 'make_train_images':
-        sys.stderr.write(TextColor.GREEN + "INFO: MAKE TRAIN IMAGE MODULE SELECTED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE TRAIN IMAGE MODULE SELECTED\n")
         make_train_images(FLAGS.bam,
                           FLAGS.truth_bam,
                           FLAGS.fasta,
@@ -294,7 +293,7 @@ def main():
                           FLAGS.output_dir,
                           FLAGS.threads)
     elif FLAGS.sub_command == 'train_model':
-        sys.stderr.write(TextColor.GREEN + "INFO: TRAIN MODEL MODULE SELECTED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN MODEL MODULE SELECTED\n")
         distributed = not FLAGS.distributed_off
         train_models(FLAGS.train_image_dir,
                      FLAGS.test_image_dir,
@@ -308,7 +307,7 @@ def main():
                      distributed,
                      FLAGS.device_ids)
     elif FLAGS.sub_command == 'test_model':
-        sys.stderr.write(TextColor.GREEN + "INFO: TEST MODEL MODULE SELECTED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST MODEL MODULE SELECTED\n")
         test_models(FLAGS.test_image_dir,
                     FLAGS.model_path,
                     FLAGS.num_workers,
@@ -317,7 +316,7 @@ def main():
                     FLAGS.print_details)
 
     elif FLAGS.sub_command == 'run_hyperband':
-        sys.stderr.write(TextColor.GREEN + "INFO: RUN HYPERBAND MODULE SELECTED\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN HYPERBAND MODULE SELECTED\n")
         run_hyperband(FLAGS.train_image_dir,
                       FLAGS.test_image_dir,
                       FLAGS.output_dir,
