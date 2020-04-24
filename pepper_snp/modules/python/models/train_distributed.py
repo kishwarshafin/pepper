@@ -113,6 +113,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
     param_count = sum(p.numel() for p in transducer_model.parameters() if p.requires_grad)
     if rank == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n")
+        sys.stderr.flush()
 
     model_optimizer = torch.optim.Adam(transducer_model.parameters(), lr=lr, weight_decay=decay)
 
@@ -120,6 +121,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OPTIMIZER LOADING\n")
         model_optimizer = ModelHandler.load_simple_optimizer(model_optimizer, retrain_model_path, gpu_mode)
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OPTIMIZER LOADED\n")
+        sys.stderr.flush()
 
     if gpu_mode:
         transducer_model = transducer_model.to(device_id)
@@ -202,6 +204,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                                  + " LOSS: " + str(avg_loss)
                                  + " COMPLETE (" + str(percent_complete) + "%)"
                                  + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
+                sys.stderr.flush()
             batch_no += 1
 
         dist.barrier()

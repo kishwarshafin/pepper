@@ -211,6 +211,7 @@ class UserInterfaceSupport:
                                      + " INFO: " + thread_prefix + " " + str(counter) + "/" + str(len(intervals))
                                      + " COMPLETE (" + str(percent_complete) + "%)"
                                      + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
+                    sys.stderr.flush()
 
         return thread_id
 

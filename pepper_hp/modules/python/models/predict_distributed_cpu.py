@@ -97,6 +97,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
             if thread_id == 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
+                sys.stderr.flush()
 
 
 def cleanup():

@@ -95,10 +95,12 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                                  + " ACCURACY: " + str(round(accuracy, 5))
                                  + " COMPLETE (" + str(percent_complete) + "%)"
                                  + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
+                sys.stderr.flush()
 
     avg_loss = total_loss / total_images if total_images else 0
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST LOSS: " + str(avg_loss) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CONFUSION MATRIX: \n" + str(confusion_matrix.conf) + "\n")
+    sys.stderr.flush()
 
     return {'loss': avg_loss, 'accuracy': accuracy, 'confusion_matrix': str(confusion_matrix.conf)}

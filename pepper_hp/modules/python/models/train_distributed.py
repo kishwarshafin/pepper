@@ -120,6 +120,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OPTIMIZER LOADING\n")
         model_optimizer = ModelHandler.load_simple_optimizer(model_optimizer, retrain_model_path, gpu_mode)
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OPTIMIZER LOADED\n")
+        sys.stderr.flush()
 
     if gpu_mode:
         transducer_model = transducer_model.to(device_id)
@@ -137,6 +138,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
     if rank == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAINING STARTING\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: START: " + str(start_epoch + 1) + " END: " + str(epoch_limit) + "\n")
+        sys.stderr.flush()
 
     stats = dict()
     stats['loss_epoch'] = []
@@ -148,6 +150,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         total_images = 0
         if rank == 0:
             sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN EPOCH: " + str(epoch + 1) + "\n")
+            sys.stderr.flush()
         # make sure the model is in train mode. BN is different in train and eval.
 
         batch_no = 1
@@ -201,6 +204,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                                  + " LOSS: " + str(avg_loss)
                                  + " COMPLETE (" + str(percent_complete) + "%)"
                                  + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
+                sys.stderr.flush()
             batch_no += 1
 
         dist.barrier()
