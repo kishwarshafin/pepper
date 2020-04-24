@@ -175,7 +175,7 @@ class AlignmentSummarizer:
 
         return realigned_reads
 
-    def create_summary(self, truth_bam_handler, train_mode, realignment_flag=False):
+    def create_summary(self, truth_bam_handler, train_mode, realignment_flag=True):
         log_prefix = "[" + self.chromosome_name + ":" + str(self.region_start_position) + "-" \
                      + str(self.region_end_position) + "]"
         all_images = []

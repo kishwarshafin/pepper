@@ -207,7 +207,7 @@ class UserInterfaceSupport:
         if train_mode:
             max_size = 1000
         else:
-            max_size = 10000
+            max_size = 1000
 
         start_time = time.time()
         fasta_handler = PEPPER.FASTA_handler(draft_file)
