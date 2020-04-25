@@ -62,8 +62,6 @@ def simplify_variants(variant):
             continue
         simplified_variants.append((contig, pos, pos+1, ref_base, [alt_base], genotype))
 
-    print(variant)
-    print("OUTSIDE SIMPLIFY: ", (contig, ref_start+window_move-1, ref_end, ref_seq[window_move-1:], [allele[window_move-1:]], genotype))
     ref_out = ref_seq[window_move-1:]
     alt_out = allele[window_move-1:]
     if ref_out != alt_out:
