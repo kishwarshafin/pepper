@@ -837,8 +837,16 @@ def simplify_variants(variant):
         if len(alts) == 0:
             continue
 
-        GT = variant.genotype_data['GT'].split('|')
-        GT = '|'.join([gt if allele[indx] != ref_base else '0' for allele, gt in zip(alleles, GT)])
+        gt_tag = []
+        gt_count = 1
+        for allele in zip(alleles):
+            if allele[indx] != ref_base:
+                gt_tag.append(str(gt_count))
+                gt_count += 1
+            else:
+                gt_tag.append("0")
+
+        GT = '|'.join(gt_tag)
         genotype_data = collections.OrderedDict()
         genotype_data['GT'] = GT
         genotype_data['GQ'] = variant.genotype_data['GQ']
@@ -857,9 +865,16 @@ def simplify_variants(variant):
     ref_out = ref_seq[window_move-1:]
     alts = [allele[window_move-1:] for allele in alleles if len(allele[window_move-1:]) > 0 and allele[window_move-1:] != ref_out]
     if len(alts) > 0:
-        alt_alleles = [allele[window_move-1:] for allele in alleles]
-        GT = variant.genotype_data['GT'].split('|')
-        GT = '|'.join([gt if allele != ref_out else '0' for allele, gt in zip(alt_alleles, GT)])
+        gt_tag = []
+        gt_count = 1
+        for allele in zip(alts):
+            if allele != ref_out:
+                gt_tag.append(str(gt_count))
+                gt_count += 1
+            else:
+                gt_tag.append("0")
+
+        GT = '|'.join(gt_tag)
         genotype_data = collections.OrderedDict()
         genotype_data['GT'] = GT
         genotype_data['GQ'] = variant.genotype_data['GQ']
