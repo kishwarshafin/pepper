@@ -832,19 +832,23 @@ def simplify_variants(variant):
     for pos in range(ref_start, ref_start + window_move - 1):
         indx = pos - ref_start
         ref_base = ref_seq[indx]
-        alts = [allele[indx] for allele in alleles if allele[indx] != ref_base]
 
-        if len(alts) == 0:
-            continue
-
+        alts = []
         gt_tag = []
         gt_count = 1
         for allele in alleles:
-            if allele[indx] != ref_base:
+            alt = allele[indx]
+            if alt != ref_base:
+                alts.append(alt)
                 gt_tag.append(str(gt_count))
                 gt_count += 1
+            elif alt in alts:
+                gt_tag.append(str(gt_count-1))
             else:
                 gt_tag.append("0")
+
+        if len(alts) == 0:
+            continue
 
         GT = '|'.join(gt_tag)
         genotype_data = collections.OrderedDict()
@@ -863,17 +867,22 @@ def simplify_variants(variant):
         simplified_variants.append(v1)
 
     ref_out = ref_seq[window_move-1:]
-    alts = [allele[window_move-1:] for allele in alleles if len(allele[window_move-1:]) > 0 and allele[window_move-1:] != ref_out]
-    if len(alts) > 0:
-        gt_tag = []
-        gt_count = 1
-        for allele in alts:
-            if allele != ref_out:
-                gt_tag.append(str(gt_count))
-                gt_count += 1
-            else:
-                gt_tag.append("0")
+    alts = []
+    gt_tag = []
+    gt_count = 1
 
+    for allele in alleles:
+        alt = allele[window_move-1:]
+        if alt != ref_out:
+            alts.append(alt)
+            gt_tag.append(str(gt_count))
+            gt_count += 1
+        elif alt in alts:
+            gt_tag.append(str(gt_count-1))
+        else:
+            gt_tag.append("0")
+
+    if len(alts) > 0:
         GT = '|'.join(gt_tag)
         genotype_data = collections.OrderedDict()
         genotype_data['GT'] = GT
