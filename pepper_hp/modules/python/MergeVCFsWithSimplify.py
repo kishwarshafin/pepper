@@ -842,7 +842,7 @@ def simplify_variants(variant):
                 alts.append(alt)
                 gt_tag.append(str(gt_count))
                 gt_count += 1
-            elif alt in alts:
+            elif alt != ref_base and alt in alts:
                 gt_tag.append(str(gt_count-1))
             else:
                 gt_tag.append("0")
@@ -877,7 +877,7 @@ def simplify_variants(variant):
             alts.append(alt)
             gt_tag.append(str(gt_count))
             gt_count += 1
-        elif alt in alts:
+        elif alt != ref_out and alt in alts:
             gt_tag.append(str(gt_count-1))
         else:
             gt_tag.append("0")
@@ -897,6 +897,7 @@ def simplify_variants(variant):
                      info=variant.info,
                      genotype_data=genotype_data)
         simplified_variants.append(v1)
+    print(simplified_variants)
 
     return simplified_variants
 
