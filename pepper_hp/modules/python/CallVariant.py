@@ -7,7 +7,7 @@ from pepper_hp.modules.python.ImageGenerationUI import UserInterfaceSupport
 from pepper_hp.modules.python.MakeImages import make_images
 from pepper_hp.modules.python.RunInference import run_inference
 from pepper_hp.modules.python.FindCandidates import process_candidates
-from pepper_hp.modules.python.MergeVCFs import haploid2diploid
+from pepper_hp.modules.python.MergeVCFsWithSimplify import haploid2diploid
 from pepper_hp.build import PEPPER_HP
 
 
