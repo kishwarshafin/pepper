@@ -838,7 +838,7 @@ def simplify_variants(variant):
         gt_count = 1
         for allele in alleles:
             alt = allele[indx]
-            if alt != ref_base:
+            if alt != ref_base and alt not in alts:
                 alts.append(alt)
                 gt_tag.append(str(gt_count))
                 gt_count += 1
@@ -873,7 +873,7 @@ def simplify_variants(variant):
 
     for allele in alleles:
         alt = allele[window_move-1:]
-        if alt != ref_out:
+        if alt != ref_out and alt not in alts:
             alts.append(alt)
             gt_tag.append(str(gt_count))
             gt_count += 1
@@ -897,7 +897,6 @@ def simplify_variants(variant):
                      info=variant.info,
                      genotype_data=genotype_data)
         simplified_variants.append(v1)
-    print(simplified_variants)
 
     return simplified_variants
 
