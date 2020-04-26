@@ -837,7 +837,12 @@ def simplify_variants(variant):
         if len(alts) == 0:
             continue
 
-        alts = [allele[indx] for allele in alleles]
+        GT = variant.genotype_data['GT'].split('|')
+        GT = '|'.join([GT if allele[indx] != ref_base else '0' for allele, GT in zip(alts, GT)])
+        genotype_data = collections.OrderedDict()
+        genotype_data['GT'] = GT
+        genotype_data['GQ'] = variant.genotype_data['GQ']
+
         v1 = Variant(chrom=variant.chrom,
                      pos=pos,
                      ref=ref_base,
@@ -845,15 +850,19 @@ def simplify_variants(variant):
                      ident=variant.ident,
                      qual=variant.qual,
                      info=variant.info,
-                     genotype_data=variant.genotype_data)
+                     genotype_data=genotype_data)
     
         simplified_variants.append(v1)
 
     ref_out = ref_seq[window_move-1:]
     alts = [allele[window_move-1:] for allele in alleles if len(allele[window_move-1:]) > 0 and allele[window_move-1:] != ref_out]
-
     if len(alts) > 0:
-        alts = [allele[window_move-1:] for allele in alleles]
+        GT = variant.genotype_data['GT'].split('|')
+        GT = '|'.join([GT if allele != ref_out else '0' for allele, GT in zip(alts, GT)])
+        genotype_data = collections.OrderedDict()
+        genotype_data['GT'] = GT
+        genotype_data['GQ'] = variant.genotype_data['GQ']
+
         v1 = Variant(chrom=variant.chrom,
                      pos=ref_start+window_move-1,
                      ref=ref_out,
@@ -861,7 +870,7 @@ def simplify_variants(variant):
                      ident=variant.ident,
                      qual=variant.qual,
                      info=variant.info,
-                     genotype_data=variant.genotype_data)
+                     genotype_data=genotype_data)
         simplified_variants.append(v1)
 
     return simplified_variants
