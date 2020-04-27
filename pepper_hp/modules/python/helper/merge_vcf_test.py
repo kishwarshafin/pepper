@@ -3,7 +3,7 @@ from collections import defaultdict
 from pysam import VariantFile
 
 
-def merg_vcf(h1_vcf, h2_vcf, output_dir, merge_genotype=False):
+def merg_vcf(h1_vcf, h2_vcf, output_dir, merge_genotype):
 
     vcf_positional_dict = defaultdict(lambda: defaultdict(list))
     vcf_in1 = VariantFile(h1_vcf)
@@ -21,7 +21,7 @@ def merg_vcf(h1_vcf, h2_vcf, output_dir, merge_genotype=False):
             vcf_positional_dict[rec.chrom][rec.pos].append(rec)
 
     for chrom in vcf_positional_dict.keys():
-        for pos in vcf_positional_dict[chrom].keys():
+        for pos in sorted(vcf_positional_dict[chrom].keys()):
             # this means that merging is needed at this position
             if len(vcf_positional_dict[chrom][pos]) == 1:
                 for var in vcf_positional_dict[chrom][pos]:
