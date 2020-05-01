@@ -213,7 +213,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
         print("ITERATION COMPLETE", small_chunk_keys)
         for pos in candidate_map.keys():
             for candidate in candidate_map[pos]:
-
+                print(candidate)
                 # non-ref prob calcuates the probability of having an alt in that region
                 non_ref_prob= 0.0
 
