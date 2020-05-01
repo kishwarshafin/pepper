@@ -28,13 +28,11 @@ class VCFWriter:
         if genotype == [0, 0]:
             vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                   stop=ref_end, id='.', qual=qual,
-                                                  filter='refCall', alleles=alleles, GT=genotype, GQ=min(phred_gqs),
-                                                  DP=max(dps), AD=','.join([str(x) for x in ads]))
+                                                  filter='refCall', alleles=alleles, GT=genotype, GQ=min(phred_gqs))
         else:
             vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                   stop=ref_end, id='.', qual=qual,
-                                                  filter='PASS', alleles=alleles, GT=genotype, GQ=min(phred_gqs),
-                                                  DP=max(dps), AD=','.join([str(x) for x in ads]))
+                                                  filter='PASS', alleles=alleles, GT=genotype, GQ=min(phred_gqs))
         self.vcf_file.write(vcf_record)
 
     def get_vcf_header(self, sample_name, contigs):

@@ -224,8 +224,6 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                 # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
                 # non-ref prob calcuates the probability of having an alt in that region
                 if not check_alleles(candidate.allele.ref) or not check_alleles(candidate.allele.alt):
-                    print("INVALID CANDIDATE")
-                    print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
                     continue
                 non_ref_prob= 0.0
 
