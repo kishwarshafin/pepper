@@ -141,6 +141,7 @@ def write_vcf(contig, candidate_positional_map, vcf_file):
     # print(candidate_map)
     # candidate_map = {2931716: {(2931716, 2931719, 'CTT', 'C', 1, 'DEL'), (2931716, 2931718, 'CT', 'C', 2, 'DEL')}}
     for pos in sorted(candidate_positional_map.keys()):
+        print(pos, candidate_positional_map[pos])
         candidates = list()
         if pos in candidate_positional_map:
             candidates.extend(candidate_positional_map[pos])
