@@ -333,7 +333,7 @@ class AlignmentSummarizer:
             total_reads = len(all_reads)
 
             if total_reads == 0:
-                return [], [], [], [], []
+                return [], [], [], [], [], []
 
             if total_reads > AlingerOptions.MAX_READS_IN_REGION:
                 # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
