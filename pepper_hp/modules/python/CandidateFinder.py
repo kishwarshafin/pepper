@@ -164,6 +164,14 @@ def filter_candidate(depth, read_support, read_support_h0, read_support_h1, read
     return False
 
 
+def check_alleles(allele):
+    allele = allele.upper()
+    for base in list(allele):
+        if base not in ['A', 'C', 'G', 'T']:
+            return False
+    return True
+
+
 def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_keys):
 
     # for chunk_key in small_chunk_keys:
@@ -171,7 +179,6 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
 
     # Find candidates per chunk
     for file_name, chunk_name in small_chunk_keys:
-        print(file_name, chunk_name)
         with h5py.File(file_name, 'r') as hdf5_file:
             smaller_chunks = set(hdf5_file['predictions'][contig][chunk_name].keys()) - {'contig_start', 'contig_end'}
             contig_start = hdf5_file['predictions'][contig][chunk_name]['contig_start'][()]
@@ -180,16 +187,13 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
         cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
 
         # find candidates
-        print("finding candidates")
         candidate_map = cpp_candidate_finder.find_candidates(bam_file_path, reference_file_path, contig, contig_start, contig_end)
-        print("cpp finding done")
         smaller_chunks = sorted(smaller_chunks)
         prediction_map_h1 = defaultdict()
         prediction_map_h2 = defaultdict()
         max_index_map = defaultdict()
 
         for chunk in smaller_chunks:
-            print(chunk)
             with h5py.File(file_name, 'r') as hdf5_file:
                 bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
                 positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
@@ -215,10 +219,14 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     max_index_map[pos] = indx + 1
 
         for pos in candidate_map.keys():
-            print(pos, chunk_name)
             for candidate in candidate_map[pos]:
-                print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
+
+                # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
                 # non-ref prob calcuates the probability of having an alt in that region
+                if not check_alleles(candidate.allele.ref) or check_alleles(candidate.allele.alt):
+                    print("INVALID CANDIDATE")
+                    print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
+                    continue
                 non_ref_prob= 0.0
 
                 alt_prob_h1 = 1.0
@@ -275,10 +283,8 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                 elif candidate.allele.alt_type == 3:
                     alt_prob_h1 = 1.0
                     alt_prob_h2 = 1.0
-                    print(candidate.pos_start, candidate.pos_end)
+                    # print(candidate.pos_start, candidate.pos_end)
                     for pos in range(candidate.pos_start, candidate.pos_end):
-                        print(pos)
-                        print(pos, (pos, 0) in prediction_map_h1.keys(), (pos, 0) in prediction_map_h2.keys())
                         ref_allele_indx = get_index_from_base(candidate.allele.ref[pos - candidate.pos_start])
                         non_ref_prob_h1 = (sum(prediction_map_h1[(pos, 0)]) - prediction_map_h1[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
                         non_ref_prob_h2 = (sum(prediction_map_h2[(pos, 0)]) - prediction_map_h2[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
