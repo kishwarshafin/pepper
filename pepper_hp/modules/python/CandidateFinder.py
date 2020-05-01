@@ -209,10 +209,10 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                 else:
                     prediction_map_h2[(pos, indx)] = base_pred
 
-                if indx == 0:
-                    max_index_map[pos] = 1
-                else:
+                if pos in max_index_map.keys():
                     max_index_map[pos] = max(max_index_map[pos], indx + 1)
+                else:
+                    max_index_map[pos] = indx + 1
 
         for pos in candidate_map.keys():
             print(pos, chunk_name)
