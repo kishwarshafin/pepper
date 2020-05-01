@@ -21,9 +21,10 @@ def candidates_to_variants(candidates, contig):
     overall_non_ref_prob = -1.0
 
     for i, candidate in enumerate(candidates):
-        print(candidates)
         pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
         read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
+        if pos_start == 240075 or pos_start == 240074 or pos_start == 240076:
+            print(candidates)
 
         if overall_non_ref_prob < 0:
             overall_non_ref_prob = non_ref_prob
