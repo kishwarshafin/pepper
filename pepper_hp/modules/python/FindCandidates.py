@@ -142,7 +142,12 @@ def write_vcf(contig, candidate_positional_map, vcf_file):
         print(pos, candidate_positional_map[pos])
         candidates = list()
         if pos in candidate_positional_map:
-            candidates.extend(candidate_positional_map[pos])
+            alt_set = set()
+            for variant in candidate_positional_map[pos]:
+                if (variant[2], variant[3], variant[4]) not in alt_set:
+                    alt_set.add((variant[2], variant[3], variant[4]))
+                    candidates.append(variant)
+        print(candidates)
 
         if len(candidates) == 0:
             continue
