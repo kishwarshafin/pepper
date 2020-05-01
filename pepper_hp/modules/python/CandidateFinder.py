@@ -171,6 +171,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
 
     # Find candidates per chunk
     for file_name, chunk_name in small_chunk_keys:
+        print(file_name, chunk_name)
         with h5py.File(file_name, 'r') as hdf5_file:
             smaller_chunks = set(hdf5_file['predictions'][contig][chunk_name].keys()) - {'contig_start', 'contig_end'}
             contig_start = hdf5_file['predictions'][contig][chunk_name]['contig_start'][()]
