@@ -79,7 +79,21 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                         char base = read.sequence[read_index];
 
                         // update the summary of base
-                        base_summaries[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                        if(read.hp_tag == 0) {
+                            base_summaries_hp1[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                            base_summaries_hp2[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                            coverage_hp1[ref_position] += 1;
+                            coverage_hp2[ref_position] += 1;
+                        }
+                        else if(read.hp_tag == 1) {
+                            base_summaries_hp1[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                            coverage_hp1[ref_position] += 1;
+                        }
+                        else if(read.hp_tag == 2) {
+                            base_summaries_hp2[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                            coverage_hp2[ref_position] += 1;
+                        }
+
                         coverage[ref_position] += 1.0;
 
                     }
@@ -98,7 +112,16 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                     alt = read.sequence.substr(read_index, cigar.length);
                     for (int i = 0; i < cigar.length; i++) {
                         pair<long long, int> position_pair = make_pair(ref_position - 1, i);
-                        insert_summaries[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
+                        if(read.hp_tag == 0) {
+                            insert_summaries_hp1[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
+                            insert_summaries_hp2[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
+                        }
+                        else if(read.hp_tag == 1) {
+                            insert_summaries_hp1[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
+                        }
+                        else if(read.hp_tag == 2)    {
+                            insert_summaries_hp2[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
+                        }
                     }
                     longest_insert_count[ref_position - 1] = std::max(longest_insert_count[ref_position - 1],
                                                                       (long long) alt.length());
@@ -114,7 +137,18 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                 for (int i = 0; i < cigar.length; i++) {
                     if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                         // update the summary of base
-                        base_summaries[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                        if(read.hp_tag == 0) {
+                            base_summaries_hp1[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                            base_summaries_hp2[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                            coverage_hp1[ref_position] += 1;
+                            coverage_hp2[ref_position] += 1;
+                        } else if(read.hp_tag == 1) {
+                            base_summaries_hp1[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                            coverage_hp1[ref_position] += 1;
+                        } else if(read.hp_tag == 2) {
+                            base_summaries_hp2[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                            coverage_hp2[ref_position] += 1;
+                        }
                         coverage[ref_position] += 1.0;
                     }
                 }
@@ -128,17 +162,6 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
         }
     }
 }
-
-//int SummaryGenerator::get_sequence_length(long long start_pos, long long end_pos) {
-//    int length = 0;
-//    for (int i = start_pos; i <= end_pos; i++) {
-//        length += 1;
-//        if (longest_insert_count[i] > 0) {
-//            length += longest_insert_count[i];
-//        }
-//    }
-//    return length;
-//}
 
 bool check_base(char base) {
     if(base=='A' || base=='a' ||
@@ -267,20 +290,38 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
     cout << endl;
 
     cout << "-------------" << endl;
-    for (int i = 0; i < image[0].size(); i++) {
-        if(i==0)cout<<"AFW:\t";
-        if(i==1)cout<<"CFW:\t";
-        if(i==2)cout<<"GFW:\t";
-        if(i==3)cout<<"TFW:\t";
-        if(i==4)cout<<"ARV:\t";
-        if(i==5)cout<<"CRV:\t";
-        if(i==6)cout<<"GRV:\t";
-        if(i==7)cout<<"TRV:\t";
-        if(i==8)cout<<"GFW:\t";
-        if(i==9)cout<<"GRV:\t";
+    for (int i = 0; i < image_hp1[0].size(); i++) {
+        if(i==0)cout<<"AFW1:\t";
+        if(i==1)cout<<"CFW1:\t";
+        if(i==2)cout<<"GFW1:\t";
+        if(i==3)cout<<"TFW1:\t";
+        if(i==4)cout<<"ARV1:\t";
+        if(i==5)cout<<"CRV1:\t";
+        if(i==6)cout<<"GRV1:\t";
+        if(i==7)cout<<"TRV1:\t";
+        if(i==8)cout<<"GFW1:\t";
+        if(i==9)cout<<"GRV1:\t";
 
-        for (int j = 0; j < image.size(); j++) {
-            printf("%3d\t", image[j][i]);
+        for (int j = 0; j < image_hp1.size(); j++) {
+            printf("%3d\t", image_hp1[j][i]);
+        }
+        cout << endl;
+    }
+    cout << "-------------" << endl;
+    for (int i = 0; i < image_hp2[0].size(); i++) {
+        if(i==0)cout<<"AFW2:\t";
+        if(i==1)cout<<"CFW2:\t";
+        if(i==2)cout<<"GFW2:\t";
+        if(i==3)cout<<"TFW2:\t";
+        if(i==4)cout<<"ARV2:\t";
+        if(i==5)cout<<"CRV2:\t";
+        if(i==6)cout<<"GRV2:\t";
+        if(i==7)cout<<"TRV2:\t";
+        if(i==8)cout<<"GFW2:\t";
+        if(i==9)cout<<"GRV2:\t";
+
+        for (int j = 0; j < image_hp2.size(); j++) {
+            printf("%3d\t", image_hp2[j][i]);
         }
         cout << endl;
     }
@@ -291,35 +332,48 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
     // at this point labels and positions are generated, now generate the pileup
     for (long long i = start_pos; i <= end_pos; i++) {
 
-        vector<uint8_t> row;
-        uint8_t pixel_value = 0;
+        vector<uint8_t> row_h1;
+        vector<uint8_t> row_h2;
+        uint8_t pixel_value_h1 = 0;
+        uint8_t pixel_value_h2 = 0;
         // iterate through the summaries
         for(int j = 0; j <= 9; j++) {
-            pixel_value = (base_summaries[make_pair(i, j)] / max(1.0, coverage[i])) * ImageOptions::MAX_COLOR_VALUE;
-            row.push_back(pixel_value);
+            pixel_value_h1 = (base_summaries_hp1[make_pair(i, j)] / max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE;
+            pixel_value_h2 = (base_summaries_hp2[make_pair(i, j)] / max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE;
+            row_h1.push_back(pixel_value_h1);
+            row_h2.push_back(pixel_value_h2);
         }
 
-        assert(row.size() == 10);
-        image.push_back(row);
+        assert(row_h1.size() == 10);
+        assert(row_h2.size() == 10);
+        image_hp1.push_back(row_h1);
+        image_hp2.push_back(row_h2);
 
         if (longest_insert_count[i] > 0) {
 
             for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                vector<uint8_t> ins_row;
+                vector<uint8_t> ins_row_hp1;
+                vector<uint8_t> ins_row_hp2;
 
                 // iterate through the summaries
                 for(int j = 0; j <= 9; j++) {
-                    pixel_value = (insert_summaries[make_pair(make_pair(i, ii), j)] /
-                            max(1.0, coverage[i])) * ImageOptions::MAX_COLOR_VALUE ;
-                    ins_row.push_back(pixel_value);
+                    pixel_value_h1 = (insert_summaries_hp1[make_pair(make_pair(i, ii), j)] /
+                            max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE ;
+                    pixel_value_h2 = (insert_summaries_hp2[make_pair(make_pair(i, ii), j)] /
+                                   max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE ;
+                    ins_row_hp1.push_back(pixel_value_h1);
+                    ins_row_hp2.push_back(pixel_value_h2);
                 }
-                assert(ins_row.size() == 10);
-                image.push_back(ins_row);
+                assert(ins_row_hp1.size() == 10);
+                assert(ins_row_hp2.size() == 10);
+                image_hp1.push_back(ins_row_hp1);
+                image_hp2.push_back(ins_row_hp2);
             }
         }
     }
 
-    assert(image.size() == genomic_pos.size());
+    assert(image_hp1.size() == genomic_pos.size());
+    assert(image_hp1.size() == image_hp2.size());
 }
 
 
@@ -399,16 +453,13 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
 
 void SummaryGenerator::generate_summary(vector <type_read> &reads,
                                         long long start_pos,
-                                        long long end_pos,
-                                        int hp_tag) {
+                                        long long end_pos) {
     int read_count = 0;
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
         if(read.mapping_quality > 0) {
-            if(read.hp_tag == hp_tag or read.hp_tag == 0) {
-                read_count += 1;
-                iterate_over_read(read, start_pos, end_pos);
-            }
+            read_count += 1;
+            iterate_over_read(read, start_pos, end_pos);
         }
     }
 

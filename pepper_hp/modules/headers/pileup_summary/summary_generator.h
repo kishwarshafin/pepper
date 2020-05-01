@@ -23,16 +23,27 @@ class SummaryGenerator {
     string chromosome_name;
     string reference_sequence;
 
-    map< pair< pair<long long, int>, int>, double> insert_summaries;
-    map< pair<long long, int>, double> base_summaries;
+    map< pair< pair<long long, int>, int>, double> insert_summaries_hp1;
+    map< pair< pair<long long, int>, int>, double> insert_summaries_hp2;
+    map< pair<long long, int>, double> base_summaries_hp1;
+    map< pair<long long, int>, double> base_summaries_hp2;
     map<long long, long long> longest_insert_count;
     map<long long, double> coverage;
+    map<long long, double> coverage_hp1;
+    map<long long, double> coverage_hp2;
 
     map< pair<long long, int>, char> insert_labels;
+    map< pair<long long, int>, char> insert_labels_hp1;
+    map< pair<long long, int>, char> insert_labels_hp2;
     map< long long, char> base_labels;
+    map< long long, char> base_labels_hp1;
+    map< long long, char> base_labels_hp2;
 public:
-    vector< vector<uint8_t> > image;
+    vector< vector<uint8_t> > image_hp1;
+    vector< vector<uint8_t> > image_hp2;
     vector<uint8_t> labels;
+    vector<uint8_t> labels_hp1;
+    vector<uint8_t> labels_hp2;
     vector<pair<long long, int> > genomic_pos;
     vector<int> bad_label_positions;
     vector<uint8_t> ref_image;
@@ -43,8 +54,7 @@ public:
                      long long ref_end);
     void generate_summary(vector <type_read> &reads,
                           long long start_pos,
-                          long long end_pos,
-                          int hp_tag);
+                          long long end_pos);
 
     void generate_train_summary(vector <type_read> &reads,
                                 long long start_pos,

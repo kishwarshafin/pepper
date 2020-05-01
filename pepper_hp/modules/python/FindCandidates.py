@@ -7,39 +7,105 @@ import re
 from pepper_hp.modules.python.CandidateFinder import find_candidates
 from pepper_hp.modules.python.VcfWriter import VCFWriter
 from pepper_hp.modules.python.ImageGenerationUI import UserInterfaceSupport
+from pepper_hp.modules.python.Options import CandidateFinderOptions
 
 
 def candidates_to_variants(candidates, contig):
-    alleles = []
-    ref_start = candidates[0][0]
-    ref_end = candidates[0][1]
-    ref_seq = candidates[0][2]
+    max_h1_prob = 0.0
+    max_h2_prob = 0.0
+    h1_indx = -1
+    h2_indx = -1
+    min_pos_start = -1
+    max_pos_end = -1
+    ref_sequence = ""
+    overall_non_ref_prob = -1.0
 
-    if len(candidates) > 1:
-        if candidates[1][1] > candidates[0][1]:
-            ref_end = candidates[1][1]
-            ref_seq = candidates[1][2]
+    for i, candidate in enumerate(candidates):
+        pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
+        read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
 
-    for candidate in candidates:
-        changed_candidate = list(candidate)
-        if candidate[1] < ref_end:
-            bases_needed = ref_end - candidate[1]
-            ref_suffix = ref_seq[-bases_needed:]
-            changed_candidate[1] = ref_end
-            changed_candidate[2] = ref_seq
-            changed_candidate[3] = candidate[3] + ref_suffix
-        alleles.append(changed_candidate[3])
+        if overall_non_ref_prob < 0:
+            overall_non_ref_prob = non_ref_prob
+
+        overall_non_ref_prob = min(non_ref_prob, overall_non_ref_prob)
+
+        if min_pos_start == -1:
+            min_pos_start = pos_start
+        if max_pos_end == -1:
+            max_pos_end = pos_end
+
+        min_pos_start = min(min_pos_start, pos_start)
+        max_pos_end = max(max_pos_end, pos_end)
+
+        if max_pos_end == pos_end:
+            ref_sequence = ref
+
+        if alt_prob_h1 > CandidateFinderOptions.ALT_PROB_THRESHOLD:
+            if h1_indx == -1:
+                h1_indx = i
+                max_h1_prob = alt_prob_h1
+            elif max_h1_prob < alt_prob_h1:
+                h1_indx = i
+                max_h1_prob = alt_prob_h1
+        if alt_prob_h2 > CandidateFinderOptions.ALT_PROB_THRESHOLD:
+            if h2_indx == -1:
+                h2_indx = i
+                max_h2_prob = alt_prob_h2
+            elif max_h2_prob < alt_prob_h2:
+                h2_indx = i
+                max_h2_prob = alt_prob_h2
+    # print(candidates)
+    # print(h1_indx, h2_indx)
+
+    selected_alts = []
+    selected_dps = []
+    selected_gts = []
+    selected_ads = []
+
+    other_alts = []
+    other_dps = []
+    other_gts = []
+    other_ads = []
+    for i, candidate in enumerate(candidates):
+        pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
+        read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
+
+        if pos_end < max_pos_end:
+            bases_needed = max_pos_end - pos_end
+            ref_suffix = ref_sequence[-bases_needed:]
+            alt = alt + ref_suffix
+
+        if i in [h1_indx, h2_indx]:
+            selected_alts.append(alt)
+            selected_dps.append(depth)
+            selected_ads.append(read_support)
+            selected_gts.append(max(alt_prob_h1, alt_prob_h2))
+        else:
+            other_alts.append(alt)
+            other_dps.append(depth)
+            other_ads.append(read_support)
+            other_gts.append(max(alt_prob_h1, alt_prob_h2))
+
+    indx_list = list()
+    for i in [h1_indx, h2_indx]:
+        if i > -1:
+            indx_list.append(i)
 
     genotype = [0, 0]
-    if len(alleles) == 1:
+    if len(indx_list) == 1:
         genotype = [0, 1]
-    elif alleles[0] == alleles[1]:
-        alleles = list(set(alleles))
-        genotype = [1, 1]
-    else:
-        genotype = [1, 2]
+    elif len(indx_list) == 2:
+        if indx_list[0] == indx_list[1]:
+            genotype = [1, 1]
+        else:
+            genotype = [1, 2]
 
-    return contig, ref_start, ref_end, ref_seq, alleles, genotype
+    alleles = selected_alts + other_alts
+    dps = selected_dps + other_dps
+    gts = selected_gts + other_gts
+    ads = selected_ads + other_ads
+
+    return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, gts, ads, overall_non_ref_prob
 
 
 def simplify_variants(variant):
@@ -69,26 +135,20 @@ def simplify_variants(variant):
     return simplified_variants
 
 
-def write_vcf(contig, all_candidate_positions, candidate_positional_map, vcf_file):
+def write_vcf(contig, candidate_positional_map, vcf_file):
     # print(candidate_map)
     # candidate_map = {2931716: {(2931716, 2931719, 'CTT', 'C', 1, 'DEL'), (2931716, 2931718, 'CT', 'C', 2, 'DEL')}}
-    for pos in sorted(all_candidate_positions):
+    for pos in sorted(candidate_positional_map.keys()):
         candidates = list()
         if pos in candidate_positional_map:
-            candidates.append(candidate_positional_map[pos])
+            candidates.extend(candidate_positional_map[pos])
 
         if len(candidates) == 0:
             continue
 
-        if len(candidates) > 2:
-            print("ERROR: OBSERVED MORE THAN 2 CANDIDATES AT SITE: ", contig, pos, candidates)
-            exit(1)
-
         variant = candidates_to_variants(list(candidates), contig)
-        variant_list = simplify_variants(variant)
 
-        for variant in variant_list:
-            vcf_file.write_vcf_records(variant)
+        vcf_file.write_vcf_records(variant)
 
 
 def natural_key(string_):
@@ -107,7 +167,7 @@ def get_file_paths_from_directory(directory_path):
     return file_paths
 
 
-def candidate_finder(input_dir, reference_file, sample_name, output_path, threads):
+def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_path, threads):
     all_prediction_files = get_file_paths_from_directory(input_dir)
 
     all_contigs = set()
@@ -132,21 +192,21 @@ def candidate_finder(input_dir, reference_file, sample_name, output_path, thread
                         for chunk_key in chunk_keys:
                             all_chunk_keys.append((prediction_file, chunk_key))
 
-        all_candidate_positions, candidate_positional_map = \
-            find_candidates(input_dir,  reference_file, contig, all_chunk_keys, threads)
+        candidate_positional_map = find_candidates(input_dir,  reference_file, bam_file, contig, all_chunk_keys, threads)
 
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", TOTAL CANDIDATES FOUND: "
-                         + str(len(all_candidate_positions)) + ".\n")
+                         + str(len(candidate_positional_map.keys())) + ".\n")
 
-        write_vcf(contig, all_candidate_positions, candidate_positional_map, vcf_file)
+        write_vcf(contig, candidate_positional_map, vcf_file)
 
     hdf5_file.close()
 
 
-def process_candidates(input_dir, reference, sample_name, output_dir, threads):
+def process_candidates(input_dir, reference, bam_file, sample_name, output_dir, threads):
     output_dir = UserInterfaceSupport.handle_output_directory(output_dir)
     candidate_finder(input_dir,
                      reference,
+                     bam_file,
                      sample_name,
                      output_dir,
                      threads)

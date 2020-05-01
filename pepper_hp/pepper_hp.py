@@ -263,8 +263,15 @@ def add_find_candidates_arguments(parser):
         help="Path to directory containing HDF files."
     )
     parser.add_argument(
-        "-r",
-        "--input_reference",
+        "-b",
+        "--bam",
+        type=str,
+        required=True,
+        help="BAM file containing mapping between reads and the draft assembly."
+    )
+    parser.add_argument(
+        "-f",
+        "--fasta",
         type=str,
         required=True,
         help="Input reference/assembly file."
@@ -418,7 +425,8 @@ def main():
     elif FLAGS.sub_command == 'find_candidates':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FIND CANDIDATE MODULE SELECTED\n")
         process_candidates(FLAGS.input_dir,
-                           FLAGS.input_reference,
+                           FLAGS.fasta,
+                           FLAGS.bam,
                            FLAGS.sample_name,
                            FLAGS.output_dir,
                            FLAGS.threads)

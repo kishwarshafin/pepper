@@ -12,9 +12,18 @@ class ImageSizeOptions(object):
 
 
 class ReadFilterOptions(object):
-    MIN_MAPQ = 2
+    MIN_MAPQ = 10
     MIN_BASEQ = 0
     INCLUDE_SUPPLEMENTARY = False
+
+
+class CandidateFinderOptions(object):
+    SAFE_BASES = 20
+    ALT_PROB_THRESHOLD = 0.4
+    NON_REF_PROB_THRESHOLD = 0.4
+    ALLELE_FREQ_THRESHOLD = 0.25
+    ALLELE_FREQ_THRESHOLD_LAST_RESORT = 0.1
+    PROB_LAST_RESORT = 0.5
 
 
 class TrainOptions(object):

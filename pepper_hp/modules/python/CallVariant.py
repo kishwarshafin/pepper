@@ -7,7 +7,6 @@ from pepper_hp.modules.python.ImageGenerationUI import UserInterfaceSupport
 from pepper_hp.modules.python.MakeImages import make_images
 from pepper_hp.modules.python.RunInference import run_inference
 from pepper_hp.modules.python.FindCandidates import process_candidates
-from pepper_hp.modules.python.MergeVCFsWithSimplify import haploid2diploid
 from pepper_hp.build import PEPPER_HP
 
 
@@ -85,83 +84,40 @@ def call_variant(bam_filepath,
 
     output_dir = UserInterfaceSupport.handle_output_directory(output_dir)
 
-    image_output_directory_hp1 = output_dir + "images_" + str(timestr) + "/hp1_images/"
-    image_output_directory_hp2 = output_dir + "images_" + str(timestr) + "/hp2_images/"
-
-    prediction_output_directory_hp1 = output_dir + "predictions_" + str(timestr) + "/hp1/"
-    prediction_output_directory_hp2 = output_dir + "predictions_" + str(timestr) + "/hp2/"
-
-    candidate_output_directory_hp1 = output_dir + "candidate_variants_" + str(timestr) + "/hp1/"
-    candidate_output_directory_hp2 = output_dir + "candidate_variants_" + str(timestr) + "/hp2/"
+    image_output_directory = output_dir + "images_" + str(timestr) + "/"
+    prediction_output_directory = output_dir + "predictions_" + str(timestr) + "/"
+    candidate_output_directory = output_dir + "/"
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN-ID: " + str(timestr) + "\n")
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: IMAGE OUTPUT: " + str(image_output_directory_hp1) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: IMAGE OUTPUT: " + str(image_output_directory) + "\n")
 
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 1.1: GENERATING IMAGES FOR HAPLOTYPE 1\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 1: GENERATING IMAGES:\n")
     make_images(bam_filepath,
                 fasta_filepath,
                 region,
-                image_output_directory_hp1,
-                1,
+                image_output_directory,
                 threads)
 
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN-ID: " + str(timestr) + "\n")
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: IMAGE OUTPUT: " + str(image_output_directory_hp2) + "\n")
-
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 1.2: GENERATING IMAGES FOR BOTH HAPLOTYPE 2\n")
-    make_images(bam_filepath,
-                fasta_filepath,
-                region,
-                image_output_directory_hp2,
-                2,
-                threads)
-
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 2.1: RUNNING INFERENCE ON HAPLOTYPE 1\n")
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(prediction_output_directory_hp1) + "\n")
-    run_inference(image_output_directory_hp1,
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 2: RUNNING INFERENCE\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(prediction_output_directory) + "\n")
+    run_inference(image_output_directory,
                   model_path,
                   batch_size,
                   num_workers,
-                  prediction_output_directory_hp1,
+                  prediction_output_directory,
                   device_ids,
                   callers_per_gpu,
                   gpu_mode,
                   threads)
 
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 2.2: RUNNING INFERENCE ON HAPLOTYPE 2\n")
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(prediction_output_directory_hp1) + "\n")
-    run_inference(image_output_directory_hp2,
-                  model_path,
-                  batch_size,
-                  num_workers,
-                  prediction_output_directory_hp2,
-                  device_ids,
-                  callers_per_gpu,
-                  gpu_mode,
-                  threads)
-
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3.1: CALLING VARIANTS ON HAPLOTYPE 1\n")
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(candidate_output_directory_hp1) + "\n")
-    process_candidates(prediction_output_directory_hp1,
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3.1: CALLING VARIANTS\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(candidate_output_directory) + "\n")
+    process_candidates(prediction_output_directory,
                        fasta_filepath,
+                       bam_filepath,
                        sample_name,
-                       candidate_output_directory_hp1,
+                       candidate_output_directory,
                        threads)
-
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3.2: CALLING VARIANTS ON HAPLOTYPE 2\n")
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(candidate_output_directory_hp2) + "\n")
-    process_candidates(prediction_output_directory_hp2,
-                       fasta_filepath,
-                       sample_name,
-                       candidate_output_directory_hp2,
-                       threads)
-
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 4: MERGING VARIANTS.\n")
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(output_dir) + "\n")
-    haploid2diploid(candidate_output_directory_hp1 + 'candidates_as_variants.vcf',
-                    candidate_output_directory_hp2 + 'candidates_as_variants.vcf',
-                    fasta_filepath,
-                    output_dir)
 
     end_time = time.time()
     mins = int((end_time - start_time) / 60)

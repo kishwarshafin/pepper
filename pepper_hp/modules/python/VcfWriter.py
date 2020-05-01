@@ -1,6 +1,6 @@
 from pysam import VariantFile, VariantHeader
 from pepper_hp.build import PEPPER_HP
-import time
+import math
 import collections
 Candidate = collections.namedtuple('Candidate', 'chromosome_name pos_start pos_end ref '
                                                 'alternate_alleles allele_depths '
@@ -16,17 +16,41 @@ class VCFWriter:
         self.vcf_file = VariantFile(output_dir + filename + '.vcf', 'w', header=vcf_header)
 
     def write_vcf_records(self, called_variant):
-        contig, ref_start, ref_end, ref_seq, alleles, genotype = called_variant
+        contig, ref_start, ref_end, ref_seq, alleles, genotype, dps, gqs, ads, non_ref_prob = called_variant
         alleles = tuple([ref_seq]) + tuple(alleles)
+        qual = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, non_ref_prob)))
 
-        vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
-                                              stop=ref_end, id='.', qual=60,
-                                              filter='PASS', alleles=alleles, GT=genotype, GQ=60)
+        phred_gqs = []
+        for gq in gqs:
+            phred_gq = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, gq)))
+            phred_gqs.append(phred_gq)
 
+        if genotype == [0, 0]:
+            vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
+                                                  stop=ref_end, id='.', qual=qual,
+                                                  filter='refCall', alleles=alleles, GT=genotype, GQ=min(phred_gqs),
+                                                  DP=max(dps), AD=','.join([str(x) for x in ads]))
+        else:
+            vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
+                                                  stop=ref_end, id='.', qual=qual,
+                                                  filter='PASS', alleles=alleles, GT=genotype, GQ=min(phred_gqs),
+                                                  DP=max(dps), AD=','.join([str(x) for x in ads]))
         self.vcf_file.write(vcf_record)
 
     def get_vcf_header(self, sample_name, contigs):
         header = VariantHeader()
+
+        sqs = self.fasta_handler.get_chromosome_names()
+        for sq in sqs:
+            if sq not in contigs:
+                continue
+            sq_id = sq
+            ln = self.fasta_handler.get_chromosome_sequence_length(sq)
+            items = [('ID', sq_id),
+                     ('length', ln)]
+            items = [('ID', sq_id)]
+            header.add_meta(key='contig', items=items)
+
         items = [('ID', "PASS"),
                  ('Description', "All filters passed")]
         header.add_meta(key='FILTER', items=items)
@@ -47,19 +71,26 @@ class VCFWriter:
                  ('Type', 'String'),
                  ('Description', "Genotype")]
         header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "DP"),
+                 ('Number', 1),
+                 ('Type', 'Integer'),
+                 ('Description', "Depth")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "AD"),
+                 ('Number', 1),
+                 ('Type', 'String'),
+                 ('Description', "Depth")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "GT"),
+                 ('Number', 1),
+                 ('Type', 'String'),
+                 ('Description', "Genotype")]
+        header.add_meta(key='FORMAT', items=items)
         items = [('ID', "GQ"),
                  ('Number', 1),
                  ('Type', 'Float'),
                  ('Description', "Genotype Quality")]
         header.add_meta(key='FORMAT', items=items)
-
-        sqs = self.fasta_handler.get_chromosome_names()
-        for sq in sqs:
-            if sq not in contigs:
-                continue
-            sq_id = sq
-            items = [('ID', sq_id)]
-            header.add_meta(key='contig', items=items)
 
         header.add_sample(sample_name)
 

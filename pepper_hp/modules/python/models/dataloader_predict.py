@@ -37,7 +37,10 @@ class SequenceDataset(Dataset):
                     image_names = list(hdf5_file['summaries'].keys())
 
                     for image_name in image_names:
-                        file_image_pair.append((hdf5_file_path, image_name))
+                        # for hp_tag 1
+                        file_image_pair.append((hdf5_file_path, image_name, 1))
+                        # for hp_tag 2
+                        file_image_pair.append((hdf5_file_path, image_name, 2))
                 else:
                     sys.stderr.write("WARN: NO IMAGES FOUND IN FILE: " + hdf5_file_path + "\n")
 
@@ -45,10 +48,14 @@ class SequenceDataset(Dataset):
 
     def __getitem__(self, index):
         # load the image
-        hdf5_filepath, image_name = self.all_images[index]
+        hdf5_filepath, image_name, hp_tag = self.all_images[index]
 
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
-            image = hdf5_file['summaries'][image_name]['image'][()]
+            if hp_tag == 1:
+                image = hdf5_file['summaries'][image_name]['image_hp1'][()]
+            else:
+                image = hdf5_file['summaries'][image_name]['image_hp2'][()]
+
             position = hdf5_file['summaries'][image_name]['position'][()]
             index = hdf5_file['summaries'][image_name]['index'][()]
             contig = hdf5_file['summaries'][image_name]['contig'][()]
@@ -57,7 +64,7 @@ class SequenceDataset(Dataset):
             contig_end = hdf5_file['summaries'][image_name]['region_end'][()]
             ref_seq = hdf5_file['summaries'][image_name]['ref_seq'][()]
 
-        return contig, contig_start, contig_end, chunk_id, image, position, index, ref_seq
+        return contig, contig_start, contig_end, chunk_id, image, position, index, ref_seq, hp_tag
 
     def __len__(self):
         return len(self.all_images)

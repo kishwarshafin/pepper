@@ -19,31 +19,35 @@ class AlignmentSummarizer:
         chunk_start = 0
         chunk_id = 0
         chunk_end = min(len(summary.genomic_pos), chunk_size)
-        images = []
+        images_hp1 = []
+        images_hp2 = []
         labels = []
         positions = []
         chunk_ids = []
         ref_images = []
 
         while True:
-            image_chunk = summary.image[chunk_start:chunk_end]
+            image_chunk_hp1 = summary.image_hp1[chunk_start:chunk_end]
+            image_chunk_hp2 = summary.image_hp2[chunk_start:chunk_end]
             pos_chunk = summary.genomic_pos[chunk_start:chunk_end]
             ref_chunk = summary.ref_image[chunk_start:chunk_end]
             label_chunk = [0] * (chunk_end - chunk_start)
 
-            assert (len(image_chunk) == len(pos_chunk) == len(label_chunk))
+            assert (len(image_chunk_hp1) == len(image_chunk_hp2) == len(pos_chunk) == len(label_chunk))
             # print(len(image_chunk), len(pos_chunk), len(label_chunk))
 
-            padding_required = chunk_size - len(image_chunk)
+            padding_required = chunk_size - len(image_chunk_hp1)
             if padding_required > 0:
                 label_chunk = label_chunk + [0] * padding_required
                 pos_chunk = pos_chunk + [(-1, -1)] * padding_required
                 ref_chunk = ref_chunk + [0] * padding_required
-                image_chunk = image_chunk + [[0.0] * ImageSizeOptions.IMAGE_HEIGHT] * padding_required
+                image_chunk_hp1 = image_chunk_hp1 + [[0.0] * ImageSizeOptions.IMAGE_HEIGHT] * padding_required
+                image_chunk_hp2 = image_chunk_hp2 + [[0.0] * ImageSizeOptions.IMAGE_HEIGHT] * padding_required
 
-            assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == ImageSizeOptions.SEQ_LENGTH)
+            assert (len(image_chunk_hp1) == len(image_chunk_hp2) == len(pos_chunk) == len(label_chunk) == ImageSizeOptions.SEQ_LENGTH)
 
-            images.append(image_chunk)
+            images_hp1.append(image_chunk_hp1)
+            images_hp2.append(image_chunk_hp2)
             labels.append(label_chunk)
             positions.append(pos_chunk)
             chunk_ids.append(chunk_id)
@@ -56,7 +60,7 @@ class AlignmentSummarizer:
             chunk_start = chunk_end - chunk_overlap
             chunk_end = min(len(summary.genomic_pos), chunk_start + chunk_size)
 
-        return images, labels, positions, chunk_ids, ref_images
+        return images_hp1, images_hp2, labels, positions, chunk_ids, ref_images
 
     @staticmethod
     def chunk_images_train(summary, chunk_size, chunk_overlap):
@@ -199,10 +203,11 @@ class AlignmentSummarizer:
 
         return realigned_reads
 
-    def create_summary(self, truth_bam, hp_tag, train_mode, realignment_flag):
+    def create_summary(self, truth_bam, train_mode, realignment_flag):
         log_prefix = "[" + self.chromosome_name + ":" + str(self.region_start_position) + "-" \
                      + str(self.region_end_position) + "]"
-        all_images = []
+        all_images_hp1 = []
+        all_images_hp2 = []
         all_labels = []
         all_positions = []
         all_image_chunk_ids = []
@@ -361,26 +366,27 @@ class AlignmentSummarizer:
                                                                 self.region_end_position + 1)
 
             summary_generator = PEPPER_HP.SummaryGenerator(ref_seq,
-                                                        self.chromosome_name,
-                                                        self.region_start_position,
-                                                        self.region_end_position)
+                                                           self.chromosome_name,
+                                                           self.region_start_position,
+                                                           self.region_end_position)
 
             summary_generator.generate_summary(all_reads,
                                                self.region_start_position,
-                                               self.region_end_position,
-                                               hp_tag)
+                                               self.region_end_position)
 
-            images, labels, positions, chunk_ids, ref_seqs = \
+            # images_hp1, images_hp2, labels, positions, chunk_ids, ref_images
+            images_hp1, images_hp2, labels, positions, chunk_ids, ref_seqs = \
                 self.chunk_images(summary_generator,
                                   chunk_size=ImageSizeOptions.SEQ_LENGTH,
                                   chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
 
-            all_images.extend(images)
+            all_images_hp1.extend(images_hp1)
+            all_images_hp2.extend(images_hp2)
             all_labels.extend(labels)
             all_positions.extend(positions)
             all_image_chunk_ids.extend(chunk_ids)
             all_ref_seq.extend(ref_seqs)
 
-        assert(len(all_images) == len(all_labels) == len(all_image_chunk_ids) == len(all_ref_seq))
+        assert(len(all_images_hp1) == len(all_images_hp2) == len(all_labels) == len(all_image_chunk_ids) == len(all_ref_seq))
 
-        return all_images, all_labels, all_positions, all_image_chunk_ids, all_ref_seq
+        return all_images_hp1, all_images_hp2, all_labels, all_positions, all_image_chunk_ids, all_ref_seq

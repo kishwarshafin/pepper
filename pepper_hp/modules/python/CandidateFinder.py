@@ -7,6 +7,8 @@ import concurrent.futures
 import numpy as np
 from collections import defaultdict
 import operator
+from pepper_hp.modules.python.Options import CandidateFinderOptions
+from pepper_hp.modules.python.CandidateFinderCPP import CandidateFinderCPP
 
 
 BASE_ERROR_RATE = 0.0
@@ -129,122 +131,189 @@ def get_anchor_positions(base_predictions, ref_seq, indices, positions):
 
     return list(delete_anchors), list(insert_anchors)
 
-def small_chunk_stitch(input_dir, reference_file_path, contig, small_chunk_keys):
+
+def get_index_from_base(base):
+    if base == '*':
+        return 0
+    if base == 'A':
+        return 1
+    if base == 'C':
+        return 2
+    if base == 'G':
+        return 3
+    if base == 'T':
+        return 4
+
+
+def filter_candidate(depth, read_support, read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
+    allele_frequency = read_support / max(1.0, depth)
+    if alt_prob_h1 >= CandidateFinderOptions.ALT_PROB_THRESHOLD or alt_prob_h2 >= CandidateFinderOptions.ALT_PROB_THRESHOLD:
+        return True
+    # at this point it means it was not supported by any of the haps, so now look at the non_ref_prob
+    if non_ref_prob >= CandidateFinderOptions.NON_REF_PROB_THRESHOLD:
+        return True
+    # then check the frequency, if too high then definately check
+    if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
+        return True
+    # now it's extremely unlikely to have this as a true-variant, but still give it one more lifeline
+    if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD_LAST_RESORT and max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.PROB_LAST_RESORT:
+        return True
+
+    # otherwise, it's highly unlikely to be a true variant.
+    return False
+
+
+def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_keys):
+
     # for chunk_key in small_chunk_keys:
-    all_mismatches = list()
-    all_positions = list()
-    all_anchors = list()
-    position_to_ref_base = defaultdict()
+    positional_selected_candidate_list = defaultdict(list)
 
     # Find candidates per chunk
     for file_name, chunk_name in small_chunk_keys:
-        all_positions = set()
-        highest_index_per_pos = defaultdict(lambda: 0)
-
         with h5py.File(file_name, 'r') as hdf5_file:
             smaller_chunks = set(hdf5_file['predictions'][contig][chunk_name].keys()) - {'contig_start', 'contig_end'}
+            contig_start = hdf5_file['predictions'][contig][chunk_name]['contig_start'][()]
+            contig_end = hdf5_file['predictions'][contig][chunk_name]['contig_end'][()]
+
+        cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
+
+        # find candidates
+        candidate_map = cpp_candidate_finder.find_candidates(bam_file_path, reference_file_path, contig, contig_start, contig_end)
 
         smaller_chunks = sorted(smaller_chunks)
+        prediction_map_h1 = defaultdict()
+        prediction_map_h2 = defaultdict()
+        max_index_map = defaultdict()
 
         for chunk in smaller_chunks:
             with h5py.File(file_name, 'r') as hdf5_file:
-                bases = hdf5_file['predictions'][contig][chunk_name][chunk]['bases'][()]
+                bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
                 positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
                 indices = hdf5_file['predictions'][contig][chunk_name][chunk]['index'][()]
-                ref_seq = hdf5_file['predictions'][contig][chunk_name][chunk]['ref_seq'][()]
+                hp_tag = hdf5_file['predictions'][contig][chunk_name][chunk]['hp_tag'][()]
 
             positions = np.array(positions, dtype=np.int64)
             base_predictions = np.array(bases, dtype=np.int)
-            ref_seq = np.array(ref_seq, dtype=np.int)
-            delete_anchors, insert_anchors = get_anchor_positions(base_predictions, ref_seq, indices, positions)
-
-            indel_anchors = insert_anchors + delete_anchors
-            all_anchors.extend(indel_anchors)
 
             # as I have carried the reference sequence over, we will get the candidates naturally
-            for pos, indx, ref_base, base_pred in zip(positions, indices, ref_seq, base_predictions):
+            for pos, indx, base_pred in zip(positions, indices, base_predictions):
                 if indx < 0 or pos < 0:
                     continue
 
-                if (pos, indx) not in all_positions:
-                    if ref_base != base_pred:
-                        if indx == 0 and ref_base == 0:
-                            pass
+                if hp_tag == 1:
+                    prediction_map_h1[(pos, indx)] = base_pred
+                else:
+                    prediction_map_h2[(pos, indx)] = base_pred
+
+                if indx == 0:
+                    max_index_map[pos] = 1
+                else:
+                    max_index_map[pos] = max(max_index_map[pos], indx + 1)
+
+        for pos in candidate_map.keys():
+            for candidate in candidate_map[pos]:
+
+                # non-ref prob calcuates the probability of having an alt in that region
+                non_ref_prob= 0.0
+
+                alt_prob_h1 = 1.0
+                alt_prob_h2 = 1.0
+                # see if it's a SNP
+                if candidate.allele.alt_type == 1:
+                    # see the possibility that this position may
+                    pos = candidate.pos_start
+                    alt_allele_indx = get_index_from_base(candidate.allele.alt)
+                    # calculate probability for HP1
+                    prob_alt_h1 = prediction_map_h1[(pos, 0)][alt_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, 0)]))
+
+                    # calculate probability for HP2
+                    prob_alt_h2 = prediction_map_h2[(pos, 0)][alt_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, 0)]))
+
+                    # non-ref-prob is the probability that this position can have an alt
+                    for indx in range(0, max_index_map[pos]):
+                        if indx == 0:
+                            ref_allele_indx = get_index_from_base(candidate.allele.ref[0])
                         else:
-                            all_mismatches.append((pos, indx, ref_base, base_pred))
-                            if indx == 0:
-                                all_positions.add(pos)
+                            ref_allele_indx = get_index_from_base('*')
+                        non_ref_prob_h1 = (sum(prediction_map_h1[(pos, indx)]) - prediction_map_h1[(pos, indx)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, indx)]))
+                        non_ref_prob_h2 = (sum(prediction_map_h2[(pos, indx)]) - prediction_map_h2[(pos, indx)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, indx)]))
+                        non_ref_prob = max(non_ref_prob, max(non_ref_prob_h1, non_ref_prob_h2))
 
-                    if indx == 0:
-                        position_to_ref_base[pos] = ref_base
+                    # calculate probability for HP2
+                    alt_prob_h1 = alt_prob_h1 * max(0.01, prob_alt_h1)
+                    alt_prob_h2 = alt_prob_h2 * max(0.01, prob_alt_h2)
+                # INSERTION
+                elif candidate.allele.alt_type == 2:
+                    alt_allele = candidate.allele.alt
+                    pos = candidate.pos_start
+                    indx_lim = min(max_index_map[pos], len(alt_allele))
 
-                    all_positions.add((pos, indx))
-                    highest_index_per_pos[pos] = max(highest_index_per_pos[pos], indx)
+                    for indx in range(1, indx_lim):
+                        alt_allele_indx = get_index_from_base(alt_allele[indx])
+                        # print(alt_allele[indx], get_index_from_base(alt_allele[indx]), prediction_map_h1[(pos, indx)], prediction_map_h2[(pos, indx)])
+                        prob_alt_h1 = prediction_map_h1[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, 0)]))
+                        prob_alt_h2 = prediction_map_h2[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, 0)]))
+                        alt_prob_h1 = alt_prob_h1 * max(0.01, prob_alt_h1)
+                        alt_prob_h2 = alt_prob_h2 * max(0.01, prob_alt_h2)
 
-    bad_indices = list()
-    # now add all the anchor positions
-    for pos in all_anchors:
-        if pos not in position_to_ref_base.keys():
-            continue
-        ref_base = position_to_ref_base[pos]
+                    # non-ref-prob is the probability that this position can have an alt
+                    for indx in range(0, max_index_map[pos]):
+                        if indx == 0:
+                            ref_allele_indx = get_index_from_base(candidate.allele.ref[0])
+                        else:
+                            ref_allele_indx = get_index_from_base('*')
+                        non_ref_prob_h1 = (sum(prediction_map_h1[(pos, indx)]) - prediction_map_h1[(pos, indx)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, indx)]))
+                        non_ref_prob_h2 = (sum(prediction_map_h2[(pos, indx)]) - prediction_map_h2[(pos, indx)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, indx)]))
+                        non_ref_prob = max(non_ref_prob, max(non_ref_prob_h1, non_ref_prob_h2))
+                    # alt_probability = prediction_map[(candidate.pos_start)][0]
+                # DEL
+                elif candidate.allele.alt_type == 3:
+                    alt_prob_h1 = 1.0
+                    alt_prob_h2 = 1.0
+                    for pos in range(candidate.pos_start, candidate.pos_end):
+                        ref_allele_indx = get_index_from_base(candidate.allele.ref[pos - candidate.pos_start])
+                        non_ref_prob_h1 = (sum(prediction_map_h1[(pos, 0)]) - prediction_map_h1[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
+                        non_ref_prob_h2 = (sum(prediction_map_h2[(pos, 0)]) - prediction_map_h2[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
+                        non_ref_prob = max(non_ref_prob, max(non_ref_prob_h1, non_ref_prob_h2))
 
-        if ref_base == 0:
-            bad_indices.append(pos)
-            continue
+                        if pos > candidate.pos_start:
+                            prob_del_h1 = prediction_map_h1[(pos, 0)][0] / max(1.0, sum(prediction_map_h1[(pos, 0)]))
+                            prob_del_h2 = prediction_map_h2[(pos, 0)][0] / max(1.0, sum(prediction_map_h2[(pos, 0)]))
+                            alt_prob_h1 = alt_prob_h1 * max(0.01, prob_del_h1)
+                            alt_prob_h2 = alt_prob_h2 * max(0.01, prob_del_h2)
 
-        if pos not in all_positions:
-            all_mismatches.append((pos, 0, ref_base, ref_base))
-            all_positions.add(pos)
+                if filter_candidate(candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
+                    # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                    #       candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob)
+                    positional_selected_candidate_list[candidate.pos_start].append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                                                                                    candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2,
+                                                                                    alt_prob_h1, alt_prob_h2, non_ref_prob))
 
-    return contig, all_mismatches, bad_indices
+    return positional_selected_candidate_list
 
 
-def find_candidates(input_dir, reference_file_path, contig, sequence_chunk_keys, threads):
+def find_candidates(input_dir, reference_file_path, bam_file, contig, sequence_chunk_keys, threads):
+
     sequence_chunk_keys = sorted(sequence_chunk_keys)
-
-    all_mismatches = list()
-    all_positions = set()
-
+    all_positional_candidates = defaultdict(list)
+    all_positions = list()
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
         file_chunks = chunks(sequence_chunk_keys, max(2, int(len(sequence_chunk_keys) / threads) + 1))
 
-        futures = [executor.submit(small_chunk_stitch, input_dir, reference_file_path, contig, file_chunk)
+        futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, contig, file_chunk)
                    for file_chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
-                contig, mismatches, bad_indices = fut.result()
-                for pos, indx, ref, alt in mismatches:
-                    if (pos, indx) not in all_positions and pos not in bad_indices:
-                        all_positions.add((pos, indx))
-                        event_type = SNP_EVENT
-                        if indx > 0:
-                            event_type = INSERT_EVENT
-                        elif indx == 0 and alt == 0:
-                            event_type = DELETE_EVENT
-                        all_mismatches.append((pos, indx, ref, alt, 1, event_type))
+                positional_candidates = fut.result()
+
+                for pos in positional_candidates.keys():
+                    if pos in all_positions:
+                        continue
+                    all_positional_candidates[pos].extend(positional_candidates[pos])
+                    all_positions.append(pos)
             else:
                 sys.stderr.write("ERROR IN THREAD: " + str(fut.exception()) + "\n")
             fut._result = None  # python issue 27144
 
-    all_groups = group_adjacent_mismatches(sorted(all_mismatches, key=operator.itemgetter(0, 1, 4)))
-
-    all_candidate_positions = set()
-    candidate_positional_map = defaultdict()
-
-    for mismatch_group in all_groups:
-        if not mismatch_group:
-            continue
-
-        variant = mismatch_groups_to_variants(mismatch_group)
-
-        if variant is not None:
-            _st, _end, ref, alt1, alt2, v_type = variant
-        else:
-            continue
-
-        if len(alt1) >= 1:
-            all_candidate_positions.add(_st)
-            candidate_positional_map[_st] = (_st, _end, ref, alt1, v_type)
-
-    return all_candidate_positions, candidate_positional_map
+    return all_positional_candidates
