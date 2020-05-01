@@ -273,6 +273,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     alt_prob_h2 = 1.0
                     print(candidate.pos_start, candidate.pos_end)
                     for pos in range(candidate.pos_start, candidate.pos_end):
+                        print(pos)
                         print(pos, (pos, 0) in prediction_map_h1.keys(), (pos, 0) in prediction_map_h2.keys())
                         ref_allele_indx = get_index_from_base(candidate.allele.ref[pos - candidate.pos_start])
                         non_ref_prob_h1 = (sum(prediction_map_h1[(pos, 0)]) - prediction_map_h1[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
