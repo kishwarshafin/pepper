@@ -175,12 +175,10 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
             contig_start = hdf5_file['predictions'][contig][chunk_name]['contig_start'][()]
             contig_end = hdf5_file['predictions'][contig][chunk_name]['contig_end'][()]
 
-        print("FINDING CANDIDATES", small_chunk_keys)
         cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
 
         # find candidates
         candidate_map = cpp_candidate_finder.find_candidates(bam_file_path, reference_file_path, contig, contig_start, contig_end)
-        print("CANDIDATE FINDING STOP", small_chunk_keys)
         smaller_chunks = sorted(smaller_chunks)
         prediction_map_h1 = defaultdict()
         prediction_map_h2 = defaultdict()
@@ -210,10 +208,10 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     max_index_map[pos] = 1
                 else:
                     max_index_map[pos] = max(max_index_map[pos], indx + 1)
-        print("ITERATION COMPLETE", small_chunk_keys)
+
         for pos in candidate_map.keys():
+            print(pos)
             for candidate in candidate_map[pos]:
-                print(candidate)
                 # non-ref prob calcuates the probability of having an alt in that region
                 non_ref_prob= 0.0
 
