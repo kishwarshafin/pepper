@@ -180,13 +180,16 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
         cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
 
         # find candidates
+        print("finding candidates")
         candidate_map = cpp_candidate_finder.find_candidates(bam_file_path, reference_file_path, contig, contig_start, contig_end)
+        print("cpp finding done")
         smaller_chunks = sorted(smaller_chunks)
         prediction_map_h1 = defaultdict()
         prediction_map_h2 = defaultdict()
         max_index_map = defaultdict()
 
         for chunk in smaller_chunks:
+            print(chunk)
             with h5py.File(file_name, 'r') as hdf5_file:
                 bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
                 positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
