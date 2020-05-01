@@ -86,7 +86,7 @@ def call_variant(bam_filepath,
 
     image_output_directory = output_dir + "images_" + str(timestr) + "/"
     prediction_output_directory = output_dir + "predictions_" + str(timestr) + "/"
-    candidate_output_directory = output_dir + "/"
+    candidate_output_directory = output_dir
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN-ID: " + str(timestr) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: IMAGE OUTPUT: " + str(image_output_directory) + "\n")

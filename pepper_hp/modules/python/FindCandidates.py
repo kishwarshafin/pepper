@@ -168,6 +168,7 @@ def get_file_paths_from_directory(directory_path):
 
 
 def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_path, threads):
+    print(input_dir, reference_file, bam_file, sample_name, output_path, threads)
     all_prediction_files = get_file_paths_from_directory(input_dir)
 
     all_contigs = set()
@@ -204,6 +205,7 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
 
 def process_candidates(input_dir, reference, bam_file, sample_name, output_dir, threads):
     output_dir = UserInterfaceSupport.handle_output_directory(output_dir)
+
     candidate_finder(input_dir,
                      reference,
                      bam_file,
