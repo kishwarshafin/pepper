@@ -28,7 +28,7 @@ class CandidateFinderCPP:
 
         reference_sequence = fasta_handler.get_reference_sequence(self.contig,
                                                                   ref_start,
-                                                                  ref_end)
+                                                                  ref_end).upper()
 
         # candidate finder objects
         candidate_finder = PEPPER_HP.CandidateFinder(reference_sequence,
