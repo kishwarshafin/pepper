@@ -212,6 +212,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
         for pos in candidate_map.keys():
             print(pos)
             for candidate in candidate_map[pos]:
+                print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
                 # non-ref prob calcuates the probability of having an alt in that region
                 non_ref_prob= 0.0
 
