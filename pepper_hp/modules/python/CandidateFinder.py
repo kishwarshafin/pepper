@@ -211,7 +211,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     max_index_map[pos] = max(max_index_map[pos], indx + 1)
 
         for pos in candidate_map.keys():
-            print(pos, small_chunk_keys)
+            print(pos, chunk_name)
             for candidate in candidate_map[pos]:
                 print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
                 # non-ref prob calcuates the probability of having an alt in that region
