@@ -133,6 +133,7 @@ def get_anchor_positions(base_predictions, ref_seq, indices, positions):
 
 
 def get_index_from_base(base):
+    base = base.upper()
     if base == '*':
         return 0
     if base == 'A':
