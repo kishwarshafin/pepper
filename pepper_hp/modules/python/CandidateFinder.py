@@ -154,10 +154,10 @@ def filter_candidate(depth, read_support, read_support_h0, read_support_h1, read
     if non_ref_prob >= CandidateFinderOptions.NON_REF_PROB_THRESHOLD:
         return True
     # then check the frequency, if too high then definately check
-    if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
-        return True
+    # if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
+    #     return True
     # now it's extremely unlikely to have this as a true-variant, but still give it one more lifeline
-    if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD_LAST_RESORT and max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.PROB_LAST_RESORT:
+    if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD_LAST_RESORT or max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.PROB_LAST_RESORT:
         return True
 
     # otherwise, it's highly unlikely to be a true variant.
@@ -225,7 +225,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                 # non-ref prob calcuates the probability of having an alt in that region
                 if not check_alleles(candidate.allele.ref) or not check_alleles(candidate.allele.alt):
                     continue
-                non_ref_prob= 0.0
+                non_ref_prob = 0.0
 
                 alt_prob_h1 = 1.0
                 alt_prob_h2 = 1.0
@@ -262,8 +262,8 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     for indx in range(1, indx_lim):
                         alt_allele_indx = get_index_from_base(alt_allele[indx])
                         # print(alt_allele[indx], get_index_from_base(alt_allele[indx]), prediction_map_h1[(pos, indx)], prediction_map_h2[(pos, indx)])
-                        prob_alt_h1 = prediction_map_h1[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, 0)]))
-                        prob_alt_h2 = prediction_map_h2[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, 0)]))
+                        prob_alt_h1 = prediction_map_h1[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, alt_allele_indx)]))
+                        prob_alt_h2 = prediction_map_h2[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, alt_allele_indx)]))
                         alt_prob_h1 = alt_prob_h1 * max(0.01, prob_alt_h1)
                         alt_prob_h2 = alt_prob_h2 * max(0.01, prob_alt_h2)
 
