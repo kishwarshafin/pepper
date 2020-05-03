@@ -154,8 +154,8 @@ def filter_candidate(depth, read_support, read_support_h0, read_support_h1, read
     if non_ref_prob >= CandidateFinderOptions.NON_REF_PROB_THRESHOLD:
         return True
     # then check the frequency, if too high then definately check
-    # if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
-    #     return True
+    if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
+        return True
     # now it's extremely unlikely to have this as a true-variant, but still give it one more lifeline
     if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD_LAST_RESORT or max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.PROB_LAST_RESORT:
         return True
