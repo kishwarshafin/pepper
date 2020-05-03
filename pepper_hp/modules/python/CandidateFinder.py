@@ -262,13 +262,12 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     for indx in range(1, indx_lim):
                         alt_allele_indx = get_index_from_base(alt_allele[indx])
                         # print(alt_allele[indx], get_index_from_base(alt_allele[indx]), prediction_map_h1[(pos, indx)], prediction_map_h2[(pos, indx)])
-                        prob_alt_h1 = prediction_map_h1[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, alt_allele_indx)]))
-                        prob_alt_h2 = prediction_map_h2[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, alt_allele_indx)]))
+                        prob_alt_h1 = prediction_map_h1[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, indx)]))
+                        prob_alt_h2 = prediction_map_h2[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, indx)]))
                         alt_prob_h1 = alt_prob_h1 * max(0.01, prob_alt_h1)
                         alt_prob_h2 = alt_prob_h2 * max(0.01, prob_alt_h2)
-
                     # non-ref-prob is the probability that this position can have an alt
-                    for indx in range(0, max_index_map[pos]):
+                    for indx in range(0, max_index_map[pos]-1):
                         if indx == 0:
                             ref_allele_indx = get_index_from_base(candidate.allele.ref[0])
                         else:
