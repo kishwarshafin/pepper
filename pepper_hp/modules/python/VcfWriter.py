@@ -13,7 +13,7 @@ class VCFWriter:
         self.contigs = contigs
         vcf_header = self.get_vcf_header(sample_name, contigs)
 
-        self.vcf_file = VariantFile(output_dir + filename + '.vcf', 'w', header=vcf_header)
+        self.vcf_file = VariantFile(output_dir + filename + '.vcf.gz', 'w', header=vcf_header)
 
     def write_vcf_records(self, called_variant):
         contig, ref_start, ref_end, ref_seq, alleles, genotype, dps, gqs, ads, non_ref_prob = called_variant
@@ -25,15 +25,15 @@ class VCFWriter:
         # for gq in gqs:
         #     phred_gq = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, gq)))
         #     phred_gqs.append(phred_gq)
-
+        vafs = [round(ad/max(1, max(dps)), 3) for ad in ads]
         if genotype == [0, 0]:
             vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                   stop=ref_end, id='.', qual=qual,
-                                                  filter='refCall', alleles=alleles, GT=genotype, GQ=min(gqs))
+                                                  filter='refCall', alleles=alleles, GT=genotype, GQ=min(gqs), VAF=vafs)
         else:
             vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                   stop=ref_end, id='.', qual=qual,
-                                                  filter='PASS', alleles=alleles, GT=genotype, GQ=min(gqs))
+                                                  filter='PASS', alleles=alleles, GT=genotype, GQ=min(gqs), VAF=vafs)
         self.vcf_file.write(vcf_record)
 
     def get_vcf_header(self, sample_name, contigs):
@@ -79,6 +79,11 @@ class VCFWriter:
                  ('Number', 1),
                  ('Type', 'String'),
                  ('Description', "Depth")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "VAF"),
+                 ('Number', "A"),
+                 ('Type', 'Float'),
+                 ('Description', "Variant allele fractions.")]
         header.add_meta(key='FORMAT', items=items)
         items = [('ID', "GT"),
                  ('Number', 1),
