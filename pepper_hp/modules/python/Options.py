@@ -33,6 +33,7 @@ class CandidateFinderOptions(object):
     DEL_LAST_CHANCE_THRESHOLD = 0.1
 
     SAFE_BASES = 20
+    ALT_PROB_THRESHOLD = 0.1
 
 
 class TrainOptions(object):
