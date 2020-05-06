@@ -243,16 +243,49 @@ def get_index_from_base(base):
         return 4
 
 
-def filter_candidate(depth, read_support, read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
+def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
     allele_frequency = read_support / max(1.0, depth)
+    # at first put a clear threshold in frequency to make sure the method runs within a good runtime
+    if allele_frequency < CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
+        return False
+
+    # now this is for SNPs
+    if candidate_type == 1:
+        if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.SNP_ALT_PROB_THRESHOLD:
+            return True
+        if non_ref_prob >= CandidateFinderOptions.SNP_NON_REF_THRESHOLD:
+            return True
+        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.SNP_LAST_CHANCE_THRESHOLD:
+            return True
+    # insert alleles
+    elif candidate_type == 2:
+        if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_ALT_PROB_THRESHOLD:
+            return True
+        if non_ref_prob >= CandidateFinderOptions.IN_NON_REF_THRESHOLD:
+            return True
+        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_LAST_CHANCE_THRESHOLD:
+            return True
+
+    # delete alleles
+    elif candidate_type == 2:
+        if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_ALT_PROB_THRESHOLD:
+            return True
+        if non_ref_prob >= CandidateFinderOptions.DEL_NON_REF_THRESHOLD:
+            return True
+        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_LAST_CHANCE_THRESHOLD:
+            return True
+
+
+
+
     # if alt_prob_h1 >= CandidateFinderOptions.ALT_PROB_THRESHOLD or alt_prob_h2 >= CandidateFinderOptions.ALT_PROB_THRESHOLD:
     #     return True
     # at this point it means it was not supported by any of the haps, so now look at the non_ref_prob
     # if non_ref_prob >= CandidateFinderOptions.NON_REF_PROB_THRESHOLD:
     #     return True
     # then check the frequency, if too high then definately check
-    if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
-        return True
+    # if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
+    #     return True
     # if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD_LAST_RESORT or max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.PROB_LAST_RESORT:
     #     return True
     # now it's extremely unlikely to have this as a true-variant, but still give it one more lifeline
@@ -397,7 +430,8 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                             alt_prob_h1 = alt_prob_h1 * max(0.01, prob_del_h1)
                             alt_prob_h2 = alt_prob_h2 * max(0.01, prob_del_h2)
 
-                if filter_candidate(candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
+                if filter_candidate(candidate.allele.alt_type, candidate.depth, candidate.read_support,
+                                    candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
                     # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
                     #       candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob)
                     found_candidate = True
