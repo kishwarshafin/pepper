@@ -148,19 +148,19 @@ def get_index_from_base(base):
 
 def filter_candidate(depth, read_support, read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
     allele_frequency = read_support / max(1.0, depth)
-    if alt_prob_h1 >= CandidateFinderOptions.ALT_PROB_THRESHOLD or alt_prob_h2 >= CandidateFinderOptions.ALT_PROB_THRESHOLD:
-        return True
+    # if alt_prob_h1 >= CandidateFinderOptions.ALT_PROB_THRESHOLD or alt_prob_h2 >= CandidateFinderOptions.ALT_PROB_THRESHOLD:
+    #     return True
     # at this point it means it was not supported by any of the haps, so now look at the non_ref_prob
-    if non_ref_prob >= CandidateFinderOptions.NON_REF_PROB_THRESHOLD:
-        return True
+    # if non_ref_prob >= CandidateFinderOptions.NON_REF_PROB_THRESHOLD:
+    #     return True
     # then check the frequency, if too high then definately check
     if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
         return True
     # if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD_LAST_RESORT or max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.PROB_LAST_RESORT:
     #     return True
     # now it's extremely unlikely to have this as a true-variant, but still give it one more lifeline
-    if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD_LAST_RESORT or max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.PROB_LAST_RESORT:
-        return True
+    # if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD_LAST_RESORT or max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.PROB_LAST_RESORT:
+    #     return True
 
     # otherwise, it's highly unlikely to be a true variant.
     return False
