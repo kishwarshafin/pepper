@@ -135,24 +135,18 @@ def simplify_variants(variant):
     return simplified_variants
 
 
-def write_vcf(contig, candidate_positional_map, vcf_file):
+def write_vcf(contig, all_selected_candidates, vcf_file):
     # print(candidate_map)
     # candidate_map = {2931716: {(2931716, 2931719, 'CTT', 'C', 1, 'DEL'), (2931716, 2931718, 'CT', 'C', 2, 'DEL')}}
-    for pos in sorted(candidate_positional_map.keys()):
-        candidates = list()
-        if pos in candidate_positional_map:
-            alt_set = set()
-            for variant in candidate_positional_map[pos]:
-                if (variant[2], variant[3], variant[4]) not in alt_set:
-                    alt_set.add((variant[2], variant[3], variant[4]))
-                    candidates.append(variant)
-
-        if len(candidates) == 0:
+    positions = list()
+    from tqdm import tqdm
+    for candidate in tqdm(all_selected_candidates):
+        if candidate[1] in positions:
             continue
+        else:
+            positions.append(candidate[1])
 
-        variant = candidates_to_variants(list(candidates), contig)
-
-        vcf_file.write_vcf_records(variant)
+        vcf_file.write_vcf_records(candidate)
 
 
 def natural_key(string_):
@@ -196,12 +190,12 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
                         for chunk_key in chunk_keys:
                             all_chunk_keys.append((prediction_file, chunk_key))
 
-        candidate_positional_map = find_candidates(input_dir,  reference_file, bam_file, contig, all_chunk_keys, threads)
+        selected_candidates = find_candidates(input_dir,  reference_file, bam_file, contig, all_chunk_keys, threads)
 
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", TOTAL CANDIDATES FOUND: "
-                         + str(len(candidate_positional_map.keys())) + ".\n")
+                         + str(len(selected_candidates)) + ".\n")
 
-        write_vcf(contig, candidate_positional_map, vcf_file)
+        write_vcf(contig, selected_candidates, vcf_file)
 
     hdf5_file.close()
 

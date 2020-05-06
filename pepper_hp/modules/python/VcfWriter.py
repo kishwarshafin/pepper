@@ -18,21 +18,22 @@ class VCFWriter:
     def write_vcf_records(self, called_variant):
         contig, ref_start, ref_end, ref_seq, alleles, genotype, dps, gqs, ads, non_ref_prob = called_variant
         alleles = tuple([ref_seq]) + tuple(alleles)
-        qual = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, non_ref_prob)))
+        # qual = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, non_ref_prob)))
+        qual = non_ref_prob
 
-        phred_gqs = []
-        for gq in gqs:
-            phred_gq = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, gq)))
-            phred_gqs.append(phred_gq)
+        # phred_gqs = []
+        # for gq in gqs:
+        #     phred_gq = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, gq)))
+        #     phred_gqs.append(phred_gq)
 
         if genotype == [0, 0]:
             vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                   stop=ref_end, id='.', qual=qual,
-                                                  filter='refCall', alleles=alleles, GT=genotype, GQ=min(phred_gqs))
+                                                  filter='refCall', alleles=alleles, GT=genotype, GQ=min(gqs))
         else:
             vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                   stop=ref_end, id='.', qual=qual,
-                                                  filter='PASS', alleles=alleles, GT=genotype, GQ=min(phred_gqs))
+                                                  filter='PASS', alleles=alleles, GT=genotype, GQ=min(gqs))
         self.vcf_file.write(vcf_record)
 
     def get_vcf_header(self, sample_name, contigs):
