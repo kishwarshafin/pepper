@@ -18,9 +18,9 @@ class ReadFilterOptions(object):
 
 
 class CandidateFinderOptions(object):
-    SNP_ALT_PROB_THRESHOLD = 0.1
-    SNP_NON_REF_THRESHOLD = 0.1
-    SNP_LAST_CHANCE_THRESHOLD = 0.1
+    SNP_ALT_PROB_THRESHOLD = 0.9
+    SNP_NON_REF_THRESHOLD = 0.9
+    SNP_LAST_CHANCE_THRESHOLD = 0.9
 
     IN_ALT_PROB_THRESHOLD = 0.1
     IN_NON_REF_THRESHOLD = 0.1
