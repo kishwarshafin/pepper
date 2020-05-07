@@ -21,6 +21,8 @@ class AlignmentSummarizer:
         chunk_end = min(len(summary.genomic_pos), chunk_size)
         images_hp1 = []
         images_hp2 = []
+        labels_hp1 = []
+        labels_hp2 = []
         labels = []
         positions = []
         chunk_ids = []
@@ -31,14 +33,16 @@ class AlignmentSummarizer:
             image_chunk_hp2 = summary.image_hp2[chunk_start:chunk_end]
             pos_chunk = summary.genomic_pos[chunk_start:chunk_end]
             ref_chunk = summary.ref_image[chunk_start:chunk_end]
-            label_chunk = [0] * (chunk_end - chunk_start)
+            label_chunk_hp1 = [0] * (chunk_end - chunk_start)
+            label_chunk_hp2 = [0] * (chunk_end - chunk_start)
 
             assert (len(image_chunk_hp1) == len(image_chunk_hp2) == len(pos_chunk) == len(label_chunk))
             # print(len(image_chunk), len(pos_chunk), len(label_chunk))
 
             padding_required = chunk_size - len(image_chunk_hp1)
             if padding_required > 0:
-                label_chunk = label_chunk + [0] * padding_required
+                label_chunk_hp1 = label_chunk_hp1 + [0] * padding_required
+                label_chunk_hp2 = label_chunk_hp2 + [0] * padding_required
                 pos_chunk = pos_chunk + [(-1, -1)] * padding_required
                 ref_chunk = ref_chunk + [0] * padding_required
                 image_chunk_hp1 = image_chunk_hp1 + [[0.0] * ImageSizeOptions.IMAGE_HEIGHT] * padding_required
@@ -48,7 +52,8 @@ class AlignmentSummarizer:
 
             images_hp1.append(image_chunk_hp1)
             images_hp2.append(image_chunk_hp2)
-            labels.append(label_chunk)
+            labels_hp1.append(label_chunk_hp1)
+            labels_hp2.append(label_chunk_hp2)
             positions.append(pos_chunk)
             chunk_ids.append(chunk_id)
             ref_images.append(ref_chunk)
@@ -60,12 +65,14 @@ class AlignmentSummarizer:
             chunk_start = chunk_end - chunk_overlap
             chunk_end = min(len(summary.genomic_pos), chunk_start + chunk_size)
 
-        return images_hp1, images_hp2, labels, positions, chunk_ids, ref_images
+        return images_hp1, images_hp2, labels_hp1, labels_hp2, positions, chunk_ids, ref_images
 
     @staticmethod
     def chunk_images_train(summary, chunk_size, chunk_overlap):
-        images = []
-        labels = []
+        images_hp1 = []
+        images_hp2 = []
+        labels_hp1 = []
+        labels_hp2 = []
         positions = []
         chunk_ids = []
         ref_images = []
@@ -85,16 +92,19 @@ class AlignmentSummarizer:
                         break
                     if i > 0 and chunk_start < bad_indices[i-1]:
                         break
-
-                image_chunk = summary.image[chunk_start:chunk_end]
+                images_hp1_chunk = summary.image_hp1[chunk_start:chunk_end]
+                images_hp2_chunk = summary.image_hp2[chunk_start:chunk_end]
                 pos_chunk = summary.genomic_pos[chunk_start:chunk_end]
                 ref_chunk = summary.ref_image[chunk_start:chunk_end]
-                label_chunk = summary.labels[chunk_start:chunk_end]
+                label_chunk_hp1 = summary.labels_hp1[chunk_start:chunk_end]
+                label_chunk_hp2 = summary.labels_hp2[chunk_start:chunk_end]
 
-                assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == chunk_size)
+                assert (len(images_hp1_chunk) == len(images_hp2_chunk) == len(pos_chunk) == len(label_chunk_hp1) == len(label_chunk_hp2) == chunk_size)
 
-                images.append(image_chunk)
-                labels.append(label_chunk)
+                images_hp1.append(images_hp1_chunk)
+                images_hp2.append(images_hp2_chunk)
+                labels_hp1.append(label_chunk_hp1)
+                labels_hp2.append(label_chunk_hp2)
                 positions.append(pos_chunk)
                 chunk_ids.append(chunk_id)
                 ref_images.append(ref_chunk)
@@ -108,9 +118,9 @@ class AlignmentSummarizer:
 
             chunk_start = chunk_end + 1
 
-        assert(len(images) == len(labels) == len(positions) == len(chunk_ids))
+        assert(len(images_hp1) == len(images_hp2) == len(labels_hp1) == len(labels_hp2) == len(positions) == len(chunk_ids))
 
-        return images, labels, positions, chunk_ids, ref_images
+        return images_hp1, images_hp2, labels_hp1, labels_hp2, positions, chunk_ids, ref_images
 
     @staticmethod
     def overlap_length_between_ranges(range_a, range_b):
@@ -203,51 +213,113 @@ class AlignmentSummarizer:
 
         return realigned_reads
 
-    def create_summary(self, truth_bam, train_mode, realignment_flag):
+    @staticmethod
+    def range_intersection(intervals):
+        left = intervals[0][0]
+        right = intervals[0][1]
+
+        found_overlap = False
+        for i in range(1, len(intervals)):
+            if intervals[i][0] > right or intervals[i][1] < left:
+                continue
+            else:
+                found_overlap = True
+                left = max(left, intervals[i][0])
+                right = min(right, intervals[i][1])
+
+        if found_overlap:
+            return [left, right]
+        else:
+            return None
+
+    def create_summary(self, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag):
         log_prefix = "[" + self.chromosome_name + ":" + str(self.region_start_position) + "-" \
                      + str(self.region_end_position) + "]"
         all_images_hp1 = []
         all_images_hp2 = []
-        all_labels = []
+        all_labels_hp1 = []
+        all_labels_hp2 = []
         all_positions = []
         all_image_chunk_ids = []
         all_ref_seq = []
 
         if train_mode:
             # get the reads from the bam file
-            truth_bam_handler = PEPPER_HP.BAM_handler(truth_bam)
-            # get the reads from the bam file
-            truth_reads = truth_bam_handler.get_reads(self.chromosome_name,
-                                                      self.region_start_position,
-                                                      self.region_end_position,
-                                                      ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
-                                                      ReadFilterOptions.MIN_MAPQ,
-                                                      ReadFilterOptions.MIN_BASEQ)
+            truth_bam_handler_h1 = PEPPER_HP.BAM_handler(truth_bam_h1)
+            truth_bam_handler_h2 = PEPPER_HP.BAM_handler(truth_bam_h2)
+
+            truth_reads_h1 = truth_bam_handler_h1.get_reads(self.chromosome_name,
+                                                            self.region_start_position,
+                                                            self.region_end_position,
+                                                            ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
+                                                            ReadFilterOptions.MIN_MAPQ,
+                                                            ReadFilterOptions.MIN_BASEQ)
+
+            truth_reads_h2 = truth_bam_handler_h2.get_reads(self.chromosome_name,
+                                                            self.region_start_position,
+                                                            self.region_end_position,
+                                                            ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
+                                                            ReadFilterOptions.MIN_MAPQ,
+                                                            ReadFilterOptions.MIN_BASEQ)
 
             # do a local realignment of truth reads to reference
             if realignment_flag:
-                truth_reads = self.reads_to_reference_realignment(self.region_start_position,
-                                                                  self.region_end_position,
-                                                                  truth_reads)
+                truth_reads_h1 = self.reads_to_reference_realignment(self.region_start_position,
+                                                                     self.region_end_position,
+                                                                     truth_reads_h1)
+                truth_reads_h2 = self.reads_to_reference_realignment(self.region_start_position,
+                                                                     self.region_end_position,
+                                                                     truth_reads_h2)
 
-            truth_regions = []
-            for read in truth_reads:
-                # start, end, read, is_kept, is_h1
-                truth_regions.append([read.pos, read.pos_end - 1, read,  True])
+            truth_regions_h1 = []
+            for read in truth_reads_h1:
+                # start, end, read, is_kept
+                truth_regions_h1.append([read.pos, read.pos_end - 1, read,  True])
+
+            truth_regions_h2 = []
+            for read in truth_reads_h2:
+                # start, end, read, is_kept
+                truth_regions_h2.append([read.pos, read.pos_end - 1, read,  True])
 
             # these are all the regions we will use to generate summaries from.
             # It's important to notice that we need to realign the reads to the reference before we do that.
-            truth_regions = self.remove_conflicting_regions(truth_regions)
+            truth_regions_h1 = self.remove_conflicting_regions(truth_regions_h1)
+            truth_regions_h2 = self.remove_conflicting_regions(truth_regions_h2)
+            regions_h1 = []
+            for start, end_pos, read, is_kept in truth_regions_h1:
+                if is_kept:
+                    regions_h1.append([start, end_pos])
+            regions_h2 = []
+            for start_pos, end_pos, read, is_kept in truth_regions_h2:
+                if is_kept:
+                    regions_h2.append([start_pos, end_pos])
+
+            truth_regions = []
+            for reg_h1 in regions_h1:
+                reg = AlignmentSummarizer.range_intersection([reg_h1] + regions_h2)
+                if reg is not None:
+                    truth_regions.append(reg)
 
             if not truth_regions:
                 # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " NO TRAINING REGION FOUND.\n"
                 #                  + TextColor.END)
-                return [], [], [], [], []
+                return [], [], [], [], [], [], []
 
-            for region in truth_regions:
-                region_start, region_end, truth_read, is_kept = tuple(region)
+            for region_start, region_end in truth_regions:
+                truth_reads_h1 = truth_bam_handler_h1.get_reads(self.chromosome_name,
+                                                                self.region_start_position,
+                                                                self.region_end_position,
+                                                                ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
+                                                                ReadFilterOptions.MIN_MAPQ,
+                                                                ReadFilterOptions.MIN_BASEQ)
 
-                if not is_kept:
+                truth_reads_h2 = truth_bam_handler_h2.get_reads(self.chromosome_name,
+                                                                self.region_start_position,
+                                                                self.region_end_position,
+                                                                ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
+                                                                ReadFilterOptions.MIN_MAPQ,
+                                                                ReadFilterOptions.MIN_BASEQ)
+                if len(truth_reads_h1) > 1 or len(truth_reads_h2) > 1:
                     continue
 
                 ref_start = region_start
@@ -298,23 +370,25 @@ class AlignmentSummarizer:
                     #                  + " secs\n" + TextColor.END)
 
                 summary_generator = PEPPER_HP.SummaryGenerator(ref_seq,
-                                                            self.chromosome_name,
-                                                            ref_start,
-                                                            ref_end)
+                                                               self.chromosome_name,
+                                                               ref_start,
+                                                               ref_end)
 
                 summary_generator.generate_train_summary(all_reads,
                                                          region_start,
                                                          region_end,
-                                                         truth_read,
-                                                         hp_tag)
+                                                         truth_reads_h1[0],
+                                                         truth_reads_h2[0])
 
-                images, labels, positions, chunk_ids, ref_seqs = \
+                images_hp1, images_hp2, labels_hp1, labels_hp2, positions, chunk_ids, ref_seqs = \
                     self.chunk_images_train(summary_generator,
                                             chunk_size=ImageSizeOptions.SEQ_LENGTH,
                                             chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
 
-                all_images.extend(images)
-                all_labels.extend(labels)
+                all_images_hp1.extend(images_hp1)
+                all_images_hp2.extend(images_hp2)
+                all_labels_hp1.extend(labels_hp1)
+                all_labels_hp2.extend(labels_hp2)
                 all_positions.extend(positions)
                 all_image_chunk_ids.extend(chunk_ids)
                 all_ref_seq.extend(ref_seqs)
@@ -333,7 +407,7 @@ class AlignmentSummarizer:
             total_reads = len(all_reads)
 
             if total_reads == 0:
-                return [], [], [], [], [], []
+                return [], [], [], [], [], [], []
 
             if total_reads > AlingerOptions.MAX_READS_IN_REGION:
                 # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
@@ -374,19 +448,21 @@ class AlignmentSummarizer:
                                                self.region_start_position,
                                                self.region_end_position)
 
+
             # images_hp1, images_hp2, labels, positions, chunk_ids, ref_images
-            images_hp1, images_hp2, labels, positions, chunk_ids, ref_seqs = \
+            images_hp1, images_hp2, labels_hp1, labels_hp2, positions, chunk_ids, ref_seqs = \
                 self.chunk_images(summary_generator,
                                   chunk_size=ImageSizeOptions.SEQ_LENGTH,
                                   chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
 
             all_images_hp1.extend(images_hp1)
             all_images_hp2.extend(images_hp2)
-            all_labels.extend(labels)
+            all_labels_hp1.extend(labels_hp1)
+            all_labels_hp2.extend(labels_hp2)
             all_positions.extend(positions)
             all_image_chunk_ids.extend(chunk_ids)
             all_ref_seq.extend(ref_seqs)
 
-        assert(len(all_images_hp1) == len(all_images_hp2) == len(all_labels) == len(all_image_chunk_ids) == len(all_ref_seq))
+        assert(len(all_images_hp1) == len(all_images_hp2) == len(all_labels_hp1) == len(all_labels_hp2) == len(all_image_chunk_ids) == len(all_ref_seq))
 
-        return all_images_hp1, all_images_hp2, all_labels, all_positions, all_image_chunk_ids, all_ref_seq
+        return all_images_hp1, all_images_hp2, all_labels_hp1, all_labels_hp2, all_positions, all_image_chunk_ids, all_ref_seq

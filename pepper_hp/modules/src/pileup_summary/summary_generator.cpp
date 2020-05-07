@@ -171,7 +171,7 @@ bool check_base(char base) {
     return false;
 }
 
-void SummaryGenerator::generate_labels(type_read read, long long region_start, long long region_end) {
+void SummaryGenerator::generate_labels(type_read read, long long region_start, long long region_end, int hp_tag) {
     int read_index = 0;
     long long ref_position = read.pos;
     int cigar_index = 0;
@@ -195,7 +195,10 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
 //                    cout<<ref_position<<" "<<ref_end<<" "<<region_end<<endl;
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
-                        base_labels[ref_position] = base;
+                        if(hp_tag == 1)
+                            base_labels_hp1[ref_position] = base;
+                        else
+                            base_labels_hp2[ref_position] = base;
                     }
                     read_index += 1;
                     ref_position += 1;
@@ -215,7 +218,10 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
                             base = alt[i];
                         }
                         pair<long long, int> position_pair = make_pair(ref_position - 1, i);
-                        insert_labels[position_pair] = base;
+                        if(hp_tag == 1)
+                            insert_labels_hp1[position_pair] = base;
+                        else
+                            insert_labels_hp2[position_pair] = base;
                     }
                 }
                 read_index += cigar.length;
@@ -231,7 +237,10 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
                         if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                             // DELETE
                             char base = '*';
-                            base_labels[ref_position + i] = '*';
+                            if(hp_tag == 1)
+                                base_labels_hp1[ref_position + i] = '*';
+                            else
+                                base_labels_hp2[ref_position + i] = '*';
                         }
                     }
                 }
@@ -258,19 +267,36 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
     }
     cout << endl;
     for (int i = start_pos; i <= end_pos; i++) {
-        if(i==start_pos) cout<<"TRH:\t";
-        cout << "  " <<base_labels[i] << "\t";
+        if(i==start_pos) cout<<"TRH1:\t";
+        cout << "  " <<base_labels_hp1[i] << "\t";
         if (longest_insert_count[i] > 0) {
             for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                if (insert_labels[make_pair(i, ii)]) cout << "  "<< insert_labels[make_pair(i, ii)] << "\t";
+                if (insert_labels_hp1[make_pair(i, ii)]) cout << "  "<< insert_labels_hp1[make_pair(i, ii)] << "\t";
                 else cout << "  *" << "\t";
             }
         }
     }
     cout << endl;
-    for (int i = 0; i < labels.size(); i++) {
-        if(i==0) cout<<"LBL:\t";
-        printf("%3d\t", labels[i]);
+    for (int i = 0; i < labels_hp1.size(); i++) {
+        if(i==0) cout<<"LBL1:\t";
+        printf("%3d\t", labels_hp1[i]);
+    }
+    cout << endl;
+
+    for (int i = start_pos; i <= end_pos; i++) {
+        if(i==start_pos) cout<<"TRH2:\t";
+        cout << "  " <<base_labels_hp2[i] << "\t";
+        if (longest_insert_count[i] > 0) {
+            for (int ii = 0; ii < longest_insert_count[i]; ii++) {
+                if (insert_labels_hp2[make_pair(i, ii)]) cout << "  "<< insert_labels_hp2[make_pair(i, ii)] << "\t";
+                else cout << "  *" << "\t";
+            }
+        }
+    }
+    cout << endl;
+    for (int i = 0; i < labels_hp1.size(); i++) {
+        if(i==0) cout<<"LBL2:\t";
+        printf("%3d\t", labels_hp2[i]);
     }
     cout << endl;
 
@@ -381,58 +407,71 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
 void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
                                               long long start_pos,
                                               long long end_pos,
-                                              type_read truth_read,
-                                              int hp_tag) {
+                                              type_read truth_read_hp1,
+                                              type_read truth_read_hp2) {
 
 
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
-        if(read.mapping_quality > 0) {
-            if(read.hp_tag == hp_tag or read.hp_tag == 0) {
-                iterate_over_read(read, start_pos, end_pos);
-            }
+        if(read.mapping_quality >= 10) {
+            iterate_over_read(read, start_pos, end_pos);
         }
     }
 
     // this populates base_labels and insert_labels dictionaries
-    generate_labels(truth_read, start_pos, end_pos + 1);
+    generate_labels(truth_read_hp1, start_pos, end_pos + 1, 1);
+    generate_labels(truth_read_hp2, start_pos, end_pos + 1, 2);
 
     // after all the dictionaries are populated, we can simply walk through the region and generate a sequence
     for (long long pos = start_pos; pos <= end_pos; pos++) {
 
         if(coverage[pos] > 0) {
-            labels.push_back(get_labels(base_labels[pos]));
+            labels_hp1.push_back(get_labels(base_labels_hp1[pos]));
+            labels_hp2.push_back(get_labels(base_labels_hp2[pos]));
         } else {
-            labels.push_back(get_labels('*'));
+            labels_hp1.push_back(get_labels('*'));
+            labels_hp2.push_back(get_labels('*'));
         }
 
         // if the label contains anything but ACTG
-        if(!check_base(base_labels[pos])) {
+        if(!check_base(base_labels_hp1[pos]) || !check_base(base_labels_hp2[pos])) {
 //            cerr<<"INFO: INVALID REFERENCE BASE INDEX FOUND: ["<<chromosome_name<<":"<<start_pos<<"-"<<end_pos<<"] " <<
 //                pos<<" "<<" "<<base_labels[pos]<<endl;
-            bad_label_positions.push_back(labels.size());
+            bad_label_positions.push_back(labels_hp1.size());
         }
 
         genomic_pos.push_back(make_pair(pos, 0));
         if (longest_insert_count[pos] > 0) {
             for (int ii = 0; ii < longest_insert_count[pos]; ii++) {
                 genomic_pos.push_back(make_pair(pos, ii + 1));
-                if (insert_labels[make_pair(pos, ii)]) {
-                    labels.push_back(get_labels(insert_labels[make_pair(pos, ii)]));
+                if (insert_labels_hp1[make_pair(pos, ii)]) {
+                    labels_hp1.push_back(get_labels(insert_labels_hp1[make_pair(pos, ii)]));
 
                     // if the label contains anything but ACTG
-                    if(!check_base(insert_labels[make_pair(pos, ii)])) {
+                    if(!check_base(insert_labels_hp1[make_pair(pos, ii)])) {
 //                        cerr<<"INFO: INVALID REFERENCE INSERT BASE INDEX FOUND: "<<chromosome_name<<" "<<
 //                            pos<<" "<<insert_labels[make_pair(pos, ii)]<<endl;
-                        bad_label_positions.push_back(labels.size());
+                        bad_label_positions.push_back(labels_hp1.size());
                     }
                 }
-                else labels.push_back(get_labels('#'));
+                else labels_hp1.push_back(get_labels('#'));
+                if (insert_labels_hp2[make_pair(pos, ii)]) {
+                    labels_hp2.push_back(get_labels(insert_labels_hp2[make_pair(pos, ii)]));
+
+                    // if the label contains anything but ACTG
+                    if(!check_base(insert_labels_hp2[make_pair(pos, ii)])) {
+//                        cerr<<"INFO: INVALID REFERENCE INSERT BASE INDEX FOUND: "<<chromosome_name<<" "<<
+//                            pos<<" "<<insert_labels[make_pair(pos, ii)]<<endl;
+                        bad_label_positions.push_back(labels_hp2.size());
+                    }
+                }
+                else labels_hp2.push_back(get_labels('#'));
             }
         }
     }
-    bad_label_positions.push_back(labels.size());
-    assert(labels.size() == genomic_pos.size());
+    bad_label_positions.push_back(labels_hp1.size());
+    assert(labels_hp1.size() == genomic_pos.size());
+    assert(labels_hp1.size() == labels_hp2.size());
 
     // generate reference sequence
     for (int i = start_pos; i <= end_pos; i++) {
@@ -457,7 +496,7 @@ void SummaryGenerator::generate_summary(vector <type_read> &reads,
     int read_count = 0;
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
-        if(read.mapping_quality > 0) {
+        if(read.mapping_quality >= 10) {
             read_count += 1;
             iterate_over_read(read, start_pos, end_pos);
         }

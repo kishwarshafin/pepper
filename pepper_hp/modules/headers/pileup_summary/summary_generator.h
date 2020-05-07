@@ -32,16 +32,13 @@ class SummaryGenerator {
     map<long long, double> coverage_hp1;
     map<long long, double> coverage_hp2;
 
-    map< pair<long long, int>, char> insert_labels;
     map< pair<long long, int>, char> insert_labels_hp1;
     map< pair<long long, int>, char> insert_labels_hp2;
-    map< long long, char> base_labels;
     map< long long, char> base_labels_hp1;
     map< long long, char> base_labels_hp2;
 public:
     vector< vector<uint8_t> > image_hp1;
     vector< vector<uint8_t> > image_hp2;
-    vector<uint8_t> labels;
     vector<uint8_t> labels_hp1;
     vector<uint8_t> labels_hp2;
     vector<pair<long long, int> > genomic_pos;
@@ -59,12 +56,12 @@ public:
     void generate_train_summary(vector <type_read> &reads,
                                 long long start_pos,
                                 long long end_pos,
-                                type_read truth_read,
-                                int hp_tag);
+                                type_read truth_read_hp1,
+                                type_read truth_read_hp2);
 
     void iterate_over_read(type_read read, long long region_start, long long region_end);
     int get_sequence_length(long long start_pos, long long end_pos);
-    void generate_labels(type_read truth_reads, long long region_start, long long region_end);
+    void generate_labels(type_read read, long long region_start, long long region_end, int hp_tag);
     void generate_ref_features();
     void debug_print(long long start_pos, long long end_pos);
     void generate_image(long long start_pos, long long end_pos);
