@@ -18,7 +18,7 @@ class ReadFilterOptions(object):
 
 
 class CandidateFinderOptions(object):
-    ALLELE_FREQ_THRESHOLD = 0.10
+    ALLELE_FREQ_THRESHOLD = 0.05
 
     SNP_ALT_PROB_THRESHOLD = 0.1
     SNP_NON_REF_THRESHOLD = 0.1
