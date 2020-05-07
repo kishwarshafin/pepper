@@ -1,6 +1,5 @@
 from pysam import VariantFile, VariantHeader
 from pepper_hp.build import PEPPER_HP
-from tqdm import tqdm
 import collections
 Candidate = collections.namedtuple('Candidate', 'chromosome_name pos_start pos_end ref '
                                                 'alternate_alleles allele_depths '
@@ -18,7 +17,7 @@ class VCFWriter:
     def write_vcf_records(self, variants_list):
         last_position = -1
         with VariantFile(self.output_dir + self.filename + '.vcf.gz', 'w', header=self.vcf_header) as vcf_file:
-            for called_variant in tqdm(variants_list):
+            for called_variant in variants_list:
                 contig, ref_start, ref_end, ref_seq, alleles, genotype, dps, gqs, ads, non_ref_prob = called_variant
                 if ref_start == last_position:
                     continue
