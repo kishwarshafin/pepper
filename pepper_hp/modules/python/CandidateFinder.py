@@ -251,60 +251,34 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
 
     # now this is for SNPs
     if candidate_type == 1:
-        if 0.05 <= allele_frequency < 0.10:
-            if non_ref_prob >= 0.8:
-                return True
-        elif 0.10 <= allele_frequency < 0.15:
-            if non_ref_prob >= 0.6:
-                return True
-        elif non_ref_prob >= 0.1:
+        if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.SNP_ALT_PROB_THRESHOLD:
             return True
-
-        if max(alt_prob_h1, alt_prob_h2) >= 0.5:
+        if non_ref_prob >= CandidateFinderOptions.SNP_NON_REF_THRESHOLD:
             return True
-        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= 0.8:
+        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.SNP_LAST_CHANCE_THRESHOLD:
             return True
+        # if allele_frequency > CandidateFinderOptions.SNP_FREQ_THRESHOLD:
+        #     return True
     # insert alleles
     elif candidate_type == 2:
-        if 0.05 <= allele_frequency < 0.10:
-            if non_ref_prob >= 0.8:
-                return True
-        elif 0.10 <= allele_frequency < 0.15:
-            if non_ref_prob >= 0.6:
-                return True
-        elif non_ref_prob >= 0.1:
+        if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_ALT_PROB_THRESHOLD:
             return True
+        if non_ref_prob >= CandidateFinderOptions.IN_NON_REF_THRESHOLD:
+            return True
+        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_LAST_CHANCE_THRESHOLD:
+            return True
+        # if allele_frequency > CandidateFinderOptions.IN_FREQ_THRESHOLD:
+        #     return True
 
-        if max(alt_prob_h1, alt_prob_h2) >= 0.5:
-            return True
-        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= 0.8:
-            return True
-        # if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_ALT_PROB_THRESHOLD:
-        #     return True
-        # if non_ref_prob >= CandidateFinderOptions.IN_NON_REF_THRESHOLD:
-        #     return True
-        # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_LAST_CHANCE_THRESHOLD:
-        #     return True
     # delete alleles
     elif candidate_type == 3:
-        if 0.05 <= allele_frequency < 0.10:
-            if non_ref_prob >= 0.8:
-                return True
-        elif 0.10 <= allele_frequency < 0.15:
-            if non_ref_prob >= 0.6:
-                return True
-        elif non_ref_prob >= 0.1:
+        if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_ALT_PROB_THRESHOLD:
             return True
-
-        if max(alt_prob_h1, alt_prob_h2) >= 0.5:
+        if non_ref_prob >= CandidateFinderOptions.DEL_NON_REF_THRESHOLD:
             return True
-        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= 0.8:
+        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_LAST_CHANCE_THRESHOLD:
             return True
-        # if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_ALT_PROB_THRESHOLD:
-        #     return True
-        # if non_ref_prob >= CandidateFinderOptions.DEL_NON_REF_THRESHOLD:
-        #     return True
-        # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_LAST_CHANCE_THRESHOLD:
+        # if allele_frequency > CandidateFinderOptions.DEL_FREQ_THRESHOLD:
         #     return True
 
 
