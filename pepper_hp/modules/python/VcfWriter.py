@@ -16,14 +16,13 @@ class VCFWriter:
         self.filename = filename
 
     def write_vcf_records(self, variants_list):
-        positions = list()
+        last_position = -1
         with VariantFile(self.output_dir + self.filename + '.vcf.gz', 'w', header=self.vcf_header) as vcf_file:
             for called_variant in tqdm(variants_list):
                 contig, ref_start, ref_end, ref_seq, alleles, genotype, dps, gqs, ads, non_ref_prob = called_variant
-                if ref_start in positions:
+                if ref_start == last_position:
                     continue
-
-                positions.append(ref_start)
+                last_position = ref_start
                 alleles = tuple([ref_seq]) + tuple(alleles)
                 # qual = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, non_ref_prob)))
                 qual = non_ref_prob
