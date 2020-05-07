@@ -135,20 +135,6 @@ def simplify_variants(variant):
     return simplified_variants
 
 
-def write_vcf(contig, all_selected_candidates, vcf_file):
-    # print(candidate_map)
-    # candidate_map = {2931716: {(2931716, 2931719, 'CTT', 'C', 1, 'DEL'), (2931716, 2931718, 'CT', 'C', 2, 'DEL')}}
-    positions = list()
-    from tqdm import tqdm
-    for candidate in tqdm(all_selected_candidates):
-        if candidate[1] in positions:
-            continue
-        else:
-            positions.append(candidate[1])
-
-        vcf_file.write_vcf_records(candidate)
-
-
 def natural_key(string_):
     """See http://www.codinghorror.com/blog/archives/001018.html"""
     return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
@@ -195,7 +181,7 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", TOTAL CANDIDATES FOUND: "
                          + str(len(selected_candidates)) + ".\n")
 
-        write_vcf(contig, selected_candidates, vcf_file)
+        vcf_file.write_vcf_records(selected_candidates)
 
     hdf5_file.close()
 
