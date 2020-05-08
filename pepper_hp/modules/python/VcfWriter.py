@@ -13,33 +13,33 @@ class VCFWriter:
         self.vcf_header = self.get_vcf_header(sample_name, contigs)
         self.output_dir = output_dir
         self.filename = filename
+        self.vcf_file = VariantFile(self.output_dir + self.filename + '.vcf.gz', 'w', header=self.vcf_header)
 
     def write_vcf_records(self, variants_list):
         last_position = -1
-        with VariantFile(self.output_dir + self.filename + '.vcf.gz', 'w', header=self.vcf_header) as vcf_file:
-            for called_variant in variants_list:
-                contig, ref_start, ref_end, ref_seq, alleles, genotype, dps, gqs, ads, non_ref_prob = called_variant
-                if ref_start == last_position:
-                    continue
-                last_position = ref_start
-                alleles = tuple([ref_seq]) + tuple(alleles)
-                # qual = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, non_ref_prob)))
-                qual = non_ref_prob
+        for called_variant in variants_list:
+            contig, ref_start, ref_end, ref_seq, alleles, genotype, dps, gqs, ads, non_ref_prob = called_variant
+            if ref_start == last_position:
+                continue
+            last_position = ref_start
+            alleles = tuple([ref_seq]) + tuple(alleles)
+            # qual = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, non_ref_prob)))
+            qual = non_ref_prob
 
-                # phred_gqs = []
-                # for gq in gqs:
-                #     phred_gq = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, gq)))
-                #     phred_gqs.append(phred_gq)
-                vafs = [round(ad/max(1, max(dps)), 3) for ad in ads]
-                if genotype == [0, 0]:
-                    vcf_record = vcf_file.new_record(contig=str(contig), start=ref_start,
-                                                     stop=ref_end, id='.', qual=qual,
-                                                     filter='refCall', alleles=alleles, GT=genotype, GQ=min(gqs), VAF=vafs)
-                else:
-                    vcf_record = vcf_file.new_record(contig=str(contig), start=ref_start,
-                                                     stop=ref_end, id='.', qual=qual,
-                                                     filter='PASS', alleles=alleles, GT=genotype, GQ=min(gqs), VAF=vafs)
-                vcf_file.write(vcf_record)
+            # phred_gqs = []
+            # for gq in gqs:
+            #     phred_gq = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, gq)))
+            #     phred_gqs.append(phred_gq)
+            vafs = [round(ad/max(1, max(dps)), 3) for ad in ads]
+            if genotype == [0, 0]:
+                vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
+                                                      stop=ref_end, id='.', qual=qual,
+                                                      filter='refCall', alleles=alleles, GT=genotype, GQ=min(gqs), VAF=vafs)
+            else:
+                vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
+                                                      stop=ref_end, id='.', qual=qual,
+                                                      filter='PASS', alleles=alleles, GT=genotype, GQ=min(gqs), VAF=vafs)
+            self.vcf_file.write(vcf_record)
 
     def get_vcf_header(self, sample_name, contigs):
         header = VariantHeader()

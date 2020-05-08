@@ -139,14 +139,6 @@ def add_make_images_arguments(parser):
         help="FASTA file containing the draft assembly."
     )
     parser.add_argument(
-        "-hp",
-        "--hp_tag",
-        type=int,
-        required=True,
-        default=None,
-        help="Haplotype tag to process from the BAM file."
-    )
-    parser.add_argument(
         "-t",
         "--threads",
         required=True,
@@ -407,7 +399,6 @@ def main():
                     FLAGS.fasta,
                     FLAGS.region,
                     FLAGS.output_dir,
-                    FLAGS.hp_tag,
                     FLAGS.threads)
 
     elif FLAGS.sub_command == 'run_inference':
