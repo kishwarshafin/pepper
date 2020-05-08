@@ -59,6 +59,7 @@ def calculate_stats(truth_vcf, vcf):
 
     all_allele_frequencies = list()
     total_recs = 0
+    total_multi_allelic_sites = 0
     for rec in vcf_in1.fetch():
         total_recs += 1
         # ['__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__setstate__', '__sizeof__', '__str__', '__subclasshook__',
@@ -66,7 +67,11 @@ def calculate_stats(truth_vcf, vcf):
         alts = rec.alts
         total_alts += len(alts)
         for sample in rec.samples:
-            vafs = list(rec.samples[sample]['VAF'])
+            if 'VAF' in rec.samples[sample].keys():
+                vafs = list(rec.samples[sample]['VAF'])
+            else:
+                vafs = [0.0] * len(alts)
+
             gts = list(rec.samples[sample]['GT'])
 
             true_index = []
@@ -81,6 +86,8 @@ def calculate_stats(truth_vcf, vcf):
             else:
                 q_of_false_alleles.append(positional_norm_q[rec.pos])
 
+            if len(alts) > 1:
+                total_multi_allelic_sites += 1
             for i, (alt, vaf) in enumerate(zip(alts, vafs)):
                 if i in true_index:
                     vafs_of_true_alleles.append(vaf)
@@ -96,13 +103,15 @@ def calculate_stats(truth_vcf, vcf):
             for vaf in vafs:
                 all_allele_frequencies.append(round(vaf, 3))
 
-    print("Total positions:\t", total_recs)
-    print("Total alt alleles:\t", total_alts)
-    print("Total true alleles:\t", total_true_calls, "(" + str(int(100 * (total_true_calls/total_alts))) + "%)")
-    print("Total false alleles:\t", total_false_calls, "(" + str(int(100 * (total_false_calls/total_alts))) + "%)")
-    # plot_distributions(all_allele_frequencies, vafs_of_true_alleles, vafs_of_false_alleles)
+    print("Records:\t", total_recs)
+    print("Multi-alleleic:\t", total_false_calls, "(" + str(int(100 * (total_false_calls/total_alts))) + "%)")
+    print("Alt alleles:\t", total_alts)
+    print("True alleles:\t", total_true_calls, "(" + str(int(100 * (total_true_calls/total_alts))) + "%)")
+    print("False alleles:\t", total_false_calls, "(" + str(int(100 * (total_false_calls/total_alts))) + "%)")
+
+    plot_distributions(all_allele_frequencies, vafs_of_true_alleles, vafs_of_false_alleles)
     # plot_distributions(all_allele_frequencies, q_of_true_alleles, q_of_false_alleles)
-    plot_vaf_and_q_2d(true_allele_q_vaf, false_allele_q_vaf, q_vaf)
+    # plot_vaf_and_q_2d(true_allele_q_vaf, false_allele_q_vaf, q_vaf)
 
 
 
