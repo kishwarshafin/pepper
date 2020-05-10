@@ -21,10 +21,31 @@ def plot_distributions(vafs, true_vafs, false_vafs):
     plt.ylabel("Count", fontsize='24')
 
     plt.title("Stacked histogram showing TP and FP distribution at different frequency intervals.", fontsize='20')
-    plt.show()
+    # plt.show()
     # exit()
-    # output_file_name = "./allele_distribution.png"
-    # plt.savefig(output_file_name, format='png', dpi=300, quality=95)
+    output_file_name = "./VAF_distribution.png"
+    plt.savefig(output_file_name, format='png', dpi=300, quality=95)
+
+
+def plot_distributions_q(true_qvals, false_qvals):
+    sns.set(rc={"figure.figsize": (20, 10)})
+    sns.set_style("white")
+    # plt.hist(vafs, bins=100, color='blue', alpha=0.4)
+    plt.hist([true_qvals, false_qvals], bins=100, density=False, histtype='bar', color=['green', 'red'], alpha=0.4, stacked=True, label=['True variants', 'False positives'])
+    # plt.hist(false_vafs, bins=100, color='red', alpha=0.4, stacked=True)
+    plt.xlim((0.00, 1.10))
+    # plt.ylim((0, 500))
+    plt.legend(fontsize='x-large')
+    # plt.xticks(np.arange(0, 1, step=0.10), fontsize=18)
+    plt.yticks(fontsize=18)
+    plt.xlabel("P-value", fontsize='24')
+    plt.ylabel("Count", fontsize='24')
+
+    plt.title("Stacked histogram showing TP and FP distribution at different P-value intervals.", fontsize='20')
+    # plt.show()
+    # exit()
+    output_file_name = "./P_val_distribution.png"
+    plt.savefig(output_file_name, format='png', dpi=300, quality=95)
 
 
 def plot_vaf_and_q_2d(true_allele_q_vaf, false_allele_q_vaf, q_vaf):
@@ -34,7 +55,7 @@ def plot_vaf_and_q_2d(true_allele_q_vaf, false_allele_q_vaf, q_vaf):
     plt.scatter(vaf, q, c=pred)
     plt.xlabel("VAF", fontsize='24')
     plt.ylabel("Q-value", fontsize='24')
-    plt.xlim((0.00, 0.20))
+    plt.xlim((0.00, 0.25))
     plt.show()
 
 
@@ -56,6 +77,8 @@ def calculate_stats(truth_vcf, vcf):
     true_allele_q_vaf = list()
     false_allele_q_vaf = list()
     q_vaf = list()
+
+    VAF_Threshold = 1.10
 
     all_allele_frequencies = list()
     total_recs = 0
@@ -82,9 +105,11 @@ def calculate_stats(truth_vcf, vcf):
             if true_index:
                 # if positional_norm_q[rec.pos] == 0:
                 #     print(rec)
-                q_of_true_alleles.append(positional_norm_q[rec.pos])
+                if min(vafs) <= VAF_Threshold:
+                    q_of_true_alleles.append(positional_norm_q[rec.pos])
             else:
-                q_of_false_alleles.append(positional_norm_q[rec.pos])
+                if min(vafs) <= VAF_Threshold:
+                    q_of_false_alleles.append(positional_norm_q[rec.pos])
 
             if len(alts) > 1:
                 total_multi_allelic_sites += 1
@@ -92,12 +117,18 @@ def calculate_stats(truth_vcf, vcf):
                 if i in true_index:
                     vafs_of_true_alleles.append(vaf)
                     true_allele_q_vaf.append((positional_norm_q[rec.pos], min(1.1, vaf)))
-                    # q_vaf.append((positional_norm_q[rec.pos], min(1.1, vaf), 'Green'))
+
+                    if vaf <= VAF_Threshold:
+                        q_vaf.append((positional_norm_q[rec.pos], min(1.1, vaf), 'Green'))
+
                     total_true_calls += 1
                 else:
                     vafs_of_false_alleles.append(vaf)
                     false_allele_q_vaf.append((positional_norm_q[rec.pos], min(1.1, vaf)))
-                    q_vaf.append((positional_norm_q[rec.pos], min(1.1, vaf), 'Red'))
+
+                    if vaf <= VAF_Threshold:
+                        q_vaf.append((positional_norm_q[rec.pos], min(1.1, vaf), 'Red'))
+
                     total_false_calls += 1
 
             for vaf in vafs:
@@ -110,7 +141,7 @@ def calculate_stats(truth_vcf, vcf):
     print("False alleles:\t", total_false_calls, "(" + str(int(100 * (total_false_calls/total_alts))) + "%)")
 
     plot_distributions(all_allele_frequencies, vafs_of_true_alleles, vafs_of_false_alleles)
-    # plot_distributions(all_allele_frequencies, q_of_true_alleles, q_of_false_alleles)
+    # plot_distributions_q(q_of_true_alleles, q_of_false_alleles)
     # plot_vaf_and_q_2d(true_allele_q_vaf, false_allele_q_vaf, q_vaf)
 
 
