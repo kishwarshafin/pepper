@@ -252,12 +252,12 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
     if CandidateFinderOptions.ALLELE_FREQ_THRESHOLD <= allele_frequency <= 0.25:
         if max(alt_prob_h1, alt_prob_h2) >= 0.4:
             return True
-        if non_ref_prob >= 0.4:
+        elif non_ref_prob >= 0.4:
             return True
-        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= 0.4:
+        elif max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= 0.4:
             return True
-    else:
-        return False
+        else:
+            return False
 
     # now this is for SNPs
     if candidate_type == 1:
