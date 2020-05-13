@@ -58,7 +58,9 @@ class VCFWriter:
             if sq not in contigs:
                 continue
             sq_id = sq
-            items = [('ID', sq_id)]
+            ln = self.fasta_handler.get_chromosome_sequence_length(sq)
+            items = [('ID', sq_id),
+                     ('length', ln)]
             header.add_meta(key='contig', items=items)
 
         header.add_sample(sample_name)
