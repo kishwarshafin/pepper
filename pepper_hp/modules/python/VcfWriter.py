@@ -32,9 +32,10 @@ class VCFWriter:
             #     phred_gqs.append(phred_gq)
             vafs = [round(ad/max(1, max(dps)), 3) for ad in ads]
             if genotype == [0, 0]:
-                vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
-                                                      stop=ref_end, id='.', qual=qual,
-                                                      filter='refCall', alleles=alleles, GT=genotype, GQ=min(gqs), VAF=vafs)
+                continue
+                # vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
+                #                                       stop=ref_end, id='.', qual=qual,
+                #                                       filter='refCall', alleles=alleles, GT=genotype, GQ=min(gqs), VAF=vafs)
             else:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=qual,
@@ -52,7 +53,7 @@ class VCFWriter:
             ln = self.fasta_handler.get_chromosome_sequence_length(sq)
             items = [('ID', sq_id),
                      ('length', ln)]
-            items = [('ID', sq_id)]
+            # items = [('ID', sq_id)]
             header.add_meta(key='contig', items=items)
 
         items = [('ID', "PASS"),

@@ -11,4 +11,4 @@ cython>=0.29.12
 pyyaml
 torchnet
 intervaltree
-pysam
+pysam==0.15.2
