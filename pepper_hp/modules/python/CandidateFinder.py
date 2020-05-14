@@ -43,16 +43,17 @@ def candidates_to_variants(candidates, contig):
 
         overall_non_ref_prob = min(non_ref_prob, overall_non_ref_prob)
 
-        if min_pos_start == -1:
-            min_pos_start = pos_start
-        if max_pos_end == -1:
-            max_pos_end = pos_end
-
-        min_pos_start = min(min_pos_start, pos_start)
-        max_pos_end = max(max_pos_end, pos_end)
-
-        if max_pos_end == pos_end:
-            ref_sequence = ref
+        # moving this to a separate loop as we want to do it only on the selected candidates
+        # if min_pos_start == -1:
+        #     min_pos_start = pos_start
+        # if max_pos_end == -1:
+        #     max_pos_end = pos_end
+        #
+        # min_pos_start = min(min_pos_start, pos_start)
+        # max_pos_end = max(max_pos_end, pos_end)
+        #
+        # if max_pos_end == pos_end:
+        #     ref_sequence = ref
 
         if alt_prob_h1 > CandidateFinderOptions.ALT_PROB_THRESHOLD:
             if h1_indx == -1:
@@ -61,6 +62,7 @@ def candidates_to_variants(candidates, contig):
             elif max_h1_prob < alt_prob_h1:
                 h1_indx = i
                 max_h1_prob = alt_prob_h1
+
         if alt_prob_h2 > CandidateFinderOptions.ALT_PROB_THRESHOLD:
             if h2_indx == -1:
                 h2_indx = i
@@ -68,6 +70,22 @@ def candidates_to_variants(candidates, contig):
             elif max_h2_prob < alt_prob_h2:
                 h2_indx = i
                 max_h2_prob = alt_prob_h2
+
+    for i, candidate in enumerate(candidates):
+        pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
+        read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
+
+        # make it universal just pick out all
+        if i in [h1_indx, h2_indx]:
+            if min_pos_start == -1:
+                min_pos_start = pos_start
+            if max_pos_end == -1:
+                max_pos_end = pos_end
+            min_pos_start = min(min_pos_start, pos_start)
+            max_pos_end = max(max_pos_end, pos_end)
+
+            if max_pos_end == pos_end:
+                ref_sequence = ref
     # print(candidates)
     # print(h1_indx, h2_indx)
 
@@ -124,6 +142,7 @@ def candidates_to_variants(candidates, contig):
     dps = selected_dps
     gts = selected_gts
     ads = selected_ads
+    # print(contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, gts, ads, overall_non_ref_prob)
 
     return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, gts, ads, overall_non_ref_prob
 
@@ -484,7 +503,7 @@ def find_candidates(input_dir, reference_file_path, bam_file, contig, sequence_c
                 sys.stderr.write("ERROR IN THREAD: " + str(fut.exception()) + "\n")
             fut._result = None  # python issue 27144
 
-    print("SORTING CANDIDATES: ", len(all_selected_candidates))
+    # print("TOTAL CANDIDATES IN ", contig, len(all_selected_candidates))
     all_selected_candidates = sorted(all_selected_candidates, key=lambda x: x[1])
-    print("SORTED")
+    # print("SORTED")
     return all_selected_candidates

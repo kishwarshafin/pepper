@@ -13,7 +13,7 @@ class VCFWriter:
         self.vcf_header = self.get_vcf_header(sample_name, contigs)
         self.output_dir = output_dir
         self.filename = filename
-        self.vcf_file = VariantFile(self.output_dir + self.filename + '.vcf.gz', 'w', header=self.vcf_header)
+        self.vcf_file = VariantFile(self.output_dir + self.filename + '.vcf', 'w', header=self.vcf_header)
 
     def write_vcf_records(self, variants_list):
         last_position = -1
@@ -44,17 +44,6 @@ class VCFWriter:
 
     def get_vcf_header(self, sample_name, contigs):
         header = VariantHeader()
-
-        sqs = self.fasta_handler.get_chromosome_names()
-        for sq in sqs:
-            if sq not in contigs:
-                continue
-            sq_id = sq
-            ln = self.fasta_handler.get_chromosome_sequence_length(sq)
-            items = [('ID', sq_id),
-                     ('length', ln)]
-            # items = [('ID', sq_id)]
-            header.add_meta(key='contig', items=items)
 
         items = [('ID', "PASS"),
                  ('Description', "All filters passed")]
@@ -102,6 +91,18 @@ class VCFWriter:
                  ('Description', "Genotype Quality")]
         header.add_meta(key='FORMAT', items=items)
 
+        sqs = self.fasta_handler.get_chromosome_names()
+        for sq in sqs:
+            if sq not in contigs:
+                continue
+            sq_id = sq
+            ln = self.fasta_handler.get_chromosome_sequence_length(sq)
+            items = [('ID', str(sq_id)),
+                     ('length', str(ln))]
+            # items = [('ID', sq_id)]
+            header.add_meta(key='contig', items=items)
+
         header.add_sample(sample_name)
+
 
         return header
