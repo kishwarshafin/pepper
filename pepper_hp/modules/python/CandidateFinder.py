@@ -277,9 +277,9 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
     if CandidateFinderOptions.ALLELE_FREQ_THRESHOLD <= allele_frequency <= 0.25:
         if max(alt_prob_h1, alt_prob_h2) >= 0.4:
             return True
-        elif non_ref_prob >= 0.4:
+        elif candidate_type == 1 and non_ref_prob >= 0.4:
             return True
-        elif max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= 0.4:
+        elif candidate_type == 1 and max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= 0.4:
             return True
         else:
             return False
@@ -458,11 +458,13 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     alt_prob_h2 = 1.0
                     # print(candidate.pos_start, candidate.pos_end)
                     for pos in range(candidate.pos_start, candidate.pos_end):
-                        # print(pos)
+
                         ref_allele_indx = get_index_from_base(candidate.allele.ref[pos - candidate.pos_start])
                         non_ref_prob_h1 = (sum(prediction_map_h1[(pos, 0)]) - prediction_map_h1[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
                         non_ref_prob_h2 = (sum(prediction_map_h2[(pos, 0)]) - prediction_map_h2[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
+                        # print("before", pos, non_ref_prob, non_ref_prob_h1, non_ref_prob_h2)
                         non_ref_prob = max(non_ref_prob, max(non_ref_prob_h1, non_ref_prob_h2))
+                        # print("after", pos, non_ref_prob, non_ref_prob_h1, non_ref_prob_h2)
 
                         if pos > candidate.pos_start:
                             del_allele_indx = get_index_from_base('*')
