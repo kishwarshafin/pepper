@@ -298,8 +298,8 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
     elif candidate_type == 2:
         if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_ALT_PROB_THRESHOLD:
             return True
-        if non_ref_prob >= CandidateFinderOptions.IN_NON_REF_THRESHOLD:
-            return True
+        # if non_ref_prob >= CandidateFinderOptions.IN_NON_REF_THRESHOLD:
+        #     return True
         # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_LAST_CHANCE_THRESHOLD:
         #     return True
         # if allele_frequency > CandidateFinderOptions.IN_FREQ_THRESHOLD:
@@ -309,8 +309,8 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
     elif candidate_type == 3:
         if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_ALT_PROB_THRESHOLD:
             return True
-        if non_ref_prob >= CandidateFinderOptions.DEL_NON_REF_THRESHOLD:
-            return True
+        # if non_ref_prob >= CandidateFinderOptions.DEL_NON_REF_THRESHOLD:
+        #     return True
         # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_LAST_CHANCE_THRESHOLD:
         #     return True
         # if allele_frequency > CandidateFinderOptions.DEL_FREQ_THRESHOLD:
