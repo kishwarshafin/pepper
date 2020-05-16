@@ -44,16 +44,17 @@ def candidates_to_variants(candidates, contig):
         overall_non_ref_prob = min(non_ref_prob, overall_non_ref_prob)
 
         # moving this to a separate loop as we want to do it only on the selected candidates
-        # if min_pos_start == -1:
-        #     min_pos_start = pos_start
-        # if max_pos_end == -1:
-        #     max_pos_end = pos_end
-        #
-        # min_pos_start = min(min_pos_start, pos_start)
-        # max_pos_end = max(max_pos_end, pos_end)
-        #
-        # if max_pos_end == pos_end:
-        #     ref_sequence = ref
+        if min_pos_start == -1:
+            min_pos_start = pos_start
+        if max_pos_end == -1:
+            max_pos_end = pos_end
+
+        min_pos_start = min(min_pos_start, pos_start)
+        max_pos_end = max(max_pos_end, pos_end)
+
+        if max_pos_end == pos_end:
+            ref_sequence = ref
+        # upto this point
 
         if alt_prob_h1 > CandidateFinderOptions.ALT_PROB_THRESHOLD:
             if h1_indx == -1:
@@ -71,21 +72,21 @@ def candidates_to_variants(candidates, contig):
                 h2_indx = i
                 max_h2_prob = alt_prob_h2
 
-    for i, candidate in enumerate(candidates):
-        pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
-        read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
-
-        # make it universal just pick out all
-        if i in [h1_indx, h2_indx]:
-            if min_pos_start == -1:
-                min_pos_start = pos_start
-            if max_pos_end == -1:
-                max_pos_end = pos_end
-            min_pos_start = min(min_pos_start, pos_start)
-            max_pos_end = max(max_pos_end, pos_end)
-
-            if max_pos_end == pos_end:
-                ref_sequence = ref
+    # for i, candidate in enumerate(candidates):
+    #     pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
+    #     read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
+    #
+    #     # make it universal just pick out all
+    #     if i in [h1_indx, h2_indx]:
+    #         if min_pos_start == -1:
+    #             min_pos_start = pos_start
+    #         if max_pos_end == -1:
+    #             max_pos_end = pos_end
+    #         min_pos_start = min(min_pos_start, pos_start)
+    #         max_pos_end = max(max_pos_end, pos_end)
+    #
+    #         if max_pos_end == pos_end:
+    #             ref_sequence = ref
     # print(candidates)
     # print(h1_indx, h2_indx)
 
@@ -132,16 +133,16 @@ def candidates_to_variants(candidates, contig):
         else:
             genotype = [1, 2]
 
-    # alleles = selected_alts + other_alts
-    # dps = selected_dps + other_dps
-    # gts = selected_gts + other_gts
-    # ads = selected_ads + other_ads
+    alleles = selected_alts + other_alts
+    dps = selected_dps + other_dps
+    gts = selected_gts + other_gts
+    ads = selected_ads + other_ads
 
     # only report the selected alts
-    alleles = selected_alts
-    dps = selected_dps
-    gts = selected_gts
-    ads = selected_ads
+    # alleles = selected_alts
+    # dps = selected_dps
+    # gts = selected_gts
+    # ads = selected_ads
     # print(contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, gts, ads, overall_non_ref_prob)
 
     return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, gts, ads, overall_non_ref_prob
@@ -274,15 +275,15 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
     if allele_frequency < CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
         return False
 
-    # if CandidateFinderOptions.ALLELE_FREQ_THRESHOLD <= allele_frequency <= 0.15:
-    #     if max(alt_prob_h1, alt_prob_h2) >= 0.4:
-    #         return True
-    #     elif candidate_type == 1 and non_ref_prob >= 0.1:
-    #         return True
-    #     elif candidate_type == 1 and max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= 0.1:
-    #         return True
-    #     else:
-    #         return False
+    if CandidateFinderOptions.ALLELE_FREQ_THRESHOLD <= allele_frequency <= 0.25:
+        if max(alt_prob_h1, alt_prob_h2) >= 0.2:
+            return True
+        elif candidate_type == 1 and non_ref_prob >= 0.1:
+            return True
+        elif candidate_type == 1 and max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= 0.1:
+            return True
+        else:
+            return False
 
     # now this is for SNPs
     if candidate_type == 1:
@@ -298,26 +299,23 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
     elif candidate_type == 2:
         if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_ALT_PROB_THRESHOLD:
             return True
-        if non_ref_prob >= CandidateFinderOptions.IN_NON_REF_THRESHOLD:
-            return True
-        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_LAST_CHANCE_THRESHOLD:
-            return True
-        if allele_frequency > CandidateFinderOptions.IN_FREQ_THRESHOLD:
-            return True
+        # if non_ref_prob >= CandidateFinderOptions.IN_NON_REF_THRESHOLD:
+        #     return True
+        # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_LAST_CHANCE_THRESHOLD:
+        #     return True
+        # if allele_frequency > CandidateFinderOptions.IN_FREQ_THRESHOLD:
+        #     return True
 
     # delete alleles
     elif candidate_type == 3:
         if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_ALT_PROB_THRESHOLD:
             return True
-        if non_ref_prob >= CandidateFinderOptions.DEL_NON_REF_THRESHOLD:
-            return True
-        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_LAST_CHANCE_THRESHOLD:
-            return True
-        if allele_frequency > CandidateFinderOptions.DEL_FREQ_THRESHOLD:
-            return True
-
-
-
+        # if non_ref_prob >= CandidateFinderOptions.DEL_NON_REF_THRESHOLD:
+        #     return True
+        # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_LAST_CHANCE_THRESHOLD:
+        #     return True
+        # if allele_frequency > CandidateFinderOptions.DEL_FREQ_THRESHOLD:
+        #     return True
 
     # if alt_prob_h1 >= CandidateFinderOptions.ALT_PROB_THRESHOLD or alt_prob_h2 >= CandidateFinderOptions.ALT_PROB_THRESHOLD:
     #     return True
