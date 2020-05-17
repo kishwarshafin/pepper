@@ -693,6 +693,15 @@ def _merge_variants(
 
     haps = list(alts_dict.keys())
     alts = list(alts_dict.values())
+    filtered_alts = list()
+    filtered_haps = list()
+    for i, alt in enumerate(alts):
+        if alt != ref:
+            filtered_alts.append(alt)
+            filtered_haps.append(haps[i])
+
+    alts = filtered_alts
+    haps = filtered_haps
     gt_sep = '/' if discard_phase else '|'
     if len(alts) == 2:
         if alts[0] == alts[1]:  # homozygous 1/1
@@ -849,7 +858,8 @@ def simplify_variants(variant):
 
         if len(alts) == 0:
             continue
-
+        if len(gt_tag) == 1:
+            gt_tag.append("0")
         GT = '|'.join(gt_tag)
         genotype_data = collections.OrderedDict()
         genotype_data['GT'] = GT
@@ -883,6 +893,8 @@ def simplify_variants(variant):
             gt_tag.append("0")
 
     if len(alts) > 0:
+        if len(gt_tag) == 1:
+            gt_tag.append("0")
         GT = '|'.join(gt_tag)
         genotype_data = collections.OrderedDict()
         genotype_data['GT'] = GT
