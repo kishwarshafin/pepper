@@ -2,6 +2,7 @@ import collections
 from copy import deepcopy
 import itertools
 from threading import Lock
+from datetime import datetime
 from distutils.version import LooseVersion
 
 import intervaltree
@@ -9,6 +10,7 @@ import pysam
 import sys
 import os
 import re
+from pepper_hp.build import PEPPER_HP
 from pepper_hp.modules.python.ImageGenerationUI import UserInterfaceSupport
 
 """Reading and writing of Variant Call Format files."""
@@ -423,9 +425,6 @@ class VCFWriter(object):
         self.version = version
         self.meta = ['fileformat=VCFv{}'.format(self.version)]
 
-        if contigs is not None:
-            self.meta.extend(['contig=<ID={}>'.format(c) for c in contigs])
-
         if meta_info is not None:
             # try to sort so we get INFO, FILTER, FORMAT in that order
             try:
@@ -438,6 +437,9 @@ class VCFWriter(object):
             # remove version if this is present in meta_info
             meta_info = [m for m in meta_info if 'fileformat=VCFv' not in m]
             self.meta.extend(meta_info)
+
+        if contigs is not None:
+            self.meta.extend(['contig=<ID={},length={}>'.format(c, ln) for c, ln in contigs])
 
     def __enter__(self):
         """Open and prepare file as a managed context."""
@@ -762,7 +764,17 @@ class Haploid2DiploidConverter(object):
         self.fasta = pysam.FastaFile(ref_fasta)
         all_contigs = list(set(itertools.chain(*[v.chroms for v in self.vcfs])))
         all_contigs = sorted(all_contigs, key=natural_key)
-        self.chroms = all_contigs
+
+        fasta_handler = PEPPER_HP.FASTA_handler(ref_fasta)
+        sqs = fasta_handler.get_chromosome_names()
+
+        self.chroms = []
+        for sq in sqs:
+            if sq not in all_contigs:
+                continue
+            sq_id = sq
+            ln = fasta_handler.get_chromosome_sequence_length(sq)
+            self.chroms.append((sq_id, ln))
 
     def variants(self):
         """Yield diploid variants.
@@ -770,8 +782,9 @@ class Haploid2DiploidConverter(object):
         :yields `Variant` objs
 
         """
-        for chrom in loose_version_sort(self.chroms):
-            sys.stderr.write('Merging variants in chrom {}'.format(chrom) + "\n")
+        for chrom, ln in loose_version_sort(self.chroms):
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: MERGING VARIANTS IN CONTIG: " + str(chrom) + "\n")
+            sys.stderr.flush()
             merged = []
             trees = [vcf._tree[chrom] for vcf in self.vcfs]
             # assign haplotype so that otherwise identical variants in both
@@ -918,7 +931,7 @@ def haploid2diploid(vcf1, vcf2, ref_fasta, output_dir, adjacent=False, discard_p
     output_dir = UserInterfaceSupport.handle_output_directory(os.path.abspath(output_dir))
     converter = Haploid2DiploidConverter(vcf1, vcf2, ref_fasta)
 
-    vcfout = output_dir + "merged_vcf_simplified.vcf"
+    vcfout = output_dir + "PEPPER_HP_CANDIDATES_MERGED.vcf"
 
     with VCFWriter(vcfout, 'w', version='4.1', contigs=converter.chroms, meta_info=converter.meta_info) as vcf_writer:
         for v in converter.variants():

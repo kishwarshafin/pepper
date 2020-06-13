@@ -1,9 +1,11 @@
 import time
 import os
 import sys
+import re
 import concurrent.futures
 from datetime import datetime
 from pepper_snp.build import PEPPER_SNP
+from pepper_snp.modules.python.ExcludeContigs import EXCLUDED_HUMAN_CONTIGS
 from pepper_snp.modules.python.DataStore import DataStore
 from pepper_snp.modules.python.AlignmentSummarizer import AlignmentSummarizer
 from pepper_snp.modules.python.Options import ImageSizeOptions
@@ -84,17 +86,42 @@ class UserInterfaceSupport:
         return output_directory
 
     @staticmethod
-    def get_chromosome_list(chromosome_names, ref_file, region_bed):
+    def natural_key(string_):
+        """See http://www.codinghorror.com/blog/archives/001018.html"""
+        return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
+
+    @staticmethod
+    def get_chromosome_list(chromosome_names, ref_file, bam_file, region_bed):
         """
         PARSES THROUGH THE CHROMOSOME PARAMETER TO FIND OUT WHICH REGIONS TO PROCESS
         :param chromosome_names: NAME OF CHROMOSOME
         :param ref_file: PATH TO THE REFERENCE FILE
+        :param bam_file: PATH TO BAM FILE
         :return: LIST OF CHROMOSOME IN REGION SPECIFIC FORMAT
         """
-        if not chromosome_names:
+        if not chromosome_names and not region_bed:
             fasta_handler = PEPPER_SNP.FASTA_handler(ref_file)
-            chromosome_names = fasta_handler.get_chromosome_names()
-            chromosome_names = ','.join(chromosome_names)
+            bam_handler = PEPPER_SNP.BAM_handler(bam_file)
+            bam_contigs = bam_handler.get_chromosome_sequence_names()
+            fasta_contigs = fasta_handler.get_chromosome_names()
+            common_contigs = list(set(fasta_contigs) & set(bam_contigs))
+            common_contigs = list(set(common_contigs) - set(EXCLUDED_HUMAN_CONTIGS))
+
+            if len(common_contigs) == 0:
+                sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
+                                 + "ERROR: NO COMMON CONTIGS FOUND BETWEEN THE BAM FILE AND THE FASTA FILE.")
+                sys.stderr.flush()
+                exit(1)
+
+            common_contigs = sorted(common_contigs, key=UserInterfaceSupport.natural_key)
+            sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] INFO: COMMON CONTIGS FOUND: " + str(common_contigs) + "\n")
+            sys.stderr.flush()
+
+            chromosome_name_list = []
+            for contig_name in common_contigs:
+                chromosome_name_list.append((contig_name, None))
+
+            return chromosome_name_list
 
         if region_bed:
             chromosome_name_list = []

@@ -34,8 +34,9 @@ def find_candidates(input_dir, reference_path, output_dir, threads, sample_name,
     all_contigs = set()
     for prediction_file in all_prediction_files:
         with h5py.File(prediction_file, 'r') as hdf5_file:
-            contigs = list(hdf5_file['predictions'].keys())
-            all_contigs.update(contigs)
+            if 'predictions' in hdf5_file.keys():
+                contigs = list(hdf5_file['predictions'].keys())
+                all_contigs.update(contigs)
     all_contigs = list(all_contigs)
 
     vcf_file = VCFWriter(reference_path, sample_name, output_dir, all_contigs)
@@ -46,10 +47,11 @@ def find_candidates(input_dir, reference_path, output_dir, threads, sample_name,
         all_chunk_keys = list()
         for prediction_file in all_prediction_files:
             with h5py.File(prediction_file, 'r') as hdf5_file:
-                if contig in hdf5_file['predictions'].keys():
-                    chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
-                    for chunk_key in chunk_keys:
-                        all_chunk_keys.append((prediction_file, chunk_key))
+                if 'predictions' in hdf5_file.keys():
+                    if contig in hdf5_file['predictions'].keys():
+                        chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
+                        for chunk_key in chunk_keys:
+                            all_chunk_keys.append((prediction_file, chunk_key))
 
         all_candidates, reference_dict, positions = find_SNP_candidates(contig,
                                                                         all_chunk_keys,

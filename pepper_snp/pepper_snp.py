@@ -57,8 +57,9 @@ def add_call_variant_arguments(parser):
         "-s",
         "--sample_name",
         type=str,
-        required=True,
-        help="Name of the sample."
+        default="SAMPLE",
+        required=False,
+        help="Name of the sample. Default: SAMPLE"
     )
     parser.add_argument(
         "-t",
@@ -287,8 +288,9 @@ def add_find_candidates_arguments(parser):
         "-s",
         "--sample_name",
         type=str,
-        required=True,
-        help="Name of the sample."
+        required=False,
+        default="SAMPLE",
+        help="Name of the sample. Default: SAMPLE"
     )
     parser.add_argument(
         "-o",
