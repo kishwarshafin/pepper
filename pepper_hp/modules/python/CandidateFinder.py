@@ -298,6 +298,8 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
             return True
     # insert alleles
     elif candidate_type == 2:
+        if allele_frequency < CandidateFinderOptions.INDEL_ALLELE_FREQ_THRESHOLD:
+            return False
         if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_ALT_PROB_THRESHOLD:
             return True
         # if non_ref_prob >= CandidateFinderOptions.IN_NON_REF_THRESHOLD:
@@ -309,6 +311,8 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
 
     # delete alleles
     elif candidate_type == 3:
+        if allele_frequency < CandidateFinderOptions.INDEL_ALLELE_FREQ_THRESHOLD:
+            return False
         if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_ALT_PROB_THRESHOLD:
             return True
         # if non_ref_prob >= CandidateFinderOptions.DEL_NON_REF_THRESHOLD:
