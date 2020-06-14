@@ -300,10 +300,10 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
     elif candidate_type == 2:
         if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_ALT_PROB_THRESHOLD:
             return True
-        if non_ref_prob >= CandidateFinderOptions.IN_NON_REF_THRESHOLD:
-            return True
-        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_LAST_CHANCE_THRESHOLD:
-            return True
+        # if non_ref_prob >= CandidateFinderOptions.IN_NON_REF_THRESHOLD:
+        #     return True
+        # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_LAST_CHANCE_THRESHOLD:
+        #     return True
         if allele_frequency > CandidateFinderOptions.IN_FREQ_THRESHOLD:
             return True
 
@@ -311,10 +311,10 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
     elif candidate_type == 3:
         if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_ALT_PROB_THRESHOLD:
             return True
-        if non_ref_prob >= CandidateFinderOptions.DEL_NON_REF_THRESHOLD:
-            return True
-        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_LAST_CHANCE_THRESHOLD:
-            return True
+        # if non_ref_prob >= CandidateFinderOptions.DEL_NON_REF_THRESHOLD:
+        #     return True
+        # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_LAST_CHANCE_THRESHOLD:
+        #     return True
         if allele_frequency > CandidateFinderOptions.DEL_FREQ_THRESHOLD:
             return True
 
@@ -474,9 +474,9 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
 
                 if filter_candidate(candidate.allele.alt_type, candidate.depth, candidate.read_support,
                                     candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
-                    # print("SELECTED")
-                    # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                    #       candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob)
+                    print("SELECTED")
+                    print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                          candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob)
                     found_candidate = True
                     selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
                                                 candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2,
