@@ -400,8 +400,8 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     continue
                 non_ref_prob = 0.0
 
-                alt_prob_h1 = 1.0
-                alt_prob_h2 = 1.0
+                alt_prob_h1 = 0.0
+                alt_prob_h2 = 0.0
                 # see if it's a SNP
                 if candidate.allele.alt_type == 1:
                     # see the possibility that this position may
@@ -424,22 +424,25 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                         non_ref_prob = max(non_ref_prob, max(non_ref_prob_h1, non_ref_prob_h2))
 
                     # calculate probability for HP2
-                    alt_prob_h1 = alt_prob_h1 * max(0.01, prob_alt_h1)
-                    alt_prob_h2 = alt_prob_h2 * max(0.01, prob_alt_h2)
+                    alt_prob_h1 = max(0.0000001, prob_alt_h1)
+                    alt_prob_h2 = max(0.0000001, prob_alt_h2)
                 # INSERTION
                 elif candidate.allele.alt_type == 2:
                     alt_allele = candidate.allele.alt
                     pos = candidate.pos_start
                     indx_lim = min(max_index_map[pos], len(alt_allele))
-
+                    length = 0
                     for indx in range(1, indx_lim):
                         alt_allele_indx = get_index_from_base(alt_allele[indx])
                         # print(alt_allele[indx], get_index_from_base(alt_allele[indx]), prediction_map_h1[(pos, indx)], prediction_map_h2[(pos, indx)])
                         prob_alt_h1 = max(0.01, prediction_map_h1[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, indx)])))
                         prob_alt_h2 = max(0.01, prediction_map_h2[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, indx)])))
 
-                        alt_prob_h1 = max(0.0000001, (alt_prob_h1 * prob_alt_h1))
-                        alt_prob_h2 = max(0.0000001, (alt_prob_h2 * prob_alt_h2))
+                        alt_prob_h1 += prob_alt_h1
+                        alt_prob_h2 += prob_alt_h2
+                        length += 1
+                    alt_prob_h1 = alt_prob_h1 / max(1, length)
+                    alt_prob_h2 = alt_prob_h2 / max(1, length)
 
                     # non-ref-prob is the probability that this position can have an alt
                     for indx in range(0, max_index_map[pos]):
@@ -453,8 +456,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     # alt_probability = prediction_map[(candidate.pos_start)][0]
                 # DEL
                 elif candidate.allele.alt_type == 3:
-                    alt_prob_h1 = 1.0
-                    alt_prob_h2 = 1.0
+                    length = 0
                     # print(candidate.pos_start, candidate.pos_end)
                     for pos in range(candidate.pos_start, candidate.pos_end):
 
@@ -469,14 +471,19 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                             del_allele_indx = get_index_from_base('*')
                             prob_del_h1 = prediction_map_h1[(pos, 0)][del_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, 0)]))
                             prob_del_h2 = prediction_map_h2[(pos, 0)][del_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, 0)]))
-                            alt_prob_h1 = alt_prob_h1 * max(0.01, prob_del_h1)
-                            alt_prob_h2 = alt_prob_h2 * max(0.01, prob_del_h2)
+                            alt_prob_h1 += prob_del_h1
+                            alt_prob_h2 += prob_del_h2
+                            length += 1
+
+                    alt_prob_h1 = alt_prob_h1 / max(1, length)
+                    alt_prob_h2 = alt_prob_h2 / max(1, length)
 
                 if filter_candidate(candidate.allele.alt_type, candidate.depth, candidate.read_support,
                                     candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
-                    print("SELECTED")
-                    print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                          candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob)
+                    # print("SELECTED")
+                    # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                    #       "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
+                    #       candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob)
                     found_candidate = True
                     selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
                                                 candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2,
@@ -484,7 +491,8 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                 # else:
                 #     print("NOT SELECTED:")
                 #     print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                #           candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob)
+                #           "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
+                #           candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob)
             if found_candidate:
                 variant = candidates_to_variants(list(selected_candidates), contig)
                 selected_candidate_list.append(variant)
