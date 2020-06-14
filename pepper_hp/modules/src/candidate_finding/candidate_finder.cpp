@@ -47,20 +47,21 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
                         reference_sequence[reference_index] != read.sequence[read_index] &&
                         read.base_qualities[read_index] >= CandidateFinder_options::min_base_quality) {
                         //look forward and make sure this is not an anchor base
+                        bool check_this_base = 1;
                         if(i == cigar.length - 1 && cigar_i + 1 < read.cigar_tuples.size()) {
                             CigarOp next_cigar = read.cigar_tuples[cigar_i + 1];
                             if(next_cigar.operation == CIGAR_OPERATIONS::IN ||
                                next_cigar.operation == CIGAR_OPERATIONS::DEL) {
                                 // this is an anchor base of a delete or an insert, don't process this.
                                 coverage[region_index] += 1;
+                                check_this_base = 0;
                             }
-                        } else {
+                        }
+                        if(check_this_base == 1) {
                             // process the SNP allele here
                             string ref(1, reference_sequence[reference_index]);
                             string alt(1, read.sequence[read_index]);
                             Candidate candidate_alt(ref_position, ref_position + 1, ref, alt, AlleleType::SNP_ALLELE);
-
-//                            cout<<"SNP "<<ref_position<<" "<<ref_position + 1<<" "<<ref<<" "<<alt<<endl;
 
                             if (AlleleFrequencyMap.find(candidate_alt) != AlleleFrequencyMap.end()) {
                                 AlleleFrequencyMap[candidate_alt] += 1;

@@ -287,6 +287,7 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
 
     # now this is for SNPs
     if candidate_type == 1:
+        # print("SNP", candidate_type, depth, read_support, max(alt_prob_h1, alt_prob_h2), non_ref_prob, max(non_ref_prob, alt_prob_h1, alt_prob_h2))
         if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.SNP_ALT_PROB_THRESHOLD:
             return True
         if non_ref_prob >= CandidateFinderOptions.SNP_NON_REF_THRESHOLD:
@@ -393,7 +394,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
             selected_candidates = []
             found_candidate = False
             for candidate in candidate_map[pos]:
-                # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
+                # print("CANDIDATE", candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
                 # non-ref prob calcuates the probability of having an alt in that region
                 if not check_alleles(candidate.allele.ref) or not check_alleles(candidate.allele.alt):
                     continue
@@ -473,12 +474,17 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
 
                 if filter_candidate(candidate.allele.alt_type, candidate.depth, candidate.read_support,
                                     candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
+                    # print("SELECTED")
                     # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
                     #       candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob)
                     found_candidate = True
                     selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
                                                 candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2,
                                                 alt_prob_h1, alt_prob_h2, non_ref_prob))
+                # else:
+                #     print("NOT SELECTED:")
+                #     print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                #           candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob)
             if found_candidate:
                 variant = candidates_to_variants(list(selected_candidates), contig)
                 selected_candidate_list.append(variant)

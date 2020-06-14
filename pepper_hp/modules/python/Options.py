@@ -12,7 +12,7 @@ class ImageSizeOptions(object):
 
 
 class ReadFilterOptions(object):
-    MIN_MAPQ = 10
+    MIN_MAPQ = 1
     MIN_BASEQ = 0
     INCLUDE_SUPPLEMENTARY = False
 
@@ -28,12 +28,12 @@ class CandidateFinderOptions(object):
     IN_ALT_PROB_THRESHOLD = 0.1
     IN_NON_REF_THRESHOLD = 0.1
     IN_LAST_CHANCE_THRESHOLD = 0.1
-    IN_FREQ_THRESHOLD = 0.1
+    IN_FREQ_THRESHOLD = 0.3
 
     DEL_ALT_PROB_THRESHOLD = 0.1
     DEL_NON_REF_THRESHOLD = 0.1
     DEL_LAST_CHANCE_THRESHOLD = 0.1
-    DEL_FREQ_THRESHOLD = 0.1
+    DEL_FREQ_THRESHOLD = 0.3
 
     SAFE_BASES = 20
     ALT_PROB_THRESHOLD = 0.1
