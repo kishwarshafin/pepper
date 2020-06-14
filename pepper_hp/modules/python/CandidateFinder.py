@@ -304,8 +304,8 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
         #     return True
         # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_LAST_CHANCE_THRESHOLD:
         #     return True
-        if allele_frequency > CandidateFinderOptions.IN_FREQ_THRESHOLD:
-            return True
+        # if allele_frequency > CandidateFinderOptions.IN_FREQ_THRESHOLD:
+        #     return True
 
     # delete alleles
     elif candidate_type == 3:
@@ -315,8 +315,8 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
         #     return True
         # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_LAST_CHANCE_THRESHOLD:
         #     return True
-        if allele_frequency > CandidateFinderOptions.DEL_FREQ_THRESHOLD:
-            return True
+        # if allele_frequency > CandidateFinderOptions.DEL_FREQ_THRESHOLD:
+        #     return True
 
     # if alt_prob_h1 >= CandidateFinderOptions.ALT_PROB_THRESHOLD or alt_prob_h2 >= CandidateFinderOptions.ALT_PROB_THRESHOLD:
     #     return True
