@@ -12,7 +12,7 @@ Computational Genomics Lab (CGL), University of California, Santa Cruz.
 ### Oxford Nanopore variant calling workflow (Limited support release)
 In collaboration with the [DeepVariant](https://github.com/google/deepvariant) group, we are developing a haplotype-aware variant calling pipeline for Oxford Nanopore sequencing technology. We are releasing the pipeline with limited support until we finalize the pipeline for full support.
 
-<img src="img/PEPPER_deepvariant.png" alt="PEPPER DeepVariant workflow">
+<img src="img/PEPPER_DeepVariant.png" alt="PEPPER DeepVariant workflow">
 
 ### How to run the variant calling pipeline
 Please consult the [documentation provided here](./docs/PEPPER_variant_calling.md) on how to run the variant calling pipeline.

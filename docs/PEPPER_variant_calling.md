@@ -1,7 +1,7 @@
 ## Oxford Nanopore variant calling workflow (Limited support release)
 In collaboration with the [DeepVariant](https://github.com/google/deepvariant) group, we are developing a haplotype-aware variant calling pipeline for Oxford Nanopore sequencing technology. We are releasing the pipeline with limited support until we finalize the pipeline.
 
-<img src="../img/PEPPER_deepvariant.png" alt="PEPPER DeepVariant workflow">
+<img src="../img/PEPPER_DeepVariant.png" alt="PEPPER DeepVariant workflow">
 
 ### Limited support statement
 We are releasing this pipeline with limited support as we are actively developing the pipeline. This pipeline is developed outside the main repository of [DeepVariant](https://github.com/google/deepvariant). If you have issues with running this pipeline, please open a github issue in this repository (PEPPER). We will update this page as we evaluate the pipeline across all platforms.
