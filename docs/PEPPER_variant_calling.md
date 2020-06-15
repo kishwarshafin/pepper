@@ -22,7 +22,7 @@ We have not yet tested the pipeline on different pores and devices. We will upda
 As we use WhatsHap to phase the BAM file, please expect disk-space usage of ~4x the size of the BAM file.
 
 ### How to run
-We have combined all of the steps to run sequentially using one script. You can run the pipeline on your CPU-only or GPU-only machines.
+We have combined all of the steps to run sequentially using one script. You can run the pipeline on your CPU-only or GPU machines.
 
 #### Running on a CPU-only machine (Whole genome run)
 Running the variant calling pipeline is as simple as:
