@@ -60,7 +60,7 @@ On a **GPU** based machine (make sure to install [nvidia-docker](https://github.
 docker run --ipc=host \
 -v /input_dir:/input_dir \
 -v /output_dir:/output_dir \
---gpu all \
+--gpus all \
 kishwars/pepper_deepvariant_gpu:latest \
 /opt/run_pepper_deepvariant.sh \
 -b </input/bam_file.bam> \
@@ -72,7 +72,7 @@ kishwars/pepper_deepvariant_gpu:latest \
 docker run --ipc=host \
 -v /input_dir:/input_dir \
 -v /output_dir:/output_dir \
---gpu all \
+--gpus all \
 kishwars/pepper_deepvariant_gpu:latest \
 /opt/run_pepper_deepvariant.sh \
 -b </input/bam_file.bam> \
