@@ -3,6 +3,7 @@ In collaboration with the [DeepVariant](https://github.com/google/deepvariant) g
 
 <img src="../img/PEPPER_DeepVariant.png" alt="PEPPER DeepVariant workflow">
 
+
 ### Limited support statement
 We are releasing this pipeline with limited support as we are actively developing the pipeline. This pipeline is developed outside the main repository of [DeepVariant](https://github.com/google/deepvariant). If you have issues with running this pipeline, please open a github issue in this repository (PEPPER). We will update this page as we evaluate the pipeline across all platforms.
 
@@ -190,3 +191,21 @@ Expected output:
 |-------|--------|-------------|----------|----------|-------------|----------|-------|---------------|------------------|-----------------|
 | INDEL | ALL    | 3           | 2        | 1        | 2           | 0        | 0     | 0.666667      | 1.0              | 0.8             |
 | SNP   | ALL    | 45          | 45       | 0        | 45          | 0        | 0     | 1.0           | 1.0              | 1.0             |
+
+### Authors:
+This pipeline is a collaboration between UCSC genomics institute and the genomics team at Google health.
+
+#### UCSC Genomics Institute:
+* Kishwar Shafin
+* Trevor Pesout
+* Miten Jain
+* Benedict Paten
+
+#### Genomics team at Google Health:
+* Pi-Chuan Chang
+* Alexey Kolesnikov
+* Maria Nattestad
+* Gunjan Baid
+* Sidharth Goel
+* Howard Yang
+* Andrew Carroll
