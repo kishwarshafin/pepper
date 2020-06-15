@@ -187,10 +187,10 @@ pkrusche/hap.py /opt/hap.py/bin/hap.py \
 
 Expected output:
 
-| Type  | Filter | TRUTH.TOTAL | TRUTH.TP | TRUTH.FN | QUERY.TOTAL | QUERY.FP | FP.gt | METRIC.Recall | METRIC.Precision | METRIC.F1_Score |
-|-------|--------|-------------|----------|----------|-------------|----------|-------|---------------|------------------|-----------------|
-| INDEL | ALL    | 3           | 2        | 1        | 2           | 0        | 0     | 0.666667      | 1.0              | 0.8             |
-| SNP   | ALL    | 45          | 45       | 0        | 45          | 0        | 0     | 1.0           | 1.0              | 1.0             |
+| Type  | Filter | TRUTH.TOTAL | TRUTH.TP | METRIC.Recall | METRIC.Precision | METRIC.F1_Score |
+|-------|--------|-------------|----------|---------------|------------------|-----------------|
+| INDEL | ALL    | 3           | 2        | 0.666667      | 1.0              | 0.8             |
+| SNP   | ALL    | 45          | 45       | 1.0           | 1.0              | 1.0             |
 
 ### Authors:
 This pipeline is a collaboration between UCSC genomics institute and the genomics team at Google health.
