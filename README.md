@@ -9,13 +9,16 @@
 © 2020 Kishwar Shafin, Trevor Pesout, Miten Jain, Benedict Paten. <br/>
 Computational Genomics Lab (CGL), University of California, Santa Cruz.
 
-### Oxford Nanopore variant calling workflow (Limited support release)
+----
+## Oxford Nanopore variant calling workflow (Limited support release)
 In collaboration with the [DeepVariant](https://github.com/google/deepvariant) group, we are developing a haplotype-aware variant calling pipeline for Oxford Nanopore sequencing technology. We are releasing the pipeline with limited support until we finalize the pipeline for full support.
 
 <img src="img/PEPPER_DeepVariant.png" alt="PEPPER DeepVariant workflow">
 
-### How to run the variant calling pipeline
+## How to run the variant calling pipeline
 Please consult the [documentation provided here](./docs/PEPPER_variant_calling.md) on how to run the variant calling pipeline.
+
+----
 
 ## Polisher workflow
  * Sequence a genome and get a basecalled reads file (`reads.fastq`).
