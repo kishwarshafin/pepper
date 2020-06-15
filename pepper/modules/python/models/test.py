@@ -4,8 +4,8 @@ from tqdm import tqdm
 import torchnet.meter as meter
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from datetime import datetime
 from pepper.modules.python.models.dataloader import SequenceDataset
-from pepper.modules.python.TextColor import TextColor
 from pepper.modules.python.Options import ImageSizeOptions, TrainOptions
 """
 This script will evaluate a model and return the loss value.
@@ -45,7 +45,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
         criterion = criterion.cuda()
 
     # Test the Model
-    sys.stderr.write(TextColor.PURPLE + 'Test starting\n' + TextColor.END)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: Test starting\n")
     confusion_matrix = meter.ConfusionMeter(num_classes)
 
     total_loss = 0
@@ -92,7 +92,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
     avg_loss = total_loss / total_images if total_images else 0
 
-    sys.stderr.write(TextColor.YELLOW+'\nTest Loss: ' + str(avg_loss) + "\n"+TextColor.END)
-    sys.stderr.write("Confusion Matrix: \n" + str(confusion_matrix.conf) + "\n" + TextColor.END)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] Test Loss: " + str(avg_loss) + "\n")
+    sys.stderr.write("Confusion Matrix: \n" + str(confusion_matrix.conf) + "\n")
 
     return {'loss': avg_loss, 'accuracy': accuracy, 'confusion_matrix': str(confusion_matrix.conf)}

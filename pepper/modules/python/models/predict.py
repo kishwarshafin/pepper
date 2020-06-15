@@ -3,8 +3,8 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from pepper.modules.python.models.dataloader_predict import SequenceDataset
-from pepper.modules.python.TextColor import TextColor
 from tqdm import tqdm
+from datetime import datetime
 from pepper.modules.python.models.ModelHander import ModelHandler
 from pepper.modules.python.Options import ImageSizeOptions, TrainOptions
 from pepper.modules.python.DataStorePredict import DataStore
@@ -42,7 +42,7 @@ def predict(test_file, output_filename, model_path, batch_size, num_workers, gpu
     if gpu_mode:
         transducer_model = transducer_model.cuda()
 
-    sys.stderr.write(TextColor.CYAN + 'STARTING INFERENCE\n' + TextColor.END)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING INFERENCE\n")
 
     with torch.no_grad():
         for contig, contig_start, contig_end, chunk_id, images, position, index in tqdm(test_loader, ncols=50):

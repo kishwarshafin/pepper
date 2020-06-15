@@ -1,11 +1,16 @@
 import h5py
 import sys
 import re
-from pepper.modules.python.TextColor import TextColor
-from pepper.modules.python.StitchV2 import create_consensus_sequence
+from pepper.modules.python.Stitch import create_consensus_sequence
 from os.path import isfile, join
 from pathlib import Path
 from os import listdir
+from datetime import datetime
+
+
+def natural_key(string_):
+    """See http://www.codinghorror.com/blog/archives/001018.html"""
+    return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
 
 
 def get_file_paths_from_directory(directory_path):
@@ -45,14 +50,17 @@ def perform_stitch(hdf_file_path, output_path, threads):
             contigs = list(hdf5_file['predictions'].keys())
             all_contigs.update(contigs)
 
+    output_path = output_path + '_pepper_polished.fa'
+    output_path_qual = output_path + '_pepper_polished.txt'
     output_directory = Path(output_path).resolve().parents[0]
     output_directory.mkdir(parents=True, exist_ok=True)
 
-    consensus_fasta_file = open(output_path + '_pepper.fa', 'w')
+    consensus_fasta_file = open(output_path, 'w')
+    quality_fasta_file = open(output_path_qual, 'w')
 
-    for contig in sorted(all_contigs):
-        sys.stderr.write(TextColor.YELLOW + "INFO: PROCESSING CONTIG: " + contig + "\n" + TextColor.END)
-
+    for contig in sorted(all_contigs, key=natural_key):
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + "\n")
+        sys.stderr.flush()
         # get all the chunk keys from all the files
         all_chunk_keys = list()
         for prediction_file in all_prediction_files:
@@ -63,15 +71,19 @@ def perform_stitch(hdf_file_path, output_path, threads):
                 for chunk_key in chunk_keys:
                     all_chunk_keys.append((prediction_file, chunk_key))
 
-        consensus_sequence = create_consensus_sequence(contig,
-                                                       all_chunk_keys,
-                                                       threads)
-        sys.stderr.write(TextColor.BLUE + "INFO: FINISHED PROCESSING " + contig + ", POLISHED SEQUENCE LENGTH: "
-                         + str(len(consensus_sequence)) + ".\n" + TextColor.END)
+        consensus_sequence, quality_sequence = create_consensus_sequence(contig,
+                                                                         all_chunk_keys,
+                                                                         threads)
+        assert(len(consensus_sequence) == len(quality_sequence))
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", POLISHED SEQUENCE LENGTH: "
+                         + str(len(consensus_sequence)) + ".\n")
 
         # TODO: I should write a FASTA handler here. This is too sloppy.
         if consensus_sequence is not None and len(consensus_sequence) > 0:
             consensus_fasta_file.write('>' + contig + "\n")
             consensus_fasta_file.write(consensus_sequence+"\n")
+
+            quality_fasta_file.write('>' + contig + "\n")
+            quality_fasta_file.write(quality_sequence+"\n")
 
     hdf5_file.close()

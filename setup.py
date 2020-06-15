@@ -68,12 +68,14 @@ class CMakeBuild(build_ext):
 
         # Move from build temp to final position
         for ext in self.extensions:
+            print(ext)
             self.move_output(ext)
 
     def move_output(self, ext):
         source_path = os.path.abspath(self.build_temp + "/" + self.get_ext_filename(ext.name))
-
-        dest_directory = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name))) + "/pepper/build/"
+        print(source_path)
+        dest_directory = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name))) + "/" + str(ext.name).lower() + "/build/"
+        print(dest_directory)
         os.makedirs(dest_directory, exist_ok=True)
 
         dest_path = dest_directory + self.get_ext_filename(ext.name)
@@ -127,11 +129,22 @@ if __name__ == '__main__':
     setup(
         name='pepper_polish',
         version=get_version(),
-        packages=['pepper/', 'pepper/modules/python', 'pepper/modules/python/models', 'pepper/modules/python/helper'],
+        packages=['pepper/', 'pepper/modules/python', 'pepper/modules/python/models', 'pepper/modules/python/helper',
+                  'pepper_snp/', 'pepper_snp/modules/python', 'pepper_snp/modules/python/models', 'pepper_snp/modules/python/helper',
+                  'pepper_hp/', 'pepper_hp/modules/python', 'pepper_hp/modules/python/models'],
         package_dir={'pepper': 'pepper',
                      'pepper/modules/python': 'pepper/modules/python',
                      'pepper/modules/python/models': 'pepper/modules/python/models',
-                     'pepper/modules/python/helper': 'pepper/modules/python/helper'},
+                     'pepper/modules/python/helper': 'pepper/modules/python/helper',
+                     'pepper_snp': 'pepper_snp',
+                     'pepper_snp/modules/python': 'pepper_snp/modules/python',
+                     'pepper_snp/modules/python/models': 'pepper_snp/modules/python/models',
+                     'pepper_snp/modules/python/helper': 'pepper_snp/modules/python/helper',
+                     'pepper_hp': 'pepper_hp',
+                     'pepper_hp/modules/python': 'pepper_hp/modules/python',
+                     'pepper_hp/modules/python/models': 'pepper_hp/modules/python/models',
+                     'pepper_hp/modules/python/helper': 'pepper_hp/modules/python/helper'
+                     },
         url='https://github.com/kishwarshafin/pepper',
         author=__author__,
         author_email="kishwar.shafin@gmail.com",
@@ -144,9 +157,13 @@ if __name__ == '__main__':
             'console_scripts': [
                 '{0} = {0}.{0}:main'.format(__pkg_name__),
                 '{0}_train = {0}.{0}_train:main'.format(__pkg_name__),
+                '{0}_snp = {0}_snp.{0}_snp:main'.format(__pkg_name__),
+                '{0}_snp_train = {0}_snp.{0}_snp_train:main'.format(__pkg_name__),
+                '{0}_hp = {0}_hp.{0}_hp:main'.format(__pkg_name__),
+                '{0}_hp_train = {0}_hp.{0}_hp_train:main'.format(__pkg_name__),
             ]
         },
-        ext_modules=[CMakeExtension('PEPPER')],
+        ext_modules=[CMakeExtension('PEPPER'), CMakeExtension('PEPPER_SNP'), CMakeExtension('PEPPER_HP')],
         cmdclass={
             'build_ext': CMakeBuild
         },

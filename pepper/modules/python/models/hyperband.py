@@ -3,7 +3,6 @@ import numpy as np
 from math import log, ceil
 from time import time, ctime
 import sys
-from pepper.modules.python.TextColor import TextColor
 import logging
 from datetime import datetime
 """
@@ -78,8 +77,8 @@ class Hyperband:
                 n_configs = n * self.eta ** (-i)
                 n_iterations = int(ceil(r * self.eta ** (i)))
 
-                sys.stderr.write(TextColor.BLUE + "\n*** {} configurations x {:.5f} iterations each"
-                                 .format(n_configs, n_iterations) + "\n" + TextColor.END)
+                sys.stderr.write("\n*** {} configurations x {:.5f} iterations each"
+                                 .format(n_configs, n_iterations) + "\n")
 
                 logging.info("\n*** {} configurations x {:.1f} iterations each".format(n_configs, n_iterations))
 
@@ -88,10 +87,9 @@ class Hyperband:
 
                 for config_index, config in enumerate(model_configs):
                     self.counter += 1
-                    sys.stderr.write(TextColor.BLUE + "{} | {} | lowest loss: {} | accuracy: {} | (run {}) | model {}"
+                    sys.stderr.write("{} | {} | lowest loss: {} | accuracy: {} | (run {}) | model {}"
                                      .format(self.counter, ctime(), self.best_loss, self.best_acc, self.best_counter,
-                                             self.best_config)
-                                     + TextColor.END)
+                                             self.best_config))
                     logging.info("{} | {} | lowest loss so far: {} | (run {})"
                                  .format(self.counter, ctime(), self.best_loss, self.best_counter))
 
@@ -106,7 +104,7 @@ class Hyperband:
                     assert ('loss' in result)
 
                     seconds = int(round(time() - start_time))
-                    sys.stderr.write(TextColor.BLUE + "\n{} seconds.\n".format(seconds) + TextColor.END)
+                    sys.stderr.write("\n{} seconds.\n".format(seconds))
 
                     loss = result['loss']
                     val_losses.append(loss)

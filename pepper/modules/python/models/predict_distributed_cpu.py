@@ -35,14 +35,14 @@ def predict(input_filepath, file_chunks, output_filepath, batch_size, num_worker
                              batch_size=batch_size,
                              shuffle=False,
                              num_workers=num_workers)
-
-    progress_bar = tqdm(
-        total=len(data_loader),
-        ncols=100,
-        leave=False,
-        position=rank,
-        desc="CALLER #" + str(rank),
-    )
+    if rank == 0:
+        progress_bar = tqdm(
+            total=len(data_loader),
+            ncols=100,
+            leave=False,
+            position=rank,
+            desc="CALLER #" + str(rank),
+        )
 
     with torch.no_grad():
         for contig, contig_start, contig_end, chunk_id, images, position, index in data_loader:
@@ -72,6 +72,8 @@ def predict(input_filepath, file_chunks, output_filepath, batch_size, num_worker
                 top_zeros = chunk_start
                 bottom_zeros = ImageSizeOptions.SEQ_LENGTH - chunk_end
 
+                counts = torch.ones((output_base.size(0), output_base.size(1), 1))
+
                 # do softmax and get prediction
                 # we run a softmax a padding to make the output tensor compatible for adding
                 inference_layers = nn.Sequential(
@@ -85,14 +87,25 @@ def predict(input_filepath, file_chunks, output_filepath, batch_size, num_worker
 
             base_values, base_labels = torch.max(prediction_base_tensor, 2)
 
+            # this part is for the phred score calculation
+            counts = torch.ones((base_values.size(0), base_values.size(1) - 2 * ImageSizeOptions.SEQ_OVERLAP))
+            top_ones = nn.ZeroPad2d((ImageSizeOptions.SEQ_OVERLAP, ImageSizeOptions.SEQ_OVERLAP))
+            counts = top_ones(counts) + 1
+            phred_score = -10 * torch.log10(1.0 - (base_values / counts))
+            phred_score[phred_score == float('inf')] = 100
+
             predicted_base_labels = base_labels.cpu().numpy()
+            phred_score = phred_score.cpu().numpy()
 
             for i in range(images.size(0)):
                 prediction_data_file.write_prediction(contig[i], contig_start[i], contig_end[i], chunk_id[i],
-                                                      position[i], index[i], predicted_base_labels[i])
-            progress_bar.update(1)
+                                                      position[i], index[i], predicted_base_labels[i], phred_score[i])
 
-    progress_bar.close()
+            if rank == 0:
+                progress_bar.update(1)
+
+    if rank == 0:
+        progress_bar.close()
 
 
 def cleanup():

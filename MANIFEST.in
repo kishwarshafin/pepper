@@ -5,3 +5,5 @@ recursive-include docker/ *
 recursive-include pepper/ *
 recursive-include pepper/modules/headers *
 recursive-include pepper/modules/src *
+recursive-include pepper_snp/ *
+recursive-include pepper_hp/ *

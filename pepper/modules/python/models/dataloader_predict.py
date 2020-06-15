@@ -2,9 +2,9 @@ from os.path import isfile, join
 from os import listdir
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
+from datetime import datetime
 import h5py
 import sys
-from pepper.modules.python.TextColor import TextColor
 
 
 def get_file_paths_from_directory(directory_path):
@@ -40,8 +40,8 @@ class SequenceDataset(Dataset):
                     for image_name in image_names:
                         file_image_pair.append((hdf5_file_path, image_name))
                 else:
-                    sys.stderr.write(TextColor.YELLOW + "WARN: NO IMAGES FOUND IN FILE: "
-                                     + hdf5_file_path + "\n" + TextColor.END)
+                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] WARN: NO IMAGES FOUND IN FILE: "
+                                     + hdf5_file_path + "\n")
 
         self.all_images = file_image_pair
 

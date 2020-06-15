@@ -6,8 +6,8 @@ import concurrent.futures
 import numpy as np
 from collections import defaultdict
 import operator
-from pepper.modules.python.TextColor import TextColor
 from pepper.build import PEPPER
+from datetime import datetime
 import re
 
 
@@ -87,7 +87,7 @@ def get_confident_positions(alignment):
             ref_index += cigar_len
             read_index += cigar_len
         else:
-            raise ValueError(TextColor.RED + "ERROR: INVALID CIGAR OPERATION ENCOUNTERED WHILTE STITCHING: "
+            raise ValueError("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]  ERROR: INVALID CIGAR OPERATION ENCOUNTERED WHILTE STITCHING: "
                              + str(cigar_op) + "\n")
 
     return -1, -1

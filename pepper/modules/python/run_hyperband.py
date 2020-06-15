@@ -8,7 +8,7 @@ import time
 
 # Custom generator for our dataset
 from pepper.modules.python.models.hyperband import Hyperband
-from pepper.modules.python.TextColor import TextColor
+from datetime import datetime
 from pepper.modules.python.models.train import train, save_best_model
 from pepper.modules.python.Options import TrainOptions
 """
@@ -72,8 +72,8 @@ class WrapHyperband:
         # Number of iterations or epoch for the model to train on
         n_iterations = int(round(n_iterations))
         params, retrain_model, retrain_model_path, prev_ite = model_params
-        sys.stderr.write(TextColor.BLUE + '\nEpochs: ' + str(n_iterations) + "\n" + TextColor.END)
-        sys.stderr.write(TextColor.BLUE + str(params) + "\n" + TextColor.END)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]  INFO: \nEpochs: " + str(n_iterations) + "\n")
+        sys.stderr.write(str(params) + "\n")
 
         epoch_limit = int(n_iterations)
         lr = params['lr']

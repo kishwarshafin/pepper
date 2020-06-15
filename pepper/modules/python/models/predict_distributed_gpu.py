@@ -39,13 +39,14 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     transducer_model.eval()
     transducer_model = DistributedDataParallel(transducer_model, device_ids=[device_id])
 
-    progress_bar = tqdm(
-        total=len(data_loader),
-        ncols=100,
-        leave=False,
-        position=rank,
-        desc="GPU #" + str(device_id),
-    )
+    if rank == 0:
+        progress_bar = tqdm(
+            total=len(data_loader),
+            ncols=100,
+            leave=False,
+            position=rank,
+            desc="GPU #" + str(device_id),
+        )
 
     with torch.no_grad():
         for contig, contig_start, contig_end, chunk_id, images, position, index in data_loader:
@@ -93,14 +94,25 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                 torch.cuda.empty_cache()
 
             base_values, base_labels = torch.max(prediction_base_tensor, 2)
+
+            # this part is for the phred score calculation
+            counts = torch.ones((base_values.size(0), base_values.size(1) - 2 * ImageSizeOptions.SEQ_OVERLAP))
+            top_ones = nn.ZeroPad2d((ImageSizeOptions.SEQ_OVERLAP, ImageSizeOptions.SEQ_OVERLAP))
+            counts = top_ones(counts) + 1
+            phred_score = -10 * torch.log10(1.0 - (base_values / counts))
+            phred_score[phred_score == float('inf')] = 100
+
             predicted_base_labels = base_labels.cpu().numpy()
+            phred_score = phred_score.cpu().numpy()
 
             for i in range(images.size(0)):
                 prediction_data_file.write_prediction(contig[i], contig_start[i], contig_end[i], chunk_id[i],
-                                                      position[i], index[i], predicted_base_labels[i])
-            progress_bar.update(1)
+                                                      position[i], index[i], predicted_base_labels[i], phred_score[i])
+            if rank == 0:
+                progress_bar.update(1)
 
-    progress_bar.close()
+    if rank == 0:
+        progress_bar.close()
 
 
 def cleanup():
