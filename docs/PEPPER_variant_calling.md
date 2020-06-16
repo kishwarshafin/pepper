@@ -22,6 +22,32 @@ We have not yet tested the pipeline on different pores and devices. We will upda
 ##### Disk-space requirements
 As we use WhatsHap to phase the BAM file, please expect disk-space usage of ~4x the size of the BAM file.
 
+### Benchmarking
+You can run this pipeline on run-time efficient mode or high-accuracy mode (high-accuracy mode enabled by setting parameter `-x 1`). The difference between these two modes is the haplotype-aware model used for DeepVariant. The high-accuracy mode uses a better feature representation known as `rows` in DeepVariant that results in higher accuracy but slower run-time.
+
+#### Expected run-time
+We have tested the high-accuracy and run-time efficient mode of this pipeline on `~50x HG002 chr20` data.
+
+Resources available:
+```bash
+CPUs:
+  CPU(s):                          32
+  CPU MHz:                         1979.549
+  CPU max MHz:                     3400.0000
+  CPU min MHz:                     2200.0000
+GPU:
+  GPU(s):                          1
+  GPU Model:                       GeForce GTX 1080ti
+  GPU Memory:                      11177MiB
+```
+
+|      Mode     | Platform | Sample | Region | Coverage | Run-time (wall-clock) |
+|:-------------:|:--------:|:------:|:------:|:--------:|:---------------------:|
+|    Run-time   |    CPU   |  HG002 |  chr20 |   ~50x   |                       |
+|    Run-time   |    GPU   |  HG002 |  chr20 |   ~50x   |       71.03 mins      |
+| High-accuracy |    CPU   |  HG002 |  chr20 |   ~50x   |                       |
+| High-accuracy |    GPU   |  HG002 |  chr20 |   ~50x   |      164.71 mins      |
+
 ### How to run
 We have combined all of the steps to run sequentially using one script. You can run the pipeline on your CPU-only or GPU machines.
 
