@@ -43,9 +43,19 @@ class CandidateFinderCPP:
         positional_candidate_list = sorted(positional_candidate_list)
 
         positional_candidate_map = defaultdict(list)
+        positional_max_insert = defaultdict(int)
+        positional_max_delete = defaultdict(int)
         for positional_candidate in positional_candidate_list:
             for candidate in positional_candidate.candidates:
                 if region_start <= candidate.pos_start and candidate.pos_end <= region_end:
+                    # print(candidate)
+                    # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                    #       "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
+                    #       "\nH0 supp", candidate.read_support_h0, "H1 supp",  candidate.read_support_h1, "H2 supp",  candidate.read_support_h2)
+                    if candidate.allele.alt_type == 2:
+                        positional_max_insert[candidate.pos_start] = max(positional_max_insert[candidate.pos_start], len(candidate.allele.alt))
+                    if candidate.allele.alt_type == 3:
+                        positional_max_delete[candidate.pos_start] = max(positional_max_delete[candidate.pos_start], len(candidate.allele.ref))
                     positional_candidate_map[positional_candidate.pos_start].append(candidate)
 
-        return positional_candidate_map
+        return positional_candidate_map, positional_max_insert, positional_max_delete

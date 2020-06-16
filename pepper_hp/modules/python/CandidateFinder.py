@@ -363,7 +363,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
         cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
 
         # find candidates
-        candidate_map = cpp_candidate_finder.find_candidates(bam_file_path, reference_file_path, contig, contig_start, contig_end)
+        candidate_map, max_insert_map, max_delete_map = cpp_candidate_finder.find_candidates(bam_file_path, reference_file_path, contig, contig_start, contig_end)
         smaller_chunks = sorted(smaller_chunks)
         prediction_map_h1 = defaultdict()
         prediction_map_h2 = defaultdict()
@@ -434,10 +434,12 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                 elif candidate.allele.alt_type == 2:
                     alt_allele = candidate.allele.alt
                     pos = candidate.pos_start
-                    indx_lim = min(max_index_map[pos], len(alt_allele))
                     length = 0
-                    for indx in range(1, indx_lim):
-                        alt_allele_indx = get_index_from_base(alt_allele[indx])
+                    for indx in range(1, max_index_map[pos]):
+                        if indx < len(alt_allele):
+                            alt_allele_indx = get_index_from_base(alt_allele[indx])
+                        else:
+                            alt_allele_indx = get_index_from_base('*')
                         # print(alt_allele[indx], get_index_from_base(alt_allele[indx]), prediction_map_h1[(pos, indx)], prediction_map_h2[(pos, indx)])
                         prob_alt_h1 = max(0.01, prediction_map_h1[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, indx)])))
                         prob_alt_h2 = max(0.01, prediction_map_h2[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, indx)])))
@@ -461,24 +463,36 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                 # DEL
                 elif candidate.allele.alt_type == 3:
                     length = 0
-                    # print(candidate.pos_start, candidate.pos_end)
-                    for pos in range(candidate.pos_start, candidate.pos_end):
+                    # print("CANDIDATE", candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
+                    # print(candidate.pos_start, candidate.pos_end, max_delete_map[candidate.pos_start], candidate.pos_start + max_delete_map[candidate.pos_start])
+                    for pos in range(candidate.pos_start, candidate.pos_start + max_delete_map[candidate.pos_start]):
 
-                        ref_allele_indx = get_index_from_base(candidate.allele.ref[pos - candidate.pos_start])
-                        non_ref_prob_h1 = (sum(prediction_map_h1[(pos, 0)]) - prediction_map_h1[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
-                        non_ref_prob_h2 = (sum(prediction_map_h2[(pos, 0)]) - prediction_map_h2[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
-                        # print("before", pos, non_ref_prob, non_ref_prob_h1, non_ref_prob_h2)
-                        non_ref_prob = max(non_ref_prob, max(non_ref_prob_h1, non_ref_prob_h2))
-                        # print("after", pos, non_ref_prob, non_ref_prob_h1, non_ref_prob_h2)
+                        # print(pos, candidate.pos_start + max_delete_map[candidate.pos_start])
+                        if candidate.pos_start < pos < candidate.pos_end:
+                            ref_allele_indx = get_index_from_base(candidate.allele.ref[pos - candidate.pos_start])
+                            non_ref_prob_h1 = (sum(prediction_map_h1[(pos, 0)]) - prediction_map_h1[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
+                            non_ref_prob_h2 = (sum(prediction_map_h2[(pos, 0)]) - prediction_map_h2[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
+                            # print("before", pos, non_ref_prob, non_ref_prob_h1, non_ref_prob_h2)
+                            non_ref_prob = max(non_ref_prob, max(non_ref_prob_h1, non_ref_prob_h2))
+                            # print("after", pos, non_ref_prob, non_ref_prob_h1, non_ref_prob_h2)
 
-                        if pos > candidate.pos_start:
+                        if candidate.pos_start < pos < candidate.pos_end:
                             del_allele_indx = get_index_from_base('*')
                             prob_del_h1 = prediction_map_h1[(pos, 0)][del_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, 0)]))
                             prob_del_h2 = prediction_map_h2[(pos, 0)][del_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, 0)]))
                             alt_prob_h1 += prob_del_h1
                             alt_prob_h2 += prob_del_h2
                             length += 1
-
+                        elif pos >= candidate.pos_end:
+                            # on other delete indicies, we want them to not be deletes
+                            del_allele_indx = get_index_from_base('*')
+                            prob_non_del_h1 = (sum(prediction_map_h1[(pos, 0)]) - prediction_map_h1[(pos, 0)][del_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
+                            prob_non_del_h2 = (sum(prediction_map_h2[(pos, 0)]) - prediction_map_h2[(pos, 0)][del_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
+                            alt_prob_h1 += prob_non_del_h1
+                            alt_prob_h2 += prob_non_del_h2
+                            length += 1
+                    # print(alt_prob_h1, length)
+                    # print(alt_prob_h2, length)
                     alt_prob_h1 = alt_prob_h1 / max(1, length)
                     alt_prob_h2 = alt_prob_h2 / max(1, length)
 
@@ -487,7 +501,9 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     # print("SELECTED")
                     # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
                     #       "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
-                    #       candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob)
+                    #       "H0 supp", candidate.read_support_h0, "H1 supp",  candidate.read_support_h1, "H2 supp",  candidate.read_support_h2,
+                    #       "ALT prob h1:", alt_prob_h1, "ALT prob h2:", alt_prob_h2, "Non-ref prob:", non_ref_prob)
+                    # print()
                     found_candidate = True
                     selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
                                                 candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2,
@@ -496,7 +512,8 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                 #     print("NOT SELECTED:")
                 #     print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
                 #           "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
-                #           candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob)
+                #           "H0 supp", candidate.read_support_h0, "H1 supp",  candidate.read_support_h1, "H2 supp",  candidate.read_support_h2,
+                #           "ALT prob h1:", alt_prob_h1, "ALT prob h2:", alt_prob_h2, "Non-ref prob:", non_ref_prob)
             if found_candidate:
                 variant = candidates_to_variants(list(selected_candidates), contig)
                 selected_candidate_list.append(variant)
