@@ -25,7 +25,7 @@ As we use WhatsHap to phase the BAM file, please expect disk-space usage of ~4x 
 ### Benchmarking
 You can run this pipeline on run-time efficient mode or high-accuracy mode (high-accuracy mode enabled by setting parameter `-x 1`). The difference between these two modes is the haplotype-aware model used for DeepVariant. The high-accuracy mode uses a better feature representation known as `rows` in DeepVariant that results in higher accuracy but slower run-time.
 
-#### Expected run-time
+#### Expected run-time and performance
 We have tested the high-accuracy and run-time efficient mode of this pipeline on `~50x HG002 chr20` data.
 
 Resources available:
@@ -47,6 +47,15 @@ GPU:
 |    Run-time   |    GPU   |  HG002 |  chr20 |   ~50x   |       71.03 mins      |
 | High-accuracy |    CPU   |  HG002 |  chr20 |   ~50x   |      211.92 mins      |
 | High-accuracy |    GPU   |  HG002 |  chr20 |   ~50x   |      164.71 mins      |
+
+
+Performance:
+|      Mode     |  Type | Truth Total | True positives | False negatives | False positives |  Recall  | Precision | F1-Score |
+|:-------------:|:-----:|:-----------:|:--------------:|:---------------:|:---------------:|:--------:|:---------:|:--------:|
+|    Run-time   | INDEL |    11271    |      6318      |       4953      |       1826      | 0.560554 |  0.778935 | 0.651942 |
+|    Run-time   |  SNP  |    71334    |      71037     |       297       |       191       | 0.995836 |  0.997319 | 0.996577 |
+| High-accuracy | INDEL |    11271    |      6393      |       4878      |       1556      | 0.567208 |  0.80733  | 0.666295 |
+| High-accuracy |  SNP  |    71334    |      71054     |       280       |       209       | 0.996075 |  0.997068 | 0.996571 |
 
 ### How to run
 We have combined all of the steps to run sequentially using one script. You can run the pipeline on your CPU-only or GPU machines.
