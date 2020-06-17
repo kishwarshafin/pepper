@@ -43,9 +43,9 @@ GPU:
 
 |      Mode     | Platform | Sample | Region | Coverage | Run-time (wall-clock) |
 |:-------------:|:--------:|:------:|:------:|:--------:|:---------------------:|
-|    Run-time   |    CPU   |  HG002 |  chr20 |   ~50x   |                       |
+|    Run-time   |    CPU   |  HG002 |  chr20 |   ~50x   |      118.34 mins      |
 |    Run-time   |    GPU   |  HG002 |  chr20 |   ~50x   |       71.03 mins      |
-| High-accuracy |    CPU   |  HG002 |  chr20 |   ~50x   |                       |
+| High-accuracy |    CPU   |  HG002 |  chr20 |   ~50x   |      211.92 mins      |
 | High-accuracy |    GPU   |  HG002 |  chr20 |   ~50x   |      164.71 mins      |
 
 ### How to run
