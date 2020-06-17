@@ -275,66 +275,38 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
     if allele_frequency < CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
         return False
 
-    # if CandidateFinderOptions.ALLELE_FREQ_THRESHOLD <= allele_frequency <= 0.25:
-    #     if max(alt_prob_h1, alt_prob_h2) >= 0.2:
-    #         return True
-    #     elif candidate_type == 1 and non_ref_prob >= 0.1:
-    #         return True
-    #     elif candidate_type == 1 and max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= 0.1:
-    #         return True
-    #     else:
-    #         return False
-
     # now this is for SNPs
     if candidate_type == 1:
         # print("SNP", candidate_type, depth, read_support, max(alt_prob_h1, alt_prob_h2), non_ref_prob, max(non_ref_prob, alt_prob_h1, alt_prob_h2))
         if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.SNP_ALT_PROB_THRESHOLD:
             return True
-        if non_ref_prob >= CandidateFinderOptions.SNP_NON_REF_THRESHOLD:
-            return True
-        if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.SNP_LAST_CHANCE_THRESHOLD:
-            return True
-        if allele_frequency > CandidateFinderOptions.SNP_FREQ_THRESHOLD:
+        # if non_ref_prob >= CandidateFinderOptions.SNP_NON_REF_THRESHOLD:
+        #     return True
+        # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.SNP_LAST_CHANCE_THRESHOLD:
+        #     return True
+        if allele_frequency >= CandidateFinderOptions.SNP_FREQ_THRESHOLD:
             return True
     # insert alleles
     elif candidate_type == 2:
-        if allele_frequency < CandidateFinderOptions.INDEL_ALLELE_FREQ_THRESHOLD:
-            return False
         if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_ALT_PROB_THRESHOLD:
             return True
         # if non_ref_prob >= CandidateFinderOptions.IN_NON_REF_THRESHOLD:
         #     return True
         # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_LAST_CHANCE_THRESHOLD:
         #     return True
-        # if allele_frequency > CandidateFinderOptions.IN_FREQ_THRESHOLD:
-        #     return True
+        if allele_frequency >= CandidateFinderOptions.IN_FREQ_THRESHOLD:
+            return True
 
     # delete alleles
     elif candidate_type == 3:
-        if allele_frequency < CandidateFinderOptions.INDEL_ALLELE_FREQ_THRESHOLD:
-            return False
         if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_ALT_PROB_THRESHOLD:
             return True
         # if non_ref_prob >= CandidateFinderOptions.DEL_NON_REF_THRESHOLD:
         #     return True
         # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_LAST_CHANCE_THRESHOLD:
         #     return True
-        # if allele_frequency > CandidateFinderOptions.DEL_FREQ_THRESHOLD:
-        #     return True
-
-    # if alt_prob_h1 >= CandidateFinderOptions.ALT_PROB_THRESHOLD or alt_prob_h2 >= CandidateFinderOptions.ALT_PROB_THRESHOLD:
-    #     return True
-    # at this point it means it was not supported by any of the haps, so now look at the non_ref_prob
-    # if non_ref_prob >= CandidateFinderOptions.NON_REF_PROB_THRESHOLD:
-    #     return True
-    # then check the frequency, if too high then definately check
-    # if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
-    #     return True
-    # if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD_LAST_RESORT or max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.PROB_LAST_RESORT:
-    #     return True
-    # now it's extremely unlikely to have this as a true-variant, but still give it one more lifeline
-    # if allele_frequency >= CandidateFinderOptions.ALLELE_FREQ_THRESHOLD_LAST_RESORT or max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.PROB_LAST_RESORT:
-    #     return True
+        if allele_frequency >= CandidateFinderOptions.DEL_FREQ_THRESHOLD:
+            return True
 
     # otherwise, it's highly unlikely to be a true variant.
     return False
