@@ -25,10 +25,18 @@ As we use WhatsHap to phase the BAM file, please expect disk-space usage of ~4x 
 ### Benchmarking
 You can run this pipeline on run-time efficient mode or high-accuracy mode (high-accuracy mode enabled by setting parameter `-x 1`). The difference between these two modes is the haplotype-aware model used for DeepVariant. The high-accuracy mode uses a better feature representation known as `rows` in DeepVariant that results in higher accuracy but slower run-time.
 
-#### Expected run-time and performance
+#### Expected run-time and performance (HG002 chr20)
 We have tested the high-accuracy and run-time efficient mode of this pipeline on `~50x HG002 chr20` data.
+Data:
+```bash
+Sample:     HG002
+Coverage:   ~50-80x
+Basecaller: Guppy 3.6.0
+Region:     chr20
+Referrence: GRCh38_no_alt
+```
 
-Resources available:
+Compute node description:
 ```bash
 CPUs:
   CPU(s):                          32
@@ -41,6 +49,7 @@ GPU:
   GPU Memory:                      11177MiB
 ```
 
+Run-time analysis:
 |      Mode     | Platform | Sample | Region | Coverage | Run-time (wall-clock) |
 |:-------------:|:--------:|:------:|:------:|:--------:|:---------------------:|
 |    Run-time   |    CPU   |  HG002 |  chr20 |   ~50x   |      118.34 mins      |
@@ -49,13 +58,23 @@ GPU:
 | High-accuracy |    GPU   |  HG002 |  chr20 |   ~50x   |      164.71 mins      |
 
 
-Performance:
+Variant-calling performance:
 |      Mode     |  Type | Truth Total | True positives | False negatives | False positives |  Recall  | Precision | F1-Score |
 |:-------------:|:-----:|:-----------:|:--------------:|:---------------:|:---------------:|:--------:|:---------:|:--------:|
 |    Run-time   | INDEL |    11271    |      6318      |       4953      |       1826      | 0.560554 |  0.778935 | 0.651942 |
 |    Run-time   |  SNP  |    71334    |      71037     |       297       |       191       | 0.995836 |  0.997319 | 0.996577 |
 | High-accuracy | INDEL |    11271    |      6393      |       4878      |       1556      | 0.567208 |  0.80733  | 0.666295 |
 | High-accuracy |  SNP  |    71334    |      71054     |       280       |       209       | 0.996075 |  0.997068 | 0.996571 |
+
+### Whole-genome evaluation
+
+We evaluated our pipeline on three samples (HG002-HG003-HG004). At the time of this release, only v3.3.2 truth was available for HG003 and HG004. Here we report the whole genome performance on three samples:
+
+| Method              | Truth Set   | Reference | Sequencing platform   | Basecaller  | Sample | Coverage | Type | Recall   | Precision | F1 Score |
+|---------------------|-------------|-----------|-----------------------|-------------|--------|----------|------|----------|-----------|----------|
+| PEPPER- DeepVariant | GIAB v3.3.2 | GRCh37    | ONT R9.4.1 PromethION | Guppy 3.6.0 | HG002  | ~45-55x  | SNV  | 0.99605  | 0.996219  | 0.996135 |
+|                     |             |           |                       |             | HG003  | ~75-85x  | SNV  | 0.99546  | 0.997782  | 0.99662  |
+|                     |             |           |                       |             | HG004  | ~75-85x  | SNV  | 0.996939 | 0.996764  | 0.996852 |
 
 ### How to run
 We have combined all of the steps to run sequentially using one script. You can run the pipeline on your CPU-only or GPU machines.
