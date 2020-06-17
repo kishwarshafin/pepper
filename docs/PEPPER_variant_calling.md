@@ -68,14 +68,22 @@ Variant-calling performance:
 
 ### Whole-genome evaluation
 
-We evaluated our pipeline on three samples (HG002-HG003-HG004). At the time of this release, only v3.3.2 truth was available for HG003 and HG004. Here we report the whole genome performance on three samples:
+We evaluated our pipeline on three samples (HG002-HG003-HG004). At the time of this release, only v3.3.2 truth was available for HG003 and HG004. Data description:
+```bash
+Sample:     HG002, HG003, HG004
+Coverage:   ~50x, ~80x, ~80x
+Basecaller: Guppy 3.6.0
+Region:     WGS
+Referrence: GRCh38_no_alt
+```
 
-| Method              | Truth Set   | Reference | Sequencing platform   | Basecaller  | Sample | Coverage | Type | Recall   | Precision | F1 Score |
-|---------------------|-------------|-----------|-----------------------|-------------|--------|----------|------|----------|-----------|----------|
-| PEPPER- DeepVariant | GIAB v3.3.2 | GRCh37    | ONT R9.4.1 PromethION | Guppy 3.6.0 | HG002  | ~45-55x  | SNV  | 0.99605  | 0.996219  | 0.996135 |
-|                     |             |           |                       |             | HG003  | ~75-85x  | SNV  | 0.99546  | 0.997782  | 0.99662  |
-|                     |             |           |                       |             | HG004  | ~75-85x  | SNV  | 0.996939 | 0.996764  | 0.996852 |
+Here we report the whole genome performance on three samples.
 
+| Reference |    Truth    | Sample | Coverage | Type |  Recall  | Precision | F1 Score |
+|:---------:|:-----------:|:------:|:--------:|:----:|:--------:|:---------:|:--------:|
+|   GRCh37  | GIAB v3.3.2 |  HG002 |  ~45-55x |  SNV |  0.99605 |  0.996219 | 0.996135 |
+|   GRCh37  | GIAB v3.3.2 |  HG003 |  ~75-85x |  SNV |  0.99546 |  0.997782 |  0.99662 |
+|   GRCh37  | GIAB v3.3.2 |  HG004 |  ~75-85x |  SNV | 0.996939 |  0.996764 | 0.996852 |
 ### How to run
 We have combined all of the steps to run sequentially using one script. You can run the pipeline on your CPU-only or GPU machines.
 
