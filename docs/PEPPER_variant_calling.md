@@ -241,7 +241,7 @@ You can run the pipeline on a CPU-only or GPU machine.
 ##### CPU-only Machine:
 ```bash
 # Runtime efficient mode
-sudo docker run --ipc=host \
+docker run --ipc=host \
 -v ${INPUT_DIR}:/input \
 -v ${OUTPUT_DIR}:/output \
 kishwars/pepper_deepvariant_cpu:latest \
@@ -253,7 +253,7 @@ kishwars/pepper_deepvariant_cpu:latest \
 -r chr20:1000000-1020000
 
 # High-accuracy mode (Used for pFDA). USE:
-sudo docker run --ipc=host \
+docker run --ipc=host \
 -v ${INPUT_DIR}:/input \
 -v ${OUTPUT_DIR}:/output \
 kishwars/pepper_deepvariant_cpu:latest \
@@ -270,7 +270,7 @@ kishwars/pepper_deepvariant_cpu:latest \
 On a GPU machine with CUDA installed, you can run the following commands to run the pipeline. Please make sure you have [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) installed.
 ```bash
 # Runtime efficient mode
-sudo docker run --ipc=host \
+docker run --ipc=host \
 --gpus all \
 -v ${INPUT_DIR}:/input \
 -v ${OUTPUT_DIR}:/output \
@@ -283,7 +283,7 @@ kishwars/pepper_deepvariant_gpu:latest \
 -r chr20:1000000-1020000
 
 # High-accuracy mode (Used for pFDA). USE:
-sudo docker run --ipc=host \
+docker run --ipc=host \
 --gpus all \
 -v ${INPUT_DIR}:/input \
 -v ${OUTPUT_DIR}:/output \
@@ -300,7 +300,7 @@ kishwars/pepper_deepvariant_gpu:latest \
 #### Evaluate the variants:
 You can use hap.py to evaluate the variants.
 ```bash
-sudo docker run -it \
+docker run -it \
 -v "${INPUT_DIR}":"/input" \
 -v "${OUTPUT_DIR}:/output" \
 pkrusche/hap.py /opt/hap.py/bin/hap.py \
