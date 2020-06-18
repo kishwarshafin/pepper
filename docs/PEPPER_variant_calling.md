@@ -3,11 +3,29 @@ In collaboration with the [DeepVariant](https://github.com/google/deepvariant) g
 
 <img src="../img/PEPPER_DeepVariant.png" alt="PEPPER DeepVariant workflow">
 
+----
+
+### Table of contents:
+- [Limited support statement](#Limited-support-statement)
+- [Requirements](#Requirements)
+  * [Sequencing data requirements](#Sequencing-data-requirements)
+  * [Disk-space requirements](#Disk-space-requirements)
+- [ONT HG002 chr20 case-study](#HG002-chr20-case-study)
+- [ONT Whole-genome evaluations](#Whole-genome-evaluations)
+- [How to run](#How-to-run)
+- [Quickstart](#Quickstart)
+- [Authors](#Authors)
+----
 
 ### Limited support statement
 We are releasing this pipeline with limited support as we are actively developing the pipeline. This pipeline is developed outside the main repository of [DeepVariant](https://github.com/google/deepvariant). If you have issues with running this pipeline, please open a github issue in this repository (PEPPER). We will update this page as we evaluate the pipeline across all platforms.
 
-### Expected input
+----
+
+### Requirements
+We are releasing this pipeline executable only via docker. Other executables will be provided as we finalize the pipeline.
+
+##### Sequencing data requirements
 We expect the input files meet the following requirements to produce results that we have reported.
 ```bash
 Alignment file (BAM):
@@ -22,19 +40,64 @@ We have not yet tested the pipeline on different pores and devices. We will upda
 ##### Disk-space requirements
 As we use WhatsHap to phase the BAM file, please expect disk-space usage of ~4x the size of the BAM file.
 
-### Benchmarking
-You can run this pipeline on run-time efficient mode or high-accuracy mode (high-accuracy mode enabled by setting parameter `-x 1`). The difference between these two modes is the haplotype-aware model used for DeepVariant. The high-accuracy mode uses a better feature representation known as `rows` in DeepVariant that results in higher accuracy but slower run-time.
+----
 
-#### Expected run-time and performance (HG002 chr20)
-We have tested the high-accuracy and run-time efficient mode of this pipeline on `~50x HG002 chr20` data.
-Data:
+### HG002 chr20 case-study
+We evaluated this pipeline on `~50x` HG002 data. The data is publicly available, please feel free to download, run and evaluate the pipelin.
 ```bash
 Sample:     HG002
 Coverage:   ~50-80x
 Basecaller: Guppy 3.6.0
 Region:     chr20
-Referrence: GRCh38_no_alt
+Reference: GRCh38_no_alt
 ```
+
+|      FILE | LINK                                                                                                      |
+|----------:|-----------------------------------------------------------------------------------------------------------|
+|  BAM FILE | https://storage.googleapis.com/kishwar-helen/ont-casestudy/HG002_prom_R941_guppy360_2_GRCh38_ch20.bam     |
+| BAM INDEX | https://storage.googleapis.com/kishwar-helen/ont-casestudy/HG002_prom_R941_guppy360_2_GRCh38_ch20.bam.bai |
+| Reference | https://storage.googleapis.com/kishwar-helen/ont-casestudy/GRCh38_no_alt_chr20.fa                         |
+| Ref Index | https://storage.googleapis.com/kishwar-helen/ont-casestudy/GRCh38_no_alt_chr20.fa.fai                     |
+|  GIAB VCF | https://storage.googleapis.com/kishwar-helen/ont-casestudy/HG002_GRCh38_GIABv4.1.vcf.gz                   |
+|  GIAB BED | https://storage.googleapis.com/kishwar-helen/ont-casestudy/HG002_GRCh38_1_22_v4.1_draft_benchmark.bed     |
+
+#### Command-line instructions
+Example PEPPER-DeepVariant run on this data:
+```bash
+docker run --ipc=host \
+-v /input:/input \
+-v /output:/output \
+kishwars/pepper_deepvariant_cpu:latest \
+/opt/run_pepper_deepvariant.sh \
+-b /input/HG002_prom_R941_guppy360_2_GRCh38_ch20.bam \
+-f /input/GRCh38_no_alt_chr20.fa \
+-t 30 \
+-o /output/ \
+-x 1
+```
+For evaluation with hap.py:
+```bash
+docker run -it \
+-v /input:/input \
+-v /output:/output \
+pkrusche/hap.py:latest \
+/opt/hap.py/bin/hap.py \
+/input/HG002_GRCh38_GIABv4.1.vcf.gz \
+/output/PEPPER_HP_DEEPVARIANT_FINAL_OUTPUT.vcf.gz \
+-f /input/HG002_GRCh38_1_22_v4.1_draft_benchmark.bed \
+-r /input/GRCh38_no_alt_chr20.fa \
+-o /output/hg002_chr20_pepper_deepvariant \
+--pass-only \
+-l chr20 \
+--engine=vcfeval \
+--threads=30
+```
+
+#### Run-time and performance
+You can run this pipeline on run-time efficient mode or high-accuracy mode (high-accuracy mode enabled by setting parameter `-x 1`). The difference between these two modes is the haplotype-aware model used for DeepVariant. The high-accuracy mode uses a better feature representation known as `rows` in DeepVariant that results in higher accuracy but slower run-time.
+
+We have tested the high-accuracy and run-time efficient mode of this pipeline on `~50x HG002 chr20` data.
+
 
 Compute node description:
 ```bash
@@ -50,6 +113,7 @@ GPU:
 ```
 
 Run-time analysis:
+
 |      Mode     | Platform | Sample | Region | Coverage | Run-time (wall-clock) |
 |:-------------:|:--------:|:------:|:------:|:--------:|:---------------------:|
 |    Run-time   |    CPU   |  HG002 |  chr20 |   ~50x   |      118.34 mins      |
@@ -59,6 +123,7 @@ Run-time analysis:
 
 
 Variant-calling performance:
+
 |      Mode     |  Type | Truth Total | True positives | False negatives | False positives |  Recall  | Precision | F1-Score |
 |:-------------:|:-----:|:-----------:|:--------------:|:---------------:|:---------------:|:--------:|:---------:|:--------:|
 |    Run-time   | INDEL |    11271    |      6318      |       4953      |       1826      | 0.560554 |  0.778935 | 0.651942 |
@@ -66,7 +131,9 @@ Variant-calling performance:
 | High-accuracy | INDEL |    11271    |      6393      |       4878      |       1556      | 0.567208 |  0.80733  | 0.666295 |
 | High-accuracy |  SNP  |    71334    |      71054     |       280       |       209       | 0.996075 |  0.997068 | 0.996571 |
 
-### Whole-genome evaluation
+----
+
+### Whole-genome evaluations
 
 We evaluated our pipeline on three samples (HG002-HG003-HG004). At the time of this release, only v3.3.2 truth was available for HG003 and HG004. Data description:
 ```bash
@@ -84,7 +151,8 @@ Here we report the whole genome performance on three samples.
 |   GRCh37  | GIAB v3.3.2 |  HG002 |  ~45-55x |  SNV |  0.99605 |  0.996219 | 0.996135 |
 |   GRCh37  | GIAB v3.3.2 |  HG003 |  ~75-85x |  SNV |  0.99546 |  0.997782 |  0.99662 |
 |   GRCh37  | GIAB v3.3.2 |  HG004 |  ~75-85x |  SNV | 0.996939 |  0.996764 | 0.996852 |
-### How to run
+
+## How to run
 We have combined all of the steps to run sequentially using one script. You can run the pipeline on your CPU-only or GPU machines.
 
 #### Running on a CPU-only machine (Whole genome run)
@@ -143,6 +211,8 @@ kishwars/pepper_deepvariant_gpu:latest \
 -t <number_of_threads> \
 -x 1
 ```
+
+----
 
 ## Quickstart
 Here is an example on how to run the pipeline on a small example.
@@ -227,8 +297,6 @@ kishwars/pepper_deepvariant_gpu:latest \
 -x 1 # this enables high-accuracy version
 ```
 
-
-
 #### Evaluate the variants:
 You can use hap.py to evaluate the variants.
 ```bash
@@ -254,6 +322,7 @@ Expected output:
 | INDEL | ALL    | 3           | 2        | 0.666667      | 1.0              | 0.8             |
 | SNP   | ALL    | 45          | 45       | 1.0           | 1.0              | 1.0             |
 
+----
 ### Authors:
 This pipeline is a collaboration between UCSC genomics institute and the genomics team at Google health.
 
