@@ -35,11 +35,11 @@ class VCFWriter:
                 # continue
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=qual,
-                                                      filter='refCall', alleles=alleles, GT=genotype, GQ=min(gqs), VAF=vafs)
+                                                      filter='refCall', alleles=alleles, GT=genotype, AP=gqs, GQ=non_ref_prob, VAF=vafs)
             else:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=qual,
-                                                      filter='PASS', alleles=alleles, GT=genotype, GQ=min(gqs), VAF=vafs)
+                                                      filter='PASS', alleles=alleles, GT=genotype, AP=gqs, GQ=non_ref_prob, VAF=vafs)
             self.vcf_file.write(vcf_record)
 
     def get_vcf_header(self, sample_name, contigs):
@@ -79,6 +79,11 @@ class VCFWriter:
                  ('Number', "A"),
                  ('Type', 'Float'),
                  ('Description', "Variant allele fractions.")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "AP"),
+                 ('Number', "A"),
+                 ('Type', 'Float'),
+                 ('Description', "Maximum variant allele probability.")]
         header.add_meta(key='FORMAT', items=items)
         items = [('ID', "GT"),
                  ('Number', 1),
