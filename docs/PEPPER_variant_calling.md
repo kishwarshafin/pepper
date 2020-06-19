@@ -43,7 +43,9 @@ As we use WhatsHap to phase the BAM file, please expect disk-space usage of ~4x 
 ----
 
 ### HG002 chr20 case-study
-We evaluated this pipeline on `~50x` HG002 data. The data is publicly available, please feel free to download, run and evaluate the pipelin.
+**NOTE: This is a chromosome-level case-study. Please see the [Quickstart](#Quickstart) section of this document for demonstration of this pipeline on a smaller dataset.**
+
+We evaluated this pipeline on `~50x` HG002 data. The data is publicly available, please feel free to download, run and evaluate the pipeline.
 ```bash
 Sample:     HG002
 Coverage:   ~50-80x
@@ -52,45 +54,98 @@ Region:     chr20
 Reference: GRCh38_no_alt
 ```
 
-|      FILE | LINK                                                                                                      |
-|----------:|-----------------------------------------------------------------------------------------------------------|
-|  BAM FILE | https://storage.googleapis.com/kishwar-helen/ont-casestudy/HG002_prom_R941_guppy360_2_GRCh38_ch20.bam     |
-| BAM INDEX | https://storage.googleapis.com/kishwar-helen/ont-casestudy/HG002_prom_R941_guppy360_2_GRCh38_ch20.bam.bai |
-| Reference | https://storage.googleapis.com/kishwar-helen/ont-casestudy/GRCh38_no_alt_chr20.fa                         |
-| Ref Index | https://storage.googleapis.com/kishwar-helen/ont-casestudy/GRCh38_no_alt_chr20.fa.fai                     |
-|  GIAB VCF | https://storage.googleapis.com/kishwar-helen/ont-casestudy/HG002_GRCh38_GIABv4.1.vcf.gz                   |
-|  GIAB BED | https://storage.googleapis.com/kishwar-helen/ont-casestudy/HG002_GRCh38_1_22_v4.1_draft_benchmark.bed     |
-
 #### Command-line instructions
-Example PEPPER-DeepVariant run on this data:
+##### Step 1: Install docker
+Please install docker and wget if you don't have it installed already.
+
 ```bash
-docker run --ipc=host \
--v /input:/input \
--v /output:/output \
+# Install wget to download data files.
+sudo apt-get -qq -y update
+sudo apt-get -qq -y install wget
+
+# Install docker using instructions on:
+# https://docs.docker.com/install/linux/docker-ce/ubuntu/
+sudo apt-get -qq -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+sudo add-apt-repository \
+"deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+$(lsb_release -cs) \
+stable"
+
+sudo apt-get -qq -y update
+sudo apt-get -qq -y install docker-ce
+docker --version
+```
+
+##### Step 2: Run PEPPER-DeepVariant
+```bash
+BASE="${HOME}/ont-case-study"
+
+# Set up input data
+INPUT_DIR="${BASE}/input/data"
+REF="GRCh38_no_alt_chr20.fa"
+BAM="HG002_prom_R941_guppy360_2_GRCh38_ch20.bam"
+TRUTH_VCF="HG002_GRCh38_GIABv4.1.vcf.gz"
+TRUTH_BED="HG002_GRCh38_1_22_v4.1_draft_benchmark.bed"
+
+# Set the number of CPUs to use
+THREADS="64"
+
+# Set up output directory
+OUTPUT_DIR="${BASE}/output"
+OUTPUT_VCF="PEPPER_HP_DEEPVARIANT_FINAL_OUTPUT.vcf.gz"
+
+## Create local directory structure
+mkdir -p "${OUTPUT_DIR}"
+mkdir -p "${INPUT_DIR}"
+
+# Download the data to input directory
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-casestudy/HG002_prom_R941_guppy360_2_GRCh38_ch20.bam
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-casestudy/HG002_prom_R941_guppy360_2_GRCh38_ch20.bam.bai
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-casestudy/GRCh38_no_alt_chr20.fa
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-casestudy/GRCh38_no_alt_chr20.fa.fai
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-casestudy/HG002_GRCh38_GIABv4.1.vcf.gz
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-casestudy/HG002_GRCh38_1_22_v4.1_draft_benchmark.bed
+
+## Pull the docker image.
+sudo docker pull kishwars/pepper_deepvariant_cpu:latest
+
+# Run PEPPER-DeepVariant High-Accuracy mode on CPU
+# For other versions and GPU specific version, please consult the How to run section of this document
+sudo docker run --ipc=host \
+-v "${INPUT_DIR}":"${INPUT_DIR}" \
+-v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
 kishwars/pepper_deepvariant_cpu:latest \
 /opt/run_pepper_deepvariant.sh \
--b /input/HG002_prom_R941_guppy360_2_GRCh38_ch20.bam \
--f /input/GRCh38_no_alt_chr20.fa \
--t 30 \
--o /output/ \
+-f "${INPUT_DIR}/${REF}" \
+-b "${INPUT_DIR}/${BAM}" \
+-o "${OUTPUT_DIR}" \
+-t ${THREADS} \
 -x 1
 ```
-For evaluation with hap.py:
+
+###### Evaluation using hap.py (Optional)
+You can evaluate the variants using `hap.py`.
 ```bash
-docker run -it \
--v /input:/input \
--v /output:/output \
+# Pull the docker image
+sudo docker pull pkrusche/hap.py:latest
+
+# Run hap.py
+sudo docker run -it \
+-v "${INPUT_DIR}":"${INPUT_DIR}" \
+-v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
 pkrusche/hap.py:latest \
 /opt/hap.py/bin/hap.py \
-/input/HG002_GRCh38_GIABv4.1.vcf.gz \
-/output/PEPPER_HP_DEEPVARIANT_FINAL_OUTPUT.vcf.gz \
--f /input/HG002_GRCh38_1_22_v4.1_draft_benchmark.bed \
--r /input/GRCh38_no_alt_chr20.fa \
--o /output/hg002_chr20_pepper_deepvariant \
+${INPUT_DIR}/${TRUTH_VCF} \
+${OUTPUT_DIR}/${OUTPUT_VCF} \
+-f "${INPUT_DIR}/${TRUTH_BED}" \
+-r "${INPUT_DIR}/${REF}" \
+-o "${OUTPUT_DIR}/happy.output" \
 --pass-only \
 -l chr20 \
 --engine=vcfeval \
---threads=30
+--threads="${THREADS}"
 ```
 
 #### Run-time and performance
@@ -153,7 +208,7 @@ Here we report the whole genome performance on three samples.
 |   GRCh37  | GIAB v3.3.2 |  HG004 |  ~75-85x |  SNV | 0.996939 |  0.996764 | 0.996852 |
 
 ## How to run
-We have combined all of the steps to run sequentially using one script. You can run the pipeline on your CPU-only or GPU machines.
+We have combined all of the steps to run sequentially using one script. You can run the pipeline on your CPU-only or GPU machines using the command-line instructions provided here. Please see [Quickstart](#Quickstart) section or [HG002 chr20 case-study](#HG002-chr20-case-study) which provides example datasets.
 
 #### Running on a CPU-only machine (Whole genome run)
 Running the variant calling pipeline is as simple as:
@@ -215,104 +270,131 @@ kishwars/pepper_deepvariant_gpu:latest \
 ----
 
 ## Quickstart
-Here is an example on how to run the pipeline on a small example.
+Here is an example on how to run the pipeline on a small example. Please see the [HG002 chr20 case-study](#HG002-chr20-case-study) section of this document for a chromosome level evaluation.
 
-#### Download data
+##### Step 1: Install docker
+Please install docker and wget if you don't have it installed already.
+
 ```bash
-INPUT_DIR=${PWD}/pepper_deepvariant_input_data
-mkdir -p ${INPUT_DIR}
+# Install wget to download data files.
+sudo apt-get -qq -y update
+sudo apt-get -qq -y install wget
 
-DATA_DIR=https://storage.googleapis.com/kishwar-helen/ont-quickstart
-wget -P ${INPUT_DIR} "${DATA_DIR}"/HG002_prom_R941_guppy360_2_GRCh38_TEST.bam
-wget -P ${INPUT_DIR} "${DATA_DIR}"/HG002_prom_R941_guppy360_2_GRCh38_TEST.bam.bai
-wget -P ${INPUT_DIR} "${DATA_DIR}"/GRCh38_no_alt_chr20.fa
-wget -P ${INPUT_DIR} "${DATA_DIR}"/GRCh38_no_alt_chr20.fa.fai
-wget -P ${INPUT_DIR} "${DATA_DIR}"/HG002_GRCh38_GIABv4.1.TRUTH.TEST.bed
-wget -P ${INPUT_DIR} "${DATA_DIR}"/HG002_GRCh38_GIABv4.1.TRUTH.TEST.vcf.gz
-wget -P ${INPUT_DIR} "${DATA_DIR}"/HG002_GRCh38_GIABv4.1.TRUTH.TEST.vcf.gz.tbi
+# Install docker using instructions on:
+# https://docs.docker.com/install/linux/docker-ce/ubuntu/
+sudo apt-get -qq -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
-OUTPUT_DIR=${PWD}/pepper_deepvariant_output_data
-mkdir -p ${OUTPUT_DIR}
+sudo add-apt-repository \
+"deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+$(lsb_release -cs) \
+stable"
+
+sudo apt-get -qq -y update
+sudo apt-get -qq -y install docker-ce
+docker --version
 ```
 
-#### Run the pipeline
-You can run the pipeline on a CPU-only or GPU machine.
-
-##### CPU-only Machine:
+##### Step 2: Run PEPPER-DeepVariant
 ```bash
-# Runtime efficient mode
-docker run --ipc=host \
--v ${INPUT_DIR}:/input \
--v ${OUTPUT_DIR}:/output \
+BASE="${HOME}/ont-quickstart"
+
+# Set up input data
+INPUT_DIR="${BASE}/input/data"
+REF="GRCh38_no_alt_chr20.fa"
+BAM="HG002_prom_R941_guppy360_2_GRCh38_TEST.bam"
+TRUTH_VCF="HG002_GRCh38_GIABv4.1.TRUTH.TEST.vcf.gz"
+TRUTH_BED="HG002_GRCh38_GIABv4.1.TRUTH.TEST.bed"
+
+# Set the number of CPUs to use
+THREADS="1"
+
+# Set up output directory
+OUTPUT_DIR="${BASE}/output"
+OUTPUT_VCF="PEPPER_HP_DEEPVARIANT_FINAL_OUTPUT.vcf.gz"
+
+## Create local directory structure
+mkdir -p "${OUTPUT_DIR}"
+mkdir -p "${INPUT_DIR}"
+
+# Download the data to input directory
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-quickstart/HG002_prom_R941_guppy360_2_GRCh38_TEST.bam
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-quickstart/HG002_prom_R941_guppy360_2_GRCh38_TEST.bam.bai
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-quickstart/GRCh38_no_alt_chr20.fa
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-quickstart/GRCh38_no_alt_chr20.fa.fai
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-quickstart/HG002_GRCh38_GIABv4.1.TRUTH.TEST.bed
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-quickstart/HG002_GRCh38_GIABv4.1.TRUTH.TEST.vcf.gz
+wget -P ${INPUT_DIR} https://storage.googleapis.com/kishwar-helen/ont-quickstart/HG002_GRCh38_GIABv4.1.TRUTH.TEST.vcf.gz.tbi
+
+## Pull the docker image.
+sudo docker pull kishwars/pepper_deepvariant_cpu:latest
+
+# Run PEPPER-DeepVariant High-Accuracy mode on CPU
+sudo docker run --ipc=host \
+-v "${INPUT_DIR}":"${INPUT_DIR}" \
+-v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
 kishwars/pepper_deepvariant_cpu:latest \
 /opt/run_pepper_deepvariant.sh \
--b /input/HG002_prom_R941_guppy360_2_GRCh38_TEST.bam \
--f /input/GRCh38_no_alt_chr20.fa \
--o /output/ \
--t 1 \
--r chr20:1000000-1020000
+-f "${INPUT_DIR}/${REF}" \
+-b "${INPUT_DIR}/${BAM}" \
+-o "${OUTPUT_DIR}" \
+-t ${THREADS} \
+-r chr20:1000000-1020000 \
+-x 1
 
-# High-accuracy mode (Used for pFDA). USE:
-docker run --ipc=host \
--v ${INPUT_DIR}:/input \
--v ${OUTPUT_DIR}:/output \
+# For run-time efficient mode on CPU-only machines:
+sudo docker run --ipc=host \
+-v "${INPUT_DIR}":"${INPUT_DIR}" \
+-v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
 kishwars/pepper_deepvariant_cpu:latest \
 /opt/run_pepper_deepvariant.sh \
--b /input/HG002_prom_R941_guppy360_2_GRCh38_TEST.bam \
--f /input/GRCh38_no_alt_chr20.fa \
--o /output/ \
--t 1 \
--r chr20:1000000-1020000 \
--x 1 # this enables high-accuracy version
-```
-
-##### GPU-based Machine:
-On a GPU machine with CUDA installed, you can run the following commands to run the pipeline. Please make sure you have [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) installed.
-```bash
-# Runtime efficient mode
-docker run --ipc=host \
---gpus all \
--v ${INPUT_DIR}:/input \
--v ${OUTPUT_DIR}:/output \
-kishwars/pepper_deepvariant_gpu:latest \
-/opt/run_pepper_deepvariant.sh \
--b /input/HG002_prom_R941_guppy360_2_GRCh38_TEST.bam \
--f /input/GRCh38_no_alt_chr20.fa \
--o /output/ \
--t 1 \
+-f "${INPUT_DIR}/${REF}" \
+-b "${INPUT_DIR}/${BAM}" \
+-o "${OUTPUT_DIR}" \
+-t ${THREADS} \
 -r chr20:1000000-1020000
 
-# High-accuracy mode (Used for pFDA). USE:
-docker run --ipc=host \
+# On GPU machines with high-accuracy (please install nvidia-docker to use this)
+
+## Pull the docker image.
+sudo docker pull kishwars/pepper_deepvariant_cpu:latest
+
+# Run PEPPER-DeepVariant High-Accuracy mode on GPU
+sudo docker run --ipc=host \
 --gpus all \
--v ${INPUT_DIR}:/input \
--v ${OUTPUT_DIR}:/output \
+-v "${INPUT_DIR}":"${INPUT_DIR}" \
+-v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
 kishwars/pepper_deepvariant_gpu:latest \
 /opt/run_pepper_deepvariant.sh \
--b /input/HG002_prom_R941_guppy360_2_GRCh38_TEST.bam \
--f /input/GRCh38_no_alt_chr20.fa \
--o /output/ \
--t 1 \
--r chr20:1000000-1020000 \
--x 1 # this enables high-accuracy version
+-f "${INPUT_DIR}/${REF}" \
+-b "${INPUT_DIR}/${BAM}" \
+-o "${OUTPUT_DIR}" \
+-t ${THREADS} \
+-x 1 \
+-r chr20:1000000-1020000
 ```
 
 #### Evaluate the variants:
 You can use hap.py to evaluate the variants.
 ```bash
-docker run -it \
--v "${INPUT_DIR}":"/input" \
--v "${OUTPUT_DIR}:/output" \
-pkrusche/hap.py /opt/hap.py/bin/hap.py \
-/input/HG002_GRCh38_GIABv4.1.TRUTH.TEST.vcf.gz \
-/output/PEPPER_HP_DEEPVARIANT_FINAL_OUTPUT.vcf.gz \
--f /input/HG002_GRCh38_GIABv4.1.TRUTH.TEST.bed \
--r /input/GRCh38_no_alt_chr20.fa \
--o /output/happy.output \
+# Pull the docker image
+sudo docker pull pkrusche/hap.py:latest
+
+# Run hap.py
+sudo docker run -it \
+-v "${INPUT_DIR}":"${INPUT_DIR}" \
+-v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
+pkrusche/hap.py:latest \
+/opt/hap.py/bin/hap.py \
+${INPUT_DIR}/${TRUTH_VCF} \
+${OUTPUT_DIR}/${OUTPUT_VCF} \
+-f "${INPUT_DIR}/${TRUTH_BED}" \
+-r "${INPUT_DIR}/${REF}" \
+-o "${OUTPUT_DIR}/happy.output" \
 --pass-only \
+-l chr20 \
 --engine=vcfeval \
---threads=1 \
--l chr20:1000000-1020000
+--threads="${THREADS}"
 ```
 
 Expected output:
