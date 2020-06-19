@@ -33,6 +33,11 @@ Alignment file (BAM):
       Pore:       R9.4.1
       Basecaller: Guppy 3.6.0
       Platform:   PromethION or MinION
+
+Reference file:
+      Standard release of GRCh38 or GRCh37.
+      We have not tested this pipeline on references with smaller contigs i.e. assemblies.
+
 ```
 
 We have not yet tested the pipeline on different pores and devices. We will update this document as we validate the pipeline.
