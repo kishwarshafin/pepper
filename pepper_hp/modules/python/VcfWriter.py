@@ -32,7 +32,7 @@ class VCFWriter:
             #     phred_gqs.append(phred_gq)
             vafs = [round(ad/max(1, max(dps)), 3) for ad in ads]
             if genotype == [0, 0]:
-                # continue
+                continue
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=qual,
                                                       filter='refCall', alleles=alleles, GT=genotype, AP=gqs, GQ=non_ref_prob, VAF=vafs)
