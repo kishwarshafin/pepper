@@ -133,16 +133,16 @@ def candidates_to_variants(candidates, contig):
         else:
             genotype = [1, 2]
 
-    alleles = selected_alts + other_alts
-    dps = selected_dps + other_dps
-    gts = selected_gts + other_gts
-    ads = selected_ads + other_ads
+    # alleles = selected_alts + other_alts
+    # dps = selected_dps + other_dps
+    # gts = selected_gts + other_gts
+    # ads = selected_ads + other_ads
 
     # only report the selected alts
-    # alleles = selected_alts
-    # dps = selected_dps
-    # gts = selected_gts
-    # ads = selected_ads
+    alleles = selected_alts
+    dps = selected_dps
+    gts = selected_gts
+    ads = selected_ads
     # print(contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, gts, ads, overall_non_ref_prob)
 
     return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, gts, ads, overall_non_ref_prob

@@ -12,8 +12,8 @@ def plot_distributions(vafs, true_vafs, false_vafs):
     # plt.hist(vafs, bins=100, color='blue', alpha=0.4)
     plt.hist([true_vafs, false_vafs], bins=100, density=False, histtype='bar', color=['green', 'red'], alpha=0.4, stacked=True, label=['True variants', 'False positives'])
     # plt.hist(false_vafs, bins=100, color='red', alpha=0.4, stacked=True)
-    plt.xlim((0.00, 0.3))
-    plt.ylim((0, 100))
+    plt.xlim((0.00, 1.10))
+    plt.ylim((0, 5000))
     plt.legend(fontsize='x-large')
     # plt.xticks(np.arange(0, 1, step=0.10), fontsize=18)
     plt.yticks(fontsize=18)
@@ -21,8 +21,8 @@ def plot_distributions(vafs, true_vafs, false_vafs):
     plt.ylabel("Count", fontsize='24')
 
     plt.title("Stacked histogram showing TP and FP distribution at different frequency intervals.", fontsize='20')
-    plt.show()
-    exit()
+    # plt.show()
+    # exit()
     output_file_name = "./VAF_distribution.png"
     plt.savefig(output_file_name, format='png', dpi=300, quality=95)
 
@@ -83,10 +83,10 @@ def plot_vaf_and_q_2d(true_allele_q_vaf, false_allele_q_vaf, q_vaf):
 
 def calculate_stats(truth_vcf, vcf):
     untagged_vcf = VariantFile(vcf)
-    positional_norm_q = defaultdict()
-    positional_aps = defaultdict()
-    for rec in untagged_vcf.fetch():
-        positional_norm_q[rec.pos] = rec.qual
+    positional_norm_q = defaultdict(lambda: defaultdict(float))
+    positional_aps = defaultdict(lambda: defaultdict(list))
+    for rec in untagged_vcf.fetch("chr20"):
+        positional_norm_q[rec.chrom][rec.pos] = rec.qual
         alts = rec.alts
 
         # get the allele probability from the original vcf
@@ -95,8 +95,7 @@ def calculate_stats(truth_vcf, vcf):
                 aps = list(rec.samples[sample]['AP'])
             else:
                 aps = [0.0] * len(alts)
-            positional_aps[rec.pos] = aps
-
+            positional_aps[rec.chrom][rec.pos] = aps
 
     vcf_in1 = VariantFile(truth_vcf)
 
@@ -122,7 +121,8 @@ def calculate_stats(truth_vcf, vcf):
 
     total_recs = 0
     total_multi_allelic_sites = 0
-    for rec in vcf_in1.fetch():
+    print("CONTIG" + "\t" + "POS" + "\t" + "REF" + "\t" + "ALT" + "\t" + "ALLELE_FREQ" + "\t" + "ALLELE_WEIGHT" + "\t" + "NON_REF_PROB" + "\t" + "T/F")
+    for rec in vcf_in1.fetch("chr20"):
         total_recs += 1
         # ['__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__setstate__', '__sizeof__', '__str__', '__subclasshook__',
         # 'alleles', 'alts', 'chrom', 'contig', 'copy', 'filter', 'format', 'header', 'id', 'info', 'pos', 'qual', 'ref', 'rid', 'rlen', 'samples', 'start', 'stop', 'translate']
@@ -135,8 +135,8 @@ def calculate_stats(truth_vcf, vcf):
                 is_indel = True
 
         # toggle this to switch between switch and indels
-        if not is_indel:
-            continue
+        # if not is_indel:
+        #     continue
 
         total_alts += len(alts)
         for sample in rec.samples:
@@ -147,7 +147,7 @@ def calculate_stats(truth_vcf, vcf):
                 vafs = [0.0] * len(alts)
 
             # allele weights
-            aps = positional_aps[rec.pos]
+            aps = positional_aps[rec.chrom][rec.pos]
             gts = list(rec.samples[sample]['GT'])
 
             true_index = []
@@ -157,16 +157,19 @@ def calculate_stats(truth_vcf, vcf):
 
             # generate the non-ref probability distribution
             if true_index:
-                non_ref_of_true_alleles.append(positional_norm_q[rec.pos])
+                non_ref_of_true_alleles.append(positional_norm_q[rec.chrom][rec.pos])
             else:
-                non_ref_of_false_alleles.append(positional_norm_q[rec.pos])
+                non_ref_of_false_alleles.append(positional_norm_q[rec.chrom][rec.pos])
 
             if len(alts) > 1:
                 total_multi_allelic_sites += 1
 
             # generate allele probability distribution
+
             for i, (alt, vaf, ap) in enumerate(zip(alts, vafs, aps)):
                 if i in true_index:
+                    # this is a true allele tagged by the truth
+                    print(rec.chrom + "\t" + str(rec.pos) + "\t" + rec.ref + "\t" + alt + "\t" + str(vaf) + "\t" + str(ap) + "\t" + str(positional_norm_q[rec.chrom][rec.pos]) + "\t" + "1")
                     vafs_of_true_alleles.append(vaf)
                     true_allele_q_vaf.append((ap, min(1.1, vaf)))
 
@@ -177,6 +180,7 @@ def calculate_stats(truth_vcf, vcf):
 
                     total_true_calls += 1
                 else:
+                    print(rec.chrom + "\t" + str(rec.pos) + "\t" + rec.ref + "\t" + alt + "\t" + str(vaf) + "\t" + str(ap) + "\t" + str(positional_norm_q[rec.chrom][rec.pos]) + "\t" + "0")
                     vafs_of_false_alleles.append(vaf)
                     false_allele_q_vaf.append((ap, min(1.1, vaf)))
 
@@ -201,7 +205,7 @@ def calculate_stats(truth_vcf, vcf):
     # plot_distributions(all_allele_frequencies, vafs_of_true_alleles, vafs_of_false_alleles)
     # plot_distributions_allele_probs(all_aps, ap_of_true_alleles, ap_of_false_alleles)
     # plot_distributions_non_ref(non_ref_of_true_alleles, non_ref_of_false_alleles)
-    plot_vaf_and_q_2d(true_allele_q_vaf, false_allele_q_vaf, ap_vaf_list)
+    # plot_vaf_and_q_2d(true_allele_q_vaf, false_allele_q_vaf, ap_vaf_list)
 
 
 
