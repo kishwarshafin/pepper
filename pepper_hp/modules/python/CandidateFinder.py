@@ -133,7 +133,7 @@ def candidates_to_variants(candidates, contig):
         else:
             genotype = [1, 2]
 
-    # alleles = selected_alts + other_alts
+    alleles = selected_alts + other_alts
     dps = selected_dps + other_dps
     gts = selected_gts + other_gts
     ads = selected_ads + other_ads
