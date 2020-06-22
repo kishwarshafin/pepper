@@ -1,6 +1,6 @@
 h5py==2.10.0
 tqdm==4.38.0
-numpy==1.16.2
+numpy==1.16.6
 wget==3.2
 torch==1.4.0
 torchvision==0.5.0
