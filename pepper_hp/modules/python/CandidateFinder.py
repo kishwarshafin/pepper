@@ -445,7 +445,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     non_ref_prob_h1 = 0
                     non_ref_prob_h2 = 0
                     # non-ref-prob is the probability that this position can have an alt
-                    for indx in range(0, len(alt_allele)):
+                    for indx in range(0, min(max_index_map[pos], len(alt_allele))):
                         if indx == 0:
                             ref_allele_indx = get_index_from_base(candidate.allele.ref[0])
                         else:
