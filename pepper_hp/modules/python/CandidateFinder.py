@@ -275,9 +275,7 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
 
     # now this is for SNPs
     if candidate_type == 1:
-        if allele_frequency >= 0.01:
-            return True
-        else:
+        if allele_frequency < CandidateFinderOptions.SNP_FREQ_THRESHOLD:
             return False
 
         allele_weight = max(alt_prob_h1, alt_prob_h2)
@@ -290,11 +288,6 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
             return True
     # insert alleles
     elif candidate_type == 2:
-        if allele_frequency >= 0.10:
-            return True
-        else:
-            return False
-
         if allele_frequency < CandidateFinderOptions.IN_FREQ_THRESHOLD:
             return False
 
@@ -309,11 +302,6 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
 
     # delete alleles
     elif candidate_type == 3:
-        if allele_frequency >= 0.10:
-            return True
-        else:
-            return False
-
         if allele_frequency < CandidateFinderOptions.DEL_FREQ_THRESHOLD:
             return False
 
