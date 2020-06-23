@@ -413,9 +413,7 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
 
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
-        if(read.mapping_quality >= 10) {
-            iterate_over_read(read, start_pos, end_pos);
-        }
+        iterate_over_read(read, start_pos, end_pos);
     }
 
     // this populates base_labels and insert_labels dictionaries
@@ -496,10 +494,8 @@ void SummaryGenerator::generate_summary(vector <type_read> &reads,
     int read_count = 0;
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
-        if(read.mapping_quality >= 10) {
-            read_count += 1;
-            iterate_over_read(read, start_pos, end_pos);
-        }
+        read_count += 1;
+        iterate_over_read(read, start_pos, end_pos);
     }
 
     // generate reference sequence
