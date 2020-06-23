@@ -272,40 +272,58 @@ def get_index_from_base(base):
 def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
     allele_frequency = read_support / max(1.0, depth)
     # at first put a clear threshold in frequency to make sure the method runs within a good runtime
-    if allele_frequency < CandidateFinderOptions.ALLELE_FREQ_THRESHOLD:
-        return False
 
     # now this is for SNPs
     if candidate_type == 1:
-        # print("SNP", candidate_type, depth, read_support, max(alt_prob_h1, alt_prob_h2), non_ref_prob, max(non_ref_prob, alt_prob_h1, alt_prob_h2))
-        if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.SNP_ALT_PROB_THRESHOLD:
+        if allele_frequency >= 0.01:
             return True
-        if non_ref_prob >= CandidateFinderOptions.SNP_NON_REF_THRESHOLD:
-            return True
-        # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.SNP_LAST_CHANCE_THRESHOLD:
-        #     return True
-        if allele_frequency >= CandidateFinderOptions.SNP_FREQ_THRESHOLD:
+        else:
+            return False
+
+        allele_weight = max(alt_prob_h1, alt_prob_h2)
+        predicted_val = allele_frequency * CandidateFinderOptions.SNP_ALT_FREQ_COEF \
+                         + allele_weight * CandidateFinderOptions.SNP_ALLELE_WEIGHT_COEF \
+                         + non_ref_prob  * CandidateFinderOptions.SNP_NON_REF_PROB_COEF \
+                         + CandidateFinderOptions.SNP_BIAS_TERM
+
+        if predicted_val >= CandidateFinderOptions.SNP_THRESHOLD:
             return True
     # insert alleles
     elif candidate_type == 2:
-        if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_ALT_PROB_THRESHOLD:
+        if allele_frequency >= 0.10:
             return True
-        # if non_ref_prob >= CandidateFinderOptions.IN_NON_REF_THRESHOLD:
-        #     return True
-        # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.IN_LAST_CHANCE_THRESHOLD:
-        #     return True
-        if allele_frequency >= CandidateFinderOptions.IN_FREQ_THRESHOLD:
+        else:
+            return False
+
+        if allele_frequency < CandidateFinderOptions.IN_FREQ_THRESHOLD:
+            return False
+
+        allele_weight = max(alt_prob_h1, alt_prob_h2)
+        predicted_val = allele_frequency * CandidateFinderOptions.INSERT_ALT_FREQ_COEF \
+                         + allele_weight * CandidateFinderOptions.INSERT_ALLELE_WEIGHT_COEF \
+                         + non_ref_prob  * CandidateFinderOptions.INSERT_NON_REF_PROB_COEF \
+                         + CandidateFinderOptions.INSERT_BIAS_TERM
+
+        if predicted_val >= CandidateFinderOptions.INSERT_THRESHOLD:
             return True
 
     # delete alleles
     elif candidate_type == 3:
-        if max(alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_ALT_PROB_THRESHOLD:
+        if allele_frequency >= 0.10:
             return True
-        # if non_ref_prob >= CandidateFinderOptions.DEL_NON_REF_THRESHOLD:
-        #     return True
-        # if max(non_ref_prob, alt_prob_h1, alt_prob_h2) >= CandidateFinderOptions.DEL_LAST_CHANCE_THRESHOLD:
-        #     return True
-        if allele_frequency >= CandidateFinderOptions.DEL_FREQ_THRESHOLD:
+        else:
+            return False
+
+        if allele_frequency < CandidateFinderOptions.DEL_FREQ_THRESHOLD:
+            return False
+
+        allele_weight = max(alt_prob_h1, alt_prob_h2)
+        predicted_val = allele_frequency * CandidateFinderOptions.DELETE_ALT_FREQ_COEF \
+                         + allele_weight * CandidateFinderOptions.DELETE_ALLELE_WEIGHT_COEF \
+                         + non_ref_prob  * CandidateFinderOptions.DELETE_NON_REF_PROB_COEF \
+                         + CandidateFinderOptions.DELETE_BIAS_TERM
+
+        if predicted_val >= CandidateFinderOptions.DELETE_THRESHOLD:
             return True
 
     # otherwise, it's highly unlikely to be a true variant.
@@ -422,19 +440,30 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     alt_prob_h1 = alt_prob_h1 / max(1, length)
                     alt_prob_h2 = alt_prob_h2 / max(1, length)
 
+                    # This is the calculation of non_ref_prob
+                    length = 0
+                    non_ref_prob_h1 = 0
+                    non_ref_prob_h2 = 0
                     # non-ref-prob is the probability that this position can have an alt
-                    for indx in range(0, max_index_map[pos]):
+                    for indx in range(0, len(alt_allele)):
                         if indx == 0:
                             ref_allele_indx = get_index_from_base(candidate.allele.ref[0])
                         else:
                             ref_allele_indx = get_index_from_base('*')
-                        non_ref_prob_h1 = (sum(prediction_map_h1[(pos, indx)]) - prediction_map_h1[(pos, indx)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, indx)]))
-                        non_ref_prob_h2 = (sum(prediction_map_h2[(pos, indx)]) - prediction_map_h2[(pos, indx)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, indx)]))
-                        non_ref_prob = max(non_ref_prob, max(non_ref_prob_h1, non_ref_prob_h2))
-                    # alt_probability = prediction_map[(candidate.pos_start)][0]
+                        non_ref_prob_h1 = non_ref_prob_h1 + (sum(prediction_map_h1[(pos, indx)]) - prediction_map_h1[(pos, indx)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, indx)]))
+                        non_ref_prob_h2 = non_ref_prob_h2 + (sum(prediction_map_h2[(pos, indx)]) - prediction_map_h2[(pos, indx)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, indx)]))
+                        length += 1
+
+                    non_ref_prob_h1 = non_ref_prob_h1 / max(1, length)
+                    non_ref_prob_h2 = non_ref_prob_h2 / max(1, length)
+                    non_ref_prob = max(non_ref_prob_h1, non_ref_prob_h2)
                 # DEL
                 elif candidate.allele.alt_type == 3:
                     length = 0
+
+                    non_ref_length = 0
+                    non_ref_prob_h1 = 0
+                    non_ref_prob_h2 = 0
                     # print("CANDIDATE", candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
                     # print(candidate.pos_start, candidate.pos_end, max_delete_map[candidate.pos_start], candidate.pos_start + max_delete_map[candidate.pos_start])
                     for pos in range(candidate.pos_start, candidate.pos_start + max_delete_map[candidate.pos_start]):
@@ -442,11 +471,10 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                         # print(pos, candidate.pos_start + max_delete_map[candidate.pos_start])
                         if candidate.pos_start < pos < candidate.pos_end:
                             ref_allele_indx = get_index_from_base(candidate.allele.ref[pos - candidate.pos_start])
-                            non_ref_prob_h1 = (sum(prediction_map_h1[(pos, 0)]) - prediction_map_h1[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
-                            non_ref_prob_h2 = (sum(prediction_map_h2[(pos, 0)]) - prediction_map_h2[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
-                            # print("before", pos, non_ref_prob, non_ref_prob_h1, non_ref_prob_h2)
-                            non_ref_prob = max(non_ref_prob, max(non_ref_prob_h1, non_ref_prob_h2))
-                            # print("after", pos, non_ref_prob, non_ref_prob_h1, non_ref_prob_h2)
+
+                            non_ref_prob_h1 = non_ref_prob_h1 + (sum(prediction_map_h1[(pos, 0)]) - prediction_map_h1[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
+                            non_ref_prob_h2 = non_ref_prob_h2 + (sum(prediction_map_h2[(pos, 0)]) - prediction_map_h2[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
+                            non_ref_length += 1
 
                         if candidate.pos_start < pos < candidate.pos_end:
                             del_allele_indx = get_index_from_base('*')
@@ -467,6 +495,10 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     # print(alt_prob_h2, length)
                     alt_prob_h1 = alt_prob_h1 / max(1, length)
                     alt_prob_h2 = alt_prob_h2 / max(1, length)
+
+                    non_ref_prob_h1 = non_ref_prob_h1 / max(1, non_ref_length)
+                    non_ref_prob_h2 = non_ref_prob_h2 / max(1, non_ref_length)
+                    non_ref_prob = max(non_ref_prob_h1, non_ref_prob_h2)
 
                 if filter_candidate(candidate.allele.alt_type, candidate.depth, candidate.read_support,
                                     candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
