@@ -333,6 +333,16 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
         if(i==7)cout<<"TRV1:\t";
         if(i==8)cout<<"GFW1:\t";
         if(i==9)cout<<"GRV1:\t";
+        if(i==10)cout<<"AFW2:\t";
+        if(i==11)cout<<"CFW2:\t";
+        if(i==12)cout<<"GFW2:\t";
+        if(i==13)cout<<"TFW2:\t";
+        if(i==14)cout<<"ARV2:\t";
+        if(i==15)cout<<"CRV2:\t";
+        if(i==16)cout<<"GRV2:\t";
+        if(i==17)cout<<"TRV2:\t";
+        if(i==18)cout<<"GFW2:\t";
+        if(i==19)cout<<"GRV2:\t";
 
         for (int j = 0; j < image_hp1.size(); j++) {
             printf("%3d\t", image_hp1[j][i]);
@@ -351,6 +361,16 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
         if(i==7)cout<<"TRV2:\t";
         if(i==8)cout<<"GFW2:\t";
         if(i==9)cout<<"GRV2:\t";
+        if(i==10)cout<<"AFW2:\t";
+        if(i==11)cout<<"CFW2:\t";
+        if(i==12)cout<<"GFW2:\t";
+        if(i==13)cout<<"TFW2:\t";
+        if(i==14)cout<<"ARV2:\t";
+        if(i==15)cout<<"CRV2:\t";
+        if(i==16)cout<<"GRV2:\t";
+        if(i==17)cout<<"TRV2:\t";
+        if(i==18)cout<<"GFW2:\t";
+        if(i==19)cout<<"GRV2:\t";
 
         for (int j = 0; j < image_hp2.size(); j++) {
             printf("%3d\t", image_hp2[j][i]);
@@ -367,22 +387,36 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
         vector<uint8_t> row_h1;
         vector<uint8_t> row_h2;
         uint8_t pixel_value_h1 = 0;
+        uint8_t pixel_value_h1_encoding_h2 = 0;
         uint8_t pixel_value_h2 = 0;
+        uint8_t pixel_value_h2_encoding_h1 = 0;
+
         // iterate through the summaries
         for(int j = 0; j <= 9; j++) {
             pixel_value_h1 = (base_summaries_hp1[make_pair(i, j)] / max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE;
             pixel_value_h2 = (base_summaries_hp2[make_pair(i, j)] / max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE;
+
             row_h1.push_back(pixel_value_h1);
             row_h2.push_back(pixel_value_h2);
         }
 
-        assert(row_h1.size() == 10);
-        assert(row_h2.size() == 10);
+        // this loop mounts summaries from the other haplotype to this one
+        for(int j = 0; j <= 9; j++) {
+            // you can remove these if you want to remove encoding of HP2 when inferring HP1
+            pixel_value_h2_encoding_h1 = 0.2 * (base_summaries_hp1[make_pair(i, j)] / max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE;
+            pixel_value_h1_encoding_h2 = 0.2 * (base_summaries_hp2[make_pair(i, j)] / max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE;
+
+            // you can remove these if you want to remove encoding of HP2 when inferring HP2
+            row_h1.push_back(pixel_value_h1_encoding_h2);
+            row_h2.push_back(pixel_value_h2_encoding_h1);
+        }
+
+        assert(row_h1.size() == 20);
+        assert(row_h2.size() == 20);
         image_hp1.push_back(row_h1);
         image_hp2.push_back(row_h2);
 
         if (longest_insert_count[i] > 0) {
-
             for (int ii = 0; ii < longest_insert_count[i]; ii++) {
                 vector<uint8_t> ins_row_hp1;
                 vector<uint8_t> ins_row_hp2;
@@ -393,11 +427,27 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
                             max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE ;
                     pixel_value_h2 = (insert_summaries_hp2[make_pair(make_pair(i, ii), j)] /
                                    max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE ;
+
                     ins_row_hp1.push_back(pixel_value_h1);
                     ins_row_hp2.push_back(pixel_value_h2);
                 }
-                assert(ins_row_hp1.size() == 10);
-                assert(ins_row_hp2.size() == 10);
+
+                // this loop mounts summaries from the other haplotype to this one
+                for(int j = 0; j <= 9; j++) {
+                    // you can remove these if you want to remove encoding of HP2 when inferring HP2
+                    pixel_value_h2_encoding_h1 = 0.2 * (insert_summaries_hp1[make_pair(make_pair(i, ii), j)] /
+                                                        max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE ;
+
+                    pixel_value_h1_encoding_h2 = 0.2 * (insert_summaries_hp2[make_pair(make_pair(i, ii), j)] /
+                                                        max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE ;
+
+                    // you can remove these if you want to remove encoding of HP2 when inferring HP2
+                    ins_row_hp1.push_back(pixel_value_h1_encoding_h2); // this line 1
+                    ins_row_hp2.push_back(pixel_value_h2_encoding_h1); // this line 2
+                }
+
+                assert(ins_row_hp1.size() == 20);
+                assert(ins_row_hp2.size() == 20);
                 image_hp1.push_back(ins_row_hp1);
                 image_hp2.push_back(ins_row_hp2);
             }
