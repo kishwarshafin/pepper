@@ -251,16 +251,16 @@ class AlignmentSummarizer:
             truth_reads_h1 = truth_bam_handler_h1.get_reads(self.chromosome_name,
                                                             self.region_start_position,
                                                             self.region_end_position,
-                                                            ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
-                                                            ReadFilterOptions.MIN_MAPQ,
-                                                            ReadFilterOptions.MIN_BASEQ)
+                                                            False, # include supplementary
+                                                            60, # min mapq
+                                                            0) # min baseq
 
             truth_reads_h2 = truth_bam_handler_h2.get_reads(self.chromosome_name,
                                                             self.region_start_position,
                                                             self.region_end_position,
-                                                            ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
-                                                            ReadFilterOptions.MIN_MAPQ,
-                                                            ReadFilterOptions.MIN_BASEQ)
+                                                            False, # include supplementary
+                                                            60, # min mapq
+                                                            0) # min baseq
 
             # do a local realignment of truth reads to reference
             if realignment_flag:
@@ -309,21 +309,22 @@ class AlignmentSummarizer:
                 truth_reads_h1 = truth_bam_handler_h1.get_reads(self.chromosome_name,
                                                                 self.region_start_position,
                                                                 self.region_end_position,
-                                                                ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
-                                                                ReadFilterOptions.MIN_MAPQ,
-                                                                ReadFilterOptions.MIN_BASEQ)
+                                                                False, # include supplementary
+                                                                60, # min mapq
+                                                                0)
 
                 truth_reads_h2 = truth_bam_handler_h2.get_reads(self.chromosome_name,
                                                                 self.region_start_position,
                                                                 self.region_end_position,
-                                                                ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
-                                                                ReadFilterOptions.MIN_MAPQ,
-                                                                ReadFilterOptions.MIN_BASEQ)
+                                                                False, # include supplementary
+                                                                60, # min mapq
+                                                                0)
                 if len(truth_reads_h1) > 1 or len(truth_reads_h2) > 1:
                     continue
 
                 ref_start = region_start
                 ref_end = region_end + 1
+
                 # ref_seq should contain region_end_position base
                 ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
                                                                     ref_start,
