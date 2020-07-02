@@ -103,10 +103,7 @@ class VCFWriter:
                 continue
             sq_id = sq
             ln = self.fasta_handler.get_chromosome_sequence_length(sq)
-            items = [('ID', str(sq_id)),
-                     ('length', str(ln))]
-            # items = [('ID', sq_id)]
-            header.add_meta(key='contig', items=items)
+            header.contigs.add(sq_id, length=ln)
 
         header.add_sample(sample_name)
 
