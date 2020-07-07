@@ -42,7 +42,7 @@ class CandidateFinderOptions(object):
     DEL_FREQ_THRESHOLD = 0.01
 
     SAFE_BASES = 20
-    ALT_PROB_THRESHOLD = 0.01
+    ALT_PROB_THRESHOLD = 0.9
 
 
 class TrainOptions(object):
