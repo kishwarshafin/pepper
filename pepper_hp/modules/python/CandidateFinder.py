@@ -275,14 +275,18 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
 
     # now this is for SNPs
     if candidate_type == 1:
-        if allele_frequency >= 0.09:
-            return True
-        else:
-            return False
-        if allele_frequency < CandidateFinderOptions.SNP_FREQ_THRESHOLD:
-            return False
-
+        # if allele_frequency >= 0.09:
+        #     return True
+        # else:
+        #     return False
         allele_weight = max(alt_prob_h1, alt_prob_h2)
+
+        if allele_frequency < CandidateFinderOptions.SNP_FREQ_THRESHOLD:
+            if allele_weight >= 0.9:
+                return True
+            else:
+                return False
+
         predicted_val = allele_frequency * CandidateFinderOptions.SNP_ALT_FREQ_COEF \
                          + allele_weight * CandidateFinderOptions.SNP_ALLELE_WEIGHT_COEF \
                          + non_ref_prob  * CandidateFinderOptions.SNP_NON_REF_PROB_COEF \
@@ -292,14 +296,14 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
             return True
     # insert alleles
     elif candidate_type == 2:
-        if allele_frequency >= 0.10:
-            return True
-        else:
-            return False
+        # if allele_frequency >= 0.10:
+        #     return True
+        # else:
+        #     return False
+        allele_weight = max(alt_prob_h1, alt_prob_h2)
         if allele_frequency < CandidateFinderOptions.IN_FREQ_THRESHOLD:
             return False
 
-        allele_weight = max(alt_prob_h1, alt_prob_h2)
         predicted_val = allele_frequency * CandidateFinderOptions.INSERT_ALT_FREQ_COEF \
                          + allele_weight * CandidateFinderOptions.INSERT_ALLELE_WEIGHT_COEF \
                          + non_ref_prob  * CandidateFinderOptions.INSERT_NON_REF_PROB_COEF \
@@ -310,12 +314,16 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
 
     # delete alleles
     elif candidate_type == 3:
-        if allele_frequency >= 0.10:
-            return True
-        else:
-            return False
+        # if allele_frequency >= 0.10:
+        #     return True
+        # else:
+        #     return False
+        allele_weight = max(alt_prob_h1, alt_prob_h2)
         if allele_frequency < CandidateFinderOptions.DEL_FREQ_THRESHOLD:
-            return False
+            if allele_weight >= 0.9:
+                return True
+            else:
+                return False
 
         allele_weight = max(alt_prob_h1, alt_prob_h2)
         predicted_val = allele_frequency * CandidateFinderOptions.DELETE_ALT_FREQ_COEF \
