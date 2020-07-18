@@ -185,13 +185,15 @@ class AlignmentSummarizer:
 
         if train_mode:
             # get the reads from the bam file
-            include_supplementary = False
+            include_supplementary = True
+            min_mapq = 60
+            min_baseq = 0
             truth_reads = truth_bam_handler.get_reads(self.chromosome_name,
                                                       self.region_start_position,
                                                       self.region_end_position,
                                                       include_supplementary,
-                                                      0,
-                                                      0)
+                                                      min_mapq,
+                                                      min_baseq)
 
             # do a local realignment of truth reads to reference
             if realignment_flag:
