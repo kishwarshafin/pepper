@@ -211,13 +211,17 @@ class AlignmentSummarizer:
         if train_mode:
             # get the reads from the bam file
             truth_bam_handler = PEPPER_HP.BAM_handler(truth_bam)
+            # truth reads
+            include_truth_supp = True
+            truth_read_mq = 60
+            truth_read_baseq = 0
             # get the reads from the bam file
             truth_reads = truth_bam_handler.get_reads(self.chromosome_name,
                                                       self.region_start_position,
                                                       self.region_end_position,
-                                                      ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
-                                                      ReadFilterOptions.MIN_MAPQ,
-                                                      ReadFilterOptions.MIN_BASEQ)
+                                                      include_truth_supp,
+                                                      truth_read_mq,
+                                                      truth_read_baseq)
 
             # do a local realignment of truth reads to reference
             if realignment_flag:
