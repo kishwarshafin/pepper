@@ -33,7 +33,7 @@ def make_images(bam_filepath, fasta_filepath, region, output_dir, threads):
         exit(1)
 
     # get the list of contigs
-    contig_list = UserInterfaceSupport.get_chromosome_list(region, fasta_filepath)
+    contig_list = UserInterfaceSupport.get_chromosome_list(region, fasta_filepath, bam_filepath, region_bed=None)
 
     # call the parallelization method to generate images in parallel
     UserInterfaceSupport.chromosome_level_parallelization(contig_list,
@@ -79,7 +79,7 @@ def make_train_images(bam_filepath, truth_bam_filepath, fasta_filepath, region, 
         exit(1)
 
     # get the list of contigs
-    contig_list = UserInterfaceSupport.get_chromosome_list(region, fasta_filepath)
+    contig_list = UserInterfaceSupport.get_chromosome_list(region, fasta_filepath, bam_filepath, region_bed)
 
     # call the parallelization method to generate images in parallel
     UserInterfaceSupport.chromosome_level_parallelization(contig_list,
