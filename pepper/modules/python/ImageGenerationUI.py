@@ -246,17 +246,19 @@ class UserInterfaceSupport:
 
         start_time = time.time()
         fasta_handler = PEPPER.FASTA_handler(draft_file)
+        contigs = set()
 
         all_intervals = []
         # first calculate all the intervals that we need to process
         for chr_name, region in chr_list:
             # contig update message
+            contigs.add(str(chr_name))
             if not region:
-                interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
+                interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(str(chr_name)) - 1)
             else:
                 interval_start, interval_end = tuple(region)
                 interval_start = max(0, interval_start)
-                interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
+                interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(str(chr_name)) - 1)
 
             # this is the interval size each of the process is going to get which is 10^6
             # I will split this into 10^4 size inside the worker process
@@ -268,7 +270,7 @@ class UserInterfaceSupport:
         # all intervals calculated now
         # contig update message
         sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
-                         + "INFO: TOTAL CONTIGS: " + str(len(chr_list))
+                         + "INFO: TOTAL CONTIGS: " + str(len(contigs))
                          + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n")
         sys.stderr.flush()
 
