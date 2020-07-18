@@ -55,6 +55,13 @@ def add_make_train_images_arguments(parser):
         help="Region in [chr_name:start-end] format"
     )
     parser.add_argument(
+        "-rb",
+        "--region_bed",
+        default=None,
+        type=str,
+        help="Region in [chr_name:start-end] format"
+    )
+    parser.add_argument(
         "-o",
         "--output_dir",
         type=str,
@@ -291,6 +298,7 @@ def main():
                           FLAGS.truth_bam,
                           FLAGS.fasta,
                           FLAGS.region,
+                          FLAGS.region_bed,
                           FLAGS.output_dir,
                           FLAGS.threads)
     elif FLAGS.sub_command == 'train_model':
@@ -327,21 +335,20 @@ def main():
                       FLAGS.gpu)
 
     elif FLAGS.sub_command == 'torch_stat':
-        sys.stderr.write(TextColor.YELLOW + "TORCH VERSION: " + TextColor.END + str(torch.__version__) + "\n\n")
-        sys.stderr.write(TextColor.YELLOW + "PARALLEL CONFIG:\n" + TextColor.END)
+        sys.stderr.write("TORCH VERSION: " + str(torch.__version__) + "\n\n")
+        sys.stderr.write("PARALLEL CONFIG:\n")
         print(torch.__config__.parallel_info())
-        sys.stderr.write(TextColor.YELLOW + "BUILD CONFIG:\n" + TextColor.END)
+        sys.stderr.write("BUILD CONFIG:\n")
         print(*torch.__config__.show().split("\n"), sep="\n")
 
-        sys.stderr.write(TextColor.GREEN + "CUDA AVAILABLE: " + TextColor.END + str(torch.cuda.is_available()) + "\n")
-        sys.stderr.write(TextColor.GREEN + "GPU DEVICES: " + TextColor.END + str(torch.cuda.device_count()) + "\n")
+        sys.stderr.write("CUDA AVAILABLE: " + str(torch.cuda.is_available()) + "\n")
+        sys.stderr.write("GPU DEVICES: " + str(torch.cuda.device_count()) + "\n")
 
     elif FLAGS.version is True:
         print("PEPPER VERSION: ", __version__)
 
     else:
-        sys.stderr.write(TextColor.RED + "ERROR: NO SUBCOMMAND SELECTED. PLEASE SELECT ONE OF THE AVAIABLE SUB-COMMANDS.\n"
-                         + TextColor.END)
+        sys.stderr.write("ERROR: NO SUBCOMMAND SELECTED. PLEASE SELECT ONE OF THE AVAIABLE SUB-COMMANDS.\n")
         parser.print_help()
 
 

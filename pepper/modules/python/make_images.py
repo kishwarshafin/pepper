@@ -45,7 +45,7 @@ def make_images(bam_filepath, fasta_filepath, region, output_dir, threads):
                                                           train_mode=False)
 
 
-def make_train_images(bam_filepath, truth_bam_filepath, fasta_filepath, region, output_dir, threads):
+def make_train_images(bam_filepath, truth_bam_filepath, fasta_filepath, region, region_bed, output_dir, threads):
     """
     GENERATE IMAGES WITHOUT ANY LABELS. THIS IS USED BY pepper.py
     :param bam_filepath: Path to the input bam file.

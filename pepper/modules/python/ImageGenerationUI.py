@@ -1,5 +1,6 @@
-import time
 import os
+import re
+import time
 import sys
 import concurrent.futures
 from datetime import datetime
@@ -78,21 +79,55 @@ class UserInterfaceSupport:
         return output_directory
 
     @staticmethod
-    def get_chromosome_list(chromosome_names, ref_file):
+    def natural_key(string_):
+        """See http://www.codinghorror.com/blog/archives/001018.html"""
+        return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
+
+    @staticmethod
+    def get_chromosome_list(chromosome_names, ref_file, bam_file, region_bed):
         """
         PARSES THROUGH THE CHROMOSOME PARAMETER TO FIND OUT WHICH REGIONS TO PROCESS
         :param chromosome_names: NAME OF CHROMOSOME
         :param ref_file: PATH TO THE REFERENCE FILE
+        :param bam_file: PATH TO BAM FILE
         :return: LIST OF CHROMOSOME IN REGION SPECIFIC FORMAT
         """
-        if not chromosome_names:
-            # nothing specified, so process all contigs
+        if not chromosome_names and not region_bed:
             fasta_handler = PEPPER.FASTA_handler(ref_file)
-            contig_names = fasta_handler.get_chromosome_names()
-            contig_list = []
-            for contig_name in contig_names:
-                contig_list.append((contig_name, None))
-            return contig_list
+            bam_handler = PEPPER.BAM_handler(bam_file)
+            bam_contigs = bam_handler.get_chromosome_sequence_names()
+            fasta_contigs = fasta_handler.get_chromosome_names()
+            common_contigs = list(set(fasta_contigs) & set(bam_contigs))
+
+            if len(common_contigs) == 0:
+                sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
+                                 + "ERROR: NO COMMON CONTIGS FOUND BETWEEN THE BAM FILE AND THE FASTA FILE.")
+                sys.stderr.flush()
+                exit(1)
+
+            common_contigs = sorted(common_contigs, key=UserInterfaceSupport.natural_key)
+            sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] INFO: COMMON CONTIGS FOUND: " + str(common_contigs) + "\n")
+            sys.stderr.flush()
+
+            chromosome_name_list = []
+            for contig_name in common_contigs:
+                chromosome_name_list.append((contig_name, None))
+
+            return chromosome_name_list
+
+        if region_bed:
+            chromosome_name_list = []
+            with open(region_bed) as fp:
+                line = fp.readline()
+                cnt = 1
+                while line:
+                    line_to_list = line.rstrip().split('\t')
+                    chr_name, start_pos, end_pos = line_to_list[0], int(line_to_list[1]), int(line_to_list[2])
+                    region = sorted([start_pos, end_pos])
+                    chromosome_name_list.append((chr_name, region))
+                    line = fp.readline()
+                cnt += 1
+            return chromosome_name_list
 
         split_names = chromosome_names.strip().split(',')
         split_names = [name.strip() for name in split_names]
@@ -105,7 +140,7 @@ class UserInterfaceSupport:
                 name_region = name.strip().split(':')
 
                 if len(name_region) != 2:
-                    sys.stderr.print("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: --chromosome_name INVALID value.\n")
+                    sys.stderr.write("ERROR: --region INVALID value.\n")
                     exit(0)
 
                 name, region = tuple(name_region)
@@ -113,7 +148,7 @@ class UserInterfaceSupport:
                 region = [int(pos) for pos in region]
 
                 if len(region) != 2 or not region[0] <= region[1]:
-                    sys.stderr.print("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: --chromosome_name INVALID value.\n")
+                    sys.stderr.write("ERROR: --region INVALID value.\n")
                     exit(0)
 
             range_split = name.split('-')
