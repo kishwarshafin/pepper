@@ -36,7 +36,7 @@ def chunks(file_names, threads):
 def small_chunk_stitch(contig, small_chunk_keys):
     # for chunk_key in small_chunk_keys:
     base_prediction_dictionary = defaultdict()
-    phred_score_dictionary = defaultdict()
+    # phred_score_dictionary = defaultdict()
     all_positions = set()
     # ignore first 2 * MIN_IMAGE_OVERLAP bases as they are just overlaps
     buffer_positions = ImageSizeOptions.MIN_IMAGE_OVERLAP * 2
@@ -52,7 +52,7 @@ def small_chunk_stitch(contig, small_chunk_keys):
         for i, chunk in enumerate(smaller_chunks):
             with h5py.File(file_name, 'r') as hdf5_file:
                 bases = hdf5_file['predictions'][contig][chunk_name][chunk]['bases'][()]
-                phred_score = hdf5_file['predictions'][contig][chunk_name][chunk]['phred_score'][()]
+                # phred_score = hdf5_file['predictions'][contig][chunk_name][chunk]['phred_score'][()]
                 positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
                 indices = hdf5_file['predictions'][contig][chunk_name][chunk]['index'][()]
 
@@ -61,7 +61,7 @@ def small_chunk_stitch(contig, small_chunk_keys):
             # if _st == 107900:
             #     print(positions)
 
-            for pos, indx, base_pred, base_score in zip(positions, indices, base_predictions, phred_score):
+            for pos, indx, base_pred, base_score in zip(positions, indices, base_predictions):
                 # not take the first buffer bases for every chunk that has an overlap to the last chunk
                 if _st > 0 and pos <= _st + buffer_positions:
                     continue
@@ -70,7 +70,7 @@ def small_chunk_stitch(contig, small_chunk_keys):
                     continue
 
                 base_prediction_dictionary[(pos, indx)] = base_pred
-                phred_score_dictionary[(pos, indx)] = base_score + 33
+                # phred_score_dictionary[(pos, indx)] = base_score + 33
                 all_positions.add((pos, indx))
 
     if len(all_positions) == 0:
@@ -82,16 +82,16 @@ def small_chunk_stitch(contig, small_chunk_keys):
     # weird but python has no casting between np.int64 to list
     if len(pos_list) > 1:
         predicted_base_labels = list(dict_fetch(base_prediction_dictionary))
-        predicted_phred_scores = list(dict_fetch(phred_score_dictionary))
+        # predicted_phred_scores = list(dict_fetch(phred_score_dictionary))
     else:
         predicted_base_labels = [dict_fetch(base_prediction_dictionary)]
-        predicted_phred_scores = [dict_fetch(phred_score_dictionary)]
+        # predicted_phred_scores = [dict_fetch(phred_score_dictionary)]
 
     sequence = ''.join([label_decoder[base] for base in predicted_base_labels])
-    phred_score = ''.join([chr(phred_score) for base, phred_score in zip(predicted_base_labels, predicted_phred_scores) if base != 0])
+    # phred_score = ''.join([chr(phred_score) for base, phred_score in zip(predicted_base_labels, predicted_phred_scores) if base != 0])
     first_pos = pos_list[0][0]
     last_pos = pos_list[-1][0]
-    return first_pos, last_pos, sequence, phred_score
+    return first_pos, last_pos, sequence
 
 
 def create_consensus_sequence(contig, sequence_chunk_keys, threads):
@@ -114,18 +114,16 @@ def create_consensus_sequence(contig, sequence_chunk_keys, threads):
         futures = [executor.submit(small_chunk_stitch, contig, chunk) for chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
-                first_pos, last_pos, sequence, qual = fut.result()
+                first_pos, last_pos, sequence = fut.result()
                 if first_pos != -1 and last_pos != -1:
-                    sequence_chunks.append((first_pos, last_pos, sequence, qual))
+                    sequence_chunks.append((first_pos, last_pos, sequence))
             else:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]  ERROR: " + str(fut.exception()) + "\n")
             fut._result = None  # python issue 27144
 
     sequence_chunks = sorted(sequence_chunks, key=lambda element: (element[0], element[1]))
     stitched_sequence = ''
-    quality_sequence = ''
-    for first_pos, last_pos, sequence, qual in sequence_chunks:
+    for first_pos, last_pos, sequence in sequence_chunks:
         stitched_sequence = stitched_sequence + sequence
-        quality_sequence = quality_sequence + qual
 
-    return stitched_sequence, quality_sequence
+    return stitched_sequence

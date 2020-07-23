@@ -51,12 +51,10 @@ def perform_stitch(hdf_file_path, output_path, threads):
             all_contigs.update(contigs)
 
     output_path = output_path + '_pepper_polished.fa'
-    output_path_qual = output_path + '_pepper_polished.txt'
     output_directory = Path(output_path).resolve().parents[0]
     output_directory.mkdir(parents=True, exist_ok=True)
 
     consensus_fasta_file = open(output_path, 'w')
-    quality_fasta_file = open(output_path_qual, 'w')
 
     for contig in sorted(all_contigs, key=natural_key):
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + "\n")
@@ -71,10 +69,8 @@ def perform_stitch(hdf_file_path, output_path, threads):
                 for chunk_key in chunk_keys:
                     all_chunk_keys.append((prediction_file, chunk_key))
 
-        consensus_sequence, quality_sequence = create_consensus_sequence(contig,
-                                                                         all_chunk_keys,
-                                                                         threads)
-        assert(len(consensus_sequence) == len(quality_sequence))
+        consensus_sequence = create_consensus_sequence(contig, all_chunk_keys, threads)
+
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", POLISHED SEQUENCE LENGTH: "
                          + str(len(consensus_sequence)) + ".\n")
 
@@ -82,8 +78,5 @@ def perform_stitch(hdf_file_path, output_path, threads):
         if consensus_sequence is not None and len(consensus_sequence) > 0:
             consensus_fasta_file.write('>' + contig + "\n")
             consensus_fasta_file.write(consensus_sequence+"\n")
-
-            quality_fasta_file.write('>' + contig + "\n")
-            quality_fasta_file.write(quality_sequence+"\n")
 
     hdf5_file.close()
