@@ -61,7 +61,7 @@ def small_chunk_stitch(contig, small_chunk_keys):
             # if _st == 107900:
             #     print(positions)
 
-            for pos, indx, base_pred, base_score in zip(positions, indices, base_predictions):
+            for pos, indx, base_pred in zip(positions, indices, base_predictions):
                 # not take the first buffer bases for every chunk that has an overlap to the last chunk
                 if _st > 0 and pos <= _st + buffer_positions:
                     continue
