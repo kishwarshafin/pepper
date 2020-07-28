@@ -176,7 +176,7 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
                         for chunk_key in chunk_keys:
                             all_chunk_keys.append((prediction_file, chunk_key))
 
-        selected_candidates = find_candidates(input_dir,  reference_file, bam_file, contig, all_chunk_keys, threads)
+        selected_candidates = find_candidates(input_dir, reference_file, bam_file, contig, all_chunk_keys, threads)
 
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", TOTAL CANDIDATES FOUND: "
                          + str(len(selected_candidates)) + ".\n")

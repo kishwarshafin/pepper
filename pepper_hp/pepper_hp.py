@@ -6,6 +6,7 @@ from pepper.version import __version__
 from pepper_hp.modules.python.MakeImages import make_images
 from pepper_hp.modules.python.RunInference import run_inference
 from pepper_hp.modules.python.FindCandidates import process_candidates
+from pepper_hp.modules.python.FindCandidatesBasic import process_candidates_basic
 from pepper_hp.modules.python.MergeVCFsWithSimplify import haploid2diploid
 from pepper_hp.modules.python.CallVariant import call_variant
 
@@ -114,6 +115,13 @@ def add_call_variant_arguments(parser):
         required=False,
         default=4,
         help="Number of workers for loading images. Default is 4."
+    )
+    parser.add_argument(
+        "-l",
+        "--linear",
+        default=False,
+        action='store_true',
+        help="If set then the basic candidate finder will be activated. Will not use regression model."
     )
     return parser
 
@@ -283,6 +291,13 @@ def add_find_candidates_arguments(parser):
         help="Path to output directory."
     )
     parser.add_argument(
+        "-l",
+        "--linear",
+        default=False,
+        action='store_true',
+        help="If set then the basic candidate finder will be activated. Will not use regression model."
+    )
+    parser.add_argument(
         "-t",
         "--threads",
         required=True,
@@ -391,7 +406,8 @@ def main():
                      FLAGS.callers_per_gpu,
                      FLAGS.device_ids,
                      FLAGS.num_workers,
-                     FLAGS.sample_name)
+                     FLAGS.sample_name,
+                     FLAGS.linear)
 
     elif FLAGS.sub_command == 'make_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
@@ -415,12 +431,19 @@ def main():
 
     elif FLAGS.sub_command == 'find_candidates':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FIND CANDIDATE MODULE SELECTED\n")
-        process_candidates(FLAGS.input_dir,
-                           FLAGS.fasta,
-                           FLAGS.bam,
-                           FLAGS.sample_name,
-                           FLAGS.output_dir,
-                           FLAGS.threads)
+        if not FLAGS.linear:
+            process_candidates(FLAGS.input_dir,
+                               FLAGS.fasta,
+                               FLAGS.bam,
+                               FLAGS.sample_name,
+                               FLAGS.output_dir,
+                               FLAGS.threads)
+        else:
+            process_candidates_basic(FLAGS.input_dir,
+                                     FLAGS.fasta,
+                                     FLAGS.sample_name,
+                                     FLAGS.output_dir,
+                                     FLAGS.threads)
 
     elif FLAGS.sub_command == 'merge_vcf':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MERGE VCFs MODULE SELECTED\n")
