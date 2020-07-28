@@ -50,7 +50,7 @@ class SequenceDataset(Dataset):
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
             if hp_tag == 1:
                 image = hdf5_file['summaries'][image_name]['image_hp1'][()]
-                label = hdf5_file['summaries'][image_name]['label_hp2'][()]
+                label = hdf5_file['summaries'][image_name]['label_hp1'][()]
             else:
                 image = hdf5_file['summaries'][image_name]['image_hp2'][()]
                 label = hdf5_file['summaries'][image_name]['label_hp2'][()]
