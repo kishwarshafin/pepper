@@ -140,7 +140,7 @@ def candidate_finder_basic(input_dir, reference_file, sample_name, output_path, 
             find_candidates_basic(input_dir,  reference_file, contig, all_chunk_keys, threads, 2)
 
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", TOTAL CANDIDATES FOUND IN HP1 AND HP2: "
-                         + str(len(all_candidate_positions_hp1)) + "  " + str(len(all_candidate_positions_hp1)) + ".\n")
+                         + str(len(all_candidate_positions_hp1)) + "  " + str(len(all_candidate_positions_hp2)) + ".\n")
 
         write_vcf(contig, all_candidate_positions_hp1, candidate_positional_map_hp1, vcf_file_hp1)
         write_vcf(contig, all_candidate_positions_hp2, candidate_positional_map_hp2, vcf_file_hp2)

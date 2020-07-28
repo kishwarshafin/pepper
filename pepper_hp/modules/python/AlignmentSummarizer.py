@@ -309,14 +309,14 @@ class AlignmentSummarizer:
                 truth_reads_h1 = truth_bam_handler_h1.get_reads(self.chromosome_name,
                                                                 self.region_start_position,
                                                                 self.region_end_position,
-                                                                False, # include supplementary
+                                                                True, # include supplementary
                                                                 60, # min mapq
                                                                 0)
 
                 truth_reads_h2 = truth_bam_handler_h2.get_reads(self.chromosome_name,
                                                                 self.region_start_position,
                                                                 self.region_end_position,
-                                                                False, # include supplementary
+                                                                True, # include supplementary
                                                                 60, # min mapq
                                                                 0)
                 if len(truth_reads_h1) > 1 or len(truth_reads_h2) > 1:
