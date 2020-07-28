@@ -331,8 +331,8 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
         if(i==5)cout<<"CRV1:\t";
         if(i==6)cout<<"GRV1:\t";
         if(i==7)cout<<"TRV1:\t";
-        if(i==8)cout<<"GFW1:\t";
-        if(i==9)cout<<"GRV1:\t";
+        if(i==8)cout<<"*FW1:\t";
+        if(i==9)cout<<"*RV1:\t";
         if(i==10)cout<<"AFW2:\t";
         if(i==11)cout<<"CFW2:\t";
         if(i==12)cout<<"GFW2:\t";
@@ -341,8 +341,8 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
         if(i==15)cout<<"CRV2:\t";
         if(i==16)cout<<"GRV2:\t";
         if(i==17)cout<<"TRV2:\t";
-        if(i==18)cout<<"GFW2:\t";
-        if(i==19)cout<<"GRV2:\t";
+        if(i==18)cout<<"*FW2:\t";
+        if(i==19)cout<<"*RV2:\t";
 
         for (int j = 0; j < image_hp1.size(); j++) {
             printf("%3d\t", image_hp1[j][i]);
@@ -359,8 +359,8 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
         if(i==5)cout<<"CRV2:\t";
         if(i==6)cout<<"GRV2:\t";
         if(i==7)cout<<"TRV2:\t";
-        if(i==8)cout<<"GFW2:\t";
-        if(i==9)cout<<"GRV2:\t";
+        if(i==8)cout<<"*FW2:\t";
+        if(i==9)cout<<"*RV2:\t";
         if(i==10)cout<<"AFW1:\t";
         if(i==11)cout<<"CFW1:\t";
         if(i==12)cout<<"GFW1:\t";
@@ -369,8 +369,8 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
         if(i==15)cout<<"CRV1:\t";
         if(i==16)cout<<"GRV1:\t";
         if(i==17)cout<<"TRV1:\t";
-        if(i==18)cout<<"GFW1:\t";
-        if(i==19)cout<<"GRV1:\t";
+        if(i==18)cout<<"*FW1:\t";
+        if(i==19)cout<<"*RV1:\t";
 
         for (int j = 0; j < image_hp2.size(); j++) {
             printf("%3d\t", image_hp2[j][i]);
