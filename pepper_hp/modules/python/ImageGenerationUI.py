@@ -229,7 +229,7 @@ class UserInterfaceSupport:
                                          realignment_flag):
 
         if train_mode:
-            max_size = 1000
+            max_size = 10000
         else:
             max_size = 10000
 
@@ -237,6 +237,7 @@ class UserInterfaceSupport:
         fasta_handler = PEPPER_HP.FASTA_handler(draft_file)
 
         all_intervals = []
+        total_bases = 0
         # first calculate all the intervals that we need to process
         for chr_name, region in chr_list:
             # contig update message
@@ -247,18 +248,29 @@ class UserInterfaceSupport:
                 interval_start = max(0, interval_start)
                 interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
 
+            interval_size = interval_end - interval_start
+            if train_mode and interval_size < ImageSizeOptions.MIN_SEQUENCE_LENGTH:
+                continue
+
             # this is the interval size each of the process is going to get which is 10^6
             # I will split this into 10^4 size inside the worker process
             for pos in range(interval_start, interval_end, max_size):
                 pos_start = max(interval_start, pos - ImageSizeOptions.MIN_IMAGE_OVERLAP)
                 pos_end = min(interval_end, pos + max_size + ImageSizeOptions.MIN_IMAGE_OVERLAP)
+
+                inv_size = pos_end - pos_start
+                if train_mode and inv_size < ImageSizeOptions.MIN_SEQUENCE_LENGTH:
+                    continue
+
                 all_intervals.append((chr_name, pos_start, pos_end))
+                total_bases += inv_size
 
         # all intervals calculated now
         # contig update message
         sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
                          + "INFO: TOTAL CONTIGS: " + str(len(chr_list))
-                         + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n")
+                         + " TOTAL INTERVALS: " + str(len(all_intervals))
+                         + " TOTAL BASES: " + str(total_bases) + "\n")
         sys.stderr.flush()
 
         args = (output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag)
