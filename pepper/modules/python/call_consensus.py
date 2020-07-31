@@ -40,6 +40,7 @@ def polish_genome_distributed_cpu(image_dir, model_path, batch_size, num_workers
     file_chunks = [file_chunks[i] for i in range(len(file_chunks)) if len(file_chunks[i]) > 0]
 
     total_callers = min(total_callers, len(file_chunks))
+    threads_per_caller = max(1, int(threads/total_callers))
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SETUP: " + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(total_callers) + "\n")
@@ -52,7 +53,7 @@ def polish_genome_distributed_cpu(image_dir, model_path, batch_size, num_workers
                             model_path,
                             batch_size,
                             total_callers,
-                            threads,
+                            threads_per_caller,
                             num_workers)
     sys.stderr.flush()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION GENERATED SUCCESSFULLY.\n")

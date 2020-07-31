@@ -393,8 +393,8 @@ def main():
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: BUILD CONFIG:\n")
         print(*torch.__config__.show().split("\n"), sep="\n")
 
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CUDA AVAILABLE: " + TextColor.END + str(torch.cuda.is_available()) + "\n")
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: GPU DEVICES: " + TextColor.END + str(torch.cuda.device_count()) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CUDA AVAILABLE: " + str(torch.cuda.is_available()) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: GPU DEVICES: " + str(torch.cuda.device_count()) + "\n")
 
     elif FLAGS.version is True:
         print("PEPPER VERSION: ", __version__)
