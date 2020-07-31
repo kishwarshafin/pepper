@@ -41,6 +41,9 @@ def polish_genome_distributed_cpu(image_dir, model_path, batch_size, num_workers
 
     total_callers = min(total_callers, len(file_chunks))
     threads_per_caller = max(1, int(threads/total_callers))
+    print(total_callers)
+    print(threads_per_caller)
+    exit()
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SETUP: " + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(total_callers) + "\n")
