@@ -15,15 +15,15 @@ import torch.onnx
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 
 
-def predict(input_filepath, file_chunks, output_filepath, batch_size, num_workers, rank, threads, model_path):
+def predict(input_filepath, file_chunks, output_filepath, batch_size, num_workers, rank, threads_per_caller, model_path):
     # session options
     sess_options = onnxruntime.SessionOptions()
-    sess_options.intra_op_num_threads = threads
+    sess_options.intra_op_num_threads = threads_per_caller
     sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL
     sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
 
     ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
-    torch.set_num_threads(threads)
+    torch.set_num_threads(threads_per_caller)
 
     # create output file
     output_filename = output_filepath + "pepper_prediction_" + str(rank) + ".hdf"
@@ -119,7 +119,7 @@ def setup(rank, total_callers, args, all_input_files):
     # initialize the process group
     dist.init_process_group("gloo", rank=rank, world_size=total_callers)
 
-    filepath, output_filepath, model_path, batch_size, num_workers, threads = args
+    filepath, output_filepath, model_path, batch_size, num_workers, threads_per_caller = args
 
     # issue with semaphore lock: https://github.com/pytorch/pytorch/issues/2517
     # mp.set_start_method('spawn')
@@ -133,12 +133,12 @@ def setup(rank, total_callers, args, all_input_files):
             batch_size,
             num_workers,
             rank,
-            threads,
+            threads_per_caller,
             model_path)
     cleanup()
 
 
-def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads,
+def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads_per_caller,
                             num_workers):
     """
     Create a prediction table/dictionary of an images set using a trained model.
@@ -148,7 +148,7 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
     :param model_path: Path to a trained model
     :param output_filepath: Path to output directory
     :param total_callers: Number of callers to spawn
-    :param threads: Number of threads to use per caller
+    :param threads_per_caller: Number of threads to use per caller
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
@@ -179,7 +179,7 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
                                         'output_pred': {0: 'batch_size'},
                                         'output_hidden': {0: 'batch_size'}})
 
-    args = (filepath, output_filepath, model_path, batch_size, num_workers, threads)
+    args = (filepath, output_filepath, model_path, batch_size, num_workers, threads_per_caller)
     mp.spawn(setup,
              args=(total_callers, args, file_chunks),
              nprocs=total_callers,
