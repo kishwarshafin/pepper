@@ -3,7 +3,7 @@ import torch
 import time
 from datetime import datetime
 from pepper_hp.modules.python.ImageGenerationUI import UserInterfaceSupport
-from pepper_hp.modules.python.models.predict_distributed_cpu import predict_distributed_cpu
+from pepper_hp.modules.python.models.predict_cpu import predict_distributed_cpu
 from pepper_hp.modules.python.models.predict_distributed_gpu import predict_distributed_gpu
 from os.path import isfile, join
 from os import listdir

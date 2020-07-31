@@ -4,7 +4,7 @@ from datetime import datetime
 from pepper.modules.python.ImageGenerationUI import UserInterfaceSupport
 from pepper.modules.python.models.predict import predict
 from pepper.modules.python.models.predict_distributed_gpu import predict_distributed_gpu
-from pepper.modules.python.models.predict_distributed_cpu import predict_distributed_cpu
+from pepper.modules.python.models.predict_distributed_cpu import predict_distributed_cpu, predict_linear_cpu
 from os.path import isfile, join
 from os import listdir
 import os
@@ -55,6 +55,31 @@ def polish_genome_distributed_cpu(image_dir, model_path, batch_size, num_workers
                             total_callers,
                             threads_per_caller,
                             num_workers)
+    sys.stderr.flush()
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION GENERATED SUCCESSFULLY.\n")
+
+
+def polish_genome_linear_cpu(image_dir, model_path, batch_size, num_workers, output_dir, threads):
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DISTRIBUTED CPU SETUP\n")
+    # chunk the inputs
+    input_files = get_file_paths_from_directory(image_dir)
+
+    file_chunks = []
+    for i in range(0, len(input_files)):
+        file_chunks.append(input_files[i])
+
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SETUP: " + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(1) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREADS PER CALLER: " + str(threads) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DATA-LOADER PER CALLER: " + str(num_workers) + "\n")
+    sys.stderr.flush()
+    predict_linear_cpu(image_dir,
+                       file_chunks,
+                       output_dir,
+                       model_path,
+                       batch_size,
+                       threads,
+                       num_workers)
     sys.stderr.flush()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION GENERATED SUCCESSFULLY.\n")
 
@@ -152,9 +177,9 @@ def call_consensus(image_dir, model_path, batch_size, num_workers, output_dir, d
         DO CPU INFERENCE.
         """
         # distributed CPU setup
-        polish_genome_distributed_cpu(image_dir,
-                                      model_path,
-                                      batch_size,
-                                      num_workers,
-                                      output_dir,
-                                      threads)
+        polish_genome_linear_cpu(image_dir,
+                                 model_path,
+                                 batch_size,
+                                 num_workers,
+                                 output_dir,
+                                 threads)
