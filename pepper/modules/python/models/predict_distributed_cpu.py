@@ -145,7 +145,6 @@ def predict_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, 
                                         'output_pred': {0: 'batch_size'},
                                         'output_hidden': {0: 'batch_size'}})
 
-    exit()
     start_time = time.time()
     with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
         futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, batch_size, num_workers, thread_id, threads_per_caller, model_path)
