@@ -12,7 +12,8 @@ from pepper.modules.python.models.ModelHander import ModelHandler
 from pepper.modules.python.Options import ImageSizeOptions, TrainOptions
 from pepper.modules.python.DataStorePredict import DataStore
 import torch.onnx
-os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
+import warnings
+warnings.filterwarnings("ignore", message="Exporting a model to ONNX with a batch_size other than 1, with a variable lenght with GRU can cause an error when running the ONNX model with a different batch size")
 
 
 def predict(input_filepath, file_chunks, output_filepath, batch_size, num_workers, rank, threads_per_caller, model_path):
@@ -144,6 +145,7 @@ def predict_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, 
                                         'output_pred': {0: 'batch_size'},
                                         'output_hidden': {0: 'batch_size'}})
 
+    exit()
     start_time = time.time()
     with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
         futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, batch_size, num_workers, thread_id, threads_per_caller, model_path)
