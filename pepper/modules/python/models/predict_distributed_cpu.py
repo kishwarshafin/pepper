@@ -8,7 +8,6 @@ import concurrent.futures
 from datetime import datetime
 from torch.utils.data import DataLoader
 from pepper.modules.python.models.dataloader_predict import SequenceDataset
-from tqdm import tqdm
 from pepper.modules.python.models.ModelHander import ModelHandler
 from pepper.modules.python.Options import ImageSizeOptions, TrainOptions
 from pepper.modules.python.DataStorePredict import DataStore
@@ -36,14 +35,8 @@ def predict(input_filepath, file_chunks, output_filepath, batch_size, num_worker
                              batch_size=batch_size,
                              shuffle=False,
                              num_workers=num_workers)
-    if rank == 0:
-        progress_bar = tqdm(
-            total=len(data_loader),
-            ncols=100,
-            leave=False,
-            position=rank,
-            desc="CALLER #" + str(rank),
-        )
+
+    batch_completed = 0
 
     with torch.no_grad():
         for contig, contig_start, contig_end, chunk_id, images, position, index in data_loader:
@@ -103,10 +96,12 @@ def predict(input_filepath, file_chunks, output_filepath, batch_size, num_worker
                                                       position[i], index[i], predicted_base_labels[i], phred_score[i])
 
             if rank == 0:
-                progress_bar.update(1)
+                batch_completed += 1
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
+                                 "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(len(data_loader)) + ".\n")
+                sys.stderr.flush()
 
-    if rank == 0:
-        progress_bar.close()
+    return rank
 
 
 def predict_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads_per_caller, num_workers):
