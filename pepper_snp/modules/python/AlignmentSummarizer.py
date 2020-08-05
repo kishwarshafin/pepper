@@ -210,7 +210,7 @@ class AlignmentSummarizer:
 
         if train_mode:
             # get the reads from the bam file
-            include_supplementary = False
+            include_supplementary = True
             truth_reads_h1 = truth_bam_handler_h1.get_reads(self.chromosome_name,
                                                             self.region_start_position,
                                                             self.region_end_position,
