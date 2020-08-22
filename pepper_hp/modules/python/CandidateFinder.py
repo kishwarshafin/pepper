@@ -275,7 +275,7 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
 
     # now this is for SNPs
     if candidate_type == 1:
-        if allele_frequency >= 0.05:
+        if allele_frequency >= 0.10:
             return True
         else:
             return False
@@ -296,7 +296,7 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
             return True
     # insert alleles
     elif candidate_type == 2:
-        if allele_frequency >= 0.09:
+        if allele_frequency >= 0.20:
             return True
         else:
             return False
@@ -314,7 +314,7 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
 
     # delete alleles
     elif candidate_type == 3:
-        if allele_frequency >= 0.09:
+        if allele_frequency >= 0.20:
             return True
         else:
             return False
