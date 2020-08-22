@@ -275,10 +275,10 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
 
     # now this is for SNPs
     if candidate_type == 1:
-        # if allele_frequency >= 0.09:
-        #     return True
-        # else:
-        #     return False
+        if allele_frequency >= 0.05:
+            return True
+        else:
+            return False
         allele_weight = max(alt_prob_h1, alt_prob_h2)
 
         if allele_frequency < CandidateFinderOptions.SNP_FREQ_THRESHOLD:
@@ -296,7 +296,7 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
             return True
     # insert alleles
     elif candidate_type == 2:
-        if allele_frequency >= 0.05:
+        if allele_frequency >= 0.09:
             return True
         else:
             return False
@@ -314,7 +314,7 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
 
     # delete alleles
     elif candidate_type == 3:
-        if allele_frequency >= 0.05:
+        if allele_frequency >= 0.09:
             return True
         else:
             return False
@@ -433,20 +433,26 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     alt_allele = candidate.allele.alt
                     pos = candidate.pos_start
                     length = 0
+                    alt_prob_h1 = 1.0
+                    alt_prob_h2 = 1.0
+
                     for indx in range(1, max_index_map[pos]):
                         if indx < len(alt_allele):
                             alt_allele_indx = get_index_from_base(alt_allele[indx])
                         else:
                             alt_allele_indx = get_index_from_base('*')
                         # print(alt_allele[indx], get_index_from_base(alt_allele[indx]), prediction_map_h1[(pos, indx)], prediction_map_h2[(pos, indx)])
-                        prob_alt_h1 = max(0.01, prediction_map_h1[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, indx)])))
-                        prob_alt_h2 = max(0.01, prediction_map_h2[(pos, indx)][alt_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, indx)])))
+                        prob_alt_h1 = (prediction_map_h1[(pos, indx)][alt_allele_indx] + 0.1) / max(1.0, sum(prediction_map_h1[(pos, indx)]))
+                        prob_alt_h2 = (prediction_map_h2[(pos, indx)][alt_allele_indx] + 0.1) / max(1.0, sum(prediction_map_h2[(pos, indx)]))
 
-                        alt_prob_h1 += prob_alt_h1
-                        alt_prob_h2 += prob_alt_h2
+                        alt_prob_h1 *= max(0.0001, prob_alt_h1)
+                        alt_prob_h2 *= max(0.0001, prob_alt_h2)
                         length += 1
-                    alt_prob_h1 = alt_prob_h1 / max(1, length)
-                    alt_prob_h2 = alt_prob_h2 / max(1, length)
+
+                    # alt_prob_h1 = alt_prob_h1 / max(1, length)
+                    # alt_prob_h2 = alt_prob_h2 / max(1, length)
+                    alt_prob_h1 = max(0.0000001, alt_prob_h1)
+                    alt_prob_h2 = max(0.0000001, alt_prob_h2)
 
                     # This is the calculation of non_ref_prob
                     length = 0
@@ -472,6 +478,9 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                     non_ref_length = 0
                     non_ref_prob_h1 = 0
                     non_ref_prob_h2 = 0
+                    alt_prob_h1 = 1.0
+                    alt_prob_h2 = 1.0
+
                     # print("CANDIDATE", candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
                     # print(candidate.pos_start, candidate.pos_end, max_delete_map[candidate.pos_start], candidate.pos_start + max_delete_map[candidate.pos_start])
                     for pos in range(candidate.pos_start, candidate.pos_start + max_delete_map[candidate.pos_start]):
@@ -486,23 +495,23 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
 
                         if candidate.pos_start < pos < candidate.pos_end:
                             del_allele_indx = get_index_from_base('*')
-                            prob_del_h1 = prediction_map_h1[(pos, 0)][del_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, 0)]))
-                            prob_del_h2 = prediction_map_h2[(pos, 0)][del_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, 0)]))
-                            alt_prob_h1 += prob_del_h1
-                            alt_prob_h2 += prob_del_h2
+                            prob_del_h1 = (prediction_map_h1[(pos, 0)][del_allele_indx] + 0.1) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
+                            prob_del_h2 = (prediction_map_h2[(pos, 0)][del_allele_indx] + 0.1) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
+                            alt_prob_h1 *= max(0.0001, prob_del_h1)
+                            alt_prob_h2 *= max(0.0001, prob_del_h2)
                             length += 1
                         elif pos >= candidate.pos_end:
                             # on other delete indicies, we want them to not be deletes
                             del_allele_indx = get_index_from_base('*')
                             prob_non_del_h1 = (sum(prediction_map_h1[(pos, 0)]) - prediction_map_h1[(pos, 0)][del_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
                             prob_non_del_h2 = (sum(prediction_map_h2[(pos, 0)]) - prediction_map_h2[(pos, 0)][del_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
-                            alt_prob_h1 += prob_non_del_h1
-                            alt_prob_h2 += prob_non_del_h2
+                            alt_prob_h1 *= max(0.0001, prob_non_del_h1)
+                            alt_prob_h2 *= max(0.0001, prob_non_del_h2)
                             length += 1
-                    # print(alt_prob_h1, length)
-                    # print(alt_prob_h2, length)
-                    alt_prob_h1 = alt_prob_h1 / max(1, length)
-                    alt_prob_h2 = alt_prob_h2 / max(1, length)
+                    # alt_prob_h1 = alt_prob_h1 / max(1, length)
+                    # alt_prob_h2 = alt_prob_h2 / max(1, length)
+                    alt_prob_h1 = max(0.0000001, alt_prob_h1)
+                    alt_prob_h2 = max(0.0000001, alt_prob_h2)
 
                     non_ref_prob_h1 = non_ref_prob_h1 / max(1, non_ref_length)
                     non_ref_prob_h2 = non_ref_prob_h2 / max(1, non_ref_length)
