@@ -17,6 +17,51 @@ In collaboration with the [DeepVariant](https://github.com/google/deepvariant) g
 - [Authors](#Authors)
 ----
 
+### PrecisionFDA truth challenge v2 results
+
+We participated in [PrecisionFDA truth challenge V2](https://precision.fda.gov/challenges/10/view/results) in won two awards in the ONT category. Here we show a performance comparison between the best performing Illumina and ONT submissions of the DeepVariant pipeline.
+
+<div style="text-align:center">
+<img src="../img/pFDA_awards.png" alt="pFDA awards" height="280p">
+</div>
+
+We used GIAB v4.1 to compare the performance of the methods for HG003 and HG004 samples.
+
+#### SNP performance
+Performance on HG003 sample:
+
+| Sample |            Method            | Type | Truth total | True positives | False negatives | False positives |  Recall  | Precision | F1-Score |
+|:------:|:----------------------------:|:----:|:-----------:|:--------------:|:---------------:|:---------------:|:--------:|:---------:|:--------:|
+|  HG003 | PEPPER-DeepVariant <br>(ONT) |  SNP |   3325455   |     3309586    |      15869      |       9722      | 0.995228 |  0.997072 | 0.996149 |
+|  HG003 |  DeepVariant <br>(Illumina)  |  SNP |   3325455   |     3304578    |      20877      |       7501      | 0.993722 |  0.997736 | 0.995725 |
+
+Performance on HG004 sample:
+
+| Sample |            Method            | Type | Truth total | True positives | False negatives | False positives |  Recall  | Precision | F1-Score |
+|:------:|:----------------------------:|:----:|:-----------:|:--------------:|:---------------:|:---------------:|:--------:|:---------:|:--------:|
+|  HG004 | PEPPER-DeepVariant <br>(ONT) |  SNP |     3349794 |        3336173 |           13621 |            7961 | 0.995934 |   0.99762 | 0.996776 |
+|  HG004 |  DeepVariant <br>(Illumina)  |  SNP |     3349794 |        3327319 |           22475 |            7237 | 0.993291 |  0.997831 | 0.995556 |
+
+#### Indel performance
+Performance on HG003 sample:
+
+| Sample |            Method            |  Type | Truth total | True positives | False negatives | False positives |  Recall  | Precision | F1-Score |
+|:------:|:----------------------------:|:-----:|:-----------:|:--------------:|:---------------:|:---------------:|:--------:|:---------:|:--------:|
+|  HG003 | PEPPER-DeepVariant <br>(ONT) | INDEL |      504785 |         320784 |          184001 |           50951 | 0.635486 |  0.866005 |  0.73305 |
+|  HG003 |  DeepVariant <br>(Illumina)  | INDEL |      504785 |         502041 |            2744 |            1375 | 0.994564 |   0.99738 |  0.99597 |
+
+Performance on HG004 sample:
+
+| Sample |            Method            |  Type | Truth total | True positives | False negatives | False positives |  Recall  | Precision | F1-Score |
+|:------:|:----------------------------:|:-----:|:-----------:|:--------------:|:---------------:|:---------------:|:--------:|:---------:|:--------:|
+|  HG004 | PEPPER-DeepVariant <br>(ONT) | INDEL |      511458 |         319305 |          192153 |           53032 | 0.624303 |  0.860736 | 0.723699 |
+|  HG004 |  DeepVariant <br>(Illumina)  | INDEL |      511458 |         508511 |            2947 |            1390 | 0.994238 |  0.997387 |  0.99581 |
+
+#### Remarks
+The PEPPER-DeepVariant pipeline can produce competitive SNP calls using long ONT reads.
+
+----
+
 ### Limited support statement
 We are releasing this pipeline with limited support as we are actively developing the pipeline. This pipeline is developed outside the main repository of [DeepVariant](https://github.com/google/deepvariant). If you have issues with running this pipeline, please open a github issue in this repository (PEPPER). We will update this page as we evaluate the pipeline across all platforms.
 
