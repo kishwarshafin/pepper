@@ -6,6 +6,7 @@ In collaboration with the [DeepVariant](https://github.com/google/deepvariant) g
 ----
 
 ### Table of contents:
+- [PrecisionFDA truth challenge v2 results](#PrecisionFDA-truth-challenge-v2-results)
 - [Limited support statement](#Limited-support-statement)
 - [Requirements](#Requirements)
   * [Sequencing data requirements](#Sequencing-data-requirements)
@@ -19,10 +20,12 @@ In collaboration with the [DeepVariant](https://github.com/google/deepvariant) g
 
 ### PrecisionFDA truth challenge v2 results
 
-We participated in [PrecisionFDA truth challenge V2](https://precision.fda.gov/challenges/10/view/results) in won two awards in the ONT category. Here we show a performance comparison between the best performing Illumina and ONT submissions of the DeepVariant pipeline.
+We participated in the [PrecisionFDA truth challenge V2](https://precision.fda.gov/challenges/10/view/results) and won two awards in the ONT category. The performance comparison between the best performing Illumina and ONT submissions of the DeepVariant pipeline is described here.
 
 <div style="text-align:center">
+<center>
 <img src="../img/pFDA_awards.png" alt="pFDA awards" height="280p">
+</center>
 </div>
 
 We used GIAB v4.1 to compare the performance of the methods for HG003 and HG004 samples.
