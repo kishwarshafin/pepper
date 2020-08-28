@@ -300,7 +300,10 @@ def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_
 
         if allele_frequency <= CandidateFinderOptions.IN_FREQ_THRESHOLD:
             if allele_frequency < CandidateFinderOptions.IN_FREQ_LOWER_THRESHOLD:
-                return False
+                if allele_weight >= 0.5:
+                    return True
+                else:
+                    return False
 
             if allele_weight >= 0.5 or non_ref_prob >= 0.5:
                 return True
