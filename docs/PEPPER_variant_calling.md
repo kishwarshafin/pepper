@@ -20,48 +20,36 @@ In collaboration with the [DeepVariant](https://github.com/google/deepvariant) g
 
 ### PrecisionFDA truth challenge v2 results
 
-We participated in the [PrecisionFDA truth challenge V2](https://precision.fda.gov/challenges/10/view/results) and won two awards in the ONT category. The performance comparison between the best performing Illumina and ONT submissions of the DeepVariant pipeline is described here.
+We participated in the [PrecisionFDA truth challenge V2](https://precision.fda.gov/challenges/10/view/results) and won two awards in the ONT category.
 
-<div style="text-align:center">
 <center>
 <img src="../img/pFDA_awards.png" alt="pFDA awards" height="280p">
 </center>
-</div>
 
-We used GIAB v4.1 to compare the performance of the methods for HG003 and HG004 samples.
+<br/>
 
-#### SNP performance
-Performance on HG003 sample:
+A public table with more detailed performance metrics for all submissions is available [here](https://nist-giab.s3.amazonaws.com/anonymized_challenge_results_v5.txt) and a details of the table values can be found [here](https://nist-giab.s3.amazonaws.com/anonymized_challenge_results_v5_data_descriptor.md).
 
-| Sample |            Method            | Type | Truth total | True positives | False negatives | False positives |  Recall  | Precision | F1-Score |
-|:------:|:----------------------------:|:----:|:-----------:|:--------------:|:---------------:|:---------------:|:--------:|:---------:|:--------:|
-|  HG003 | PEPPER-DeepVariant <br>(ONT) |  SNP |   3325455   |     3309586    |      15869      |       9722      | 0.995228 |  0.997072 | 0.996149 |
-|  HG003 |  DeepVariant <br>(Illumina)  |  SNP |   3325455   |     3304578    |      20877      |       7501      | 0.993722 |  0.997736 | 0.995725 |
+Here we summarize the variant calling performance of the winning submissions of Illumina and ONT in all benchmark regions and Difficult-to-map regions category. The numbers are directly lifted from the pFDA results [table](https://nist-giab.s3.amazonaws.com/anonymized_challenge_results_v5.txt).
+#### Difficult-to-Map Regions
+|          Regions         |  Type |              Team             | Technology |      Pipeline      | True<br>positives | False<br>negatives | False<br>positives |  Recall | Precision | F1-Score |
+|:------------------------:|:-----:|:-----------------------------:|:----------:|:------------------:|:-----------------:|:------------------:|:------------------:|:-------:|:---------:|:--------:|
+| Difficult-to-Map Regions |  SNP  | UCSC CGL and<br>Google Health |     ONT    | PEPPER-DeepVariant |       257460      |        3841        |        2465        | 0.98528 |  0.99045  |  0.98785 |
+| Difficult-to-Map Regions |  SNP  |             DRAGEN            |  Illumina  |       DRAGEN       |       251058      |        10245       |        5610        | 0.96078 |  0.97811  |  0.96936 |
+| Difficult-to-Map Regions | INDEL | UCSC CGL and<br>Google Health |     ONT    | PEPPER-DeepVariant |       13815       |        2673        |         670        | 0.83780 |  0.95408  |  0.89217 |
+| Difficult-to-Map Regions | INDEL |             DRAGEN            |  Illumina  |       DRAGEN       |       15883       |         605        |         420        | 0.96322 |  0.97447  |  0.96881 |
 
-Performance on HG004 sample:
+#### All benchmarking regions
 
-| Sample |            Method            | Type | Truth total | True positives | False negatives | False positives |  Recall  | Precision | F1-Score |
-|:------:|:----------------------------:|:----:|:-----------:|:--------------:|:---------------:|:---------------:|:--------:|:---------:|:--------:|
-|  HG004 | PEPPER-DeepVariant <br>(ONT) |  SNP |     3349794 |        3336173 |           13621 |            7961 | 0.995934 |   0.99762 | 0.996776 |
-|  HG004 |  DeepVariant <br>(Illumina)  |  SNP |     3349794 |        3327319 |           22475 |            7237 | 0.993291 |  0.997831 | 0.995556 |
+|        Regions        |  Type |              Team             | Technology |      Pipeline      | True<br>positives | False<br>negatives | False<br>positives |  Recall | Precision | F1-Score |
+|:---------------------:|:-----:|:-----------------------------:|:----------:|:------------------:|:-----------------:|:------------------:|:------------------:|:-------:|:---------:|:--------:|
+| All Benchmark Regions |  SNP  | UCSC CGL and<br>Google Health |     ONT    | PEPPER-DeepVariant |      3328756      |        14716       |        8914        | 0.99558 |  0.99731  |  0.99645 |
+| All Benchmark Regions |  SNP  |             DRAGEN            |  Illumina  |       DRAGEN       |      3331542      |        11973       |        7575        | 0.99641 |  0.99773  |  0.99707 |
+| All Benchmark Regions | INDEL | UCSC CGL and<br>Google Health |     ONT    | PEPPER-DeepVariant |       320171      |       187923       |        52012       | 0.63009 |  0.86333  |  0.72849 |
+| All Benchmark Regions | INDEL |             DRAGEN            |  Illumina  |       DRAGEN       |       506539      |        1588        |        1437        | 0.99687 |  0.99728  |  0.99708 |
 
-#### Indel performance
-Performance on HG003 sample:
 
-| Sample |            Method            |  Type | Truth total | True positives | False negatives | False positives |  Recall  | Precision | F1-Score |
-|:------:|:----------------------------:|:-----:|:-----------:|:--------------:|:---------------:|:---------------:|:--------:|:---------:|:--------:|
-|  HG003 | PEPPER-DeepVariant <br>(ONT) | INDEL |      504785 |         320784 |          184001 |           50951 | 0.635486 |  0.866005 |  0.73305 |
-|  HG003 |  DeepVariant <br>(Illumina)  | INDEL |      504785 |         502041 |            2744 |            1375 | 0.994564 |   0.99738 |  0.99597 |
 
-Performance on HG004 sample:
-
-| Sample |            Method            |  Type | Truth total | True positives | False negatives | False positives |  Recall  | Precision | F1-Score |
-|:------:|:----------------------------:|:-----:|:-----------:|:--------------:|:---------------:|:---------------:|:--------:|:---------:|:--------:|
-|  HG004 | PEPPER-DeepVariant <br>(ONT) | INDEL |      511458 |         319305 |          192153 |           53032 | 0.624303 |  0.860736 | 0.723699 |
-|  HG004 |  DeepVariant <br>(Illumina)  | INDEL |      511458 |         508511 |            2947 |            1390 | 0.994238 |  0.997387 |  0.99581 |
-
-#### Remarks
-The PEPPER-DeepVariant pipeline can produce competitive SNP calls using long ONT reads.
 
 ----
 
