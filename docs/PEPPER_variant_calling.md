@@ -32,21 +32,21 @@ A public table with more detailed performance metrics for all submissions is ava
 
 Here we summarize the variant calling performance of the winning submissions of Illumina and ONT in all benchmark regions and Difficult-to-map regions category. The numbers are directly lifted from the pFDA results [table](https://nist-giab.s3.amazonaws.com/anonymized_challenge_results_v5.txt).
 #### Difficult-to-Map Regions
-|          Regions         |  Type |              Team             | Technology |      Pipeline      | True<br>positives | False<br>negatives | False<br>positives |  Recall | Precision | F1-Score |
-|:------------------------:|:-----:|:-----------------------------:|:----------:|:------------------:|:-----------------:|:------------------:|:------------------:|:-------:|:---------:|:--------:|
-| Difficult-to-Map Regions |  SNP  | UCSC CGL and<br>Google Health |     ONT    | PEPPER-DeepVariant |       257460      |        3841        |        2465        | 0.98528 |  0.99045  |  0.98785 |
-| Difficult-to-Map Regions |  SNP  |             DRAGEN            |  Illumina  |       DRAGEN       |       251058      |        10245       |        5610        | 0.96078 |  0.97811  |  0.96936 |
-| Difficult-to-Map Regions | INDEL | UCSC CGL and<br>Google Health |     ONT    | PEPPER-DeepVariant |       13815       |        2673        |         670        | 0.83780 |  0.95408  |  0.89217 |
-| Difficult-to-Map Regions | INDEL |             DRAGEN            |  Illumina  |       DRAGEN       |       15883       |         605        |         420        | 0.96322 |  0.97447  |  0.96881 |
+|  Type |              Team             | Technology |      Pipeline      | True<br>positives | False<br>negatives | False<br>positives |  Recall | Precision | F1-Score |
+|:-----:|:-----------------------------:|:----------:|:------------------:|:-----------------:|:------------------:|:------------------:|:-------:|:---------:|:--------:|
+|  SNP  | UCSC CGL and<br>Google Health |     ONT    | PEPPER-DeepVariant |       257460      |        3841        |        2465        | 0.98528 |  0.99045  |  0.98785 |
+|  SNP  |             DRAGEN            |  Illumina  |       DRAGEN       |       251058      |        10245       |        5610        | 0.96078 |  0.97811  |  0.96936 |
+| INDEL | UCSC CGL and<br>Google Health |     ONT    | PEPPER-DeepVariant |       13815       |        2673        |         670        | 0.83780 |  0.95408  |  0.89217 |
+| INDEL |             DRAGEN            |  Illumina  |       DRAGEN       |       15883       |         605        |         420        | 0.96322 |  0.97447  |  0.96881 |
 
 #### All benchmarking regions
 
-|        Regions        |  Type |              Team             | Technology |      Pipeline      | True<br>positives | False<br>negatives | False<br>positives |  Recall | Precision | F1-Score |
-|:---------------------:|:-----:|:-----------------------------:|:----------:|:------------------:|:-----------------:|:------------------:|:------------------:|:-------:|:---------:|:--------:|
-| All Benchmark Regions |  SNP  | UCSC CGL and<br>Google Health |     ONT    | PEPPER-DeepVariant |      3328756      |        14716       |        8914        | 0.99558 |  0.99731  |  0.99645 |
-| All Benchmark Regions |  SNP  |             DRAGEN            |  Illumina  |       DRAGEN       |      3331542      |        11973       |        7575        | 0.99641 |  0.99773  |  0.99707 |
-| All Benchmark Regions | INDEL | UCSC CGL and<br>Google Health |     ONT    | PEPPER-DeepVariant |       320171      |       187923       |        52012       | 0.63009 |  0.86333  |  0.72849 |
-| All Benchmark Regions | INDEL |             DRAGEN            |  Illumina  |       DRAGEN       |       506539      |        1588        |        1437        | 0.99687 |  0.99728  |  0.99708 |
+|  Type |              Team             | Technology |      Pipeline      | True<br>positives | False<br>negatives | False<br>positives |  Recall | Precision | F1-Score |
+|:-----:|:-----------------------------:|:----------:|:------------------:|:-----------------:|:------------------:|:------------------:|:-------:|:---------:|:--------:|
+|  SNP  | UCSC CGL and<br>Google Health |     ONT    | PEPPER-DeepVariant |      3328756      |        14716       |        8914        | 0.99558 |  0.99731  |  0.99645 |
+|  SNP  |             DRAGEN            |  Illumina  |       DRAGEN       |      3331542      |        11973       |        7575        | 0.99641 |  0.99773  |  0.99707 |
+| INDEL | UCSC CGL and<br>Google Health |     ONT    | PEPPER-DeepVariant |       320171      |       187923       |        52012       | 0.63009 |  0.86333  |  0.72849 |
+| INDEL |             DRAGEN            |  Illumina  |       DRAGEN       |       506539      |        1588        |        1437        | 0.99687 |  0.99728  |  0.99708 |
 
 
 
