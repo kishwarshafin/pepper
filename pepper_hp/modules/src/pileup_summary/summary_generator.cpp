@@ -436,3 +436,97 @@ void SummaryGenerator::generate_summary(vector <type_read> &reads,
 //     at this point everything should be generated
 //    debug_print(start_pos, end_pos);
 }
+
+
+ImageSummary SummaryGenerator::chunk_image(int chunk_size, int chunk_overlap, int image_height) {
+    int chunk_start = 0;
+    int chunk_id = 0;
+    int chunk_end = min((int) genomic_pos.size(), chunk_size);
+
+    ImageSummary chunked_summary;
+
+    while(true) {
+//        cout<<"Chunk info: "<<chunk_start<<" "<<chunk_end<<" "<<chunk_id<<endl;
+        vector< vector<uint8_t> > image_chunk(image.begin() + chunk_start, image.begin() + chunk_end);
+        vector<pair<long long, int> > pos_chunk(genomic_pos.begin() + chunk_start, genomic_pos.begin() + chunk_end);
+        vector<uint8_t> ref_chunk(ref_image.begin() + chunk_start, ref_image.begin() + chunk_end);
+        vector<uint8_t> label_chunk((int)(chunk_end - chunk_start), 0);
+
+        int padding_required = chunk_size - (int) image_chunk.size();
+        if(padding_required > 0) {
+            for(int i=0; i < padding_required; i++) {
+                vector<uint8_t> image_padding(image_height, 0);
+                pair<long long, int> pos_pair = make_pair(-1, -1);
+
+                image_chunk.push_back(image_padding);
+                pos_chunk.push_back(pos_pair);
+                ref_chunk.push_back(0);
+                label_chunk.push_back(0);
+            }
+        }
+//        cout<<"Sizes: "<< image_chunk.size()<<" "<<pos_chunk.size()<<" "<<label_chunk.size()<<" "<<chunk_size<<endl;
+        assert (image_chunk.size() == pos_chunk.size() == label_chunk.size() == chunk_size);
+
+        chunked_summary.images.push_back(image_chunk);
+        chunked_summary.positions.push_back(pos_chunk);
+        chunked_summary.labels.push_back(label_chunk);
+        chunked_summary.refs.push_back(ref_chunk);
+        chunked_summary.chunk_ids.push_back(chunk_id);
+
+
+        chunk_id += 1;
+        if (chunk_end == (int) genomic_pos.size()) {
+            break;
+        }
+
+        chunk_start = chunk_end - chunk_overlap;
+        chunk_end = min((int) genomic_pos.size(), chunk_start + chunk_size);
+    }
+    return chunked_summary;
+}
+
+
+ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overlap, int image_height) {
+    int chunk_start = 0;
+    int chunk_id = 0;
+    int chunk_end = 0;
+
+    ImageSummary chunked_summary;
+    for(int i=0; i < (int) bad_label_positions.size(); i++){
+        chunk_end = min(chunk_start + chunk_size, bad_label_positions[i]);
+
+        while(true) {
+            if(chunk_end - chunk_start != chunk_size) {
+                int padding_required = chunk_size - (chunk_end - chunk_start);
+                chunk_start -= padding_required;
+                if(chunk_start < 0) break;
+                if(i > 0 and chunk_start < bad_label_positions[i - 1]) break;
+            }
+//            cout<<"ST END: "<<chunk_start<<" "<<chunk_end<<endl;
+            vector< vector<uint8_t> > image_chunk(image.begin() + chunk_start, image.begin() + chunk_end);
+            vector<pair<long long, int> > pos_chunk(genomic_pos.begin() + chunk_start, genomic_pos.begin() + chunk_end);
+            vector<uint8_t> ref_chunk(ref_image.begin() + chunk_start, ref_image.begin() + chunk_end);
+            vector<uint8_t> label_chunk(labels.begin() + chunk_start, labels.begin() + chunk_end);
+
+//            cout<<"Sizes: "<< image_chunk.size()<<" "<<pos_chunk.size()<<" "<<label_chunk.size()<<" "<<chunk_size<<endl;
+            assert (image_chunk.size() == pos_chunk.size() == label_chunk.size() == chunk_size);
+
+            chunked_summary.images.push_back(image_chunk);
+            chunked_summary.positions.push_back(pos_chunk);
+            chunked_summary.labels.push_back(label_chunk);
+            chunked_summary.refs.push_back(ref_chunk);
+            chunked_summary.chunk_ids.push_back(chunk_id);
+            chunk_id += 1;
+
+            if (chunk_end == bad_label_positions[i]) {
+                break;
+            }
+
+            chunk_start = chunk_end - chunk_overlap;
+            chunk_end = min(bad_label_positions[i], chunk_start + chunk_size);
+        }
+        chunk_start = chunk_end + 1;
+    }
+
+    return chunked_summary;
+}

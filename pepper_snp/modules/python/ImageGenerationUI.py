@@ -232,7 +232,7 @@ class UserInterfaceSupport:
 
                     output_hdf_file.write_summary(region, image, label, position, index, chunk_id, ref_seq, summary_name)
 
-                if counter > 0 and counter % 100 == 0:
+                if counter > 0 and counter % 1 == 0:
                     percent_complete = int((100 * counter) / len(intervals))
                     time_now = time.time()
                     mins = int((time_now - start_time) / 60)
@@ -260,7 +260,7 @@ class UserInterfaceSupport:
         if train_mode:
             max_size = 1000
         else:
-            max_size = 10000
+            max_size = 1000000
 
         start_time = time.time()
         fasta_handler = PEPPER_SNP.FASTA_handler(draft_file)
