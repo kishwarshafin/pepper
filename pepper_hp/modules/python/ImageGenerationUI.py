@@ -228,7 +228,7 @@ class UserInterfaceSupport:
 
                     output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name, ref_seq)
 
-                if counter > 0 and counter % 1 == 0 and thread_id == 0:
+                if counter > 0 and counter % 10 == 0 and thread_id == 0:
                     percent_complete = int((100 * counter) / len(intervals))
                     time_now = time.time()
                     mins = int((time_now - start_time) / 60)
@@ -254,9 +254,9 @@ class UserInterfaceSupport:
                                          realignment_flag):
 
         if train_mode:
-            max_size = 1000
+            max_size = 10000
         else:
-            max_size = 1000
+            max_size = 10000
 
         start_time = time.time()
         fasta_handler = PEPPER_HP.FASTA_handler(draft_file)
