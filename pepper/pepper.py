@@ -84,13 +84,6 @@ def add_polish_arguments(parser):
         help="If set then PyTorch will use GPUs for inference. CUDA required."
     )
     parser.add_argument(
-        "-dx",
-        "--distributed_off",
-        default=False,
-        action='store_true',
-        help="Turn off distributed inference. This mode will disable the use of multiple callers."
-    )
-    parser.add_argument(
         "-d_ids",
         "--device_ids",
         type=str,
@@ -107,22 +100,6 @@ def add_polish_arguments(parser):
         required=False,
         default=4,
         help="Number of workers for loading images. Default is 4."
-    )
-    parser.add_argument(
-        "-tpc",
-        "--threads_per_caller",
-        type=int,
-        required=False,
-        default=8,
-        help="Total threads to be used per caller. A sane value would be num_callers * threads <= total_threads."
-    )
-    parser.add_argument(
-        "-c",
-        "--callers",
-        type=int,
-        required=False,
-        default=8,
-        help="Total number of callers to spawn if doing CPU inference in distributed mode."
     )
     return parser
 
@@ -238,8 +215,7 @@ def add_call_consensus_arguments(parser):
         type=int,
         required=False,
         default=8,
-        help="Total threads to be used per caller. A sane value would be num_callers * threads <= total_threads."
-             "If distributed_off is passed then consider num_callers to be 1."
+        help="Number of threads."
     )
     return parser
 
@@ -339,10 +315,6 @@ def main():
 
     if FLAGS.sub_command == 'polish':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]  INFO: POLISH MODULE SELECTED\n")
-        # bam_filepath, fasta_filepath, output_dir, threads, region,
-        # model_path, batch_size, gpu_mode, distributed, device_ids,
-        # num_workers, number_workers, callers, threads_per_caller
-        distributed = not FLAGS.distributed_off
         polish(FLAGS.bam,
                FLAGS.fasta,
                FLAGS.output_file,
@@ -351,11 +323,8 @@ def main():
                FLAGS.model_path,
                FLAGS.batch_size,
                FLAGS.gpu,
-               distributed,
                FLAGS.device_ids,
-               FLAGS.num_workers,
-               FLAGS.callers,
-               FLAGS.threads_per_caller)
+               FLAGS.num_workers)
 
     elif FLAGS.sub_command == 'make_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED\n")

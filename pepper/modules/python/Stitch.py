@@ -98,9 +98,8 @@ def create_consensus_sequence(contig, sequence_chunk_keys, threads):
     sequence_chunk_keys = sorted(sequence_chunk_keys, key=lambda element: (element[1]))
 
     sequence_chunk_key_list = list()
-    for file_name, sequence_chunk_key in sequence_chunk_keys:
-        contig, st, end = sequence_chunk_key.split('-')
-        sequence_chunk_key_list.append((file_name, contig, int(st), int(end)))
+    for file_name, sequence_chunk_key, contig_start, contig_end in sequence_chunk_keys:
+        sequence_chunk_key_list.append((file_name, contig, int(contig_start), int(contig_end)))
 
     sequence_chunk_key_list = sorted(sequence_chunk_key_list, key=lambda element: (element[2], element[3]))
 

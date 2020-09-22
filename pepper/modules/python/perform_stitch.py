@@ -1,6 +1,7 @@
 import h5py
 import sys
 import re
+import time
 from pepper.modules.python.Stitch import create_consensus_sequence
 from os.path import isfile, join
 from pathlib import Path
@@ -42,9 +43,8 @@ def number_key(name):
 
 def perform_stitch(hdf_file_path, output_path, threads):
     all_prediction_files = get_file_paths_from_directory(hdf_file_path)
-
     all_contigs = set()
-    # get contigs from all of the files
+    time.sleep(5)
     for prediction_file in sorted(all_prediction_files):
         with h5py.File(prediction_file, 'r') as hdf5_file:
             contigs = list(hdf5_file['predictions'].keys())
@@ -67,7 +67,9 @@ def perform_stitch(hdf_file_path, output_path, threads):
                     continue
                 chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
                 for chunk_key in chunk_keys:
-                    all_chunk_keys.append((prediction_file, chunk_key))
+                    contig_start = hdf5_file['predictions'][contig][chunk_key]['contig_start'][()]
+                    contig_end = hdf5_file['predictions'][contig][chunk_key]['contig_end'][()]
+                    all_chunk_keys.append((prediction_file, chunk_key, contig_start, contig_end))
 
         consensus_sequence = create_consensus_sequence(contig, all_chunk_keys, threads)
 
