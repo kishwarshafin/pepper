@@ -127,12 +127,12 @@ def predict_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, 
                                                     num_classes=ImageSizeOptions.TOTAL_LABELS)
     transducer_model.eval()
 
-    sys.stderr.write("INFO: MODEL LOADING TO ONNX\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL LOADING TO ONNX\n")
     x = torch.zeros(1, TrainOptions.TRAIN_WINDOW, ImageSizeOptions.IMAGE_HEIGHT)
     h = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
     if not os.path.isfile(model_path + ".onnx"):
-        sys.stderr.write("INFO: SAVING MODEL TO ONNX\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SAVING MODEL TO ONNX\n")
         torch.onnx.export(transducer_model, (x, h),
                           model_path + ".onnx",
                           training=False,

@@ -140,6 +140,7 @@ def call_variant(bam_filepath,
                   gpu_mode,
                   threads)
 
+    start_time_sub = time.time()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3.1: CALLING VARIANTS ON HAPLOTYPE 1\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(candidate_output_directory_hp1) + "\n")
     process_candidates(prediction_output_directory_hp1,
@@ -147,7 +148,12 @@ def call_variant(bam_filepath,
                        sample_name,
                        candidate_output_directory_hp1,
                        threads)
+    end_time_sub = time.time()
+    mins = int((end_time_sub - start_time_sub) / 60)
+    secs = int((end_time_sub - start_time_sub)) % 60
+    sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] TOTAL ELAPSED VARIANT FINDING ON HP1: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
+    start_time_sub = time.time()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3.2: CALLING VARIANTS ON HAPLOTYPE 2\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(candidate_output_directory_hp2) + "\n")
     process_candidates(prediction_output_directory_hp2,
@@ -155,13 +161,22 @@ def call_variant(bam_filepath,
                        sample_name,
                        candidate_output_directory_hp2,
                        threads)
+    end_time_sub = time.time()
+    mins = int((end_time_sub - start_time_sub) / 60)
+    secs = int((end_time_sub - start_time_sub)) % 60
+    sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] TOTAL ELAPSED VARIANT FINDING ON HP2: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
+    start_time_sub = time.time()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 4: MERGING VARIANTS.\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(output_dir) + "\n")
     haploid2diploid(candidate_output_directory_hp1 + 'candidates_as_variants.vcf',
                     candidate_output_directory_hp2 + 'candidates_as_variants.vcf',
                     fasta_filepath,
                     output_dir)
+    end_time_sub = time.time()
+    mins = int((end_time_sub - start_time_sub) / 60)
+    secs = int((end_time_sub - start_time_sub)) % 60
+    sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] TOTAL ELAPSED MERGING VARIANTS: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
     end_time = time.time()
     mins = int((end_time - start_time) / 60)

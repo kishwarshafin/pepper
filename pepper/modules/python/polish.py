@@ -5,14 +5,14 @@ import torch
 import time
 from pathlib import Path
 from datetime import datetime
+from pepper.modules.python.ImageGenerationUI import UserInterfaceSupport
 from pepper.modules.python.make_images import make_images
 from pepper.modules.python.call_consensus import call_consensus
 from pepper.modules.python.perform_stitch import perform_stitch
 
 
 def polish(bam_filepath, fasta_filepath, output_path, threads, region,
-           model_path, batch_size, gpu_mode, distributed, device_ids,
-           num_workers, callers, threads_per_caller):
+           model_path, batch_size, gpu_mode, device_ids, num_workers):
     """
     Run all the sub-modules to polish an input assembly.
     """
@@ -46,6 +46,7 @@ def polish(bam_filepath, fasta_filepath, output_path, threads, region,
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: num_workers NEEDS TO BE >=0.\n")
         exit(1)
 
+    callers = threads
     threads_per_caller = int(threads / max(1, callers))
     # check number of threads
     if threads_per_caller <= 0:
@@ -79,13 +80,10 @@ def polish(bam_filepath, fasta_filepath, output_path, threads, region,
     timestr = time.strftime("%m%d%Y_%H%M%S")
 
     # run directories
-    if output_path[-1] != "/":
-        output_parent_directory = str(Path(output_path).resolve().parents[0]) + "/"
-    else:
-        output_parent_directory = output_path
+    output_dir = UserInterfaceSupport.handle_output_directory(output_path)
 
-    image_output_directory = output_parent_directory + "images_" + str(timestr) + "/"
-    prediction_output_directory = output_parent_directory + "predictions_" + str(timestr) + "/"
+    image_output_directory = output_dir + "images_" + str(timestr) + "/"
+    prediction_output_directory = output_dir + "predictions_" + str(timestr) + "/"
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN-ID: " + str(timestr) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: IMAGE OUTPUT: " + str(image_output_directory) + "\n")
@@ -112,8 +110,8 @@ def polish(bam_filepath, fasta_filepath, output_path, threads, region,
                    threads)
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3: RUNNING STITCH\n")
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION OUTPUT: " + str(output_parent_directory) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STITCH OUTPUT: " + str(output_dir) + "\n")
     sys.stderr.flush()
     perform_stitch(prediction_output_directory,
-                   output_path,
+                   output_dir,
                    threads)

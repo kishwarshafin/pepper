@@ -307,16 +307,15 @@ class AlignmentSummarizer:
                                                          truth_read,
                                                          hp_tag)
 
-                images, labels, positions, chunk_ids, ref_seqs = \
-                    self.chunk_images_train(summary_generator,
-                                            chunk_size=ImageSizeOptions.SEQ_LENGTH,
-                                            chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
+                image_summary = summary_generator.chunk_image_train(ImageSizeOptions.SEQ_LENGTH,
+                                                                    ImageSizeOptions.SEQ_OVERLAP,
+                                                                    ImageSizeOptions.IMAGE_HEIGHT)
 
-                all_images.extend(images)
-                all_labels.extend(labels)
-                all_positions.extend(positions)
-                all_image_chunk_ids.extend(chunk_ids)
-                all_ref_seq.extend(ref_seqs)
+                all_images.extend(image_summary.images)
+                all_labels.extend(image_summary.labels)
+                all_positions.extend(image_summary.positions)
+                all_image_chunk_ids.extend(image_summary.chunk_ids)
+                all_ref_seq.extend(image_summary.refs)
         else:
             # HERE REALIGN THE READS TO THE REFERENCE THEN GENERATE THE SUMMARY TO GET A POLISHED HAPLOTYPE
             read_start = max(0, self.region_start_position)
@@ -374,16 +373,15 @@ class AlignmentSummarizer:
                                                self.region_end_position,
                                                hp_tag)
 
-            images, labels, positions, chunk_ids, ref_seqs = \
-                self.chunk_images(summary_generator,
-                                  chunk_size=ImageSizeOptions.SEQ_LENGTH,
-                                  chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
+            image_summary = summary_generator.chunk_image(ImageSizeOptions.SEQ_LENGTH,
+                                                          ImageSizeOptions.SEQ_OVERLAP,
+                                                          ImageSizeOptions.IMAGE_HEIGHT)
 
-            all_images.extend(images)
-            all_labels.extend(labels)
-            all_positions.extend(positions)
-            all_image_chunk_ids.extend(chunk_ids)
-            all_ref_seq.extend(ref_seqs)
+            all_images.extend(image_summary.images)
+            all_labels.extend(image_summary.labels)
+            all_positions.extend(image_summary.positions)
+            all_image_chunk_ids.extend(image_summary.chunk_ids)
+            all_ref_seq.extend(image_summary.refs)
 
         assert(len(all_images) == len(all_labels) == len(all_image_chunk_ids) == len(all_ref_seq))
 

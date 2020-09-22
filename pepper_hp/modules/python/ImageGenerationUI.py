@@ -254,7 +254,7 @@ class UserInterfaceSupport:
                                          realignment_flag):
 
         if train_mode:
-            max_size = 1000
+            max_size = 10000
         else:
             max_size = 10000
 
