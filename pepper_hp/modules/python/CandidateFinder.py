@@ -369,11 +369,46 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
             contig_start = hdf5_file['predictions'][contig][chunk_name]['contig_start'][()]
             contig_end = hdf5_file['predictions'][contig][chunk_name]['contig_end'][()]
 
+        smaller_chunks = sorted(smaller_chunks)
+
+        all_positions = []
+        all_indicies = []
+        all_predictions_hp1 = []
+        all_predictions_hp2 = []
+
+        for i, chunk in enumerate(smaller_chunks):
+            with h5py.File(file_name, 'r') as hdf5_file:
+                bases_hp1 = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions_hp1'][()]
+                bases_hp2 = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions_hp2'][()]
+                positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
+                indices = hdf5_file['predictions'][contig][chunk_name][chunk]['index'][()]
+
+            if i == 0:
+                all_positions = positions
+                all_indicies = indices
+                all_predictions_hp1 = bases_hp1
+                all_predictions_hp2 = bases_hp2
+            else:
+                all_positions = np.concatenate((all_positions, positions), axis=0)
+                all_indicies = np.concatenate((all_indicies, indices), axis=0)
+                all_predictions_hp1 = np.concatenate((all_predictions_hp1, bases), axis=0)
+                all_predictions_hp2 = np.concatenate((all_predictions_hp2, bases), axis=0)
+
         cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
 
         # find candidates
-        candidate_map, max_insert_map, max_delete_map = cpp_candidate_finder.find_candidates(bam_file_path, reference_file_path, contig, contig_start, contig_end)
-        smaller_chunks = sorted(smaller_chunks)
+        candidate_map = cpp_candidate_finder.find_candidates(bam_file_path,
+                                                             reference_file_path,
+                                                             contig,
+                                                             contig_start,
+                                                             contig_end,
+                                                             all_positions,
+                                                             all_indicies,
+                                                             all_predictions_hp1,
+                                                             all_predictions_hp2)
+        print(candidate_map)
+        exit()
+
         prediction_map_h1 = defaultdict()
         prediction_map_h2 = defaultdict()
         max_index_map = defaultdict()

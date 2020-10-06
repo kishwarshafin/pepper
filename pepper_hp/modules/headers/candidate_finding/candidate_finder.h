@@ -6,6 +6,8 @@
 #define PEPPER_HP_CANDIDATE_FINDER_H
 
 #include <cmath>
+#include <numeric>
+#include <vector>
 #include "../dataio/bam_handler.h"
 using namespace std;
 
@@ -27,6 +29,33 @@ namespace Genotype {
     static constexpr int HET = 1;
     static constexpr int HOM_ALT = 2;
 };
+
+namespace LinearRegression {
+
+    static constexpr double SNP_ALT_FREQ_COEF = 0;
+    static constexpr double SNP_NON_REF_PROB_COEF = 0;
+    static constexpr double SNP_ALLELE_WEIGHT_COEF = 0.991822;
+    static constexpr double SNP_BIAS_TERM = -0.00041;
+    static constexpr double SNP_THRESHOLD = 0.001;
+    static constexpr double SNP_LOWER_FREQ_THRESHOLD = 0.10;
+    static constexpr double SNP_UPPER_FREQ = 0.4;
+
+    static constexpr double INSERT_ALT_FREQ_COEF = 0.703907;
+    static constexpr double INSERT_NON_REF_PROB_COEF = 0.84046;
+    static constexpr double INSERT_ALLELE_WEIGHT_COEF = 0.000194;
+    static constexpr double INSERT_BIAS_TERM = -0.08827;
+    static constexpr double INSERT_THRESHOLD = 0.35;
+    static constexpr double IN_LOWER_FREQ_THRESHOLD = 0.10;
+    static constexpr double IN_UPPER_FREQ = 0.3;
+
+    static constexpr double DELETE_ALT_FREQ_COEF = 0;
+    static constexpr double DELETE_NON_REF_PROB_COEF = 0.061994;
+    static constexpr double DELETE_ALLELE_WEIGHT_COEF = 0.594578;
+    static constexpr double DELETE_BIAS_TERM = -0.006053;
+    static constexpr double DELETE_THRESHOLD = 0.4;
+    static constexpr double DEL_LOWER_FREQ_THRESHOLD = 0.20;
+    static constexpr double DEL_UPPER_FREQ_THRESHOLD = 0.5;
+}
 
 struct CandidateAllele{
     string ref;
@@ -52,6 +81,9 @@ struct Candidate{
     int read_support_h0;
     int read_support_h1;
     int read_support_h2;
+    double alt_prob_h1;
+    double alt_prob_h2;
+    double non_ref_prob;
 
     Candidate() {
         this->genotype = 0;
@@ -145,7 +177,8 @@ public:
                     long long ref_start,
                     long long ref_end);
     void add_read_alleles(type_read &read, vector<int> &coverage);
-    vector<PositionalCandidateRecord> find_candidates(vector<type_read>& reads);
+    vector<PositionalCandidateRecord> find_candidates(vector<type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > predictions_hp1, vector< vector<int> > predictions_hp2);
+//    bool filter_candidate(Candidate candidate);
     // this is for speed-up, we are going to memorize all position wise read-indicies
     map<long long, set<int> > position_to_read_map;
 };

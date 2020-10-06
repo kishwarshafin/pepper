@@ -108,33 +108,6 @@ def candidates_to_variants(candidates, contig):
     return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, gts, ads, overall_non_ref_prob
 
 
-def simplify_variants(variant):
-    contig, ref_start, ref_end, ref_seq, alleles, genotype = variant
-    if len(alleles) > 1:
-        print("ERROR: OBSERVED MORE THAN 1 CANDIDATES AT SITE: ", contig, ref_start, alleles)
-        exit(1)
-    allele = alleles[0]
-
-    if len(allele) == 1 or len(ref_seq) == 1:
-        return [(contig, ref_start, ref_end, ref_seq, alleles, genotype)]
-
-    window_move = min(len(ref_seq), len(allele))
-    simplified_variants = []
-    for pos in range(ref_start, ref_start + window_move - 1):
-        indx = pos - ref_start
-        ref_base = ref_seq[indx]
-        alt_base = allele[indx]
-        if ref_base == alt_base:
-            continue
-        simplified_variants.append((contig, pos, pos+1, ref_base, [alt_base], genotype))
-
-    ref_out = ref_seq[window_move-1:]
-    alt_out = allele[window_move-1:]
-    if ref_out != alt_out:
-        simplified_variants.append((contig, ref_start+window_move-1, ref_end, ref_seq[window_move-1:], [allele[window_move-1:]], genotype))
-    return simplified_variants
-
-
 def natural_key(string_):
     """See http://www.codinghorror.com/blog/archives/001018.html"""
     return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]

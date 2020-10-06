@@ -381,18 +381,17 @@ class AlignmentSummarizer:
                                                          truth_reads_h1[0],
                                                          truth_reads_h2[0])
 
-                images_hp1, images_hp2, labels_hp1, labels_hp2, positions, chunk_ids, ref_seqs = \
-                    self.chunk_images_train(summary_generator,
-                                            chunk_size=ImageSizeOptions.SEQ_LENGTH,
-                                            chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
+                image_summary = summary_generator.chunk_image_train(ImageSizeOptions.SEQ_LENGTH,
+                                                                    ImageSizeOptions.SEQ_OVERLAP,
+                                                                    ImageSizeOptions.IMAGE_HEIGHT)
 
-                all_images_hp1.extend(images_hp1)
-                all_images_hp2.extend(images_hp2)
-                all_labels_hp1.extend(labels_hp1)
-                all_labels_hp2.extend(labels_hp2)
-                all_positions.extend(positions)
-                all_image_chunk_ids.extend(chunk_ids)
-                all_ref_seq.extend(ref_seqs)
+                all_images_hp1.extend(image_summary.images_hp1)
+                all_images_hp2.extend(image_summary.images_hp2)
+                all_labels_hp1.extend(image_summary.labels_hp1)
+                all_labels_hp2.extend(image_summary.labels_hp2)
+                all_positions.extend(image_summary.positions)
+                all_image_chunk_ids.extend(image_summary.chunk_ids)
+                all_ref_seq.extend(image_summary.refs)
         else:
             # HERE REALIGN THE READS TO THE REFERENCE THEN GENERATE THE SUMMARY TO GET A POLISHED HAPLOTYPE
             read_start = max(0, self.region_start_position)
@@ -449,20 +448,18 @@ class AlignmentSummarizer:
                                                self.region_start_position,
                                                self.region_end_position)
 
-
             # images_hp1, images_hp2, labels, positions, chunk_ids, ref_images
-            images_hp1, images_hp2, labels_hp1, labels_hp2, positions, chunk_ids, ref_seqs = \
-                self.chunk_images(summary_generator,
-                                  chunk_size=ImageSizeOptions.SEQ_LENGTH,
-                                  chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
+            image_summary = summary_generator.chunk_image(ImageSizeOptions.SEQ_LENGTH,
+                                                          ImageSizeOptions.SEQ_OVERLAP,
+                                                          ImageSizeOptions.IMAGE_HEIGHT)
 
-            all_images_hp1.extend(images_hp1)
-            all_images_hp2.extend(images_hp2)
-            all_labels_hp1.extend(labels_hp1)
-            all_labels_hp2.extend(labels_hp2)
-            all_positions.extend(positions)
-            all_image_chunk_ids.extend(chunk_ids)
-            all_ref_seq.extend(ref_seqs)
+            all_images_hp1.extend(image_summary.images_hp1)
+            all_images_hp2.extend(image_summary.images_hp2)
+            all_labels_hp1.extend(image_summary.labels_hp1)
+            all_labels_hp2.extend(image_summary.labels_hp2)
+            all_positions.extend(image_summary.positions)
+            all_image_chunk_ids.extend(image_summary.chunk_ids)
+            all_ref_seq.extend(image_summary.refs)
 
         assert(len(all_images_hp1) == len(all_images_hp2) == len(all_labels_hp1) == len(all_labels_hp2) == len(all_image_chunk_ids) == len(all_ref_seq))
 

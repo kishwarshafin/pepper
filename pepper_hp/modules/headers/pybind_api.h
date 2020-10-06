@@ -16,6 +16,15 @@
 namespace py = pybind11;
 
 PYBIND11_MODULE(PEPPER_HP, m) {
+        py::class_<ImageSummary>(m, "ImageSummary")
+            .def_readwrite("images_hp1", &ImageSummary::images_hp1)
+            .def_readwrite("images_hp2", &ImageSummary::images_hp2)
+            .def_readwrite("positions", &ImageSummary::positions)
+            .def_readwrite("refs", &ImageSummary::refs)
+            .def_readwrite("labels_hp1", &ImageSummary::labels_hp1)
+            .def_readwrite("labels_hp2", &ImageSummary::labels_hp2)
+            .def_readwrite("chunk_ids", &ImageSummary::chunk_ids);
+
         py::class_<SummaryGenerator>(m, "SummaryGenerator")
             .def(py::init<const string &, const string &, long long &, long long &>())
             .def_readwrite("genomic_pos", &SummaryGenerator::genomic_pos)
@@ -26,6 +35,8 @@ PYBIND11_MODULE(PEPPER_HP, m) {
             .def_readwrite("image_hp2", &SummaryGenerator::image_hp2)
             .def_readwrite("bad_label_positions", &SummaryGenerator::bad_label_positions)
             .def("generate_train_summary", &SummaryGenerator::generate_train_summary)
+            .def("chunk_image", &SummaryGenerator::chunk_image)
+            .def("chunk_image_train", &SummaryGenerator::chunk_image_train)
             .def("generate_summary", &SummaryGenerator::generate_summary);
 
         // Alignment CLASS
@@ -142,6 +153,9 @@ PYBIND11_MODULE(PEPPER_HP, m) {
             .def_readwrite("read_support_h0", &Candidate::read_support_h0)
             .def_readwrite("read_support_h1", &Candidate::read_support_h1)
             .def_readwrite("read_support_h2", &Candidate::read_support_h2)
+            .def_readwrite("alt_prob_h1", &Candidate::alt_prob_h1)
+            .def_readwrite("alt_prob_h2", &Candidate::alt_prob_h2)
+            .def_readwrite("non_ref_prob", &Candidate::non_ref_prob)
             .def_readwrite("depth", &Candidate::depth)
             .def_readwrite("genotype", &Candidate::genotype)
             .def_readwrite("allele", &Candidate::allele);

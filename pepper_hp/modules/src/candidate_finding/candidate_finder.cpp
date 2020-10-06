@@ -214,9 +214,98 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
 }
 
 
-vector<PositionalCandidateRecord> CandidateFinder::find_candidates(
-        vector <type_read>& reads) {
+//bool CandidateFinder::filter_candidate(Candidate candidate) {
+//    double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
+//
+//    if(candidate.allele.alt_type == SNP_TYPE) {
+//        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+//
+//        if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
+//            if(allele_weight >= 0.05) {
+//                if(allele_weight >= 0.1) return true;
+//                else return false;
+//            }
+//            return false;
+//        }
+//
+//        double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + LinearRegression::SNP_BIAS_TERM;
+//
+//        if(predicted_val >= LinearRegression::SNP_THRESHOLD) return true;
+////        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
+//        return false;
+//
+//    } else if (candidate.allele.alt_type == INSERT_TYPE) {
+//        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+//
+//        if(allele_frequency < LinearRegression::IN_LOWER_FREQ_THRESHOLD) {
+////            if(allele_frequency >= 0.05 && candidate.non_ref_prob >= 0.5) return true;
+//            return false;
+//        }
+//        double predicted_val = allele_frequency * LinearRegression::INSERT_ALT_FREQ_COEF + allele_weight * LinearRegression::INSERT_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::INSERT_NON_REF_PROB_COEF + LinearRegression::INSERT_BIAS_TERM;
+//
+//        if(predicted_val >= LinearRegression::INSERT_THRESHOLD) return true;
+////        if(allele_frequency >= LinearRegression::IN_UPPER_FREQ && allele_weight >= 0.1) return true;
+//        return false;
+//    } else if (candidate.allele.alt_type == DELETE_TYPE) {
+//        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+//
+////        if(allele_frequency>=0.20)return true;
+////        else return false;
+//
+//        if(allele_frequency < LinearRegression::DEL_LOWER_FREQ_THRESHOLD) {
+//            if(allele_frequency >= 0.10 && allele_weight >= 0.5) return true;
+////            if(allele_frequency >= 0.05 && allele_weight >= 0.65) return true;
+//
+//            return false;
+//        }
+//
+//        double predicted_val = allele_weight * LinearRegression::DELETE_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::DELETE_NON_REF_PROB_COEF + LinearRegression::DELETE_BIAS_TERM;
+//
+//        if(predicted_val >= LinearRegression::DELETE_THRESHOLD) return true;
+////        if(allele_frequency >= LinearRegression::DEL_UPPER_FREQ_THRESHOLD && candidate.allele_weight >= 0.65) return true;
+//
+//        return false;
+//    }
+//    return false;
+//}
+//
+//
 
+int get_index_from_base(char base) {
+    if(base == '*')
+        return 0;
+    if(base == 'A')
+        return 1;
+    if(base == 'C')
+        return 2;
+    if(base == 'G')
+        return 3;
+    if(base == 'T')
+        return 4;
+    return  -1;
+}
+
+vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > base_predictions_h1, vector< vector<int> > base_predictions_h2) {
+
+    // populate all the prediction maps
+
+    map < pair<long long, int>, vector<int> > prediction_map_h1;
+    map < pair<long long, int>, vector<int> > prediction_map_h2;
+    map < long long, int > max_index_map;
+
+    for(int i=0; i<positions.size(); i++) {
+        pair<long long, int> pos_pair (positions[i], indices[i]);
+        prediction_map_h1[pos_pair] = base_predictions_h1[i];
+        prediction_map_h2[pos_pair] = base_predictions_h2[i];
+
+        if(max_index_map.find(positions[i]) != max_index_map.end()) {
+            max_index_map[positions[i]] = max(indices[i], max_index_map[positions[i]]);
+        } else{
+            max_index_map[positions[i]] = indices[i];
+        }
+    }
+
+//    // all prediction maps populated now do candidate finding
     map<long long, vector <Candidate> > all_positional_candidates;
     set<long long> filtered_candidate_positions;
 
@@ -229,11 +318,12 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(
         read_index += 1;
     }
 
+    // allele maps are ready now filter through candidates
     int ref_buffer = region_start - ref_start;
-    // get all the positions that pass the threshold
     for (long long i = 0; i < coverage.size(); i++) {
         allele_ends[i] = 1;
-        // first figure out the longest delete
+        int max_del_length = 0;
+        // first figure out the longest delete and figure out the end position of the allele
         for (auto &candidate: AlleleMap[i]) {
             double freq_can = 0.0;
             if (coverage[i] > 0)
@@ -243,6 +333,7 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(
                 AlleleFrequencyMap[candidate] >= CandidateFinder_options::min_count_threshold) {
                 if(candidate.allele.alt_type == DELETE_TYPE) {
                     allele_ends[i] = max(allele_ends[i], (int) candidate.allele.ref.length());
+                    max_del_length = max(max_del_length, (int) candidate.allele.ref.length());
                 }
             }
         }
@@ -262,10 +353,179 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(
 
             candidate_found = true;
             filtered_candidate_positions.insert(i + this->region_start);
+            // allele, depth and frequency
             candidate.set_depth_values(coverage[i], AlleleFrequencyMap[candidate], AlleleFrequencyMapH0[candidate], AlleleFrequencyMapH1[candidate], AlleleFrequencyMapH2[candidate]);
 
-            // allele, depth and frequency
-            positional_record.candidates.push_back(candidate);
+            double non_ref_prob;
+            double alt_prob_h1;
+            double alt_prob_h2;
+            // all set, now calculate allele_prob and non_ref_prob
+            if(candidate.allele.alt_type == SNP_TYPE) {
+
+                pair<long long, int> pos_pair (candidate.pos, 0); // index is 0 for SNPs
+                int alt_allele_index = get_index_from_base((char)candidate.allele.alt[0]);
+                non_ref_prob = 0.0;
+                if(prediction_map_h1.find(pos_pair)==prediction_map_h1.end() || prediction_map_h2.find(pos_pair)==prediction_map_h2.end()) {
+                    non_ref_prob = 0.0;
+                    alt_prob_h1 = 0.0;
+                    alt_prob_h2 = 0.0;
+                } else {
+                    non_ref_prob = 0.0;
+                    alt_prob_h1 = 0.0;
+                    alt_prob_h2 = 0.0;
+                    double sum_h1_probs = max(1.0, double(accumulate(prediction_map_h1[pos_pair].begin(), prediction_map_h1[pos_pair].end(), 0)));
+                    double sum_h2_probs = max(1.0, double(accumulate(prediction_map_h2[pos_pair].begin(), prediction_map_h2[pos_pair].end(), 0)));
+                    double prob_alt_h1 = prediction_map_h1[pos_pair][alt_allele_index] / sum_h1_probs;
+                    double prob_alt_h2 = prediction_map_h2[pos_pair][alt_allele_index] / sum_h2_probs;
+
+                    for(int index=0; index <= max_index_map[candidate.pos]; index++) {
+
+                        int ref_allele_index = 0;
+
+                        if(index == 0) ref_allele_index = get_index_from_base(candidate.allele.ref[0]);
+                        else ref_allele_index = get_index_from_base('*');
+
+                        pair<long long, int> ref_pos_pair (candidate.pos, index);
+                        sum_h1_probs = max(1.0, double(accumulate(prediction_map_h1[ref_pos_pair].begin(), prediction_map_h1[ref_pos_pair].end(), 0)));
+                        sum_h2_probs = max(1.0, double(accumulate(prediction_map_h2[ref_pos_pair].begin(), prediction_map_h2[ref_pos_pair].end(), 0)));
+
+                        double non_ref_prob_h1 = (sum_h1_probs - prediction_map_h1[ref_pos_pair][ref_allele_index]) / sum_h1_probs;
+                        double non_ref_prob_h2 = (sum_h2_probs - prediction_map_h2[ref_pos_pair][ref_allele_index]) / sum_h2_probs;
+                        non_ref_prob = max(non_ref_prob, max(non_ref_prob_h1, non_ref_prob_h2));
+                    }
+                    alt_prob_h1 = max(0.0001, prob_alt_h1);
+                    alt_prob_h2 = max(0.0001, prob_alt_h2);
+                }
+
+                candidate.alt_prob_h1 = alt_prob_h1;
+                candidate.alt_prob_h2 = alt_prob_h2;
+                candidate.non_ref_prob = non_ref_prob;
+//                cout<<"SNP: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" Alt-prob-1: "<<alt_prob_h1<<" alt-prob-2: "<<alt_prob_h2<<" non-ref-prob: "<<non_ref_prob<<" Read support: "<<AlleleFrequencyMap[candidate]<<" Allele freq: "<<alt_freq<<endl;
+//                cout<<"------------------"<<endl;
+            }
+            else if(candidate.allele.alt_type == INSERT_TYPE) {
+                string alt_allele = candidate.allele.alt;
+                long long pos = candidate.pos;
+                int length = 0;
+                alt_prob_h1 = 1.0;
+                alt_prob_h2 = 1.0;
+//                cout<<"IN: "<<candidate.pos<<" "<<candidate.allele.alt<<endl;
+//                cout<<"max index: "<<max_index_map[candidate.pos]<<endl;
+
+                for(int index=1; index <= max_index_map[candidate.pos]; index++) {
+                    int alt_allele_index = 0;
+                    pair<long long, int> ins_pos_pair (candidate.pos, index);
+
+                    if(index < candidate.allele.alt.length()) alt_allele_index = get_index_from_base(candidate.allele.alt[index]);
+                    else alt_allele_index = get_index_from_base('*');
+
+                    double sum_h1_probs = max(1.0, double(accumulate(prediction_map_h1[ins_pos_pair].begin(), prediction_map_h1[ins_pos_pair].end(), 0)));
+                    double sum_h2_probs = max(1.0, double(accumulate(prediction_map_h2[ins_pos_pair].begin(), prediction_map_h2[ins_pos_pair].end(), 0)));
+
+                    double prob_alt_h1 = (prediction_map_h1[ins_pos_pair][alt_allele_index]) / max(1.0, sum_h1_probs);
+                    double prob_alt_h2 = (prediction_map_h2[ins_pos_pair][alt_allele_index]) / max(1.0, sum_h2_probs);
+
+                    alt_prob_h1 *= max(0.0001, prob_alt_h1);
+                    alt_prob_h2 *= max(0.0001, prob_alt_h2);
+                    length += 1;
+                }
+                alt_prob_h1 = max(0.0001, alt_prob_h1);
+                alt_prob_h2 = max(0.0001, alt_prob_h2);
+                // now calculate non-ref-prob
+                length = 0;
+                double non_ref_prob_h1 = 0.0;
+                double non_ref_prob_h2 = 0.0;
+                for(int index=0; index <= min(max_index_map[candidate.pos], int(candidate.allele.alt.size() - 1)); index++) {
+                    int ref_allele_index = 0;
+                    if(index==0) ref_allele_index = get_index_from_base(candidate.allele.ref[0]);
+                    else ref_allele_index = get_index_from_base('*');
+
+                    pair<long long, int> ref_pos_pair (candidate.pos, index);
+
+                    double sum_h1_probs = max(1.0, double(accumulate(prediction_map_h1[ref_pos_pair].begin(), prediction_map_h1[ref_pos_pair].end(), 0)));
+                    double sum_h2_probs = max(1.0, double(accumulate(prediction_map_h2[ref_pos_pair].begin(), prediction_map_h2[ref_pos_pair].end(), 0)));
+
+                    non_ref_prob_h1 = non_ref_prob_h1 + ((sum_h1_probs - prediction_map_h1[ref_pos_pair][ref_allele_index]) / max(1.0, sum_h1_probs));
+                    non_ref_prob_h2 = non_ref_prob_h2 + ((sum_h2_probs - prediction_map_h2[ref_pos_pair][ref_allele_index]) / max(1.0, sum_h2_probs));
+                    length += 1;
+                }
+                non_ref_prob_h1 = non_ref_prob_h1 / max(1, length);
+                non_ref_prob_h2 = non_ref_prob_h2 / max(1, length);
+                non_ref_prob = max(non_ref_prob_h1, non_ref_prob_h2);
+
+                candidate.alt_prob_h1 = alt_prob_h1;
+                candidate.alt_prob_h2 = alt_prob_h2;
+                candidate.non_ref_prob = non_ref_prob;
+                cout<<"IN: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" Alt-prob-1: "<<alt_prob_h1<<" alt-prob-2: "<<alt_prob_h2<<" non-ref-prob: "<<non_ref_prob<<" Read support: "<<AlleleFrequencyMap[candidate]<<" Allele freq: "<<alt_freq<<endl;
+                cout<<"------------------"<<endl;
+            }
+            else if(candidate.allele.alt_type == DELETE_TYPE) {
+                int length = 0;
+                double non_ref_length = 0.0;
+                double non_ref_prob_h1 = 0.0;
+                double non_ref_prob_h2 = 0.0;
+                double alt_prob_h1 = 1.0;
+                double alt_prob_h2 = 1.0;
+                for(int pos=candidate.pos; pos < candidate.pos + max_del_length; pos++) {
+                    if(candidate.pos < pos && pos < candidate.pos_end) {
+                        int ref_allele_index = get_index_from_base(candidate.allele.ref[pos - candidate.pos]);
+
+                        pair<long long, int> ref_pos_pair(pos, 0);
+
+                        double sum_h1_probs = max(1.0, double(accumulate(prediction_map_h1[ref_pos_pair].begin(), prediction_map_h1[ref_pos_pair].end(), 0)));
+                        double sum_h2_probs = max(1.0, double(accumulate(prediction_map_h2[ref_pos_pair].begin(), prediction_map_h2[ref_pos_pair].end(), 0)));
+
+                        non_ref_prob_h1 = non_ref_prob_h1 + ((sum_h1_probs - prediction_map_h1[ref_pos_pair][ref_allele_index]) / max(1.0, sum_h1_probs));
+                        non_ref_prob_h2 = non_ref_prob_h2 + ((sum_h2_probs - prediction_map_h2[ref_pos_pair][ref_allele_index]) / max(1.0, sum_h2_probs));
+                        non_ref_length += 1.0;
+                    }
+
+                    if(candidate.pos < pos && pos < candidate.pos_end) {
+                        int del_allele_index = get_index_from_base('*');
+
+                        pair<long long, int> ref_pos_pair(pos, 0);
+
+                        double sum_h1_probs = max(1.0, double(accumulate(prediction_map_h1[ref_pos_pair].begin(), prediction_map_h1[ref_pos_pair].end(), 0)));
+                        double sum_h2_probs = max(1.0, double(accumulate(prediction_map_h2[ref_pos_pair].begin(), prediction_map_h2[ref_pos_pair].end(), 0)));
+
+                        double prob_del_h1 = (prediction_map_h1[ref_pos_pair][del_allele_index] + 0.1) / max(1.0, sum_h1_probs);
+                        double prob_del_h2 = (prediction_map_h2[ref_pos_pair][del_allele_index] + 0.1) / max(1.0, sum_h2_probs);
+                        alt_prob_h1 *= max(0.0001, max(prob_del_h1, prob_del_h2));
+                        alt_prob_h2 *= max(0.0001, max(prob_del_h1, prob_del_h2));
+                        length += 1;
+                    } else if(pos>=candidate.pos_end) {
+                        int del_allele_index = get_index_from_base('*');
+
+                        pair<long long, int> ref_pos_pair(pos, 0);
+
+                        double sum_h1_probs = max(1.0, double(accumulate(prediction_map_h1[ref_pos_pair].begin(), prediction_map_h1[ref_pos_pair].end(), 0)));
+                        double sum_h2_probs = max(1.0, double(accumulate(prediction_map_h2[ref_pos_pair].begin(), prediction_map_h2[ref_pos_pair].end(), 0)));
+
+                        double prob_non_del_h1 = (sum_h1_probs - prediction_map_h1[ref_pos_pair][del_allele_index]) / max(1.0, sum_h1_probs);
+                        double prob_non_del_h2 = (sum_h2_probs - prediction_map_h2[ref_pos_pair][del_allele_index]) / max(1.0, sum_h2_probs);
+                        alt_prob_h1 *= max(0.0001, max(prob_non_del_h1, prob_non_del_h2));
+                        alt_prob_h2 *= max(0.0001, max(prob_non_del_h1, prob_non_del_h2));
+                        length += 1;
+                    }
+                }
+
+                alt_prob_h1 = alt_prob_h1;
+                alt_prob_h2 = alt_prob_h2;
+
+                non_ref_prob_h1 = non_ref_prob_h1 / max(1.0, non_ref_length);
+                non_ref_prob_h2 = non_ref_prob_h2 / max(1.0, non_ref_length);
+                non_ref_prob = max(non_ref_prob_h1, non_ref_prob_h2);
+
+//                cout<<"DEL: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" Alt-prob-1: "<<alt_prob_h1<<" alt-prob-2: "<<alt_prob_h2<<" non-ref-prob: "<<non_ref_prob<<" Read support: "<<AlleleFrequencyMap[candidate]<<" Allele freq: "<<alt_freq<<endl;
+//                cout<<"------------------"<<endl;
+
+//                cout<<"DEL: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" "<<alt_prob_h1<<" "<<alt_prob_h2<<" "<<non_ref_prob<<endl;
+                candidate.alt_prob_h1 = alt_prob_h1;
+                candidate.alt_prob_h2 = alt_prob_h2;
+                candidate.non_ref_prob = non_ref_prob;
+            }
+
+//            if(filter_candidate(candidate)) positional_record.candidates.push_back(candidate);
         }
 
         if (!candidate_found) continue;

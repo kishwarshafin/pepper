@@ -229,9 +229,9 @@ class UserInterfaceSupport:
                                          realignment_flag):
 
         if train_mode:
-            max_size = 10000
+            max_size = 100000
         else:
-            max_size = 10000
+            max_size = 100000
 
         start_time = time.time()
         fasta_handler = PEPPER_HP.FASTA_handler(draft_file)
