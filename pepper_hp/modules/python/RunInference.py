@@ -25,7 +25,6 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, nu
 
     if device_ids is None:
         total_gpu_devices = torch.cuda.device_count()
-        total_gpu_devices = 1
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL GPU AVAILABLE: " + str(total_gpu_devices) + "\n")
         device_ids = [i for i in range(0, total_gpu_devices)]
 

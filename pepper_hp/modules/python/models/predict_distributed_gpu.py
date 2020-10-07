@@ -40,10 +40,9 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                              num_workers=num_workers)
     torch.set_num_threads(theads_per_caller)
 
-
-    # transducer_model.to(device_id)
+    transducer_model.to(device_id)
     transducer_model.eval()
-    # transducer_model = DistributedDataParallel(transducer_model, device_ids=[device_id])
+    transducer_model = DistributedDataParallel(transducer_model, device_ids=[device_id])
 
     batch_completed = 0
     total_batches = len(data_loader)

@@ -50,21 +50,20 @@ class DataStore(object):
         self._meta = self.meta
         self._meta.update(meta)
 
-    def write_summary(self, region, image_hp1, image_hp2, label_hp1, label_hp2, position, index, chunk_id, summary_name, ref_seq):
+    def write_summary(self, region, image, label, position, index, chunk_id, summary_name, ref_seq, hp_tag):
         contig_name, region_start, region_end = region
         if 'summaries' not in self.meta:
             self.meta['summaries'] = set()
 
         if summary_name not in self.meta['summaries']:
             self.meta['summaries'].add(summary_name)
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'image_hp1')] = np.array(image_hp1, dtype=np.uint8)
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'image_hp2')] = np.array(image_hp2, dtype=np.uint8)
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'label_hp1')] = np.array(label_hp1, dtype=np.uint8)
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'label_hp2')] = np.array(label_hp2, dtype=np.uint8)
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'position')] = position
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'index')] = index
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'image')] = np.array(image, dtype=np.uint8)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'label')] = np.array(label, dtype=np.uint8)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'position')] = np.array(position, dtype=np.uint32)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'index')] = np.array(index, dtype=np.uint16)
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'contig')] = contig_name
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_start')] = region_start
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_end')] = region_end
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'chunk_id')] = chunk_id
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'ref_seq')] = ref_seq
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'ref_seq')] = np.array(ref_seq, dtype=np.uint8)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'hp_tag')] = hp_tag.astype(dtype=np.uint8)
