@@ -45,7 +45,7 @@ class SequenceDataset(Dataset):
 
     def __getitem__(self, index):
         # load the image
-        hdf5_filepath, image_name, hp_tag = self.all_images[index]
+        hdf5_filepath, image_name = self.all_images[index]
 
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
             image = hdf5_file['summaries'][image_name]['image'][()]
