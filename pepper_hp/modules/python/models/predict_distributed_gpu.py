@@ -13,7 +13,7 @@ from pepper_hp.modules.python.models.ModelHander import ModelHandler
 from pepper_hp.modules.python.Options import ImageSizeOptions, TrainOptions
 from pepper_hp.modules.python.DataStorePredict import DataStore
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
-
+torch.multiprocessing.set_sharing_strategy('file_system')
 
 def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, theads_per_caller, device_id, rank):
     transducer_model, hidden_size, gru_layers, prev_ite = \
@@ -39,7 +39,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     torch.cuda.set_device(device_id)
     transducer_model.to(device_id)
     transducer_model.eval()
-    transducer_model = DistributedDataParallel(transducer_model, device_ids=[device_id])
+    # transducer_model = DistributedDataParallel(transducer_model, device_ids=[device_id])
 
     batch_completed = 0
     total_batches = len(data_loader)
