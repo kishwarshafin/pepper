@@ -509,8 +509,8 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
 
                         double prob_non_del_h1 = (sum_h1_probs - prediction_map_h1[ref_pos_pair][del_allele_index]) / max(1.0, sum_h1_probs);
                         double prob_non_del_h2 = (sum_h2_probs - prediction_map_h2[ref_pos_pair][del_allele_index]) / max(1.0, sum_h2_probs);
-                        alt_prob_h1 *= max(0.0001, max(prob_non_del_h1, prob_non_del_h2));
-                        alt_prob_h2 *= max(0.0001, max(prob_non_del_h1, prob_non_del_h2));
+                        alt_prob_h1 *= max(0.0001, prob_non_del_h1);
+                        alt_prob_h2 *= max(0.0001, prob_non_del_h2);
                         length += 1;
                     }
                 }
