@@ -85,9 +85,6 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                 # now simply add the tensor to the global counter
                 prediction_base_tensor = torch.add(prediction_base_tensor, base_prediction)
 
-                del inference_layers
-                torch.cuda.empty_cache()
-
             # base_values, base_labels = torch.max(prediction_base_tensor, 2)
 
             # predicted_base_labels = base_labels.cpu().numpy()
@@ -110,6 +107,9 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
                 sys.stderr.flush()
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
+                     "INFO: FINISHED PROCESSING FOR CALLER: " + str(rank) + ".\n")
+    sys.stderr.flush()
 
 
 
