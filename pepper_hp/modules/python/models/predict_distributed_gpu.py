@@ -133,8 +133,8 @@ def setup(rank, total_callers, args, all_input_files):
     # start from same random weights and biases. https://github.com/pytorch/pytorch/issues/2517
     # torch.manual_seed(42)
     print(rank, device_ids, device_ids[rank], num_workers, threads_per_caller)
-    print(len(all_input_files))
-    print(len(all_input_files[rank]))
+    print(rank, len(all_input_files))
+    print(rank, len(all_input_files[rank]))
     exit()
     predict(filepath, all_input_files[rank],  output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[rank], rank)
     cleanup()
