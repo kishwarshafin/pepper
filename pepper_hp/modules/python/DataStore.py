@@ -66,4 +66,4 @@ class DataStore(object):
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_end')] = region_end
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'chunk_id')] = chunk_id
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'ref_seq')] = np.array(ref_seq, dtype=np.uint8)
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'hp_tag')] = hp_tag.astype(dtype=np.uint8)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'hp_tag')] = hp_tag
