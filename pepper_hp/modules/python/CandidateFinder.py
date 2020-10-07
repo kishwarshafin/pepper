@@ -92,12 +92,16 @@ def candidates_to_variants(candidates, contig):
 
     selected_alts = []
     selected_dps = []
-    selected_gts = []
+    selected_alt_prob_h1s = []
+    selected_alt_prob_h2s = []
+    selected_non_ref_probs = []
     selected_ads = []
 
     other_alts = []
     other_dps = []
-    other_gts = []
+    other_alt_prob_h1s = []
+    other_alt_prob_h2s = []
+    other_non_ref_probs = []
     other_ads = []
     for i, candidate in enumerate(candidates):
         pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
@@ -112,12 +116,16 @@ def candidates_to_variants(candidates, contig):
             selected_alts.append(alt)
             selected_dps.append(depth)
             selected_ads.append(read_support)
-            selected_gts.append(max(alt_prob_h1, alt_prob_h2))
+            selected_alt_prob_h1s.append(alt_prob_h1)
+            selected_alt_prob_h2s.append(alt_prob_h2)
+            selected_non_ref_probs.append(non_ref_prob)
         else:
             other_alts.append(alt)
             other_dps.append(depth)
             other_ads.append(read_support)
-            other_gts.append(max(alt_prob_h1, alt_prob_h2))
+            other_alt_prob_h1s.append(alt_prob_h1)
+            other_alt_prob_h2s.append(alt_prob_h2)
+            other_non_ref_probs.append(non_ref_prob)
 
     indx_list = list()
     for i in [h1_indx, h2_indx]:
@@ -135,7 +143,9 @@ def candidates_to_variants(candidates, contig):
 
     alleles = selected_alts + other_alts
     dps = selected_dps + other_dps
-    gts = selected_gts + other_gts
+    alt_prob_h1s = selected_alt_prob_h1s + other_alt_prob_h1s
+    alt_prob_h2s = selected_alt_prob_h2s + other_alt_prob_h2s
+    non_ref_probs = selected_non_ref_probs + other_non_ref_probs
     ads = selected_ads + other_ads
 
     # only report the selected alts
@@ -143,9 +153,9 @@ def candidates_to_variants(candidates, contig):
     # dps = selected_dps
     # gts = selected_gts
     # ads = selected_ads
-    # print(contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, gts, ads, overall_non_ref_prob)
+    # print(contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_prob_h1s, alt_prob_h2s, ads, overall_non_ref_prob)
 
-    return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, gts, ads, overall_non_ref_prob
+    return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_prob_h1s, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob
 
 
 
@@ -406,184 +416,22 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                                                              all_indicies,
                                                              all_predictions_hp1,
                                                              all_predictions_hp2)
-        print(candidate_map)
-        exit()
-
-        prediction_map_h1 = defaultdict()
-        prediction_map_h2 = defaultdict()
-        max_index_map = defaultdict()
-
-        for chunk in smaller_chunks:
-            with h5py.File(file_name, 'r') as hdf5_file:
-                bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
-                positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
-                indices = hdf5_file['predictions'][contig][chunk_name][chunk]['index'][()]
-                hp_tag = hdf5_file['predictions'][contig][chunk_name][chunk]['hp_tag'][()]
-
-            positions = np.array(positions, dtype=np.int64)
-            base_predictions = np.array(bases, dtype=np.int)
-
-            # as I have carried the reference sequence over, we will get the candidates naturally
-            for pos, indx, base_pred in zip(positions, indices, base_predictions):
-                if indx < 0 or pos < 0:
-                    continue
-
-                if hp_tag == 1:
-                    prediction_map_h1[(pos, indx)] = base_pred
-                else:
-                    prediction_map_h2[(pos, indx)] = base_pred
-
-                if pos in max_index_map.keys():
-                    max_index_map[pos] = max(max_index_map[pos], indx + 1)
-                else:
-                    max_index_map[pos] = indx + 1
-
         for pos in candidate_map.keys():
             selected_candidates = []
             found_candidate = False
             for candidate in candidate_map[pos]:
-                # print("CANDIDATE", candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
-                # non-ref prob calcuates the probability of having an alt in that region
-                if not check_alleles(candidate.allele.ref) or not check_alleles(candidate.allele.alt):
-                    continue
-                non_ref_prob = 0.0
-
-                alt_prob_h1 = 0.0
-                alt_prob_h2 = 0.0
-                # see if it's a SNP
-                if candidate.allele.alt_type == 1:
-                    # see the possibility that this position may
-                    pos = candidate.pos_start
-                    alt_allele_indx = get_index_from_base(candidate.allele.alt)
-                    # calculate probability for HP1
-                    prob_alt_h1 = prediction_map_h1[(pos, 0)][alt_allele_indx] / max(1.0, sum(prediction_map_h1[(pos, 0)]))
-
-                    # calculate probability for HP2
-                    prob_alt_h2 = prediction_map_h2[(pos, 0)][alt_allele_indx] / max(1.0, sum(prediction_map_h2[(pos, 0)]))
-
-                    # non-ref-prob is the probability that this position can have an alt
-                    for indx in range(0, max_index_map[pos]):
-                        if indx == 0:
-                            ref_allele_indx = get_index_from_base(candidate.allele.ref[0])
-                        else:
-                            ref_allele_indx = get_index_from_base('*')
-                        non_ref_prob_h1 = (sum(prediction_map_h1[(pos, indx)]) - prediction_map_h1[(pos, indx)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, indx)]))
-                        non_ref_prob_h2 = (sum(prediction_map_h2[(pos, indx)]) - prediction_map_h2[(pos, indx)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, indx)]))
-                        non_ref_prob = max(non_ref_prob, max(non_ref_prob_h1, non_ref_prob_h2))
-
-                    # calculate probability for HP2
-                    alt_prob_h1 = max(0.0000001, prob_alt_h1)
-                    alt_prob_h2 = max(0.0000001, prob_alt_h2)
-                # INSERTION
-                elif candidate.allele.alt_type == 2:
-                    alt_allele = candidate.allele.alt
-                    pos = candidate.pos_start
-                    length = 0
-                    alt_prob_h1 = 1.0
-                    alt_prob_h2 = 1.0
-
-                    for indx in range(1, max_index_map[pos]):
-                        if indx < len(alt_allele):
-                            alt_allele_indx = get_index_from_base(alt_allele[indx])
-                        else:
-                            alt_allele_indx = get_index_from_base('*')
-                        # print(alt_allele[indx], get_index_from_base(alt_allele[indx]), prediction_map_h1[(pos, indx)], prediction_map_h2[(pos, indx)])
-                        prob_alt_h1 = (prediction_map_h1[(pos, indx)][alt_allele_indx] + 0.1) / max(1.0, sum(prediction_map_h1[(pos, indx)]))
-                        prob_alt_h2 = (prediction_map_h2[(pos, indx)][alt_allele_indx] + 0.1) / max(1.0, sum(prediction_map_h2[(pos, indx)]))
-
-                        alt_prob_h1 *= max(0.0001, prob_alt_h1)
-                        alt_prob_h2 *= max(0.0001, prob_alt_h2)
-                        length += 1
-
-                    # alt_prob_h1 = alt_prob_h1 / max(1, length)
-                    # alt_prob_h2 = alt_prob_h2 / max(1, length)
-                    alt_prob_h1 = max(0.0000001, alt_prob_h1)
-                    alt_prob_h2 = max(0.0000001, alt_prob_h2)
-
-                    # This is the calculation of non_ref_prob
-                    length = 0
-                    non_ref_prob_h1 = 0
-                    non_ref_prob_h2 = 0
-                    # non-ref-prob is the probability that this position can have an alt
-                    for indx in range(0, min(max_index_map[pos], len(alt_allele))):
-                        if indx == 0:
-                            ref_allele_indx = get_index_from_base(candidate.allele.ref[0])
-                        else:
-                            ref_allele_indx = get_index_from_base('*')
-                        non_ref_prob_h1 = non_ref_prob_h1 + (sum(prediction_map_h1[(pos, indx)]) - prediction_map_h1[(pos, indx)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, indx)]))
-                        non_ref_prob_h2 = non_ref_prob_h2 + (sum(prediction_map_h2[(pos, indx)]) - prediction_map_h2[(pos, indx)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, indx)]))
-                        length += 1
-
-                    non_ref_prob_h1 = non_ref_prob_h1 / max(1, length)
-                    non_ref_prob_h2 = non_ref_prob_h2 / max(1, length)
-                    non_ref_prob = max(non_ref_prob_h1, non_ref_prob_h2)
-                # DEL
-                elif candidate.allele.alt_type == 3:
-                    length = 0
-
-                    non_ref_length = 0
-                    non_ref_prob_h1 = 0
-                    non_ref_prob_h2 = 0
-                    alt_prob_h1 = 1.0
-                    alt_prob_h2 = 1.0
-
-                    # print("CANDIDATE", candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type)
-                    # print(candidate.pos_start, candidate.pos_end, max_delete_map[candidate.pos_start], candidate.pos_start + max_delete_map[candidate.pos_start])
-                    for pos in range(candidate.pos_start, candidate.pos_start + max_delete_map[candidate.pos_start]):
-
-                        # print(pos, candidate.pos_start + max_delete_map[candidate.pos_start])
-                        if candidate.pos_start < pos < candidate.pos_end:
-                            ref_allele_indx = get_index_from_base(candidate.allele.ref[pos - candidate.pos_start])
-
-                            non_ref_prob_h1 = non_ref_prob_h1 + (sum(prediction_map_h1[(pos, 0)]) - prediction_map_h1[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
-                            non_ref_prob_h2 = non_ref_prob_h2 + (sum(prediction_map_h2[(pos, 0)]) - prediction_map_h2[(pos, 0)][ref_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
-                            non_ref_length += 1
-
-                        if candidate.pos_start < pos < candidate.pos_end:
-                            del_allele_indx = get_index_from_base('*')
-                            prob_del_h1 = (prediction_map_h1[(pos, 0)][del_allele_indx] + 0.1) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
-                            prob_del_h2 = (prediction_map_h2[(pos, 0)][del_allele_indx] + 0.1) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
-                            alt_prob_h1 *= max(0.0001, prob_del_h1)
-                            alt_prob_h2 *= max(0.0001, prob_del_h2)
-                            length += 1
-                        elif pos >= candidate.pos_end:
-                            # on other delete indicies, we want them to not be deletes
-                            del_allele_indx = get_index_from_base('*')
-                            prob_non_del_h1 = (sum(prediction_map_h1[(pos, 0)]) - prediction_map_h1[(pos, 0)][del_allele_indx]) / max(1.0, sum(prediction_map_h1[(pos, 0)]))
-                            prob_non_del_h2 = (sum(prediction_map_h2[(pos, 0)]) - prediction_map_h2[(pos, 0)][del_allele_indx]) / max(1.0, sum(prediction_map_h2[(pos, 0)]))
-                            alt_prob_h1 *= max(0.0001, prob_non_del_h1)
-                            alt_prob_h2 *= max(0.0001, prob_non_del_h2)
-                            length += 1
-                    # alt_prob_h1 = alt_prob_h1 / max(1, length)
-                    # alt_prob_h2 = alt_prob_h2 / max(1, length)
-                    alt_prob_h1 = max(0.0000001, alt_prob_h1)
-                    alt_prob_h2 = max(0.0000001, alt_prob_h2)
-
-                    non_ref_prob_h1 = non_ref_prob_h1 / max(1, non_ref_length)
-                    non_ref_prob_h2 = non_ref_prob_h2 / max(1, non_ref_length)
-                    non_ref_prob = max(non_ref_prob_h1, non_ref_prob_h2)
-
-                if filter_candidate(candidate.allele.alt_type, candidate.depth, candidate.read_support,
-                                    candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
-                    # print("SELECTED")
-                    # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                    #       "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
-                    #       "H0 supp", candidate.read_support_h0, "H1 supp",  candidate.read_support_h1, "H2 supp",  candidate.read_support_h2,
-                    #       "ALT prob h1:", alt_prob_h1, "ALT prob h2:", alt_prob_h2, "Non-ref prob:", non_ref_prob)
-                    # print()
-                    found_candidate = True
-                    selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                                                candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2,
-                                                alt_prob_h1, alt_prob_h2, non_ref_prob))
-                # else:
-                #     print("NOT SELECTED:")
-                #     print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                #           "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
-                #           "H0 supp", candidate.read_support_h0, "H1 supp",  candidate.read_support_h1, "H2 supp",  candidate.read_support_h2,
-                #           "ALT prob h1:", alt_prob_h1, "ALT prob h2:", alt_prob_h2, "Non-ref prob:", non_ref_prob)
+                # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                #       "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
+                #       "H0 supp", candidate.read_support_h0, "H1 supp",  candidate.read_support_h1, "H2 supp",  candidate.read_support_h2,
+                #       "ALT prob h1:", candidate.alt_prob_h1, "ALT prob h2:", candidate.alt_prob_h2, "Non-ref prob:", candidate.non_ref_prob)
+                found_candidate = True
+                selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                                            candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2,
+                                            candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
             if found_candidate:
                 variant = candidates_to_variants(list(selected_candidates), contig)
-                selected_candidate_list.append(variant)
+                if variant is not None:
+                    selected_candidate_list.append(variant)
 
     return selected_candidate_list
 

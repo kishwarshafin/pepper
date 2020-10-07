@@ -214,62 +214,68 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
 }
 
 
-//bool CandidateFinder::filter_candidate(Candidate candidate) {
-//    double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
-//
-//    if(candidate.allele.alt_type == SNP_TYPE) {
-//        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
-//
-//        if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
-//            if(allele_weight >= 0.05) {
-//                if(allele_weight >= 0.1) return true;
-//                else return false;
-//            }
-//            return false;
-//        }
-//
-//        double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + LinearRegression::SNP_BIAS_TERM;
-//
-//        if(predicted_val >= LinearRegression::SNP_THRESHOLD) return true;
-////        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
-//        return false;
-//
-//    } else if (candidate.allele.alt_type == INSERT_TYPE) {
-//        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
-//
-//        if(allele_frequency < LinearRegression::IN_LOWER_FREQ_THRESHOLD) {
-////            if(allele_frequency >= 0.05 && candidate.non_ref_prob >= 0.5) return true;
-//            return false;
-//        }
-//        double predicted_val = allele_frequency * LinearRegression::INSERT_ALT_FREQ_COEF + allele_weight * LinearRegression::INSERT_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::INSERT_NON_REF_PROB_COEF + LinearRegression::INSERT_BIAS_TERM;
-//
-//        if(predicted_val >= LinearRegression::INSERT_THRESHOLD) return true;
-////        if(allele_frequency >= LinearRegression::IN_UPPER_FREQ && allele_weight >= 0.1) return true;
-//        return false;
-//    } else if (candidate.allele.alt_type == DELETE_TYPE) {
-//        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
-//
-////        if(allele_frequency>=0.20)return true;
-////        else return false;
-//
-//        if(allele_frequency < LinearRegression::DEL_LOWER_FREQ_THRESHOLD) {
-//            if(allele_frequency >= 0.10 && allele_weight >= 0.5) return true;
-////            if(allele_frequency >= 0.05 && allele_weight >= 0.65) return true;
-//
-//            return false;
-//        }
-//
-//        double predicted_val = allele_weight * LinearRegression::DELETE_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::DELETE_NON_REF_PROB_COEF + LinearRegression::DELETE_BIAS_TERM;
-//
-//        if(predicted_val >= LinearRegression::DELETE_THRESHOLD) return true;
-////        if(allele_frequency >= LinearRegression::DEL_UPPER_FREQ_THRESHOLD && candidate.allele_weight >= 0.65) return true;
-//
-//        return false;
-//    }
-//    return false;
-//}
-//
-//
+bool CandidateFinder::filter_candidate(Candidate candidate) {
+    double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
+
+    if(candidate.allele.alt_type == SNP_TYPE) {
+        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+
+        if(allele_frequency >= 0.10) return true;
+        else return false;
+
+        if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
+            if(allele_weight >= 0.05) {
+                if(allele_weight >= 0.1) return true;
+                else return false;
+            }
+            return false;
+        }
+
+        double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + LinearRegression::SNP_BIAS_TERM;
+
+        if(predicted_val >= LinearRegression::SNP_THRESHOLD) return true;
+//        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
+        return false;
+
+    } else if (candidate.allele.alt_type == INSERT_TYPE) {
+        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+
+        if(allele_frequency >= 0.10) return true;
+        else return false;
+
+        if(allele_frequency < LinearRegression::IN_LOWER_FREQ_THRESHOLD) {
+//            if(allele_frequency >= 0.05 && candidate.non_ref_prob >= 0.5) return true;
+            return false;
+        }
+        double predicted_val = allele_frequency * LinearRegression::INSERT_ALT_FREQ_COEF + allele_weight * LinearRegression::INSERT_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::INSERT_NON_REF_PROB_COEF + LinearRegression::INSERT_BIAS_TERM;
+
+        if(predicted_val >= LinearRegression::INSERT_THRESHOLD) return true;
+//        if(allele_frequency >= LinearRegression::IN_UPPER_FREQ && allele_weight >= 0.1) return true;
+        return false;
+    } else if (candidate.allele.alt_type == DELETE_TYPE) {
+        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+
+        if(allele_frequency>=0.20)return true;
+        else return false;
+
+        if(allele_frequency < LinearRegression::DEL_LOWER_FREQ_THRESHOLD) {
+            if(allele_frequency >= 0.10 && allele_weight >= 0.5) return true;
+//            if(allele_frequency >= 0.05 && allele_weight >= 0.65) return true;
+
+            return false;
+        }
+
+        double predicted_val = allele_weight * LinearRegression::DELETE_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::DELETE_NON_REF_PROB_COEF + LinearRegression::DELETE_BIAS_TERM;
+
+        if(predicted_val >= LinearRegression::DELETE_THRESHOLD) return true;
+//        if(allele_frequency >= LinearRegression::DEL_UPPER_FREQ_THRESHOLD && candidate.allele_weight >= 0.65) return true;
+
+        return false;
+    }
+    return false;
+}
+
+
 
 int get_index_from_base(char base) {
     if(base == '*')
@@ -456,8 +462,8 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                 candidate.alt_prob_h1 = alt_prob_h1;
                 candidate.alt_prob_h2 = alt_prob_h2;
                 candidate.non_ref_prob = non_ref_prob;
-                cout<<"IN: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" Alt-prob-1: "<<alt_prob_h1<<" alt-prob-2: "<<alt_prob_h2<<" non-ref-prob: "<<non_ref_prob<<" Read support: "<<AlleleFrequencyMap[candidate]<<" Allele freq: "<<alt_freq<<endl;
-                cout<<"------------------"<<endl;
+//                cout<<"IN: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" Alt-prob-1: "<<alt_prob_h1<<" alt-prob-2: "<<alt_prob_h2<<" non-ref-prob: "<<non_ref_prob<<" Read support: "<<AlleleFrequencyMap[candidate]<<" Allele freq: "<<alt_freq<<endl;
+//                cout<<"------------------"<<endl;
             }
             else if(candidate.allele.alt_type == DELETE_TYPE) {
                 int length = 0;
@@ -525,7 +531,7 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                 candidate.non_ref_prob = non_ref_prob;
             }
 
-//            if(filter_candidate(candidate)) positional_record.candidates.push_back(candidate);
+            if(filter_candidate(candidate)) positional_record.candidates.push_back(candidate);
         }
 
         if (!candidate_found) continue;
