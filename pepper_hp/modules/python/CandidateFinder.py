@@ -388,6 +388,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
 
         for i, chunk in enumerate(smaller_chunks):
             with h5py.File(file_name, 'r') as hdf5_file:
+                print(hdf5_file['predictions'][contig][chunk_name].keys())
                 bases_hp1 = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions_hp1'][()]
                 bases_hp2 = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions_hp2'][()]
                 positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
