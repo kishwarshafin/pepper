@@ -127,7 +127,7 @@ def setup(rank, total_callers, args, all_input_files):
     filepath, output_filepath, model_path, batch_size, threads_per_caller, device_ids, num_workers = args
 
     # issue with semaphore lock: https://github.com/pytorch/pytorch/issues/2517
-    mp.set_start_method('spawn')
+    # mp.set_start_method('spawn')
 
     # Explicitly setting seed to make sure that models created in two processes
     # start from same random weights and biases. https://github.com/pytorch/pytorch/issues/2517
