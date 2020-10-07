@@ -14,8 +14,8 @@ from pepper_hp.modules.python.models.dataloader_predict import SequenceDataset
 from pepper_hp.modules.python.models.ModelHander import ModelHandler
 from pepper_hp.modules.python.Options import ImageSizeOptions, TrainOptions
 from pepper_hp.modules.python.DataStorePredict import DataStore
-os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
-torch.multiprocessing.set_sharing_strategy('file_system')
+# os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
+# torch.multiprocessing.set_sharing_strategy('file_system')
 
 
 def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, theads_per_caller, device_id, rank):
