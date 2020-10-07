@@ -14,11 +14,12 @@ from pepper_hp.modules.python.models.dataloader_predict import SequenceDataset
 from pepper_hp.modules.python.models.ModelHander import ModelHandler
 from pepper_hp.modules.python.Options import ImageSizeOptions, TrainOptions
 from pepper_hp.modules.python.DataStorePredict import DataStore
-#os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
-#torch.multiprocessing.set_sharing_strategy('file_system')
+os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
+torch.multiprocessing.set_sharing_strategy('file_system')
 
 
 def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, theads_per_caller, device_id, rank):
+    torch.cuda.set_device(device_id)
     transducer_model, hidden_size, gru_layers, prev_ite = \
         ModelHandler.load_simple_model_for_training(model_path,
                                                     input_channels=ImageSizeOptions.IMAGE_CHANNELS,
@@ -39,8 +40,8 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                              num_workers=num_workers)
     torch.set_num_threads(theads_per_caller)
 
-    torch.cuda.set_device(device_id)
-    transducer_model.to(device_id)
+
+    # transducer_model.to(device_id)
     transducer_model.eval()
     # transducer_model = DistributedDataParallel(transducer_model, device_ids=[device_id])
 
@@ -138,8 +139,8 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
 #
 #     predict(filepath, all_input_files[rank],  output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[rank], rank)
 #     cleanup()
-
-
+#
+#
 # def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads_per_caller, device_ids, num_workers):
 #     """
 #     Create a prediction table/dictionary of an images set using a trained model.
@@ -176,19 +177,7 @@ def predict_distributed_gpu(filepath, all_input_files, output_filepath, model_pa
     :return: Prediction dictionary
     """
     start_time = time.time()
-    with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
-        futures = [executor.submit(predict, filepath, all_input_files[rank],  output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[rank], rank)
-                   for rank in range(0, total_callers)]
-
-        for fut in concurrent.futures.as_completed(futures):
-            if fut.exception() is None:
-                # get the results
-                thread_id = fut.result()
-                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CALLER "
-                                 + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
-            else:
-                sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
-            fut._result = None  # python issue 27144
+    predict(filepath, all_input_files[0],  output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[0], 0)
 
     end_time = time.time()
     mins = int((end_time - start_time) / 60)
