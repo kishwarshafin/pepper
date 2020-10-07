@@ -37,6 +37,11 @@ class SequenceDataset(Dataset):
                     image_names = list(hdf5_file['summaries'].keys())
 
                     for image_name in image_names:
+                        if 'image_hp1' not in hdf5_file['summaries'][image_name].keys():
+                            print("ISSUE FOUND IN DATA LOADER: ", hdf5_file, image_name)
+                        if 'image_hp2' not in hdf5_file['summaries'][image_name].keys():
+                            print("ISSUE FOUND IN DATA LOADER: ", hdf5_file, image_name)
+
                         # for hp_tag 1
                         file_image_pair.append((hdf5_file_path, image_name, 1))
                         # for hp_tag 2
