@@ -50,7 +50,7 @@ class DataStore(object):
         chunk_name_prefix = str(contig) + "-" + str(contig_start.item()) + "-" + str(contig_end.item())
         chunk_name_suffix = str(chunk_id.item())
 
-        name = contig + chunk_name_prefix
+        name = chunk_name_prefix + "-" + chunk_name_suffix
 
         if 'predictions' not in self.meta:
             self.meta['predictions'] = set()
