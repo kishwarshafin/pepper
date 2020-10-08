@@ -6,20 +6,16 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel
-import time
 from datetime import datetime
-import concurrent.futures
 
 from pepper_hp.modules.python.models.dataloader_predict import SequenceDataset
 from pepper_hp.modules.python.models.ModelHander import ModelHandler
 from pepper_hp.modules.python.Options import ImageSizeOptions, TrainOptions
 from pepper_hp.modules.python.DataStorePredict import DataStore
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
-torch.multiprocessing.set_sharing_strategy('file_system')
 
 
 def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, theads_per_caller, device_id, rank):
-    torch.cuda.set_device(device_id)
     transducer_model, hidden_size, gru_layers, prev_ite = \
         ModelHandler.load_simple_model_for_training(model_path,
                                                     input_channels=ImageSizeOptions.IMAGE_CHANNELS,
@@ -40,6 +36,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                              num_workers=num_workers)
     torch.set_num_threads(theads_per_caller)
 
+    torch.cuda.set_device(device_id)
     transducer_model.to(device_id)
     transducer_model.eval()
     transducer_model = DistributedDataParallel(transducer_model, device_ids=[device_id])
@@ -88,31 +85,31 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                 # now simply add the tensor to the global counter
                 prediction_base_tensor = torch.add(prediction_base_tensor, base_prediction)
 
+                del inference_layers
+                torch.cuda.empty_cache()
+
             # base_values, base_labels = torch.max(prediction_base_tensor, 2)
 
             # predicted_base_labels = base_labels.cpu().numpy()
 
             prediction_base_tensor = prediction_base_tensor.cpu().numpy().astype(int)
 
-            for i in range(images.size(0)):
-                prediction_data_file.write_prediction(contig[i],
-                                                      contig_start[i],
-                                                      contig_end[i],
-                                                      chunk_id[i],
-                                                      position[i],
-                                                      index[i],
-                                                      ref_seq[i],
-                                                      prediction_base_tensor[i],
-                                                      hp_tag[i])
+            # for i in range(images.size(0)):
+            #     prediction_data_file.write_prediction(contig[i],
+            #                                           contig_start[i],
+            #                                           contig_end[i],
+            #                                           chunk_id[i],
+            #                                           position[i],
+            #                                           index[i],
+            #                                           ref_seq[i],
+            #                                           prediction_base_tensor[i],
+            #                                           hp_tag[i])
             batch_completed += 1
 
             if rank == 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
                 sys.stderr.flush()
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
-                     "INFO: FINISHED PROCESSING FOR CALLER: " + str(rank) + ".\n")
-    sys.stderr.flush()
 
 
 
@@ -135,7 +132,6 @@ def setup(rank, total_callers, args, all_input_files):
     # Explicitly setting seed to make sure that models created in two processes
     # start from same random weights and biases. https://github.com/pytorch/pytorch/issues/2517
     # torch.manual_seed(42)
-
     predict(filepath, all_input_files[rank],  output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[rank], rank)
     cleanup()
 
