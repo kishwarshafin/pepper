@@ -263,7 +263,7 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
         double predicted_val = allele_weight * LinearRegression::DELETE_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::DELETE_NON_REF_PROB_COEF + LinearRegression::DELETE_BIAS_TERM;
 
         if(predicted_val >= LinearRegression::DELETE_THRESHOLD) return true;
-        if(allele_frequency >= LinearRegression::DEL_UPPER_FREQ_THRESHOLD && candidate.allele_weight >= 0.6) return true;
+        if(allele_frequency >= LinearRegression::DEL_UPPER_FREQ_THRESHOLD && allele_weight >= 0.6) return true;
 
         return false;
     }
