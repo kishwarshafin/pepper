@@ -34,24 +34,24 @@ namespace LinearRegression {
 
     static constexpr double SNP_ALT_FREQ_COEF = 0;
     static constexpr double SNP_NON_REF_PROB_COEF = 0;
-    static constexpr double SNP_ALLELE_WEIGHT_COEF = 0.991822;
-    static constexpr double SNP_BIAS_TERM = -0.00041;
-    static constexpr double SNP_THRESHOLD = 0.001;
+    static constexpr double SNP_ALLELE_WEIGHT_COEF = 0.994972;
+    static constexpr double SNP_BIAS_TERM = -0.000138;
+    static constexpr double SNP_THRESHOLD = 0.1;
     static constexpr double SNP_LOWER_FREQ_THRESHOLD = 0.10;
     static constexpr double SNP_UPPER_FREQ = 0.4;
 
-    static constexpr double INSERT_ALT_FREQ_COEF = 0.703907;
-    static constexpr double INSERT_NON_REF_PROB_COEF = 0.84046;
-    static constexpr double INSERT_ALLELE_WEIGHT_COEF = 0.000194;
-    static constexpr double INSERT_BIAS_TERM = -0.08827;
+    static constexpr double INSERT_ALT_FREQ_COEF = 0;
+    static constexpr double INSERT_NON_REF_PROB_COEF = 0.155456;
+    static constexpr double INSERT_ALLELE_WEIGHT_COEF = 0.8824;
+    static constexpr double INSERT_BIAS_TERM = 0.00118;
     static constexpr double INSERT_THRESHOLD = 0.35;
     static constexpr double IN_LOWER_FREQ_THRESHOLD = 0.10;
-    static constexpr double IN_UPPER_FREQ = 0.3;
+    static constexpr double IN_UPPER_FREQ = 0.5;
 
     static constexpr double DELETE_ALT_FREQ_COEF = 0;
-    static constexpr double DELETE_NON_REF_PROB_COEF = 0.061994;
-    static constexpr double DELETE_ALLELE_WEIGHT_COEF = 0.594578;
-    static constexpr double DELETE_BIAS_TERM = -0.006053;
+    static constexpr double DELETE_NON_REF_PROB_COEF = 0.066555;
+    static constexpr double DELETE_ALLELE_WEIGHT_COEF = 0.771722;
+    static constexpr double DELETE_BIAS_TERM = -0.003433;
     static constexpr double DELETE_THRESHOLD = 0.4;
     static constexpr double DEL_LOWER_FREQ_THRESHOLD = 0.20;
     static constexpr double DEL_UPPER_FREQ_THRESHOLD = 0.5;

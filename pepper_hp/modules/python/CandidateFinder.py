@@ -1,12 +1,9 @@
 import h5py
-import time
 import sys
 from os.path import isfile, join
 from os import listdir
 import concurrent.futures
 import numpy as np
-from collections import defaultdict
-import operator
 from pepper_hp.modules.python.Options import CandidateFinderOptions
 from pepper_hp.modules.python.CandidateFinderCPP import CandidateFinderCPP
 
@@ -24,6 +21,7 @@ SNP_EVENT = 1
 INSERT_EVENT = 2
 DELETE_EVENT = 3
 
+
 def candidates_to_variants(candidates, contig):
     max_h1_prob = 0.0
     max_h2_prob = 0.0
@@ -33,6 +31,12 @@ def candidates_to_variants(candidates, contig):
     max_pos_end = -1
     ref_sequence = ""
     overall_non_ref_prob = -1.0
+
+    # sort candidates by allele-weight, non-ref prob then allele frequency
+    candidates = sorted(candidates, key=lambda x: (-max(x[10], x[11]), -x[12], -x[6]))
+
+    if len(candidates) > CandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE:
+        candidates = candidates[0: CandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE]
 
     for i, candidate in enumerate(candidates):
         pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
@@ -158,7 +162,6 @@ def candidates_to_variants(candidates, contig):
     return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_prob_h1s, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob
 
 
-
 def get_file_paths_from_directory(directory_path):
     """
     Returns all paths of files given a directory path
@@ -176,195 +179,6 @@ def chunks(file_names, threads):
     for i in range(0, len(file_names), threads):
         chunks.append(file_names[i:i + threads])
     return chunks
-
-
-def group_adjacent_mismatches(mismatches):
-    all_groups = []
-    current_group = []
-    for mismatch in mismatches:
-        if len(current_group) == 0:
-            current_group.append(mismatch)
-        elif abs(current_group[-1][0] - mismatch[0]) == 0:
-            # this means the previous position and this position has the same value, meaning it is an insert
-            current_group.append(mismatch)
-        elif abs(current_group[-1][0] - mismatch[0]) == 1 and mismatch[5] == DELETE_EVENT:
-            # this means that this position has a delete that needs to be anchored to the previous position
-            current_group.append(mismatch)
-        else:
-            # otherwise stop the current group and start a new one
-            all_groups.append(current_group)
-            current_group = [mismatch]
-
-    return all_groups
-
-
-def mismatch_groups_to_variants(mismatch_group):
-    ref_dict = defaultdict()
-    allele_dict = defaultdict()
-    all_positions = set()
-
-    mismatch_group = sorted(mismatch_group, key=operator.itemgetter(0, 1, 4))
-    for pos, indx, ref_base, alt, hp_tag, v_type in mismatch_group:
-        all_positions.add((pos, indx))
-        ref_dict[(pos, indx)] = ref_base
-        allele_dict[(pos, indx, hp_tag)] = alt
-
-    all_positions = list(all_positions)
-    all_positions = sorted(all_positions, key=operator.itemgetter(0, 1))
-    start_pos = all_positions[0][0]
-    start_indx = all_positions[0][1]
-    end_pos = all_positions[-1][0]
-    start_ref = ref_dict[(start_pos, start_indx)]
-
-    if start_indx > 0 or start_ref == 0:
-        # print("GROUP ERROR: ", mismatch_group)
-        return None
-
-    ref_allele = []
-    alt_allele_1 = []
-    alt_allele_2 = []
-    for pos, indx in all_positions:
-        ref_base = 0
-        if indx == 0:
-            ref_base = ref_dict[(pos, indx)]
-            ref_allele.append(ref_base)
-
-        if (pos, indx, 1) in allele_dict.keys():
-            alt_allele_1.append(allele_dict[(pos, indx, 1)])
-        else:
-            alt_allele_1.append(ref_base)
-
-        if (pos, indx, 2) in allele_dict.keys():
-            alt_allele_2.append(allele_dict[(pos, indx, 2)])
-        else:
-            alt_allele_2.append(ref_base)
-
-    ref_seq = ''.join(label_decoder_ref[i] for i in ref_allele)
-    alt1_seq = ''.join(label_decoder[i] for i in alt_allele_1)
-    alt2_seq = ''.join(label_decoder[i] for i in alt_allele_2)
-
-    if alt1_seq == ref_seq:
-        alt1_seq = ''
-    if alt2_seq == ref_seq:
-        alt2_seq = ''
-
-    v_type = 'SNP'
-    if len(ref_seq) > 1 or max(len(alt1_seq), len(alt2_seq)) > 1:
-        v_type = 'INDEL'
-
-    return start_pos, end_pos+1, ref_seq, alt1_seq, alt2_seq, v_type
-
-
-def get_anchor_positions(base_predictions, ref_seq, indices, positions):
-    is_diff = base_predictions != ref_seq
-    major_positions = np.where(indices == 0)
-    minor_positions = np.where(indices != 0)
-    delete_anchors = positions[major_positions][np.where(base_predictions[major_positions] == 0)] - 1
-    insert_anchors = positions[minor_positions][np.where(base_predictions[minor_positions] != 0)]
-
-    return list(delete_anchors), list(insert_anchors)
-
-
-def get_index_from_base(base):
-    base = base.upper()
-    if base == '*':
-        return 0
-    if base == 'A':
-        return 1
-    if base == 'C':
-        return 2
-    if base == 'G':
-        return 3
-    if base == 'T':
-        return 4
-
-
-def filter_candidate(candidate_type, depth, read_support, read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob):
-    allele_frequency = read_support / max(1.0, depth)
-    # at first put a clear threshold in frequency to make sure the method runs within a good runtime
-
-    # now this is for SNPs
-    if candidate_type == 1:
-        allele_weight = max(alt_prob_h1, alt_prob_h2)
-
-        if allele_frequency <= CandidateFinderOptions.SNP_FREQ_THRESHOLD:
-            if allele_weight >= 0.5:
-                return True
-            else:
-                return False
-
-        predicted_val = allele_weight * CandidateFinderOptions.SNP_ALLELE_WEIGHT_COEF \
-                        + non_ref_prob * CandidateFinderOptions.SNP_NON_REF_PROB_COEF \
-                        + CandidateFinderOptions.SNP_BIAS_TERM
-
-        if predicted_val >= CandidateFinderOptions.SNP_THRESHOLD:
-            return True
-        elif allele_frequency >= CandidateFinderOptions.SNP_UPPER_FREQ:
-            return True
-        else:
-            return False
-
-    # insert alleles
-    elif candidate_type == 2:
-        allele_weight = max(alt_prob_h1, alt_prob_h2)
-
-        if allele_frequency <= CandidateFinderOptions.IN_FREQ_THRESHOLD:
-            if allele_frequency < CandidateFinderOptions.IN_FREQ_LOWER_THRESHOLD:
-                if allele_weight >= 0.5:
-                    return True
-                else:
-                    return False
-
-            if allele_weight >= 0.5 or non_ref_prob >= 0.5:
-                return True
-            else:
-                return False
-
-        predicted_val = allele_weight * CandidateFinderOptions.INSERT_ALLELE_WEIGHT_COEF \
-                        + non_ref_prob * CandidateFinderOptions.INSERT_NON_REF_PROB_COEF \
-                        + CandidateFinderOptions.INSERT_BIAS_TERM
-
-        if predicted_val >= CandidateFinderOptions.INSERT_THRESHOLD:
-            return True
-        elif allele_frequency >= CandidateFinderOptions.IN_UPPER_FREQ:
-            return True
-        else:
-            return False
-
-    # delete alleles
-    elif candidate_type == 3:
-        allele_weight = max(alt_prob_h1, alt_prob_h2)
-
-        if allele_frequency <= CandidateFinderOptions.DEL_FREQ_THRESHOLD:
-            if allele_frequency < CandidateFinderOptions.DEL_FREQ_LOWER_THRESHOLD:
-                return False
-
-            if allele_weight >= 0.5 or non_ref_prob >= 0.5:
-                return True
-            else:
-                return False
-
-        predicted_val = allele_weight * CandidateFinderOptions.DELETE_ALLELE_WEIGHT_COEF \
-                        + non_ref_prob * CandidateFinderOptions.DELETE_NON_REF_PROB_COEF \
-                        + CandidateFinderOptions.DELETE_BIAS_TERM
-
-        if predicted_val >= CandidateFinderOptions.DELETE_THRESHOLD:
-            return True
-        elif allele_frequency >= CandidateFinderOptions.DEL_UPPER_FREQ:
-            return True
-        else:
-            return False
-
-    # otherwise, it's highly unlikely to be a true variant.
-    return False
-
-
-def check_alleles(allele):
-    allele = allele.upper()
-    for base in list(allele):
-        if base not in ['A', 'C', 'G', 'T']:
-            return False
-    return True
 
 
 def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_keys):
