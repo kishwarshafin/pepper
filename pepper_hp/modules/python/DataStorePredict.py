@@ -46,7 +46,7 @@ class DataStore(object):
         self._meta = self.meta
         self._meta.update(meta)
 
-    def write_prediction(self, contig, contig_start, contig_end, chunk_id, position, index, ref_seq, base_predictions, hp_tag):
+    def write_prediction(self, contig, contig_start, contig_end, chunk_id, position, index, ref_seq, base_predictions_hp1, base_predictions_hp2):
         chunk_name_prefix = str(contig) + "-" + str(contig_start.item()) + "-" + str(contig_end.item())
         chunk_name_suffix = str(chunk_id.item())
 
@@ -54,9 +54,6 @@ class DataStore(object):
 
         if 'predictions' not in self.meta:
             self.meta['predictions'] = set()
-
-        if 'predictions_hp' not in self.meta:
-            self.meta['predictions_hp'] = set()
 
         if 'predictions_contig' not in self.meta:
             self.meta['predictions_contig'] = set()
@@ -70,28 +67,14 @@ class DataStore(object):
 
         if name not in self.meta['predictions']:
             self.meta['predictions'].add(name)
-            self.meta['predictions_hp'].add((name, hp_tag))
 
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                      chunk_name_suffix, 'position')] = position
+                                                      chunk_name_suffix, 'position')] = np.array(position, dtype=np.int32)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                      chunk_name_suffix, 'index')] = index
+                                                      chunk_name_suffix, 'index')] = np.array(index, dtype=np.int32)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                      chunk_name_suffix, 'ref_seq')] = ref_seq
-            if hp_tag == 1:
-                self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                          chunk_name_suffix, 'base_predictions_hp1')] = base_predictions.astype(np.uint8)
-            elif hp_tag == 2:
-                self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                          chunk_name_suffix, 'base_predictions_hp2')] = base_predictions.astype(np.uint8)
-        elif (name, hp_tag) not in self.meta['predictions_hp']:
-            self.meta['predictions_hp'].add((name, hp_tag))
-            if hp_tag == 1:
-                self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                          chunk_name_suffix, 'base_predictions_hp1')] = base_predictions.astype(np.uint8)
-            elif hp_tag == 2:
-                self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                          chunk_name_suffix, 'base_predictions_hp2')] = base_predictions.astype(np.uint8)
-
-
-
+                                                      chunk_name_suffix, 'ref_seq')] = np.array(ref_seq, dtype=np.uint8)
+            self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
+                                                      chunk_name_suffix, 'base_predictions_hp1')] = base_predictions_hp1.astype(np.uint8)
+            self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
+                                                      chunk_name_suffix, 'base_predictions_hp2')] = base_predictions_hp2.astype(np.uint8)

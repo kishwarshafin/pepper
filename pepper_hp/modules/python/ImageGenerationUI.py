@@ -199,11 +199,9 @@ class UserInterfaceSupport:
                     position, index = zip(*positions[i])
                     ref_seq = ref_seqs[i]
                     chunk_id = chunk_ids[i]
-                    summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id) + "-1"
-                    output_hdf_file.write_summary(region, image_hp1, label_hp1, position, index, chunk_id, summary_name, ref_seq, 1)
+                    summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
 
-                    summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id) + "-2"
-                    output_hdf_file.write_summary(region, image_hp1, label_hp2, position, index, chunk_id, summary_name, ref_seq, 2)
+                    output_hdf_file.write_summary(region, image_hp1, image_hp2, label_hp1, label_hp2, position, index, chunk_id, summary_name, ref_seq)
 
                 if counter > 0 and counter % 10 == 0 and thread_id == 0:
                     percent_complete = int((100 * counter) / len(intervals))
