@@ -254,7 +254,7 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
 
         if(allele_frequency < LinearRegression::DEL_LOWER_FREQ_THRESHOLD) {
-            if(allele_frequency >= 0.10 && allele_weight >= 0.6) return true;
+            if(allele_frequency >= 0.10 && allele_weight >= 0.5) return true;
             if(allele_frequency >= 0.05 && allele_weight >= 0.8) return true;
 
             return false;
