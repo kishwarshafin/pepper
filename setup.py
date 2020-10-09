@@ -149,7 +149,7 @@ if __name__ == '__main__':
         author=__author__,
         author_email="kishwar.shafin@gmail.com",
         description=__description__,
-        long_description=__long_description__,
+        long_description="Please visit (GitHub)[https://github.com/kishwarshafin/pepper] for description",
         long_description_content_type=__long_description_content_type__,
         python_requires='>=3.5.*',
         install_requires=python_dependencies,
