@@ -26,5 +26,5 @@ pypi_build/bin/activate:
 	${IN_BUILD} && pip install --upgrade pip setuptools twine wheel readme_renderer[md]
 
 .PHONY: sdist
-sdist: pypi_build/bin/activate scripts/mini_align submodules/samtools-$(SAMVER)/Makefile
+sdist: pypi_build/bin/activate
 	${IN_BUILD} && python setup.py sdist
