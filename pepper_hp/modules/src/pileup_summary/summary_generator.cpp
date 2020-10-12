@@ -658,7 +658,7 @@ ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overl
             vector<uint8_t> label_chunk_hp2(labels_hp2.begin() + chunk_start, labels_hp2.begin() + chunk_end);
 
 //            cout<<"Sizes: "<< image_chunk.size()<<" "<<pos_chunk.size()<<" "<<label_chunk.size()<<" "<<chunk_size<<endl;
-            assert (image_chunk_hp1.size() == image_chunk_hp2.size() == pos_chunk.size() == label_chunk.size() == chunk_size);
+            assert (image_chunk_hp1.size() == image_chunk_hp2.size() == pos_chunk.size() == label_chunk_hp1.size() == label_chunk_hp2.size() == chunk_size);
 
             chunked_summary.images_hp1.push_back(image_chunk_hp1);
             chunked_summary.images_hp2.push_back(image_chunk_hp2);
