@@ -34,9 +34,9 @@ namespace LinearRegression {
 
     static constexpr double SNP_ALT_FREQ_COEF = 0;
     static constexpr double SNP_NON_REF_PROB_COEF = 0;
-    static constexpr double SNP_ALLELE_WEIGHT_COEF = 0.994972;
+    static constexpr double SNP_ALLELE_WEIGHT_COEF = 1.0;
     static constexpr double SNP_BIAS_TERM = 0;
-    static constexpr double SNP_THRESHOLD = 0.1;
+    static constexpr double SNP_THRESHOLD = 0.01;
     static constexpr double SNP_LOWER_FREQ_THRESHOLD = 0.10;
     static constexpr double SNP_UPPER_FREQ = 0.9;
 

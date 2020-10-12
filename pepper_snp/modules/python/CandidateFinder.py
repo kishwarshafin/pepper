@@ -96,6 +96,7 @@ def candidates_to_variants(candidates, contig):
 
     selected_alts = []
     selected_dps = []
+    selected_alt_probs = []
     selected_alt_prob_h1s = []
     selected_alt_prob_h2s = []
     selected_non_ref_probs = []
@@ -103,6 +104,7 @@ def candidates_to_variants(candidates, contig):
 
     other_alts = []
     other_dps = []
+    other_alt_probs = []
     other_alt_prob_h1s = []
     other_alt_prob_h2s = []
     other_non_ref_probs = []
@@ -120,6 +122,7 @@ def candidates_to_variants(candidates, contig):
             selected_alts.append(alt)
             selected_dps.append(depth)
             selected_ads.append(read_support)
+            selected_alt_probs.append(max(alt_prob_h1, alt_prob_h2))
             selected_alt_prob_h1s.append(alt_prob_h1)
             selected_alt_prob_h2s.append(alt_prob_h2)
             selected_non_ref_probs.append(non_ref_prob)
@@ -127,6 +130,7 @@ def candidates_to_variants(candidates, contig):
             other_alts.append(alt)
             other_dps.append(depth)
             other_ads.append(read_support)
+            other_alt_probs.append(max(alt_prob_h1, alt_prob_h2))
             other_alt_prob_h1s.append(alt_prob_h1)
             other_alt_prob_h2s.append(alt_prob_h2)
             other_non_ref_probs.append(non_ref_prob)
@@ -155,6 +159,7 @@ def candidates_to_variants(candidates, contig):
     # only report the selected alts
     alleles = selected_alts
     dps = selected_dps
+    alt_probs = selected_alt_probs
     alt_prob_h1s = selected_alt_prob_h1s
     alt_prob_h2s = selected_alt_prob_h2s
     non_ref_probs = selected_non_ref_probs
@@ -163,7 +168,7 @@ def candidates_to_variants(candidates, contig):
     # if len(alleles) == 0:
     # print(contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_prob_h1s, alt_prob_h2s, ads, overall_non_ref_prob)
 
-    return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_prob_h1s, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob
+    return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_probs, alt_prob_h1s, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob
 
 
 def get_file_paths_from_directory(directory_path):

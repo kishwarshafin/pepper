@@ -18,7 +18,7 @@ class VCFWriter:
     def write_vcf_records(self, variants_list):
         last_position = -1
         for called_variant in variants_list:
-            contig, ref_start, ref_end, ref_seq, alleles, genotype, dps, alt_prob_h1s, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob = called_variant
+            contig, ref_start, ref_end, ref_seq, alleles, genotype, dps, alt_probs, alt_prob_h1s, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob = called_variant
 
             if len(alleles) <= 0:
                 continue
@@ -36,11 +36,11 @@ class VCFWriter:
             if genotype == [0, 0]:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=overall_non_ref_prob,
-                                                      filter='refCall', alleles=alleles, GT=genotype, AP1=alt_prob_h1s, AP2=alt_prob_h2s, NR=non_ref_probs, GQ=overall_non_ref_prob, VAF=vafs)
+                                                      filter='refCall', alleles=alleles, GT=genotype, AP=alt_probs, AP1=alt_prob_h1s, AP2=alt_prob_h2s, NR=non_ref_probs, GQ=overall_non_ref_prob, VAF=vafs)
             else:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=overall_non_ref_prob,
-                                                      filter='PASS', alleles=alleles, GT=genotype, AP1=alt_prob_h1s, AP2=alt_prob_h2s, NR=non_ref_probs, GQ=overall_non_ref_prob, VAF=vafs)
+                                                      filter='PASS', alleles=alleles, GT=genotype, AP=alt_probs, AP1=alt_prob_h1s, AP2=alt_prob_h2s, NR=non_ref_probs, GQ=overall_non_ref_prob, VAF=vafs)
             self.vcf_file.write(vcf_record)
 
     def get_vcf_header(self, sample_name, contigs):
@@ -80,6 +80,11 @@ class VCFWriter:
                  ('Number', "A"),
                  ('Type', 'Float'),
                  ('Description', "Variant allele fractions.")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "AP"),
+                 ('Number', "A"),
+                 ('Type', 'Float'),
+                 ('Description', "Maximum variant allele probability.")]
         header.add_meta(key='FORMAT', items=items)
         items = [('ID', "AP1"),
                  ('Number', "A"),
