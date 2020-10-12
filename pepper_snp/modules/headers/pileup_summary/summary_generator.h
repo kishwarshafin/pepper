@@ -18,6 +18,15 @@ namespace ImageOptions {
     static constexpr bool GENERATE_INSERTS = false;
 };
 
+struct ImageSummary {
+    vector< vector< vector<uint8_t> > > images;
+    vector< vector<pair<long long, int> > > positions;
+    vector< vector<uint8_t> > refs;
+    vector< vector<uint8_t> > labels;
+    vector<int> chunk_ids;
+};
+
+
 class SummaryGenerator {
     long long ref_start;
     long long ref_end;
@@ -60,6 +69,8 @@ public:
     void generate_ref_features();
     void debug_print(long long start_pos, long long end_pos);
     void generate_image(long long start_pos, long long end_pos);
+    ImageSummary chunk_image(int chunk_size, int chunk_overlap, int image_height);
+    ImageSummary chunk_image_train(int chunk_size, int chunk_overlap, int image_height);
 };
 
 

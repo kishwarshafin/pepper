@@ -27,11 +27,27 @@ class CandidateOptions(object):
     CANDIDATE_PROB_THRESHOLD = 0.3
 
 
+class CandidateFinderOptions(object):
+    MOST_ALLOWED_CANDIDATES_PER_SITE = 2
+    SAFE_BASES = 20
+    ALT_PROB_THRESHOLD = 0.99
+
+
+class ReadFilterOptions(object):
+    MIN_MAPQ = 10
+    MIN_BASEQ = 1
+    INCLUDE_SUPPLEMENTARY = False
+
+
 class AlingerOptions(object):
     # base and map quality
     ALIGNMENT_SAFE_BASES = 20
     MIN_MAP_QUALITY = 20
 
-    MAX_READS_IN_REGION = 1500
+    MAX_READS_IN_REGION = 5000
     RANDOM_SEED = 2719747673
 
+
+class ReadOptions(object):
+    MIN_MAPPING_QUALITY = 9
+    MIN_BASE_QUALITY = 1

@@ -6,7 +6,7 @@ from datetime import datetime
 from pepper_snp.modules.python.ImageGenerationUI import UserInterfaceSupport
 from pepper_snp.modules.python.MakeImages import make_images
 from pepper_snp.modules.python.RunInference import run_inference
-from pepper_snp.modules.python.FindSNPCandidates import find_candidates
+from pepper_snp.modules.python.FindSNPCandidates import snp_candidate_finder
 from pepper_snp.build import PEPPER_SNP
 
 
@@ -22,8 +22,7 @@ def call_variant(bam_filepath,
                  distributed,
                  device_ids,
                  num_workers,
-                 sample_name,
-                 probability_threshold):
+                 sample_name):
     """
     Run all the sub-modules to polish an input assembly.
     """
@@ -115,12 +114,12 @@ def call_variant(bam_filepath,
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3: RUNNING STITCH\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION OUTPUT: " + str(output_dir) + "\n")
-    find_candidates(prediction_output_directory,
-                    fasta_filepath,
-                    output_dir,
-                    threads,
-                    sample_name,
-                    probability_threshold)
+    snp_candidate_finder(prediction_output_directory,
+                         fasta_filepath,
+                         bam_filepath,
+                         sample_name,
+                         output_dir,
+                         threads)
 
     end_time = time.time()
     mins = int((end_time - start_time) / 60)

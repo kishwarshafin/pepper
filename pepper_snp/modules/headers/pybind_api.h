@@ -9,12 +9,20 @@
 #include "dataio/bam_handler.h"
 #include "realignment/simple_aligner.h"
 #include "pileup_summary/summary_generator.h"
+#include "candidate_finding/candidate_finder.h"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/operators.h>
 namespace py = pybind11;
 
 PYBIND11_MODULE(PEPPER_SNP, m) {
+        py::class_<ImageSummary>(m, "ImageSummary")
+             .def_readwrite("images", &ImageSummary::images)
+             .def_readwrite("positions", &ImageSummary::positions)
+             .def_readwrite("refs", &ImageSummary::refs)
+             .def_readwrite("labels", &ImageSummary::labels)
+             .def_readwrite("chunk_ids", &ImageSummary::chunk_ids);
+
         py::class_<SummaryGenerator>(m, "SummaryGenerator")
             .def(py::init<const string &, const string &, long long &, long long &>())
             .def_readwrite("genomic_pos", &SummaryGenerator::genomic_pos)
@@ -22,6 +30,8 @@ PYBIND11_MODULE(PEPPER_SNP, m) {
             .def_readwrite("labels", &SummaryGenerator::labels)
             .def_readwrite("image", &SummaryGenerator::image)
             .def_readwrite("bad_label_positions", &SummaryGenerator::bad_label_positions)
+            .def("chunk_image", &SummaryGenerator::chunk_image)
+            .def("chunk_image_train", &SummaryGenerator::chunk_image_train)
             .def("generate_train_summary", &SummaryGenerator::generate_train_summary)
             .def("generate_summary", &SummaryGenerator::generate_summary);
 
@@ -116,5 +126,43 @@ PYBIND11_MODULE(PEPPER_SNP, m) {
             .def("get_reference_sequence", &FASTA_handler::get_reference_sequence)
             .def("get_chromosome_sequence_length", &FASTA_handler::get_chromosome_sequence_length)
             .def("get_chromosome_names", &FASTA_handler::get_chromosome_names);
+
+        // Candidate finder
+        py::class_<CandidateFinder>(m, "CandidateFinder")
+            .def(py::init<const string &, const string &, long long &, long long&, long long&, long long&>())
+            .def_readwrite("position_to_read_map", &CandidateFinder::position_to_read_map)
+            .def("find_candidates", &CandidateFinder::find_candidates);
+
+        py::class_<CandidateAllele>(m, "CandidateAllele")
+            .def(py::init<>())
+            .def_readwrite("ref", &CandidateAllele::ref)
+            .def_readwrite("alt", &CandidateAllele::alt)
+            .def_readwrite("alt_type", &CandidateAllele::alt_type);
+
+        py::class_<Candidate>(m, "Candidate")
+            .def(py::init<>())
+            .def("print", &Candidate::print)
+            .def("set_genotype", &Candidate::set_genotype)
+            .def_readwrite("pos_start", &Candidate::pos)
+            .def_readwrite("pos_end", &Candidate::pos_end)
+            .def_readwrite("read_support", &Candidate::read_support)
+            .def_readwrite("read_support_h0", &Candidate::read_support_h0)
+            .def_readwrite("read_support_h1", &Candidate::read_support_h1)
+            .def_readwrite("read_support_h2", &Candidate::read_support_h2)
+            .def_readwrite("alt_prob_h1", &Candidate::alt_prob_h1)
+            .def_readwrite("alt_prob_h2", &Candidate::alt_prob_h2)
+            .def_readwrite("non_ref_prob", &Candidate::non_ref_prob)
+            .def_readwrite("depth", &Candidate::depth)
+            .def_readwrite("genotype", &Candidate::genotype)
+            .def_readwrite("allele", &Candidate::allele);
+
+        py::class_<PositionalCandidateRecord>(m, "PositionalCandidateRecord")
+            .def(py::init<>())
+            .def(py::init<const string &, long long &, long long&, const int &>())
+            .def(py::self < py::self)
+            .def_readwrite("chromosome_name", &PositionalCandidateRecord::chromosome_name)
+            .def_readwrite("pos_start", &PositionalCandidateRecord::pos_start)
+            .def_readwrite("pos_end", &PositionalCandidateRecord::pos_end)
+            .def_readwrite("candidates", &PositionalCandidateRecord::candidates);
 }
 #endif //PEPPER_SNP_PYBIND_API_H

@@ -5,7 +5,7 @@ from datetime import datetime
 from pepper.version import __version__
 from pepper_snp.modules.python.MakeImages import make_images
 from pepper_snp.modules.python.RunInference import run_inference
-from pepper_snp.modules.python.FindSNPCandidates import find_candidates
+from pepper_snp.modules.python.FindSNPCandidates import snp_candidate_finder
 from pepper_snp.modules.python.CallVariant import call_variant
 
 def boolean_string(s):
@@ -277,8 +277,15 @@ def add_find_candidates_arguments(parser):
         help="Path to directory containing HDF files."
     )
     parser.add_argument(
-        "-r",
-        "--input_reference",
+        "-b",
+        "--bam",
+        type=str,
+        required=True,
+        help="BAM file containing mapping between reads and the draft assembly."
+    )
+    parser.add_argument(
+        "-f",
+        "--fasta",
         type=str,
         required=True,
         help="Input reference/assembly file."
@@ -286,8 +293,9 @@ def add_find_candidates_arguments(parser):
     parser.add_argument(
         "-s",
         "--sample_name",
+        default='default',
         type=str,
-        required=True,
+        required=False,
         help="Name of the sample."
     )
     parser.add_argument(
@@ -303,15 +311,6 @@ def add_find_candidates_arguments(parser):
         required=True,
         type=int,
         help="Number of threads."
-    )
-    parser.add_argument(
-        "-p",
-        "--probability_threshold",
-        type=float,
-        required=False,
-        default=0.1,
-        help="Threshold value for reporting SNPs. Default is 0.1, "
-             "increasing the value will reduce FP and increase FN SNPs."
     )
     return parser
 
@@ -393,8 +392,7 @@ def main():
                      distributed,
                      FLAGS.device_ids,
                      FLAGS.num_workers,
-                     FLAGS.sample_name,
-                     FLAGS.probability_threshold)
+                     FLAGS.sample_name)
 
     elif FLAGS.sub_command == 'make_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
@@ -420,12 +418,12 @@ def main():
 
     elif FLAGS.sub_command == 'find_candidates':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STITCH MODULE SELECTED\n")
-        find_candidates(FLAGS.input_dir,
-                        FLAGS.input_reference,
-                        FLAGS.output_dir,
-                        FLAGS.threads,
-                        FLAGS.sample_name,
-                        FLAGS.probability_threshold)
+        snp_candidate_finder(FLAGS.input_dir,
+                             FLAGS.fasta,
+                             FLAGS.bam,
+                             FLAGS.sample_name,
+                             FLAGS.output_dir,
+                             FLAGS.threads)
 
     # elif FLAGS.sub_command == 'download_models':
     #     sys.stderr.write("INFO: DOWNLOAD MODELS SELECTED\n")

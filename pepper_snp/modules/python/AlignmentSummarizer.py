@@ -3,7 +3,7 @@ import itertools
 import time
 import numpy as np
 from operator import itemgetter
-from pepper_snp.modules.python.Options import ImageSizeOptions, AlingerOptions
+from pepper_snp.modules.python.Options import ImageSizeOptions, AlingerOptions, ReadOptions
 
 
 class AlignmentSummarizer:
@@ -210,7 +210,7 @@ class AlignmentSummarizer:
 
         if train_mode:
             # get the reads from the bam file
-            include_supplementary = False
+            include_supplementary = True
             truth_reads_h1 = truth_bam_handler_h1.get_reads(self.chromosome_name,
                                                             self.region_start_position,
                                                             self.region_end_position,
@@ -299,7 +299,7 @@ class AlignmentSummarizer:
                                                        read_start,
                                                        read_end,
                                                        include_supplementary,
-                                                       0,
+                                                       ReadOptions.MIN_MAPPING_QUALITY,
                                                        0)
                 total_reads = len(all_reads)
 
@@ -344,17 +344,15 @@ class AlignmentSummarizer:
                                                          truth_reads_h1,
                                                          truth_reads_h2)
 
-                images, labels, positions, chunk_ids, ref_seq = \
-                    self.chunk_images_train(summary_generator,
-                                            chunk_size=ImageSizeOptions.SEQ_LENGTH,
-                                            chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
+                image_summary = summary_generator.chunk_image_train(ImageSizeOptions.SEQ_LENGTH,
+                                                                    ImageSizeOptions.SEQ_OVERLAP,
+                                                                    ImageSizeOptions.IMAGE_HEIGHT)
 
-
-                all_images.extend(images)
-                all_labels.extend(labels)
-                all_positions.extend(positions)
-                all_image_chunk_ids.extend(chunk_ids)
-                all_ref_seq.extend(ref_seq)
+                all_images.extend(image_summary.images)
+                all_labels.extend(image_summary.labels)
+                all_positions.extend(image_summary.positions)
+                all_image_chunk_ids.extend(image_summary.chunk_ids)
+                all_ref_seq.extend(image_summary.refs)
         else:
             # HERE REALIGN THE READS TO THE REFERENCE THEN GENERATE THE SUMMARY TO GET A POLISHED HAPLOTYPE
             read_start = max(0, self.region_start_position)
@@ -364,7 +362,7 @@ class AlignmentSummarizer:
                                                    read_start,
                                                    read_end,
                                                    include_supplementary,
-                                                   0,
+                                                   ReadOptions.MIN_MAPPING_QUALITY,
                                                    0)
             total_reads = len(all_reads)
 
@@ -410,16 +408,15 @@ class AlignmentSummarizer:
                                                self.region_start_position,
                                                self.region_end_position)
 
-            images, labels, positions, chunk_ids, ref_seq = \
-                self.chunk_images(summary_generator,
-                                  chunk_size=ImageSizeOptions.SEQ_LENGTH,
-                                  chunk_overlap=ImageSizeOptions.SEQ_OVERLAP)
+            image_summary = summary_generator.chunk_image(ImageSizeOptions.SEQ_LENGTH,
+                                                          ImageSizeOptions.SEQ_OVERLAP,
+                                                          ImageSizeOptions.IMAGE_HEIGHT)
 
-            all_images.extend(images)
-            all_labels.extend(labels)
-            all_positions.extend(positions)
-            all_image_chunk_ids.extend(chunk_ids)
-            all_ref_seq.extend(ref_seq)
+            all_images.extend(image_summary.images)
+            all_labels.extend(image_summary.labels)
+            all_positions.extend(image_summary.positions)
+            all_image_chunk_ids.extend(image_summary.chunk_ids)
+            all_ref_seq.extend(image_summary.refs)
 
         assert(len(all_images) == len(all_labels) == len(all_image_chunk_ids) == len(all_ref_seq))
 
