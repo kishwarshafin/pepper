@@ -32,9 +32,9 @@ add_dependencies(PEPPER htslib)
 
 # add all the external libraries
 target_link_libraries(PEPPER PRIVATE z)
-target_link_libraries(PEPPER PRIVATE bz2)
-target_link_libraries(PEPPER PRIVATE curl)
-target_link_libraries(PEPPER PRIVATE lzma)
+#target_link_libraries(PEPPER PRIVATE bz2)
+#target_link_libraries(PEPPER PRIVATE curl)
+#target_link_libraries(PEPPER PRIVATE lzma)
 target_link_libraries(PEPPER PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
 
 # PEPPER_SNP
@@ -44,9 +44,9 @@ add_dependencies(PEPPER_SNP htslib)
 
 # add all the external libraries
 target_link_libraries(PEPPER_SNP PRIVATE z)
-target_link_libraries(PEPPER_SNP PRIVATE bz2)
-target_link_libraries(PEPPER_SNP PRIVATE curl)
-target_link_libraries(PEPPER_SNP PRIVATE lzma)
+#target_link_libraries(PEPPER_SNP PRIVATE bz2)
+#target_link_libraries(PEPPER_SNP PRIVATE curl)
+#target_link_libraries(PEPPER_SNP PRIVATE lzma)
 target_link_libraries(PEPPER_SNP PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
 
 # PEPPER_HP
@@ -56,10 +56,23 @@ add_dependencies(PEPPER_HP htslib)
 
 # add all the external libraries
 target_link_libraries(PEPPER_HP PRIVATE z)
-target_link_libraries(PEPPER_HP PRIVATE bz2)
-target_link_libraries(PEPPER_HP PRIVATE curl)
-target_link_libraries(PEPPER_HP PRIVATE lzma)
+#target_link_libraries(PEPPER_HP PRIVATE bz2)
+#target_link_libraries(PEPPER_HP PRIVATE curl)
+#target_link_libraries(PEPPER_HP PRIVATE lzma)
 target_link_libraries(PEPPER_HP PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
+
+
+# PEPPER_VARIANT
+pybind11_add_module(PEPPER_VARIANT pepper_variant/modules/src/pybind_api.cpp)
+
+add_dependencies(PEPPER_VARIANT htslib)
+
+# add all the external libraries
+target_link_libraries(PEPPER_VARIANT PRIVATE z)
+#target_link_libraries(PEPPER_VARIANT PRIVATE bz2)
+#target_link_libraries(PEPPER_VARIANT PRIVATE curl)
+#target_link_libraries(PEPPER_VARIANT PRIVATE lzma)
+target_link_libraries(PEPPER_VARIANT PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
 
 #-------------------
 # Test
