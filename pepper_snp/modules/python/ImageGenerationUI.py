@@ -1,12 +1,14 @@
 import time
 import os
 import sys
+import re
 import concurrent.futures
 from datetime import datetime
 from pepper_snp.build import PEPPER_SNP
 from pepper_snp.modules.python.DataStore import DataStore
 from pepper_snp.modules.python.AlignmentSummarizer import AlignmentSummarizer
 from pepper_snp.modules.python.Options import ImageSizeOptions
+from pepper_variant.modules.python.ExcludeContigs import EXCLUDED_HUMAN_CONTIGS
 
 
 class UserInterfaceView:
@@ -42,7 +44,7 @@ class UserInterfaceView:
         # name of the chromosome
         self.chromosome_name = chromosome_name
 
-    def parse_region(self, start_position, end_position):
+    def parse_region(self, start_position, end_position, downsample_rate):
         """
         Generate labeled images of a given region of the genome
         :param start_position: Start position of the region
@@ -59,6 +61,7 @@ class UserInterfaceView:
             alignment_summarizer.create_summary(self.truth_bam_handler_h1,
                                                 self.truth_bam_handler_h2,
                                                 self.train_mode,
+                                                downsample_rate=downsample_rate,
                                                 realignment_flag=self.realignment_flag)
 
         return images, lables, positions, image_chunk_ids, ref_seqs
@@ -84,17 +87,43 @@ class UserInterfaceSupport:
         return output_directory
 
     @staticmethod
-    def get_chromosome_list(chromosome_names, ref_file, region_bed):
+    def natural_key(string_):
+        """See http://www.codinghorror.com/blog/archives/001018.html"""
+        return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
+
+    @staticmethod
+    def get_chromosome_list(chromosome_names, ref_file, bam_file, region_bed):
         """
         PARSES THROUGH THE CHROMOSOME PARAMETER TO FIND OUT WHICH REGIONS TO PROCESS
         :param chromosome_names: NAME OF CHROMOSOME
-        :param ref_file: PATH TO THE REFERENCE FILE
+        :param ref_file: PATH TO BAM FILE
+        :param bam_file: PATH TO THE REFERENCE FILE
+        :param region_bed: PATH TO A BED FILE
         :return: LIST OF CHROMOSOME IN REGION SPECIFIC FORMAT
         """
-        if not chromosome_names:
+        if not chromosome_names and not region_bed:
             fasta_handler = PEPPER_SNP.FASTA_handler(ref_file)
-            chromosome_names = fasta_handler.get_chromosome_names()
-            chromosome_names = ','.join(chromosome_names)
+            bam_handler = PEPPER_SNP.BAM_handler(bam_file)
+            bam_contigs = bam_handler.get_chromosome_sequence_names()
+            fasta_contigs = fasta_handler.get_chromosome_names()
+            common_contigs = list(set(fasta_contigs) & set(bam_contigs))
+            common_contigs = list(set(common_contigs) - set(EXCLUDED_HUMAN_CONTIGS))
+
+            if len(common_contigs) == 0:
+                sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
+                                 + "ERROR: NO COMMON CONTIGS FOUND BETWEEN THE BAM FILE AND THE FASTA FILE.")
+                sys.stderr.flush()
+                exit(1)
+
+            common_contigs = sorted(common_contigs, key=UserInterfaceSupport.natural_key)
+            sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] INFO: COMMON CONTIGS FOUND: " + str(common_contigs) + "\n")
+            sys.stderr.flush()
+
+            chromosome_name_list = []
+            for contig_name in common_contigs:
+                chromosome_name_list.append((contig_name, None))
+
+            return chromosome_name_list
 
         if region_bed:
             chromosome_name_list = []
@@ -156,7 +185,7 @@ class UserInterfaceSupport:
 
     @staticmethod
     def single_worker(args, _start, _end):
-        chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, realignment_flag, train_mode = args
+        chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, realignment_flag, train_mode, downsample_rate = args
 
         view = UserInterfaceView(chromosome_name=chr_name,
                                  bam_file_path=bam_file,
@@ -166,7 +195,7 @@ class UserInterfaceSupport:
                                  train_mode=train_mode,
                                  realignment_flag=realignment_flag)
 
-        images, labels, positions, image_chunk_ids, ref_seqs = view.parse_region(_start, _end)
+        images, labels, positions, image_chunk_ids, ref_seqs = view.parse_region(_start, _end, downsample_rate)
         region = (chr_name, _start, _end)
 
         return images, labels, positions, image_chunk_ids, ref_seqs, region
@@ -175,8 +204,9 @@ class UserInterfaceSupport:
     def image_generator(args, all_intervals, total_threads, thread_id):
         thread_prefix = "[THREAD " + "{:02d}".format(thread_id) + "]"
 
-        output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, realignment_flag, train_mode = args
-        file_name = output_path + "pepper_images_thread_" + str(thread_id) + ".hdf"
+        output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, realignment_flag, train_mode, downsample_rate = args
+        timestr = time.strftime("%m%d%Y_%H%M%S")
+        file_name = output_path + "pepper_snp_images_thread_" + str(thread_id) + "_" + str(timestr) + ".hdf"
 
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
 
@@ -191,7 +221,7 @@ class UserInterfaceSupport:
         with DataStore(file_name, 'w') as output_hdf_file:
             for counter, interval in enumerate(intervals):
                 chr_name, _start, _end = interval
-                img_args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, realignment_flag, train_mode)
+                img_args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, realignment_flag, train_mode, downsample_rate)
                 images, labels, positions, chunk_ids, ref_seqs, region = \
                     UserInterfaceSupport.single_worker(img_args, _start, _end)
 
@@ -228,7 +258,8 @@ class UserInterfaceSupport:
                                          output_path,
                                          total_threads,
                                          realignment_flag,
-                                         train_mode):
+                                         train_mode,
+                                         downsample_rate):
 
         if train_mode:
             max_size = 100000
@@ -263,7 +294,7 @@ class UserInterfaceSupport:
                          + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n")
         sys.stderr.flush()
 
-        args = (output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, realignment_flag, train_mode)
+        args = (output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, realignment_flag, train_mode, downsample_rate)
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
             futures = [executor.submit(UserInterfaceSupport.image_generator, args, all_intervals, total_threads, thread_id)
                        for thread_id in range(0, total_threads)]

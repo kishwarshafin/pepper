@@ -130,6 +130,13 @@ def add_call_variant_arguments(parser):
         help="Threshold value for reporting SNPs. Default is 0.1, "
              "increasing the value will reduce FP and increase FN SNPs."
     )
+    parser.add_argument(
+        "-d",
+        "--downsample_rate",
+        type=float,
+        default=1.0,
+        help="Downsample rate of reads while generating images."
+    )
     return parser
 
 
@@ -172,6 +179,13 @@ def add_make_images_arguments(parser):
         required=True,
         type=int,
         help="Number of threads to use. Default is 5."
+    )
+    parser.add_argument(
+        "-d",
+        "--downsample_rate",
+        type=float,
+        default=1.0,
+        help="Downsample rate of reads while generating images."
     )
     return parser
 
@@ -392,7 +406,8 @@ def main():
                      distributed,
                      FLAGS.device_ids,
                      FLAGS.num_workers,
-                     FLAGS.sample_name)
+                     FLAGS.sample_name,
+                     FLAGS.downsample_rate)
 
     elif FLAGS.sub_command == 'make_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
@@ -400,7 +415,8 @@ def main():
                     FLAGS.fasta,
                     FLAGS.region,
                     FLAGS.output_dir,
-                    FLAGS.threads)
+                    FLAGS.threads,
+                    FLAGS.downsample_rate)
 
     elif FLAGS.sub_command == 'run_inference':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN INFERENCE MODULE SELECTED.\n")

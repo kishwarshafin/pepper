@@ -22,7 +22,8 @@ def call_variant(bam_filepath,
                  distributed,
                  device_ids,
                  num_workers,
-                 sample_name):
+                 sample_name,
+                 downsample_rate):
     """
     Run all the sub-modules to polish an input assembly.
     """
@@ -97,7 +98,8 @@ def call_variant(bam_filepath,
                 fasta_filepath,
                 region,
                 image_output_directory,
-                threads)
+                threads,
+                downsample_rate)
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 2: RUNNING INFERENCE\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION OUTPUT: " + str(prediction_output_directory) + "\n")

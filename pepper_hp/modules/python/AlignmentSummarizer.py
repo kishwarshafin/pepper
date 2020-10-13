@@ -232,7 +232,7 @@ class AlignmentSummarizer:
         else:
             return None
 
-    def create_summary(self, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag):
+    def create_summary(self, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate):
         log_prefix = "[" + self.chromosome_name + ":" + str(self.region_start_position) + "-" \
                      + str(self.region_end_position) + "]"
         all_images_hp1 = []
@@ -338,29 +338,31 @@ class AlignmentSummarizer:
                                                        ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
                                                        ReadFilterOptions.MIN_MAPQ,
                                                        ReadFilterOptions.MIN_BASEQ)
+
                 total_reads = len(all_reads)
+                total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, downsample_rate * total_reads))
+                # print("INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND BEFORE.\n")
 
-                if total_reads == 0:
-                    continue
-
-                if total_reads > AlingerOptions.MAX_READS_IN_REGION:
+                if total_reads > total_allowed_reads:
                     # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
                     # reservoir_sample method utilized here
                     random = np.random.RandomState(AlingerOptions.RANDOM_SEED)
                     sample = []
                     for i, read in enumerate(all_reads):
-                        if len(sample) < AlingerOptions.MAX_READS_IN_REGION:
+                        if len(sample) < total_allowed_reads:
                             sample.append(read)
                         else:
                             j = random.randint(0, i + 1)
-                            if j < AlingerOptions.MAX_READS_IN_REGION:
+                            if j < total_allowed_reads:
                                 sample[j] = read
                     all_reads = sample
 
-                # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(total_reads)
-                #                  + " READS FOUND.\n" + TextColor.END)
+                total_reads = len(all_reads)
 
-                start_time = time.time()
+                if total_reads == 0:
+                    continue
+
+                # print("INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND AFTER.\n")
 
                 if realignment_flag:
                     all_reads = self.reads_to_reference_realignment(read_start,
@@ -405,23 +407,29 @@ class AlignmentSummarizer:
                                                    ReadFilterOptions.MIN_BASEQ)
 
             total_reads = len(all_reads)
+            total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, downsample_rate * total_reads))
+            # print("INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND BEFORE.\n")
 
-            if total_reads == 0:
-                return [], [], [], [], [], [], []
-
-            if total_reads > AlingerOptions.MAX_READS_IN_REGION:
+            if total_reads > total_allowed_reads:
                 # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
                 # reservoir_sample method utilized here
                 random = np.random.RandomState(AlingerOptions.RANDOM_SEED)
                 sample = []
                 for i, read in enumerate(all_reads):
-                    if len(sample) < AlingerOptions.MAX_READS_IN_REGION:
+                    if len(sample) < total_allowed_reads:
                         sample.append(read)
                     else:
                         j = random.randint(0, i + 1)
-                        if j < AlingerOptions.MAX_READS_IN_REGION:
+                        if j < total_allowed_reads:
                             sample[j] = read
                 all_reads = sample
+
+            total_reads = len(all_reads)
+
+            if total_reads == 0:
+                return [], [], [], [], [], [], []
+
+            # print("INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND AFTER.\n")
 
             # sys.stderr.write(TextColor.PURPLE + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND\n"
             #                  + TextColor.END)

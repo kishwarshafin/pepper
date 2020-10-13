@@ -199,7 +199,7 @@ class AlignmentSummarizer:
         else:
             return None
 
-    def create_summary(self, truth_bam_handler_h1, truth_bam_handler_h2, train_mode, realignment_flag=False):
+    def create_summary(self, truth_bam_handler_h1, truth_bam_handler_h2, train_mode, downsample_rate, realignment_flag=False):
         log_prefix = "[" + self.chromosome_name + ":" + str(self.region_start_position) + "-" \
                      + str(self.region_end_position) + "]"
         all_images = []
@@ -302,26 +302,29 @@ class AlignmentSummarizer:
                                                        ReadOptions.MIN_MAPPING_QUALITY,
                                                        0)
                 total_reads = len(all_reads)
+                total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, downsample_rate * total_reads))
+                # print("INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND BEFORE.\n")
 
-                if total_reads == 0:
-                    continue
-
-                if total_reads > AlingerOptions.MAX_READS_IN_REGION:
+                if total_reads > total_allowed_reads:
                     # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
                     # reservoir_sample method utilized here
                     random = np.random.RandomState(AlingerOptions.RANDOM_SEED)
                     sample = []
                     for i, read in enumerate(all_reads):
-                        if len(sample) < AlingerOptions.MAX_READS_IN_REGION:
+                        if len(sample) < total_allowed_reads:
                             sample.append(read)
                         else:
                             j = random.randint(0, i + 1)
-                            if j < AlingerOptions.MAX_READS_IN_REGION:
+                            if j < total_allowed_reads:
                                 sample[j] = read
                     all_reads = sample
 
-                # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(total_reads)
-                #                  + " READS FOUND.\n" + TextColor.END)
+                total_reads = len(all_reads)
+
+                if total_reads == 0:
+                    continue
+
+                # print("INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND AFTER.\n")
 
                 start_time = time.time()
 
@@ -365,34 +368,34 @@ class AlignmentSummarizer:
                                                    ReadOptions.MIN_MAPPING_QUALITY,
                                                    0)
             total_reads = len(all_reads)
+            total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, downsample_rate * total_reads))
+            # print("INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND BEFORE.\n")
 
-            if total_reads == 0:
-                return [], [], [], [], []
-
-            if total_reads > AlingerOptions.MAX_READS_IN_REGION:
+            if total_reads > total_allowed_reads:
                 # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
                 # reservoir_sample method utilized here
                 random = np.random.RandomState(AlingerOptions.RANDOM_SEED)
                 sample = []
                 for i, read in enumerate(all_reads):
-                    if len(sample) < AlingerOptions.MAX_READS_IN_REGION:
+                    if len(sample) < total_allowed_reads:
                         sample.append(read)
                     else:
                         j = random.randint(0, i + 1)
-                        if j < AlingerOptions.MAX_READS_IN_REGION:
+                        if j < total_allowed_reads:
                             sample[j] = read
                 all_reads = sample
 
-            # sys.stderr.write(TextColor.PURPLE + "INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND\n"
-            #                  + TextColor.END)
+            total_reads = len(all_reads)
+
+            if total_reads == 0:
+                return [], [], [], [], []
+
+            # print("INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND AFTER.\n")
 
             if realignment_flag:
-                start_time = time.time()
                 all_reads = self.reads_to_reference_realignment(self.region_start_position,
                                                                 self.region_end_position,
                                                                 all_reads)
-                # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " REALIGNMENT OF TOTAL " + str(total_reads)
-                #                 + " READS TOOK: " + str(round(time.time()-start_time, 5)) + " secs\n" + TextColor.END)
 
             # ref_seq should contain region_end_position base
             ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
