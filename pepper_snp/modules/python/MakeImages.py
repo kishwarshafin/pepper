@@ -22,7 +22,7 @@ def make_images(bam_file, draft_file, region, output_path, total_threads, downsa
 def make_train_images(bam_file, draft_file, truth_bam_h1, truth_bam_h2, region, region_bed, output_path, total_threads, downsample_rate):
     output_dir = UserInterfaceSupport.handle_output_directory(os.path.abspath(output_path))
 
-    chr_list = UserInterfaceSupport.get_chromosome_list(region, draft_file, bam_file, region_bed=None)
+    chr_list = UserInterfaceSupport.get_chromosome_list(region, draft_file, bam_file, region_bed=region_bed)
 
     UserInterfaceSupport.chromosome_level_parallelization(chr_list=chr_list,
                                                           bam_file=bam_file,
