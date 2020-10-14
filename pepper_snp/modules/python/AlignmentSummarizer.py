@@ -206,7 +206,27 @@ class AlignmentSummarizer:
         else:
             return None
 
-    def create_summary(self, truth_bam_handler_h1, truth_bam_handler_h2, train_mode, downsample_rate, realignment_flag=False):
+    @staticmethod
+    def range_intersection_bed(interval, bed_intervals):
+        left = interval[0]
+        right = interval[1]
+        read_hp1 = interval[2]
+        read_hp2 = interval[3]
+
+        intervals = []
+        for i in range(0, len(bed_intervals)):
+            if bed_intervals[i][0] > right or bed_intervals[i][1] < left:
+                continue
+            else:
+                left_bed = max(left, bed_intervals[i][0])
+                right_bed = min(right, bed_intervals[i][1])
+                read_hp1 = read_hp1
+                read_hp2 = read_hp2
+                intervals.append([left_bed, right_bed, read_hp1, read_hp2])
+
+        return intervals
+
+    def create_summary(self, truth_bam_handler_h1, truth_bam_handler_h2, train_mode, downsample_rate, bed_list=None, realignment_flag=False):
         log_prefix = "[" + self.chromosome_name + ":" + str(self.region_start_position) + "-" \
                      + str(self.region_end_position) + "]"
         all_images = []
@@ -270,6 +290,14 @@ class AlignmentSummarizer:
                 reg = AlignmentSummarizer.range_intersection([reg_h1] + regions_h2)
                 if reg is not None:
                     truth_regions.append(reg)
+
+            # now intersect with bed file
+            if bed_list is not None:
+                intersected_truth_regions =[]
+                for region in truth_regions:
+                    reg = AlignmentSummarizer.range_intersection_bed(region, bed_list[self.chromosome_name])
+                    intersected_truth_regions.extend(reg)
+                truth_regions = intersected_truth_regions
 
             if not truth_regions:
                 # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " NO TRAINING REGION FOUND.\n"
