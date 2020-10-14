@@ -215,13 +215,16 @@ class AlignmentSummarizer:
 
         intervals = []
         for i in range(0, len(bed_intervals)):
-            if bed_intervals[i][0] > right or bed_intervals[i][1] < left:
+            bed_left = bed_intervals[i][0]
+            bed_right = bed_intervals[i][1]
+
+            if bed_right < left:
+                continue
+            elif bed_left > right:
                 continue
             else:
-                left_bed = max(left, bed_intervals[i][0])
-                right_bed = min(right, bed_intervals[i][1])
-                read_hp1 = read_hp1
-                read_hp2 = read_hp2
+                left_bed = max(left, bed_left)
+                right_bed = min(right, bed_right)
                 intervals.append([left_bed, right_bed, read_hp1, read_hp2])
 
         return intervals
@@ -293,7 +296,7 @@ class AlignmentSummarizer:
 
             # now intersect with bed file
             if bed_list is not None:
-                intersected_truth_regions =[]
+                intersected_truth_regions = []
                 for region in truth_regions:
                     reg = AlignmentSummarizer.range_intersection_bed(region, bed_list[self.chromosome_name])
                     intersected_truth_regions.extend(reg)
