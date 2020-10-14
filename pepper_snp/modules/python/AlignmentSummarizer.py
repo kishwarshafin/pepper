@@ -307,6 +307,7 @@ class AlignmentSummarizer:
                 #                  + TextColor.END)
                 return [], [], [], [], []
 
+            chunk_id_start = 0
             for region_start, region_end, truth_read_h1, truth_read_h2 in truth_regions:
 
                 if not truth_reads_h1 or not truth_reads_h2:
@@ -372,13 +373,16 @@ class AlignmentSummarizer:
 
                 image_summary = summary_generator.chunk_image_train(ImageSizeOptions.SEQ_LENGTH,
                                                                     ImageSizeOptions.SEQ_OVERLAP,
-                                                                    ImageSizeOptions.IMAGE_HEIGHT)
+                                                                    ImageSizeOptions.IMAGE_HEIGHT,
+                                                                    chunk_id_start)
 
                 all_images.extend(image_summary.images)
                 all_labels.extend(image_summary.labels)
                 all_positions.extend(image_summary.positions)
                 all_image_chunk_ids.extend(image_summary.chunk_ids)
                 all_ref_seq.extend(image_summary.refs)
+                if len(image_summary.chunk_ids) > 0:
+                    chunk_id_start = max(image_summary.chunk_ids) + 1
         else:
             # HERE REALIGN THE READS TO THE REFERENCE THEN GENERATE THE SUMMARY TO GET A POLISHED HAPLOTYPE
             read_start = max(0, self.region_start_position)

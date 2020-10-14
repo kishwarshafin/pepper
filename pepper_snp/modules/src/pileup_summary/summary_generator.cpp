@@ -564,9 +564,9 @@ ImageSummary SummaryGenerator::chunk_image(int chunk_size, int chunk_overlap, in
 }
 
 
-ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overlap, int image_height) {
+ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overlap, int image_height, int chunk_id_start) {
     int chunk_start = 0;
-    int chunk_id = 0;
+    int chunk_id = chunk_id_start;
     int chunk_end = 0;
 
     ImageSummary chunked_summary;
