@@ -298,8 +298,9 @@ class AlignmentSummarizer:
             if bed_list is not None:
                 intersected_truth_regions = []
                 for region in truth_regions:
-                    reg = AlignmentSummarizer.range_intersection_bed(region, bed_list[self.chromosome_name])
-                    intersected_truth_regions.extend(reg)
+                    if self.chromosome_name in bed_list.keys():
+                        reg = AlignmentSummarizer.range_intersection_bed(region, bed_list[self.chromosome_name])
+                        intersected_truth_regions.extend(reg)
                 truth_regions = intersected_truth_regions
 
             if not truth_regions:

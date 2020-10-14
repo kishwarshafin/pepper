@@ -4,6 +4,7 @@ import re
 import sys
 import concurrent.futures
 from datetime import datetime
+from collections import defaultdict
 from pepper_variant.build import PEPPER_VARIANT
 from pepper_variant.modules.python.ExcludeContigs import EXCLUDED_HUMAN_CONTIGS
 from pepper_variant.modules.python.DataStore import DataStore
@@ -32,18 +33,18 @@ class UserInterfaceView:
         self.fasta_handler = PEPPER_VARIANT.FASTA_handler(draft_file_path)
         self.train_mode = train_mode
         self.downsample_rate = 1.0
-        self.truth_bam_h1 = None
-        self.truth_bam_h2 = None
+        self.truth_bam_handler_h1 = None
+        self.truth_bam_handler_h2 = None
 
         if self.train_mode:
-            self.truth_bam_h1 = truth_bam_h1
-            self.truth_bam_h2 = truth_bam_h2
+            self.truth_bam_handler_h1 = PEPPER_VARIANT.BAM_handler(truth_bam_h1)
+            self.truth_bam_handler_h2 = PEPPER_VARIANT.BAM_handler(truth_bam_h2)
 
         # --- initialize names ---
         # name of the chromosome
         self.chromosome_name = chromosome_name
 
-    def parse_region(self, start_position, end_position, downsample_rate, realignment_flag):
+    def parse_region(self, start_position, end_position, downsample_rate, realignment_flag, bed_list):
         """
         Generate labeled images of a given region of the genome
         :param start_position: Start position of the region
@@ -58,11 +59,12 @@ class UserInterfaceView:
                                                    end_position)
 
         images, labels, positions, image_chunk_ids, all_ref_seq = \
-            alignment_summarizer.create_summary(self.truth_bam_h1,
-                                                self.truth_bam_h2,
+            alignment_summarizer.create_summary(self.truth_bam_handler_h1,
+                                                self.truth_bam_handler_h2,
                                                 self.train_mode,
                                                 downsample_rate,
-                                                realignment_flag)
+                                                realignment_flag,
+                                                bed_list)
 
         return images, labels, positions, image_chunk_ids, all_ref_seq
 
@@ -101,7 +103,10 @@ class UserInterfaceSupport:
         :param region_bed: PATH TO A BED FILE
         :return: LIST OF CHROMOSOME IN REGION SPECIFIC FORMAT
         """
-        if not chromosome_names and not region_bed:
+        chromosome_name_list = []
+        region_bed_list = None
+
+        if not chromosome_names:
             fasta_handler = PEPPER_VARIANT.FASTA_handler(ref_file)
             bam_handler = PEPPER_VARIANT.BAM_handler(bam_file)
             bam_contigs = bam_handler.get_chromosome_sequence_names()
@@ -119,14 +124,52 @@ class UserInterfaceSupport:
             sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] INFO: COMMON CONTIGS FOUND: " + str(common_contigs) + "\n")
             sys.stderr.flush()
 
-            chromosome_name_list = []
             for contig_name in common_contigs:
                 chromosome_name_list.append((contig_name, None))
+        else:
+            split_names = chromosome_names.strip().split(',')
+            split_names = [name.strip() for name in split_names]
+            chromosome_name_list = []
+            for name in split_names:
+                # split on region
+                region = None
+                if ':' in name:
+                    name_region = name.strip().split(':')
 
-            return chromosome_name_list
+                    if len(name_region) != 2:
+                        sys.stderr.write("ERROR: --region INVALID value.\n")
+                        exit(0)
+
+                    name, region = tuple(name_region)
+                    region = region.strip().split('-')
+                    region = [int(pos) for pos in region]
+
+                    if len(region) != 2 or not region[0] <= region[1]:
+                        sys.stderr.write("ERROR: --region INVALID value.\n")
+                        exit(0)
+
+                range_split = name.split('-')
+                if len(range_split) > 1:
+                    chr_prefix = ''
+                    for p in name:
+                        if p.isdigit():
+                            break
+                        else:
+                            chr_prefix = chr_prefix + p
+
+                    int_ranges = []
+                    for item in range_split:
+                        s = ''.join(i for i in item if i.isdigit())
+                        int_ranges.append(int(s))
+                    int_ranges = sorted(int_ranges)
+
+                    for chr_seq in range(int_ranges[0], int_ranges[-1] + 1):
+                        chromosome_name_list.append((chr_prefix + str(chr_seq), region))
+                else:
+                    chromosome_name_list.append((name, region))
 
         if region_bed:
-            chromosome_name_list = []
+            region_bed_list = defaultdict()
             with open(region_bed) as fp:
                 line = fp.readline()
                 cnt = 1
@@ -134,58 +177,17 @@ class UserInterfaceSupport:
                     line_to_list = line.rstrip().split('\t')
                     chr_name, start_pos, end_pos = line_to_list[0], int(line_to_list[1]), int(line_to_list[2])
                     region = sorted([start_pos, end_pos])
-                    chromosome_name_list.append((chr_name, region))
+                    if chr_name not in region_bed_list.keys():
+                        region_bed_list[chr_name] = []
+                    region_bed_list[chr_name].append(region)
                     line = fp.readline()
                 cnt += 1
-            return chromosome_name_list
 
-        split_names = chromosome_names.strip().split(',')
-        split_names = [name.strip() for name in split_names]
-
-        chromosome_name_list = []
-        for name in split_names:
-            # split on region
-            region = None
-            if ':' in name:
-                name_region = name.strip().split(':')
-
-                if len(name_region) != 2:
-                    sys.stderr.write("ERROR: --region INVALID value.\n")
-                    exit(0)
-
-                name, region = tuple(name_region)
-                region = region.strip().split('-')
-                region = [int(pos) for pos in region]
-
-                if len(region) != 2 or not region[0] <= region[1]:
-                    sys.stderr.write("ERROR: --region INVALID value.\n")
-                    exit(0)
-
-            range_split = name.split('-')
-            if len(range_split) > 1:
-                chr_prefix = ''
-                for p in name:
-                    if p.isdigit():
-                        break
-                    else:
-                        chr_prefix = chr_prefix + p
-
-                int_ranges = []
-                for item in range_split:
-                    s = ''.join(i for i in item if i.isdigit())
-                    int_ranges.append(int(s))
-                int_ranges = sorted(int_ranges)
-
-                for chr_seq in range(int_ranges[0], int_ranges[-1] + 1):
-                    chromosome_name_list.append((chr_prefix + str(chr_seq), region))
-            else:
-                chromosome_name_list.append((name, region))
-
-        return chromosome_name_list
+        return chromosome_name_list, region_bed_list
 
     @staticmethod
     def single_worker(args, _start, _end):
-        chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate = args
+        chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate, bed_list = args
 
         view = UserInterfaceView(chromosome_name=chr_name,
                                  bam_file_path=bam_file,
@@ -194,7 +196,7 @@ class UserInterfaceSupport:
                                  truth_bam_h2=truth_bam_h2,
                                  train_mode=train_mode)
 
-        images, labels, positions, image_chunk_ids, ref_seq = view.parse_region(_start, _end, downsample_rate, realignment_flag)
+        images, labels, positions, image_chunk_ids, ref_seq = view.parse_region(_start, _end, downsample_rate, realignment_flag, bed_list)
         region = (chr_name, _start, _end)
 
         return images, labels, positions, image_chunk_ids, region, ref_seq
@@ -203,7 +205,7 @@ class UserInterfaceSupport:
     def image_generator(args, all_intervals, total_threads, thread_id):
         thread_prefix = "[THREAD " + "{:02d}".format(thread_id) + "]"
 
-        output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate = args
+        output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate, bed_list = args
         timestr = time.strftime("%m%d%Y_%H%M%S")
         file_name = output_path + "pepper_variants_images_thread_" + str(thread_id) + "_" + str(timestr) + ".hdf"
 
@@ -220,7 +222,7 @@ class UserInterfaceSupport:
         with DataStore(file_name, 'w') as output_hdf_file:
             for counter, interval in enumerate(intervals):
                 chr_name, _start, _end = interval
-                img_args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate)
+                img_args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate, bed_list)
                 images, labels, positions, chunk_ids, region, ref_seqs = UserInterfaceSupport.single_worker(img_args, _start, _end)
 
                 for i, image in enumerate(images):
@@ -256,7 +258,8 @@ class UserInterfaceSupport:
                                          total_threads,
                                          train_mode,
                                          realignment_flag,
-                                         downsample_rate=1.0):
+                                         downsample_rate,
+                                         bed_list):
 
         if train_mode:
             max_size = 100000
@@ -303,7 +306,7 @@ class UserInterfaceSupport:
                          + " TOTAL BASES: " + str(total_bases) + "\n")
         sys.stderr.flush()
 
-        args = (output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate)
+        args = (output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate, bed_list)
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
             futures = [executor.submit(UserInterfaceSupport.image_generator, args, all_intervals, total_threads,
                                        thread_id)

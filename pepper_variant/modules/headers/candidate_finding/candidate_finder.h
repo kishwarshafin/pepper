@@ -12,7 +12,7 @@
 using namespace std;
 
 namespace CandidateFinder_options {
-    static constexpr int min_mapping_quality = 10;
+    static constexpr int min_mapping_quality = 1;
     static constexpr int min_base_quality = 1;
     static constexpr int freq_threshold = 4;
     static constexpr int min_count_threshold = 2;
@@ -34,9 +34,9 @@ namespace LinearRegression {
 
     static constexpr double SNP_ALT_FREQ_COEF = 0;
     static constexpr double SNP_NON_REF_PROB_COEF = 0;
-    static constexpr double SNP_ALLELE_WEIGHT_COEF = 0.991663;
-    static constexpr double SNP_BIAS_TERM = -0.000418;
-    static constexpr double SNP_THRESHOLD = 0.1;
+    static constexpr double SNP_ALLELE_WEIGHT_COEF = 0.991822;
+    static constexpr double SNP_BIAS_TERM = -0.00041;
+    static constexpr double SNP_THRESHOLD = 0.001;
     static constexpr double SNP_LOWER_FREQ_THRESHOLD = 0.10;
     static constexpr double SNP_UPPER_FREQ = 0.4;
 

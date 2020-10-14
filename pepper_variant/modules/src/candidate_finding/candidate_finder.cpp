@@ -248,7 +248,7 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
         double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + LinearRegression::SNP_BIAS_TERM;
 
         if(predicted_val >= LinearRegression::SNP_THRESHOLD) return true;
-        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.1) return true;
+//        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
         return false;
 
     } else if (candidate.allele.alt_type == INSERT_TYPE) {
