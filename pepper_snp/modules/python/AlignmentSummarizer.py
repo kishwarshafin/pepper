@@ -184,18 +184,25 @@ class AlignmentSummarizer:
     def range_intersection(intervals):
         left = intervals[0][0]
         right = intervals[0][1]
+        read_hp1 = intervals[0][2]
+        read_hp2 = None
 
+        longest_interval = 0
         found_overlap = False
         for i in range(1, len(intervals)):
             if intervals[i][0] > right or intervals[i][1] < left:
                 continue
             else:
                 found_overlap = True
-                left = max(left, intervals[i][0])
-                right = min(right, intervals[i][1])
+                overlap_length = intervals[i][1] - intervals[i][0]
+                if overlap_length > longest_interval:
+                    longest_interval = overlap_length
+                    left = intervals[i][0]
+                    right = intervals[i][1]
+                    read_hp2 = intervals[i][2]
 
         if found_overlap:
-            return [left, right]
+            return [left, right, read_hp1, read_hp2]
         else:
             return None
 
@@ -248,14 +255,15 @@ class AlignmentSummarizer:
             # It's important to notice that we need to realign the reads to the reference before we do that.
             truth_regions_h1 = self.remove_conflicting_regions(truth_regions_h1)
             truth_regions_h2 = self.remove_conflicting_regions(truth_regions_h2)
+
             regions_h1 = []
             for start, end_pos, read, is_kept in truth_regions_h1:
                 if is_kept:
-                    regions_h1.append([start, end_pos])
+                    regions_h1.append([start, end_pos, read])
             regions_h2 = []
             for start_pos, end_pos, read, is_kept in truth_regions_h2:
                 if is_kept:
-                    regions_h2.append([start_pos, end_pos])
+                    regions_h2.append([start_pos, end_pos, read])
 
             truth_regions = []
             for reg_h1 in regions_h1:
@@ -268,21 +276,9 @@ class AlignmentSummarizer:
                 #                  + TextColor.END)
                 return [], [], [], [], []
 
-            for region_start, region_end in truth_regions:
-                truth_reads_h1 = truth_bam_handler_h1.get_reads(self.chromosome_name,
-                                                                self.region_start_position,
-                                                                self.region_end_position,
-                                                                include_supplementary,
-                                                                0,
-                                                                0)
+            for region_start, region_end, truth_read_h1, truth_read_h2 in truth_regions:
 
-                truth_reads_h2 = truth_bam_handler_h2.get_reads(self.chromosome_name,
-                                                                self.region_start_position,
-                                                                self.region_end_position,
-                                                                include_supplementary,
-                                                                0,
-                                                                0)
-                if len(truth_reads_h1) > 1 or len(truth_reads_h2) > 1:
+                if not truth_reads_h1 or not truth_reads_h2:
                     continue
 
                 ref_start = region_start
@@ -324,10 +320,6 @@ class AlignmentSummarizer:
                 if total_reads == 0:
                     continue
 
-                # print("INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS FOUND AFTER.\n")
-
-                start_time = time.time()
-
                 if realignment_flag:
                     all_reads = self.reads_to_reference_realignment(read_start,
                                                                     read_end,
@@ -344,8 +336,8 @@ class AlignmentSummarizer:
                 summary_generator.generate_train_summary(all_reads,
                                                          region_start,
                                                          region_end,
-                                                         truth_reads_h1,
-                                                         truth_reads_h2)
+                                                         [truth_read_h1],
+                                                         [truth_read_h2])
 
                 image_summary = summary_generator.chunk_image_train(ImageSizeOptions.SEQ_LENGTH,
                                                                     ImageSizeOptions.SEQ_OVERLAP,
