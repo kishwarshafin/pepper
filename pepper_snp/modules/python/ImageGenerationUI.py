@@ -108,7 +108,7 @@ class UserInterfaceSupport:
         chromosome_name_list = []
         region_bed_list = None
 
-        if not chromosome_names and not region_bed:
+        if not chromosome_names:
             fasta_handler = PEPPER_SNP.FASTA_handler(ref_file)
             bam_handler = PEPPER_SNP.BAM_handler(bam_file)
             bam_contigs = bam_handler.get_chromosome_sequence_names()
@@ -128,8 +128,7 @@ class UserInterfaceSupport:
 
             for contig_name in common_contigs:
                 chromosome_name_list.append((contig_name, None))
-
-        if chromosome_names:
+        else:
             split_names = chromosome_names.strip().split(',')
             split_names = [name.strip() for name in split_names]
             chromosome_name_list = []
