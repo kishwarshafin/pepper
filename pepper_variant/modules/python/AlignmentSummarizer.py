@@ -259,6 +259,8 @@ class AlignmentSummarizer:
         all_ref_seq = []
 
         if train_mode:
+            if self.chromosome_name not in bed_list.keys():
+                return [], [], [], [], []
             # get the reads from the bam file
             include_supplementary = True
             truth_reads_h1 = truth_bam_handler_h1.get_reads(self.chromosome_name,
