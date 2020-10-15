@@ -633,9 +633,9 @@ ImageSummary SummaryGenerator::chunk_image(int chunk_size, int chunk_overlap, in
 }
 
 
-ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overlap, int image_height) {
+ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overlap, int image_height, int chunk_id_start) {
     int chunk_start = 0;
-    int chunk_id = 0;
+    int chunk_id = chunk_id_start;
     int chunk_end = 0;
 
     ImageSummary chunked_summary;
@@ -654,7 +654,7 @@ ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overl
             vector< vector<uint8_t> > image_chunk_hp2(image_hp2.begin() + chunk_start, image_hp2.begin() + chunk_end);
             vector<pair<long long, int> > pos_chunk(genomic_pos.begin() + chunk_start, genomic_pos.begin() + chunk_end);
             vector<uint8_t> ref_chunk(ref_image.begin() + chunk_start, ref_image.begin() + chunk_end);
-            vector<uint8_t> label_chunk_hp1(labels_hp1.begin() + chunk_start, labels_hp2.begin() + chunk_end);
+            vector<uint8_t> label_chunk_hp1(labels_hp1.begin() + chunk_start, labels_hp1.begin() + chunk_end);
             vector<uint8_t> label_chunk_hp2(labels_hp2.begin() + chunk_start, labels_hp2.begin() + chunk_end);
 
 //            cout<<"Sizes: "<< image_chunk.size()<<" "<<pos_chunk.size()<<" "<<label_chunk.size()<<" "<<chunk_size<<endl;

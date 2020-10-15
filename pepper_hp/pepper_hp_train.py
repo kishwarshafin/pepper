@@ -83,6 +83,13 @@ def add_make_train_images_arguments(parser):
         default=5,
         help="Number of threads to use. Default is 5."
     )
+    parser.add_argument(
+        "-d",
+        "--downsample_rate",
+        type=float,
+        default=1.0,
+        help="Downsample rate of reads while generating images."
+    )
     return parser
 
 
@@ -326,7 +333,8 @@ def main():
                           FLAGS.region,
                           FLAGS.region_bed,
                           FLAGS.output_dir,
-                          FLAGS.threads)
+                          FLAGS.threads,
+                          FLAGS.downsample_rate)
     elif FLAGS.sub_command == 'train_model':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN MODEL MODULE SELECTED\n")
         distributed = not FLAGS.distributed_off

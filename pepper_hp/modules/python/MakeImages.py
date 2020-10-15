@@ -3,7 +3,7 @@ from pepper_hp.modules.python.ImageGenerationUI import UserInterfaceSupport
 
 
 def make_images(bam, fasta, region, output_dir, threads, downsample_rate):
-    chr_list = UserInterfaceSupport.get_chromosome_list(region, fasta,  bam, region_bed=None)
+    chr_list, bed_list_dictionary = UserInterfaceSupport.get_chromosome_list(region, fasta,  bam, region_bed=None)
     output_dir = UserInterfaceSupport.handle_output_directory(os.path.abspath(output_dir))
 
     UserInterfaceSupport.chromosome_level_parallelization(chr_list,
@@ -15,11 +15,12 @@ def make_images(bam, fasta, region, output_dir, threads, downsample_rate):
                                                           total_threads=threads,
                                                           train_mode=False,
                                                           realignment_flag=False,
-                                                          downsample_rate=downsample_rate)
+                                                          downsample_rate=downsample_rate,
+                                                          bed_list=bed_list_dictionary)
 
 
 def make_train_images(bam, fasta, truth_bam_h1, truth_bam_h2, region, region_bed, output_dir, threads, downsample_rate):
-    chr_list = UserInterfaceSupport.get_chromosome_list(region, fasta,  bam, region_bed=region_bed)
+    chr_list, bed_list_dictionary = UserInterfaceSupport.get_chromosome_list(region, fasta, bam, region_bed=region_bed)
     output_dir = UserInterfaceSupport.handle_output_directory(os.path.abspath(output_dir))
 
     UserInterfaceSupport.chromosome_level_parallelization(chr_list,
@@ -31,4 +32,5 @@ def make_train_images(bam, fasta, truth_bam_h1, truth_bam_h2, region, region_bed
                                                           total_threads=threads,
                                                           train_mode=True,
                                                           realignment_flag=False,
-                                                          downsample_rate=downsample_rate)
+                                                          downsample_rate=downsample_rate,
+                                                          bed_list=bed_list_dictionary)
