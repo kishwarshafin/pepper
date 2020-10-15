@@ -36,7 +36,7 @@ class CandidateFinderOptions(object):
 
 
 class ReadFilterOptions(object):
-    MIN_MAPQ = 10
+    MIN_MAPQ = 1
     MIN_BASEQ = 1
     INCLUDE_SUPPLEMENTARY = False
 

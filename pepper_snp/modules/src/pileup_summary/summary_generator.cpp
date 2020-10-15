@@ -93,7 +93,8 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
     int read_index = 0;
     long long ref_position = read.pos;
     int cigar_index = 0;
-    int base_quality = 0;
+    float mapping_quality = min(60, read.mapping_quality) / 60.0;
+    float base_quality = 0;
     long long reference_index;
 
     for (auto &cigar: read.cigar_tuples) {
@@ -113,9 +114,10 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                     //read.base_qualities[read_index] base quality
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
+                        base_quality = min(100, read.base_qualities[read_index]) / 100.0;
 
                         // update the summary of base
-                        base_summaries[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                        base_summaries[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
                         coverage[ref_position] += 1.0;
 
                     }
@@ -134,7 +136,9 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                     alt = read.sequence.substr(read_index, cigar.length);
                     for (int i = 0; i < cigar.length; i++) {
                         pair<long long, int> position_pair = make_pair(ref_position - 1, i);
-                        insert_summaries[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
+                        base_quality = min(100, read.base_qualities[read_index + i]) / 100.0;
+
+                        insert_summaries[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
                     }
                     longest_insert_count[ref_position - 1] = std::max(longest_insert_count[ref_position - 1],
                                                                       (long long) alt.length());
@@ -150,7 +154,7 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                 for (int i = 0; i < cigar.length; i++) {
                     if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                         // update the summary of base
-                        base_summaries[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                        base_summaries[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += (base_quality + read.mapping_quality) / 2.0;
                         coverage[ref_position] += 1.0;
                     }
                 }
