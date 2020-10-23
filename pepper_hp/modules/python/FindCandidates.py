@@ -4,6 +4,7 @@ import sys
 from os.path import isfile, join
 from os import listdir
 import re
+import time
 from pepper_hp.modules.python.CandidateFinder import find_candidates
 from pepper_hp.modules.python.VcfWriter import VCFWriter
 from pepper_hp.modules.python.ImageGenerationUI import UserInterfaceSupport
@@ -139,7 +140,7 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
 
     for contig in sorted(all_contigs, key=natural_key):
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + "\n")
-
+        local_start_time = time.time()
         all_chunk_keys = list()
         for prediction_file in all_prediction_files:
             with h5py.File(prediction_file, 'r') as hdf5_file:
@@ -151,8 +152,11 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
 
         selected_candidates = find_candidates(input_dir, reference_file, bam_file, contig, all_chunk_keys, threads)
 
+        end_time = time.time()
+        mins = int((end_time - local_start_time) / 60)
+        secs = int((end_time - local_start_time)) % 60
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", TOTAL CANDIDATES FOUND: "
-                         + str(len(selected_candidates)) + ".\n")
+                         + str(len(selected_candidates)) + " TOTAL TIME SPENT: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
         vcf_file.write_vcf_records(selected_candidates)
 
