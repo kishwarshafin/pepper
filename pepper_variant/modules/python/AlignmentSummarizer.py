@@ -1,7 +1,7 @@
 from pepper_variant.build import PEPPER_VARIANT
 import itertools
 import time
-import copy
+import sys
 import numpy as np
 from operator import itemgetter
 from pepper_variant.modules.python.Options import ImageSizeOptions, AlingerOptions, ReadFilterOptions
@@ -428,6 +428,7 @@ class AlignmentSummarizer:
             total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, downsample_rate * total_reads))
 
             if total_reads > total_allowed_reads:
+                sys.stderr.write("INFO: " + log_prefix + "HIGH COVERAGE CHUNK: " + str(total_reads) + " Reads.\n")
                 # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
                 # reservoir_sample method utilized here
                 random = np.random.RandomState(AlingerOptions.RANDOM_SEED)
