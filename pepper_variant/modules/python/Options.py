@@ -14,7 +14,7 @@ class ImageSizeOptions(object):
 
 
 class ReadFilterOptions(object):
-    MIN_MAPQ = 10
+    MIN_MAPQ = 1
     MIN_BASEQ = 1
     INCLUDE_SUPPLEMENTARY = False
 
@@ -98,6 +98,6 @@ class AlingerOptions(object):
     ALIGNMENT_SAFE_BASES = 20
     MIN_MAP_QUALITY = 20
 
-    MAX_READS_IN_REGION = 1500
+    MAX_READS_IN_REGION = 5000
     RANDOM_SEED = 2719747673
 
