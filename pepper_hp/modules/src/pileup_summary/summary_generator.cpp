@@ -401,18 +401,18 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
         }
 
         // this loop mounts summaries from the other haplotype to this one
-        for(int j = 0; j <= 9; j++) {
-            // you can remove these if you want to remove encoding of HP2 when inferring HP1
-            pixel_value_h2_encoding_h1 = 0.2 * (base_summaries_hp1[make_pair(i, j)] / max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE;
-            pixel_value_h1_encoding_h2 = 0.2 * (base_summaries_hp2[make_pair(i, j)] / max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE;
+//        for(int j = 0; j <= 9; j++) {
+//            // you can remove these if you want to remove encoding of HP2 when inferring HP1
+//            pixel_value_h2_encoding_h1 = 0.2 * (base_summaries_hp1[make_pair(i, j)] / max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE;
+//            pixel_value_h1_encoding_h2 = 0.2 * (base_summaries_hp2[make_pair(i, j)] / max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE;
+//
+//            // you can remove these if you want to remove encoding of HP2 when inferring HP2
+//            row_h1.push_back(pixel_value_h1_encoding_h2);
+//            row_h2.push_back(pixel_value_h2_encoding_h1);
+//        }
 
-            // you can remove these if you want to remove encoding of HP2 when inferring HP2
-            row_h1.push_back(pixel_value_h1_encoding_h2);
-            row_h2.push_back(pixel_value_h2_encoding_h1);
-        }
-
-        assert(row_h1.size() == 20);
-        assert(row_h2.size() == 20);
+        assert(row_h1.size() == 10);
+        assert(row_h2.size() == 10);
         image_hp1.push_back(row_h1);
         image_hp2.push_back(row_h2);
 
@@ -433,21 +433,21 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
                 }
 
                 // this loop mounts summaries from the other haplotype to this one
-                for(int j = 0; j <= 9; j++) {
-                    // you can remove these if you want to remove encoding of HP2 when inferring HP2
-                    pixel_value_h2_encoding_h1 = 0.2 * (insert_summaries_hp1[make_pair(make_pair(i, ii), j)] /
-                                                        max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE ;
+//                for(int j = 0; j <= 9; j++) {
+//                    // you can remove these if you want to remove encoding of HP2 when inferring HP2
+//                    pixel_value_h2_encoding_h1 = 0.2 * (insert_summaries_hp1[make_pair(make_pair(i, ii), j)] /
+//                                                        max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE ;
+//
+//                    pixel_value_h1_encoding_h2 = 0.2 * (insert_summaries_hp2[make_pair(make_pair(i, ii), j)] /
+//                                                        max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE ;
+//
+//                    // you can remove these if you want to remove encoding of HP2 when inferring HP2
+//                    ins_row_hp1.push_back(pixel_value_h1_encoding_h2); // this line 1
+//                    ins_row_hp2.push_back(pixel_value_h2_encoding_h1); // this line 2
+//                }
 
-                    pixel_value_h1_encoding_h2 = 0.2 * (insert_summaries_hp2[make_pair(make_pair(i, ii), j)] /
-                                                        max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE ;
-
-                    // you can remove these if you want to remove encoding of HP2 when inferring HP2
-                    ins_row_hp1.push_back(pixel_value_h1_encoding_h2); // this line 1
-                    ins_row_hp2.push_back(pixel_value_h2_encoding_h1); // this line 2
-                }
-
-                assert(ins_row_hp1.size() == 20);
-                assert(ins_row_hp2.size() == 20);
+                assert(ins_row_hp1.size() == 10);
+                assert(ins_row_hp2.size() == 10);
                 image_hp1.push_back(ins_row_hp1);
                 image_hp2.push_back(ins_row_hp2);
             }
