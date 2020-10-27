@@ -28,7 +28,7 @@ class TrainOptions(object):
     # the training loop breaks when current_index + TRAIN_WINDOW > LAST_INDEX. You may lose information if you don't
     # slide correctly
     TRAIN_WINDOW = 1000
-    WINDOW_JUMP = 0
+    WINDOW_JUMP = 1000
     GRU_LAYERS = 1
     HIDDEN_SIZE = 128
 
