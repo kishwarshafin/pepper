@@ -248,14 +248,14 @@ class AlignmentSummarizer:
                                                             self.region_start_position,
                                                             self.region_end_position,
                                                             include_supplementary,
-                                                            0,
+                                                            60,
                                                             0)
 
             truth_reads_h2 = truth_bam_handler_h2.get_reads(self.chromosome_name,
                                                             self.region_start_position,
                                                             self.region_end_position,
                                                             include_supplementary,
-                                                            0,
+                                                            60,
                                                             0)
 
             # do a local realignment of truth reads to reference
@@ -312,6 +312,7 @@ class AlignmentSummarizer:
                 return [], [], [], [], []
 
             chunk_id_start = 0
+
             for region_start, region_end, truth_read_h1, truth_read_h2 in truth_regions:
 
                 if not truth_reads_h1 or not truth_reads_h2:
@@ -319,6 +320,7 @@ class AlignmentSummarizer:
 
                 ref_start = region_start
                 ref_end = region_end + 1
+
                 # ref_seq should contain region_end_position base
                 ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
                                                                     ref_start,
