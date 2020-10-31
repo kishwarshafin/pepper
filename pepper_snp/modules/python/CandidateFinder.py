@@ -60,7 +60,7 @@ def candidates_to_variants(candidates, contig):
             ref_sequence = ref
         # upto this point
 
-        if alt_prob_h1 > CandidateFinderOptions.ALT_PROB_THRESHOLD:
+        if alt_prob_h1 >= CandidateFinderOptions.ALT_PROB_THRESHOLD:
             if h1_indx == -1:
                 h1_indx = i
                 max_h1_prob = alt_prob_h1
@@ -68,7 +68,7 @@ def candidates_to_variants(candidates, contig):
                 h1_indx = i
                 max_h1_prob = alt_prob_h1
 
-        if alt_prob_h2 > CandidateFinderOptions.ALT_PROB_THRESHOLD:
+        if alt_prob_h2 >= CandidateFinderOptions.ALT_PROB_THRESHOLD:
             if h2_indx == -1:
                 h2_indx = i
                 max_h2_prob = alt_prob_h2
