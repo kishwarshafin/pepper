@@ -36,11 +36,17 @@ class VCFWriter:
             if genotype == [0, 0]:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=overall_non_ref_prob,
-                                                      filter='refCall', alleles=alleles, GT=genotype, AP=alt_probs, AP1=alt_prob_h1s, AP2=alt_prob_h2s, NR=non_ref_probs, GQ=overall_non_ref_prob, VAF=vafs)
+                                                      filter='refCall', alleles=alleles, GT=genotype,
+                                                      AP=alt_probs, APM=max(alt_probs), AP1=alt_prob_h1s, AP2=alt_prob_h2s,
+                                                      NR=non_ref_probs, NRM=max(non_ref_probs),
+                                                      GQ=overall_non_ref_prob, VAF=vafs)
             else:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=overall_non_ref_prob,
-                                                      filter='PASS', alleles=alleles, GT=genotype, AP=alt_probs, AP1=alt_prob_h1s, AP2=alt_prob_h2s, NR=non_ref_probs, GQ=overall_non_ref_prob, VAF=vafs)
+                                                      filter='PASS', alleles=alleles, GT=genotype,
+                                                      AP=alt_probs, APM=max(alt_probs), AP1=alt_prob_h1s, AP2=alt_prob_h2s,
+                                                      NR=non_ref_probs, NRM=max(non_ref_probs),
+                                                      GQ=overall_non_ref_prob, VAF=vafs)
             self.vcf_file.write(vcf_record)
 
     def get_vcf_header(self, sample_name, contigs):
@@ -84,7 +90,12 @@ class VCFWriter:
         items = [('ID', "AP"),
                  ('Number', "A"),
                  ('Type', 'Float'),
-                 ('Description', "Maximum variant allele probability.")]
+                 ('Description', "Maximum variant allele probability for each allele.")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "APM"),
+                 ('Number', 1),
+                 ('Type', 'Float'),
+                 ('Description', "Maximum variant allele probability for the site.")]
         header.add_meta(key='FORMAT', items=items)
         items = [('ID', "AP1"),
                  ('Number', "A"),
@@ -99,7 +110,12 @@ class VCFWriter:
         items = [('ID', "NR"),
                  ('Number', "A"),
                  ('Type', 'Float'),
-                 ('Description', "Probability of observing a non-ref allele.")]
+                 ('Description', "Max probability of observing a non-ref allele for each allele.")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "NRM"),
+                 ('Number', 1),
+                 ('Type', 'Float'),
+                 ('Description', "Max probability of observing a non-ref allele for the site.")]
         header.add_meta(key='FORMAT', items=items)
         items = [('ID', "GT"),
                  ('Number', 1),
