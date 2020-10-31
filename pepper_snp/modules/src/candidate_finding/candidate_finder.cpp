@@ -96,6 +96,8 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
     if(allele_frequency >= 0.10) {
         return true;
     }
+    else
+        return false;
     // CONDITIONS FOR INSERT
     if(candidate.allele.alt_type == SNP_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
