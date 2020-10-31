@@ -24,11 +24,6 @@ class TrainOptions(object):
     HIDDEN_SIZE = 128
 
 
-class CandidateOptions(object):
-    # any value higher or equal candidate prob will be considered as a candidate
-    CANDIDATE_PROB_THRESHOLD = 0.3
-
-
 class CandidateFinderOptions(object):
     MOST_ALLOWED_CANDIDATES_PER_SITE = 2
     SAFE_BASES = 20
@@ -44,12 +39,12 @@ class ReadFilterOptions(object):
 class AlingerOptions(object):
     # base and map quality
     ALIGNMENT_SAFE_BASES = 20
-    MIN_MAP_QUALITY = 20
+    MIN_MAP_QUALITY = 1
 
     MAX_READS_IN_REGION = 5000
     RANDOM_SEED = 2719747673
 
 
 class ReadOptions(object):
-    MIN_MAPPING_QUALITY = 9
+    MIN_MAPPING_QUALITY = 1
     MIN_BASE_QUALITY = 1
