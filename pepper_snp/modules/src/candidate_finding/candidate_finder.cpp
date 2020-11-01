@@ -93,22 +93,22 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
 
 bool CandidateFinder::filter_candidate(Candidate candidate) {
     double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
-    // CONDITIONS FOR INSERT
+    // CONDITIONS FOR SNP
     if(candidate.allele.alt_type == SNP_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
 
-        if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
-            if(allele_weight >= 0.05) {
-                if(allele_weight >= 0.1) return true;
-                else return false;
-            }
-            return false;
-        }
+//        if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
+//            if(allele_weight >= 0.05) {
+//                if(allele_weight >= 0.1) return true;
+//                else return false;
+//            }
+//            return false;
+//        }
 
-        double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + LinearRegression::SNP_BIAS_TERM;
+        double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + candidate.alt_prob_h1 * LinearRegression::SNP_ALT_PROB1_COEF + candidate.alt_prob_h2 * LinearRegression::SNP_ALT_PROB2_COEF + LinearRegression::SNP_BIAS_TERM;
 
         if(predicted_val >= LinearRegression::SNP_THRESHOLD) return true;
-        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
+//        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
         return false;
     }
     return false;
