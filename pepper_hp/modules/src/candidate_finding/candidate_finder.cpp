@@ -219,8 +219,8 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
 
     // CONDITIONS FOR INSERT
     if(candidate.allele.alt_type == SNP_TYPE) {
-        if(allele_frequency >= 0.10) return true;
-        else return false;
+//        if(allele_frequency >= 0.10) return true;
+//        else return false;
 
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
 
@@ -240,8 +240,8 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
     }
     // CONDITIONS FOR INSERT
     else if (candidate.allele.alt_type == INSERT_TYPE) {
-        if(allele_frequency >= 0.10) return true;
-        else return false;
+//        if(allele_frequency >= 0.10) return true;
+//        else return false;
 
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
 
@@ -257,8 +257,8 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
     }
     // CONDITIONS FOR DELETE
     else if (candidate.allele.alt_type == DELETE_TYPE) {
-        if(allele_frequency >= 0.20) return true;
-        else return false;
+//        if(allele_frequency >= 0.20) return true;
+//        else return false;
 
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
 
