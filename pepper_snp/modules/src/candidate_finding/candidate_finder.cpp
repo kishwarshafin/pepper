@@ -97,15 +97,16 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
     if(candidate.allele.alt_type == SNP_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
 
-//        if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
-//            if(allele_weight >= 0.05) {
-//                if(allele_weight >= 0.1) return true;
-//                else return false;
-//            }
-//            return false;
-//        }
-
         double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + candidate.alt_prob_h1 * LinearRegression::SNP_ALT_PROB1_COEF + candidate.alt_prob_h2 * LinearRegression::SNP_ALT_PROB2_COEF + LinearRegression::SNP_BIAS_TERM;
+
+        if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
+            if(allele_weight >= 0.05) {
+                if(predicted_val >= 0.5) return true;
+                else return false;
+            }
+            return false;
+        }
+
 
         if(predicted_val >= LinearRegression::SNP_THRESHOLD) return true;
 //        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
