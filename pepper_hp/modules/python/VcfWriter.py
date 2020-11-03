@@ -1,6 +1,7 @@
 from pysam import VariantFile, VariantHeader
 from pepper_hp.build import PEPPER_HP
 import collections
+import math
 Candidate = collections.namedtuple('Candidate', 'chromosome_name pos_start pos_end ref '
                                                 'alternate_alleles allele_depths '
                                                 'allele_frequencies genotype qual gq predictions')
@@ -23,7 +24,7 @@ class VCFWriter:
                 continue
             last_position = ref_start
             alleles = tuple([ref_seq]) + tuple(alleles)
-            # qual = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, non_ref_prob)))
+            qual = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, overall_non_ref_prob)))
 
             # phred_gqs = []
             # for gq in gqs:
@@ -32,11 +33,11 @@ class VCFWriter:
             vafs = [round(ad/max(1, max(dps)), 3) for ad in ads]
             if genotype == [0, 0]:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
-                                                      stop=ref_end, id='.', qual=overall_non_ref_prob,
+                                                      stop=ref_end, id='.', qual=qual,
                                                       filter='refCall', alleles=alleles, GT=genotype, AP1=alt_prob_h1s, AP2=alt_prob_h2s, NR=non_ref_probs, GQ=overall_non_ref_prob, VAF=vafs)
             else:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
-                                                      stop=ref_end, id='.', qual=overall_non_ref_prob,
+                                                      stop=ref_end, id='.', qual=qual,
                                                       filter='PASS', alleles=alleles, GT=genotype, AP1=alt_prob_h1s, AP2=alt_prob_h2s, NR=non_ref_probs, GQ=overall_non_ref_prob, VAF=vafs)
             self.vcf_file.write(vcf_record)
 

@@ -52,7 +52,7 @@ namespace LinearRegression {
     static constexpr double DELETE_NON_REF_PROB_COEF = 0.05434;
     static constexpr double DELETE_ALLELE_WEIGHT_COEF = 0.795318;
     static constexpr double DELETE_BIAS_TERM = -0.003836;
-    static constexpr double DELETE_THRESHOLD = 0.25;
+    static constexpr double DELETE_THRESHOLD = 0.2;
     static constexpr double DEL_LOWER_FREQ_THRESHOLD = 0.20;
     static constexpr double DEL_UPPER_FREQ_THRESHOLD = 0.5;
 }
