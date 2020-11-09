@@ -92,6 +92,7 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
                                 AlleleMap[region_index].insert(candidate_alt);
 
                             coverage[region_index] += 1;
+//                            cout<<"SNP: "<<ref_position<<" "<<ref<<" "<<alt<<" "<<AlleleFrequencyMap[candidate_alt]<<" "<<read.base_qualities[read_index]<<" "<<read.mapping_quality<<" "<<read.flags.is_supplementary<<endl;
                         }
                     } else if (ref_position <= region_end &&
                                read.base_qualities[read_index] >= CandidateFinder_options::min_base_quality) {
