@@ -158,7 +158,8 @@ class UserInterfaceSupport:
         thread_prefix = "[THREAD " + "{:02d}".format(thread_id) + "]"
 
         output_path, bam_file, draft_file, truth_bam, train_mode = args
-        file_name = output_path + "pepper_images_thread_" + str(thread_id) + ".hdf"
+        timestr = time.strftime("%m%d%Y_%H%M%S")
+        file_name = output_path + "pepper_hp_images_thread_" + str(thread_id) + "_" + str(timestr) + ".hdf"
 
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
 
