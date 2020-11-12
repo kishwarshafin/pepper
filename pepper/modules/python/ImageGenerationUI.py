@@ -165,9 +165,10 @@ class UserInterfaceSupport:
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
 
         # initial notification
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING THREAD: " + str(thread_id)
-                         + " FOR " + str(len(intervals)) + " INTERVALS\n")
-        sys.stderr.flush()
+        if thread_id == 0:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING THREAD: " + str(thread_id)
+                             + " FOR " + str(len(intervals)) + " INTERVALS\n")
+            sys.stderr.flush()
 
         start_time = time.time()
         with DataStore(file_name, 'w') as output_hdf_file:
