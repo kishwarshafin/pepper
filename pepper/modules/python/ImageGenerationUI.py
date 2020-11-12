@@ -38,12 +38,12 @@ class UserInterfaceView:
         # name of the chromosome
         self.chromosome_name = chromosome_name
 
-    def parse_region(self, start_position, end_position):
+    def parse_region(self, start_position, end_position, downsample_rate):
         """
         Generate labeled images of a given region of the genome
         :param start_position: Start position of the region
         :param end_position: End position of the region
-        :param realignment_flag: If true then realignment will be performed
+        :param downsample_rate: Read downsampling rate
         :return:
         """
         alignment_summarizer = AlignmentSummarizer(self.bam_handler,
@@ -53,7 +53,8 @@ class UserInterfaceView:
                                                    end_position)
 
         images, lables, positions, image_chunk_ids = alignment_summarizer.create_summary(self.truth_bam_handler,
-                                                                                         self.train_mode)
+                                                                                         self.train_mode,
+                                                                                         downsample_rate)
 
         return images, lables, positions, image_chunk_ids
 
@@ -140,7 +141,7 @@ class UserInterfaceSupport:
 
     @staticmethod
     def single_worker(args, _start, _end):
-        chr_name, bam_file, draft_file, truth_bam, train_mode = args
+        chr_name, bam_file, draft_file, truth_bam, train_mode, downsample_rate = args
 
         view = UserInterfaceView(chromosome_name=chr_name,
                                  bam_file_path=bam_file,
@@ -148,7 +149,7 @@ class UserInterfaceSupport:
                                  truth_bam=truth_bam,
                                  train_mode=train_mode)
 
-        images, labels, positions, image_chunk_ids = view.parse_region(_start, _end)
+        images, labels, positions, image_chunk_ids = view.parse_region(_start, _end, downsample_rate)
         region = (chr_name, _start, _end)
 
         return images, labels, positions, image_chunk_ids, region
@@ -157,7 +158,7 @@ class UserInterfaceSupport:
     def image_generator(args, all_intervals, total_threads, thread_id):
         thread_prefix = "[THREAD " + "{:02d}".format(thread_id) + "]"
 
-        output_path, bam_file, draft_file, truth_bam, train_mode = args
+        output_path, bam_file, draft_file, truth_bam, train_mode, downsample_rate = args
         timestr = time.strftime("%m%d%Y_%H%M%S")
         file_name = output_path + "pepper_hp_images_thread_" + str(thread_id) + "_" + str(timestr) + ".hdf"
 
@@ -172,7 +173,7 @@ class UserInterfaceSupport:
         with DataStore(file_name, 'w') as output_hdf_file:
             for counter, interval in enumerate(intervals):
                 chr_name, _start, _end = interval
-                img_args = (chr_name, bam_file, draft_file, truth_bam, train_mode)
+                img_args = (chr_name, bam_file, draft_file, truth_bam, train_mode, downsample_rate)
                 images, labels, positions, chunk_ids, region = UserInterfaceSupport.single_worker(img_args, _start, _end)
 
                 for i, image in enumerate(images):
@@ -184,7 +185,7 @@ class UserInterfaceSupport:
 
                     output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
 
-                if counter > 0 and counter % 100 == 0:
+                if counter > 0 and counter % 10 == 0 and thread_id == 0:
                     percent_complete = int((100 * counter) / len(intervals))
                     time_now = time.time()
                     mins = int((time_now - start_time) / 60)
@@ -204,7 +205,8 @@ class UserInterfaceSupport:
                                          truth_bam,
                                          output_path,
                                          total_threads,
-                                         train_mode):
+                                         train_mode,
+                                         downsample_rate=1.0):
         if train_mode:
             max_size = 1000
         else:
@@ -238,7 +240,7 @@ class UserInterfaceSupport:
                          + " TOTAL INTERVALS: " + str(len(all_intervals)) + "\n")
         sys.stderr.flush()
 
-        args = (output_path, bam_file, draft_file, truth_bam, train_mode)
+        args = (output_path, bam_file, draft_file, truth_bam, train_mode, downsample_rate)
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
             futures = [executor.submit(UserInterfaceSupport.image_generator, args, all_intervals, total_threads, thread_id)
                        for thread_id in range(0, total_threads)]
@@ -247,8 +249,9 @@ class UserInterfaceSupport:
                 if fut.exception() is None:
                     # get the results
                     thread_id = fut.result()
-                    sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
-                                     + "INFO: THREAD " + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
+                    if thread_id == 0:
+                        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
+                                         + "INFO: THREAD " + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
                 else:
                     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: " + str(fut.exception()) + "\n")
                 fut._result = None  # python issue 27144

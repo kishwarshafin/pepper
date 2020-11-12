@@ -1,6 +1,7 @@
 from pepper.build import PEPPER
 import itertools
 import time
+import sys
 import numpy as np
 from operator import itemgetter
 from pepper.modules.python.Options import ImageSizeOptions, AlingerOptions
@@ -175,7 +176,7 @@ class AlignmentSummarizer:
 
         return realigned_reads
 
-    def create_summary(self, truth_bam_handler, train_mode, realignment_flag=True):
+    def create_summary(self, truth_bam_handler, train_mode, downsample_rate, realignment_flag=True):
         log_prefix = "[" + self.chromosome_name + ":" + str(self.region_start_position) + "-" \
                      + str(self.region_end_position) + "]"
         all_images = []
@@ -185,12 +186,12 @@ class AlignmentSummarizer:
 
         if train_mode:
             # get the reads from the bam file
-            include_supplementary = False
+            include_supplementary = True
             truth_reads = truth_bam_handler.get_reads(self.chromosome_name,
                                                       self.region_start_position,
                                                       self.region_end_position,
                                                       include_supplementary,
-                                                      0,
+                                                      60,
                                                       0)
 
             # do a local realignment of truth reads to reference
@@ -240,22 +241,26 @@ class AlignmentSummarizer:
                 if total_reads == 0:
                     continue
 
-                if total_reads > AlingerOptions.MAX_READS_IN_REGION:
+                total_reads = len(all_reads)
+                # sys.stderr.write("INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS BEFORE DOWNSAMPLING.\n")
+                total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, downsample_rate * total_reads))
+
+                if total_reads > total_allowed_reads:
                     # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
                     # reservoir_sample method utilized here
                     random = np.random.RandomState(AlingerOptions.RANDOM_SEED)
                     sample = []
                     for i, read in enumerate(all_reads):
-                        if len(sample) < AlingerOptions.MAX_READS_IN_REGION:
+                        if len(sample) < total_allowed_reads:
                             sample.append(read)
                         else:
                             j = random.randint(0, i + 1)
-                            if j < AlingerOptions.MAX_READS_IN_REGION:
+                            if j < total_allowed_reads:
                                 sample[j] = read
                     all_reads = sample
 
-                # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " TOTAL " + str(total_reads)
-                #                  + " READS FOUND.\n" + TextColor.END)
+                total_reads = len(all_reads)
+                # sys.stderr.write("INFO: " + log_prefix + " TOTAL " + str(total_reads) + " READS AFTER DOWNSAMPLING.\n")
 
                 start_time = time.time()
 
