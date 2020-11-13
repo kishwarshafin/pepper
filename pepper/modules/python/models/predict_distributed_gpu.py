@@ -99,6 +99,8 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
             counts = torch.ones((base_values.size(0), base_values.size(1) - 2 * ImageSizeOptions.SEQ_OVERLAP))
             top_ones = nn.ZeroPad2d((ImageSizeOptions.SEQ_OVERLAP, ImageSizeOptions.SEQ_OVERLAP))
             counts = top_ones(counts) + 1
+
+            base_values = base_labels.cpu().numpy()
             phred_score = -10 * torch.log10(1.0 - (base_values / counts))
             phred_score[phred_score == float('inf')] = 100
 
