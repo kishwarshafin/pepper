@@ -63,3 +63,16 @@ We used (https://github.com/jts/assembly_accuracy) to assess the quality of the 
 | Pseudomonas_aeruginosa |            99.72 (Q 25.62)            |               99.98 (Q 37.00)              |
 |   Salmonella_enterica  |            99.78 (Q 26.60)            |               99.99 (Q 40.00)              |
 |  Staphylococcus_aureus |            99.80 (Q 27.00)            |               99.95 (Q 33.35)              |
+
+### Gene completeness analysis
+After a [twitter conversation](https://twitter.com/kishwarshafin/status/1327379029817585665) with [Rasmus Kirkegaard](https://twitter.com/kirk3gaard)(@kirk3gaard), we analyzed the gene completeness before and after polishing the Zymo mock community samples using `ideel`. [Jan Gawor](https://twitter.com/gaworj)(@gaworj) pointed us to a configurable version of `ideel` which was easier to run. (Science twitter is really cool)
+
+**From this analysis, we expected the polishing to tighten the normal distribution of the query length to the length of the top hit in UniProt-DB around 1. As PEPPER fixes most errors present in the assembly, the vast majority of predicted proteins get a 1:1 ratio with their top hit in UniProt.**
+
+Here is a [blog post](http://www.opiniomics.org/a-simple-test-for-uncorrected-insertions-and-deletions-indels-in-bacterial-genomes/) and a [follow-up](http://www.opiniomics.org/with-great-power-comes-great-responsibility/) of this analysis. The versions of software we used for this analysis:
+* ideel software: https://github.com/mw55309/ideel
+* ideel software re-implementation: https://github.com/phiweger/ideel [We used this version as it provided options to configure]
+* Uniprot trembl file: ftp://ftp.ebi.ac.uk/pub/databases/uniprot/knowledgebase/uniprot_trembl.fasta.gz
+
+
+<img src="../img/Zymo_ideel.png" alt="Bonito read quality"> </img>

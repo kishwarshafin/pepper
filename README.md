@@ -10,6 +10,12 @@
 Computational Genomics Lab (CGL), University of California, Santa Cruz.
 
 ----
+## Polishing Microbial genomes
+Please consult the [documentation provided here](./docs/PEPPER_microbial_data_polishing.md) on how to polish microbial genome assemblies with PEPPER.
+
+----
+
+----
 ## Oxford Nanopore variant calling workflow (Limited support release)
 In collaboration with the [DeepVariant](https://github.com/google/deepvariant) group, we are developing a haplotype-aware variant calling pipeline for Oxford Nanopore sequencing technology. We are releasing the pipeline with limited support until we finalize the pipeline for full support.
 
