@@ -9,10 +9,6 @@ LIST TAKEN FROM: https://raw.githubusercontent.com/google/deepvariant/r0.10/deep
 
 # pyformat: disable
 EXCLUDED_HUMAN_CONTIGS = [
-    # The two canonical names for the contig representing the human
-    # mitochondrial sequence.
-    'chrM',
-    'MT',
     # From hs37d5.
     # (ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/README_human_reference_20110707)  # pylint:disable=line-too-long
     'GL000207.1',

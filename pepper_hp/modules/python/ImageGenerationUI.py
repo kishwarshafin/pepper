@@ -9,7 +9,7 @@ from pepper_hp.build import PEPPER_HP
 from pepper_hp.modules.python.DataStore import DataStore
 from pepper_hp.modules.python.AlignmentSummarizer import AlignmentSummarizer
 from pepper_hp.modules.python.Options import ImageSizeOptions
-from pepper_variant.modules.python.ExcludeContigs import EXCLUDED_HUMAN_CONTIGS
+from pepper_hp.modules.python.ExcludeContigs import EXCLUDED_HUMAN_CONTIGS
 
 
 class UserInterfaceView:
