@@ -117,7 +117,7 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                         base_quality = min(100, read.base_qualities[read_index]) / 100.0;
 
                         // update the summary of base
-                        base_summaries[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
+                        base_summaries[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
                         coverage[ref_position] += 1.0;
 
                     }
@@ -138,7 +138,7 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                         pair<long long, int> position_pair = make_pair(ref_position - 1, i);
                         base_quality = min(100, read.base_qualities[read_index + i]) / 100.0;
 
-                        insert_summaries[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
+                        insert_summaries[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
                     }
                     longest_insert_count[ref_position - 1] = std::max(longest_insert_count[ref_position - 1],
                                                                       (long long) alt.length());
@@ -154,7 +154,7 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                 for (int i = 0; i < cigar.length; i++) {
                     if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                         // update the summary of base
-                        base_summaries[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += (base_quality + read.mapping_quality) / 2.0;
+                        base_summaries[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
                         coverage[ref_position] += 1.0;
                     }
                 }

@@ -82,17 +82,17 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
 
                         // update the summary of base
                         if(read.hp_tag == 0) {
-                            base_summaries_hp1[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
-                            base_summaries_hp2[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
+                            base_summaries_hp1[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                            base_summaries_hp2[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
                             coverage_hp1[ref_position] += 1;
                             coverage_hp2[ref_position] += 1;
                         }
                         else if(read.hp_tag == 1) {
-                            base_summaries_hp1[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
+                            base_summaries_hp1[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
                             coverage_hp1[ref_position] += 1;
                         }
                         else if(read.hp_tag == 2) {
-                            base_summaries_hp2[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
+                            base_summaries_hp2[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
                             coverage_hp2[ref_position] += 1;
                         }
 
@@ -118,14 +118,14 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                         base_quality = min(100, read.base_qualities[read_index + i]) / 100.0;
 
                         if(read.hp_tag == 0) {
-                            insert_summaries_hp1[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
-                            insert_summaries_hp2[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
+                            insert_summaries_hp1[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
+                            insert_summaries_hp2[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
                         }
                         else if(read.hp_tag == 1) {
-                            insert_summaries_hp1[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
+                            insert_summaries_hp1[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
                         }
                         else if(read.hp_tag == 2)    {
-                            insert_summaries_hp2[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
+                            insert_summaries_hp2[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
                         }
                     }
                     longest_insert_count[ref_position - 1] = std::max(longest_insert_count[ref_position - 1],
@@ -144,15 +144,15 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                     if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                         // update the summary of base
                         if(read.hp_tag == 0) {
-                            base_summaries_hp1[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
-                            base_summaries_hp2[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
+                            base_summaries_hp1[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                            base_summaries_hp2[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
                             coverage_hp1[ref_position] += 1;
                             coverage_hp2[ref_position] += 1;
                         } else if(read.hp_tag == 1) {
-                            base_summaries_hp1[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
+                            base_summaries_hp1[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
                             coverage_hp1[ref_position] += 1;
                         } else if(read.hp_tag == 2) {
-                            base_summaries_hp2[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += (base_quality + mapping_quality) / 2.0;
+                            base_summaries_hp2[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
                             coverage_hp2[ref_position] += 1;
                         }
                         coverage[ref_position] += 1.0;
