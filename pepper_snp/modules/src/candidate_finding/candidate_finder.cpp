@@ -94,8 +94,8 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
 bool CandidateFinder::filter_candidate(Candidate candidate) {
     double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
 
-    if(allele_frequency >= 0.10) return true;
-    else return false;
+//    if(allele_frequency >= 0.10) return true;
+//    else return false;
     // CONDITIONS FOR SNP
     if(candidate.allele.alt_type == SNP_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
