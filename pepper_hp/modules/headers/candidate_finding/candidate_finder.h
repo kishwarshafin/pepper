@@ -33,27 +33,27 @@ namespace Genotype {
 namespace LinearRegression {
 
     static constexpr double SNP_ALT_FREQ_COEF = 0;
-    static constexpr double SNP_NON_REF_PROB_COEF = -0.012329;
-    static constexpr double SNP_ALLELE_WEIGHT_COEF = 1.006342;
-    static constexpr double SNP_BIAS_TERM = 0.000001;
+    static constexpr double SNP_NON_REF_PROB_COEF = -0.002397;
+    static constexpr double SNP_ALLELE_WEIGHT_COEF = 1.008378;
+    static constexpr double SNP_BIAS_TERM = 0.001291;
     static constexpr double SNP_THRESHOLD = 0.01;
     static constexpr double SNP_LOWER_FREQ_THRESHOLD = 0.10;
     static constexpr double SNP_UPPER_FREQ = 0.4;
 
     static constexpr double INSERT_ALT_FREQ_COEF = 0;
-    static constexpr double INSERT_NON_REF_PROB_COEF = 0.11181;
-    static constexpr double INSERT_ALLELE_WEIGHT_COEF = 0.927223;
-    static constexpr double INSERT_BIAS_TERM = 0.002392;
-    static constexpr double INSERT_THRESHOLD = 0.15;
+    static constexpr double INSERT_NON_REF_PROB_COEF = 0.239488;
+    static constexpr double INSERT_ALLELE_WEIGHT_COEF = 0.822283;
+    static constexpr double INSERT_BIAS_TERM = 0.000298;
+    static constexpr double INSERT_THRESHOLD = 0.2;
     static constexpr double IN_LOWER_FREQ_THRESHOLD = 0.10;
     static constexpr double IN_UPPER_FREQ = 0.5;
 
     static constexpr double DELETE_ALT_FREQ_COEF = 0;
-    static constexpr double DELETE_NON_REF_PROB_COEF = 0.05434;
-    static constexpr double DELETE_ALLELE_WEIGHT_COEF = 0.795318;
-    static constexpr double DELETE_BIAS_TERM = -0.003836;
-    static constexpr double DELETE_THRESHOLD = 0.2;
-    static constexpr double DEL_LOWER_FREQ_THRESHOLD = 0.15;
+    static constexpr double DELETE_NON_REF_PROB_COEF = 0.039434;
+    static constexpr double DELETE_ALLELE_WEIGHT_COEF = 0.765909;
+    static constexpr double DELETE_BIAS_TERM = -0.003304;
+    static constexpr double DELETE_THRESHOLD = 0.15;
+    static constexpr double DEL_LOWER_FREQ_THRESHOLD = 0.10;
     static constexpr double DEL_UPPER_FREQ_THRESHOLD = 0.5;
 }
 
