@@ -30,7 +30,7 @@ class AlignmentSummarizer:
             pos_chunk = summary.genomic_pos[chunk_start:chunk_end]
             label_chunk = [0] * (chunk_end - chunk_start)
 
-            assert (len(image_chunk) == len(pos_chunk) == len(label_chunk))
+            # assert (len(image_chunk) == len(pos_chunk) == len(label_chunk))
             # print(len(image_chunk), len(pos_chunk), len(label_chunk))
 
             padding_required = chunk_size - len(image_chunk)
@@ -39,7 +39,7 @@ class AlignmentSummarizer:
                 pos_chunk = pos_chunk + [(-1, -1)] * padding_required
                 image_chunk = image_chunk + [[0.0] * ImageSizeOptions.IMAGE_HEIGHT] * padding_required
 
-            assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == ImageSizeOptions.SEQ_LENGTH)
+            # assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == ImageSizeOptions.SEQ_LENGTH)
 
             images.append(image_chunk)
             labels.append(label_chunk)
@@ -82,7 +82,7 @@ class AlignmentSummarizer:
                 pos_chunk = summary.genomic_pos[chunk_start:chunk_end]
                 label_chunk = summary.labels[chunk_start:chunk_end]
 
-                assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == chunk_size)
+                # assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == chunk_size)
 
                 images.append(image_chunk)
                 labels.append(label_chunk)
@@ -98,7 +98,7 @@ class AlignmentSummarizer:
 
             chunk_start = chunk_end + 1
 
-        assert(len(images) == len(labels) == len(positions) == len(chunk_ids))
+        # assert(len(images) == len(labels) == len(positions) == len(chunk_ids))
 
         return images, labels, positions, chunk_ids
 
@@ -355,6 +355,6 @@ class AlignmentSummarizer:
             all_positions.extend(positions)
             all_image_chunk_ids.extend(chunk_ids)
 
-        assert(len(all_images) == len(all_labels) == len(all_image_chunk_ids))
+        # assert(len(all_images) == len(all_labels) == len(all_image_chunk_ids))
 
         return all_images, all_labels, all_positions, all_image_chunk_ids

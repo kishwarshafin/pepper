@@ -411,8 +411,8 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
 //            row_h2.push_back(pixel_value_h2_encoding_h1);
 //        }
 
-        assert(row_h1.size() == 10);
-        assert(row_h2.size() == 10);
+//        assert(row_h1.size() == 10);
+//        assert(row_h2.size() == 10);
         image_hp1.push_back(row_h1);
         image_hp2.push_back(row_h2);
 
@@ -446,16 +446,16 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
 //                    ins_row_hp2.push_back(pixel_value_h2_encoding_h1); // this line 2
 //                }
 
-                assert(ins_row_hp1.size() == 10);
-                assert(ins_row_hp2.size() == 10);
+//                assert(ins_row_hp1.size() == 10);
+//                assert(ins_row_hp2.size() == 10);
                 image_hp1.push_back(ins_row_hp1);
                 image_hp2.push_back(ins_row_hp2);
             }
         }
     }
 
-    assert(image_hp1.size() == genomic_pos.size());
-    assert(image_hp1.size() == image_hp2.size());
+//    assert(image_hp1.size() == genomic_pos.size());
+//    assert(image_hp1.size() == image_hp2.size());
 }
 
 
@@ -524,8 +524,8 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
         }
     }
     bad_label_positions.push_back(labels_hp1.size());
-    assert(labels_hp1.size() == genomic_pos.size());
-    assert(labels_hp1.size() == labels_hp2.size());
+//    assert(labels_hp1.size() == genomic_pos.size());
+//    assert(labels_hp1.size() == labels_hp2.size());
 
     // generate reference sequence
     for (int i = start_pos; i <= end_pos; i++) {
@@ -610,7 +610,7 @@ ImageSummary SummaryGenerator::chunk_image(int chunk_size, int chunk_overlap, in
             }
         }
 //        cout<<"Sizes: "<< image_chunk.size()<<" "<<pos_chunk.size()<<" "<<label_chunk.size()<<" "<<chunk_size<<endl;
-        assert (image_chunk_hp1.size() == image_chunk_hp2.size() == pos_chunk.size() == label_chunk_hp1.size() == label_chunk_hp2.size() == chunk_size);
+//        assert (image_chunk_hp1.size() == image_chunk_hp2.size() == pos_chunk.size() == label_chunk_hp1.size() == label_chunk_hp2.size() == chunk_size);
 
         chunked_summary.images_hp1.push_back(image_chunk_hp1);
         chunked_summary.images_hp2.push_back(image_chunk_hp2);
@@ -658,7 +658,7 @@ ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overl
             vector<uint8_t> label_chunk_hp2(labels_hp2.begin() + chunk_start, labels_hp2.begin() + chunk_end);
 
 //            cout<<"Sizes: "<< image_chunk.size()<<" "<<pos_chunk.size()<<" "<<label_chunk.size()<<" "<<chunk_size<<endl;
-            assert (image_chunk_hp1.size() == image_chunk_hp2.size() == pos_chunk.size() == label_chunk_hp1.size() == label_chunk_hp2.size() == chunk_size);
+//            assert (image_chunk_hp1.size() == image_chunk_hp2.size() == pos_chunk.size() == label_chunk_hp1.size() == label_chunk_hp2.size() == chunk_size);
 
             chunked_summary.images_hp1.push_back(image_chunk_hp1);
             chunked_summary.images_hp2.push_back(image_chunk_hp2);

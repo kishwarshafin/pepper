@@ -36,7 +36,7 @@ class AlignmentSummarizer:
             label_chunk_hp1 = [0] * (chunk_end - chunk_start)
             label_chunk_hp2 = [0] * (chunk_end - chunk_start)
 
-            assert (len(image_chunk_hp1) == len(image_chunk_hp2) == len(pos_chunk) == len(label_chunk_hp1) == len(label_chunk_hp2))
+            # assert (len(image_chunk_hp1) == len(image_chunk_hp2) == len(pos_chunk) == len(label_chunk_hp1) == len(label_chunk_hp2))
             # print(len(image_chunk), len(pos_chunk), len(label_chunk))
 
             padding_required = chunk_size - len(image_chunk_hp1)
@@ -48,7 +48,7 @@ class AlignmentSummarizer:
                 image_chunk_hp1 = image_chunk_hp1 + [[0.0] * ImageSizeOptions.IMAGE_HEIGHT] * padding_required
                 image_chunk_hp2 = image_chunk_hp2 + [[0.0] * ImageSizeOptions.IMAGE_HEIGHT] * padding_required
 
-            assert (len(image_chunk_hp1) == len(image_chunk_hp2) == len(pos_chunk) == len(label_chunk_hp1) == len(label_chunk_hp2) == ImageSizeOptions.SEQ_LENGTH)
+            # assert (len(image_chunk_hp1) == len(image_chunk_hp2) == len(pos_chunk) == len(label_chunk_hp1) == len(label_chunk_hp2) == ImageSizeOptions.SEQ_LENGTH)
 
             images_hp1.append(image_chunk_hp1)
             images_hp2.append(image_chunk_hp2)
@@ -99,7 +99,7 @@ class AlignmentSummarizer:
                 label_chunk_hp1 = summary.labels_hp1[chunk_start:chunk_end]
                 label_chunk_hp2 = summary.labels_hp2[chunk_start:chunk_end]
 
-                assert (len(images_hp1_chunk) == len(images_hp2_chunk) == len(pos_chunk) == len(label_chunk_hp1) == len(label_chunk_hp2) == chunk_size)
+                # assert (len(images_hp1_chunk) == len(images_hp2_chunk) == len(pos_chunk) == len(label_chunk_hp1) == len(label_chunk_hp2) == chunk_size)
 
                 images_hp1.append(images_hp1_chunk)
                 images_hp2.append(images_hp2_chunk)
@@ -118,7 +118,7 @@ class AlignmentSummarizer:
 
             chunk_start = chunk_end + 1
 
-        assert(len(images_hp1) == len(images_hp2) == len(labels_hp1) == len(labels_hp2) == len(positions) == len(chunk_ids))
+        # assert(len(images_hp1) == len(images_hp2) == len(labels_hp1) == len(labels_hp2) == len(positions) == len(chunk_ids))
 
         return images_hp1, images_hp2, labels_hp1, labels_hp2, positions, chunk_ids, ref_images
 
@@ -498,6 +498,6 @@ class AlignmentSummarizer:
             all_image_chunk_ids.extend(image_summary.chunk_ids)
             all_ref_seq.extend(image_summary.refs)
 
-        assert(len(all_images_hp1) == len(all_images_hp2) == len(all_labels_hp1) == len(all_labels_hp2) == len(all_image_chunk_ids) == len(all_ref_seq))
+        # assert(len(all_images_hp1) == len(all_images_hp2) == len(all_labels_hp1) == len(all_labels_hp2) == len(all_image_chunk_ids) == len(all_ref_seq))
 
         return all_images_hp1, all_images_hp2, all_labels_hp1, all_labels_hp2, all_positions, all_image_chunk_ids, all_ref_seq

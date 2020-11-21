@@ -340,7 +340,7 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
             row.push_back(pixel_value);
         }
 
-        assert(row.size() == 10);
+//        assert(row.size() == 10);
         image.push_back(row);
 
         if (longest_insert_count[i] > 0) {
@@ -354,13 +354,13 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
                     ins_row.push_back(pixel_value);
                 }
 
-                assert(ins_row.size() == 10);
+//                assert(ins_row.size() == 10);
                 image.push_back(ins_row);
             }
         }
     }
 
-    assert(image.size() == genomic_pos.size());
+//    assert(image.size() == genomic_pos.size());
 }
 
 
@@ -434,7 +434,7 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
         }
     }
     bad_label_positions.push_back(labels.size());
-    assert(labels.size() == genomic_pos.size());
+//    assert(labels.size() == genomic_pos.size());
 
     // generate reference sequence
     for (int i = start_pos; i <= end_pos; i++) {

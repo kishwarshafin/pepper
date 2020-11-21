@@ -32,7 +32,7 @@ class AlignmentSummarizer:
             ref_chunk = summary.ref_image[chunk_start:chunk_end]
             label_chunk = [0] * (chunk_end - chunk_start)
 
-            assert (len(image_chunk) == len(pos_chunk) == len(label_chunk))
+            # assert (len(image_chunk) == len(pos_chunk) == len(label_chunk))
             # print(len(image_chunk), len(pos_chunk), len(label_chunk))
 
             padding_required = chunk_size - len(image_chunk)
@@ -42,7 +42,7 @@ class AlignmentSummarizer:
                 ref_chunk = ref_chunk + [0] * padding_required
                 image_chunk = image_chunk + [[0.0] * ImageSizeOptions.IMAGE_HEIGHT] * padding_required
 
-            assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == ImageSizeOptions.SEQ_LENGTH)
+            # assert (len(image_chunk) == len(pos_chunk) == len(label_chunk) == ImageSizeOptions.SEQ_LENGTH)
 
             images.append(image_chunk)
             labels.append(label_chunk)
@@ -87,7 +87,7 @@ class AlignmentSummarizer:
                 ref_chunk = summary.ref_image[chunk_start:chunk_end]
                 label_chunk = summary.labels[chunk_start:chunk_end]
 
-                assert (len(images_chunk) == len(pos_chunk) == len(label_chunk) == chunk_size)
+                # assert (len(images_chunk) == len(pos_chunk) == len(label_chunk) == chunk_size)
 
                 images.append(images_chunk)
                 labels.append(label_chunk)
@@ -104,7 +104,7 @@ class AlignmentSummarizer:
 
             chunk_start = chunk_end + 1
 
-        assert(len(images) == len(labels) == len(positions) == len(chunk_ids))
+        # assert(len(images) == len(labels) == len(positions) == len(chunk_ids))
 
         return images, labels, positions, chunk_ids, ref_images
 
@@ -480,6 +480,6 @@ class AlignmentSummarizer:
             all_ref_seq.extend(image_summary.refs)
             # print("IMAGE GENERATION TIME: ", time.time()-start_time)
 
-        assert(len(all_images) == len(all_labels) == len(all_image_chunk_ids) == len(all_ref_seq))
+        # assert(len(all_images) == len(all_labels) == len(all_image_chunk_ids) == len(all_ref_seq))
 
         return all_images, all_labels, all_positions, all_image_chunk_ids, all_ref_seq

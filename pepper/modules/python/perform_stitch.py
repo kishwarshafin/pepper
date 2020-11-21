@@ -74,7 +74,7 @@ def perform_stitch(hdf_file_path, output_path, threads):
         consensus_sequence, quality_sequence = create_consensus_sequence(contig,
                                                                          all_chunk_keys,
                                                                          threads)
-        assert(len(consensus_sequence) == len(quality_sequence))
+        # assert(len(consensus_sequence) == len(quality_sequence))
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", POLISHED SEQUENCE LENGTH: "
                          + str(len(consensus_sequence)) + ".\n")
 
