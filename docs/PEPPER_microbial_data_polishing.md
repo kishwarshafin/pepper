@@ -1,3 +1,8 @@
+## Newer model needed for Bonito v3.1
+Please see this issue: https://github.com/kishwarshafin/pepper/issues/22
+
+We are going to re-run our training excercise on the newer Bonito version.
+
 ## Polishing Microbial genome assemblies with PEPPER
 As PEPPER is now increasingly being used to polish Microbial genome assemblies, we internally benchmarked PEPPER to find the best mode of use. As `Flye` is the most popular Microbial genome assembler, we used `Flye` for this experiment. However, this method works similarly well when paired with `Shasta` assembler. All of the data reported here is generated with Zymo Microbial mock community data with R9.4.1 chemistry.
 
