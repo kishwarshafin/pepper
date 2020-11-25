@@ -94,7 +94,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                                                       position[i], index[i], prediction_base_tensor[i], ref_seq[i])
             batch_completed += 1
 
-            if rank == 0:
+            if rank == 0 and batch_completed % 5 == 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
 
