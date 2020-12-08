@@ -120,15 +120,15 @@ def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, 
     start_time = time.time()
     predict_args = []
     for i in range(total_callers):
-        predict_args.append([(predict, filepath, file_chunks[i], output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[i], i)])
+        predict_args.append([(filepath, file_chunks[i], output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[i], i)])
 
     multiprocessing.set_start_method('spawn')
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING PROCESS POOL\n")
-    for arg in predict_args:
-        print(arg)
-    exit()
-    with multiprocessing.Pool(processes=4) as pool:
-        pool.map(lambda a: predict(*a), predict_args)
+    # for arg in predict_args:
+    #     print(arg)
+    # exit()
+    with multiprocessing.Pool(processes=total_callers) as pool:
+        pool.starmap(predict, predict_args)
 
     # with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers, mp_context=multiprocessing.get_context('spawn')) as executor:
     #     futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[thread_id], thread_id)
