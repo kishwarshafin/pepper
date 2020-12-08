@@ -124,6 +124,9 @@ def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, 
 
     multiprocessing.set_start_method('spawn')
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING PROCESS POOL\n")
+    for arg in predict_args:
+        print(arg)
+    exit()
     with multiprocessing.Pool(processes=4) as pool:
         pool.map(lambda a: predict(*a), predict_args)
 
