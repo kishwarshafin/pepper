@@ -112,33 +112,9 @@ def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, 
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
-    # load the model and create an ONNX session
-    transducer_model, hidden_size, gru_layers, prev_ite = \
-        ModelHandler.load_simple_model_for_training(model_path,
-                                                    input_channels=ImageSizeOptions.IMAGE_CHANNELS,
-                                                    image_features=ImageSizeOptions.IMAGE_HEIGHT,
-                                                    seq_len=ImageSizeOptions.SEQ_LENGTH,
-                                                    num_classes=ImageSizeOptions.TOTAL_LABELS)
-    transducer_model.eval()
-
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL LOADING TO ONNX\n")
-    x = torch.zeros(1, TrainOptions.TRAIN_WINDOW, ImageSizeOptions.IMAGE_HEIGHT)
-    h = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-
-    if not os.path.isfile(model_path + ".onnx"):
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SAVING MODEL TO ONNX\n")
-        torch.onnx.export(transducer_model, (x, h),
-                          model_path + ".onnx",
-                          training=False,
-                          opset_version=10,
-                          do_constant_folding=True,
-                          input_names=['input_image', 'input_hidden'],
-                          output_names=['output_pred', 'output_hidden'],
-                          dynamic_axes={'input_image': {0: 'batch_size'},
-                                        'input_hidden': {0: 'batch_size'},
-                                        'output_pred': {0: 'batch_size'},
-                                        'output_hidden': {0: 'batch_size'}})
-
+    print("TOTAL CALLERS: ", total_callers)
+    print("DEVICE IDs: ", device_ids)
+    exit()
     start_time = time.time()
     with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
         futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[thread_id], thread_id)
