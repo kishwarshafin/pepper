@@ -1,11 +1,10 @@
 import sys
 import os
 import torch
-import time
 import torch.nn as nn
 from torch.utils.data import DataLoader
-import concurrent.futures
-import multiprocessing
+import torch.multiprocessing as mp
+import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
 from pepper_snp.modules.python.models.dataloader_predict import SequenceDataset
 from datetime import datetime
@@ -100,6 +99,29 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
 
 
+def cleanup():
+    dist.destroy_process_group()
+
+
+def setup(rank, total_callers, args, all_input_files):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+
+    # initialize the process group
+    dist.init_process_group("gloo", rank=rank, world_size=total_callers)
+
+    filepath, output_filepath, model_path, batch_size, threads_per_caller, device_ids, num_workers = args
+
+    # issue with semaphore lock: https://github.com/pytorch/pytorch/issues/2517
+    # mp.set_start_method('spawn')
+
+    # Explicitly setting seed to make sure that models created in two processes
+    # start from same random weights and biases. https://github.com/pytorch/pytorch/issues/2517
+    # torch.manual_seed(42)
+    predict(filepath, all_input_files[rank],  output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[rank], rank)
+    cleanup()
+
+
 def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads_per_caller, device_ids, num_workers):
     """
     Create a prediction table/dictionary of an images set using a trained model.
@@ -108,46 +130,14 @@ def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, 
     :param batch_size: Batch size used for prediction
     :param model_path: Path to a trained model
     :param output_filepath: Path to output directory
-    :param total_callers: Number of callers to spawn
-    :param threads_per_caller: Number of threads to use per caller
+    :param total_callers: Number of callers
+    :param threads_per_caller: How many threads to set per caller
+    :param device_ids: Device ID of GPU to be used
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
-    # print("TOTAL CALLERS: ", total_callers)
-    # print("DEVICE IDs: ", device_ids)
-    # exit()
-    # setup args
-    start_time = time.time()
-    predict_args = []
-    for i in range(total_callers):
-        predict_args.append((filepath, file_chunks[i], output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[i], i))
-
-    print(predict_args)
-
-    multiprocessing.set_start_method('spawn')
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING PROCESS POOL\n")
-    # for arg in predict_args:
-    #     print(arg)
-    # exit()
-    with multiprocessing.Pool(processes=total_callers) as pool:
-        pool.starmap(predict, predict_args)
-
-    # with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers, mp_context=multiprocessing.get_context('spawn')) as executor:
-    #     futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[thread_id], thread_id)
-    #                for thread_id in range(0, total_callers)]
-    #
-    #     for fut in concurrent.futures.as_completed(futures):
-    #         if fut.exception() is None:
-    #             # get the results
-    #             thread_id = fut.result()
-    #             sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
-    #                              + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
-    #         else:
-    #             sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
-    #         fut._result = None  # python issue 27144
-
-    end_time = time.time()
-    mins = int((end_time - start_time) / 60)
-    secs = int((end_time - start_time)) % 60
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PREDICTION\n")
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
+    args = (filepath, output_filepath, model_path, batch_size, threads_per_caller, device_ids, num_workers)
+    mp.spawn(setup,
+             args=(total_callers, args, file_chunks),
+             nprocs=total_callers,
+             join=True)
