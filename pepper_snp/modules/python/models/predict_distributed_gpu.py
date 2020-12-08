@@ -112,9 +112,9 @@ def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, 
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
-    print("TOTAL CALLERS: ", total_callers)
-    print("DEVICE IDs: ", device_ids)
-    exit()
+    # print("TOTAL CALLERS: ", total_callers)
+    # print("DEVICE IDs: ", device_ids)
+    # exit()
     start_time = time.time()
     with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
         futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[thread_id], thread_id)
