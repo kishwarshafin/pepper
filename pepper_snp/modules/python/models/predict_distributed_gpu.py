@@ -116,20 +116,30 @@ def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, 
     # print("TOTAL CALLERS: ", total_callers)
     # print("DEVICE IDs: ", device_ids)
     # exit()
+    # setup args
     start_time = time.time()
-    with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers, mp_context=multiprocessing.get_context('spawn')) as executor:
-        futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[thread_id], thread_id)
-                   for thread_id in range(0, total_callers)]
+    predict_args = []
+    for i in range(total_callers):
+        predict_args.append([(predict, filepath, file_chunks[i], output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[i], i)])
 
-        for fut in concurrent.futures.as_completed(futures):
-            if fut.exception() is None:
-                # get the results
-                thread_id = fut.result()
-                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
-                                 + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
-            else:
-                sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
-            fut._result = None  # python issue 27144
+    multiprocessing.set_start_method('spawn')
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING PROCESS POOL\n")
+    with multiprocessing.Pool(processes=4) as pool:
+        pool.map(predict, predict_args)
+
+    # with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers, mp_context=multiprocessing.get_context('spawn')) as executor:
+    #     futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[thread_id], thread_id)
+    #                for thread_id in range(0, total_callers)]
+    #
+    #     for fut in concurrent.futures.as_completed(futures):
+    #         if fut.exception() is None:
+    #             # get the results
+    #             thread_id = fut.result()
+    #             sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
+    #                              + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
+    #         else:
+    #             sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
+    #         fut._result = None  # python issue 27144
 
     end_time = time.time()
     mins = int((end_time - start_time) / 60)
