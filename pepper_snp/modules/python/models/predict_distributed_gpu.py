@@ -5,6 +5,7 @@ import time
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import concurrent.futures
+import multiprocessing
 from torch.nn.parallel import DistributedDataParallel
 from pepper_snp.modules.python.models.dataloader_predict import SequenceDataset
 from datetime import datetime
@@ -116,7 +117,7 @@ def predict_distributed_gpu(filepath, file_chunks, output_filepath, model_path, 
     # print("DEVICE IDs: ", device_ids)
     # exit()
     start_time = time.time()
-    with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers, mp_context=multiprocessing.get_context('spawn')) as executor:
         futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, device_ids[thread_id], thread_id)
                    for thread_id in range(0, total_callers)]
 
