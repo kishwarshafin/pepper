@@ -2,12 +2,12 @@ import sys
 import os
 import torch
 import torch.onnx
-import torch.distributed as dist
 import torch.nn as nn
 import onnxruntime
+import time
 from datetime import datetime
 from torch.utils.data import DataLoader
-import torch.multiprocessing as mp
+import concurrent.futures
 from pepper_snp.modules.python.models.dataloader_predict import SequenceDataset
 from pepper_snp.modules.python.models.ModelHander import ModelHandler
 from pepper_snp.modules.python.Options import ImageSizeOptions, TrainOptions
@@ -90,26 +90,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
 
 
-def cleanup():
-    dist.destroy_process_group()
-
-
-def setup(rank, total_callers, args, all_input_files):
-    os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12355'
-
-    # initialize the process group
-    dist.init_process_group("gloo", rank=rank, world_size=total_callers)
-
-    filepath, output_filepath, model_path, batch_size, threads, num_workers = args
-
-    # Explicitly setting seed to make sure that models created in two processes
-    # start from same random weights and biases.
-    predict(filepath, all_input_files[rank],  output_filepath, model_path, batch_size, num_workers, threads, rank)
-    cleanup()
-
-
-def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, callers, threads, num_workers):
+def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads, num_workers):
     """
     Create a prediction table/dictionary of an images set using a trained model.
     :param filepath: Path to image files to predict on
@@ -117,18 +98,18 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
     :param batch_size: Batch size used for prediction
     :param model_path: Path to a trained model
     :param output_filepath: Path to output directory
-    :param callers: Number of callers to start
-    :param threads: Number of threads per caller.
+    :param total_callers: Number of callers to spawn
+    :param threads_per_caller: Number of threads to use per caller
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
+    # load the model and create an ONNX session
     transducer_model, hidden_size, gru_layers, prev_ite = \
         ModelHandler.load_simple_model_for_training(model_path,
                                                     input_channels=ImageSizeOptions.IMAGE_CHANNELS,
                                                     image_features=ImageSizeOptions.IMAGE_HEIGHT,
                                                     seq_len=ImageSizeOptions.SEQ_LENGTH,
                                                     num_classes=ImageSizeOptions.TOTAL_LABELS)
-
     transducer_model.eval()
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL LOADING TO ONNX\n")
@@ -149,10 +130,23 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
                                         'output_pred': {0: 'batch_size'},
                                         'output_hidden': {0: 'batch_size'}})
 
-    transducer_model.eval()
-    args = (filepath, output_filepath, model_path, batch_size, threads, num_workers)
+    start_time = time.time()
+    with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
+        futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads, thread_id)
+                   for thread_id in range(0, total_callers)]
 
-    mp.spawn(setup,
-             args=(callers, args, file_chunks),
-             nprocs=callers,
-             join=True)
+        for fut in concurrent.futures.as_completed(futures):
+            if fut.exception() is None:
+                # get the results
+                thread_id = fut.result()
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
+                                 + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
+            else:
+                sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
+            fut._result = None  # python issue 27144
+
+    end_time = time.time()
+    mins = int((end_time - start_time) / 60)
+    secs = int((end_time - start_time)) % 60
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PREDICTION\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
