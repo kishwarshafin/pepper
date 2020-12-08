@@ -90,6 +90,8 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
 
+    return thread_id
+
 
 def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads, num_workers):
     """
@@ -140,8 +142,9 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
             if fut.exception() is None:
                 # get the results
                 thread_id = fut.result()
-                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
-                                 + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
+                if thread_id == 0:
+                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
+                                     + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
             else:
                 sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
             fut._result = None  # python issue 27144

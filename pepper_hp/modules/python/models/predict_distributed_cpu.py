@@ -114,6 +114,8 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
                 sys.stderr.flush()
 
+    return thread_id
+
 
 def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads, num_workers):
     """
