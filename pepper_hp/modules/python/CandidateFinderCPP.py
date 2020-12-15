@@ -1,3 +1,5 @@
+import sys
+from datetime import datetime
 from collections import defaultdict
 from pepper_hp.build import PEPPER_HP
 from pepper_hp.modules.python.Options import ImageSizeOptions, ReadFilterOptions, CandidateFinderOptions
@@ -13,7 +15,7 @@ class CandidateFinderCPP:
     def overlap_length_between_ranges(range_a, range_b):
         return max(0, (min(range_a[1], range_b[1]) - max(range_a[0], range_b[0])))
 
-    def find_candidates(self, bam_file_path, fasta_file_path, contig_name, region_start, region_end, all_positions, all_indicies, all_predictions_hp1, all_predictions_hp2):
+    def find_candidates(self, bam_file_path, fasta_file_path, contig_name, region_start, region_end, all_positions, all_indicies, all_predictions_hp1, all_predictions_hp2, haplotag):
         bam_handler = PEPPER_HP.BAM_handler(bam_file_path)
         fasta_handler = PEPPER_HP.FASTA_handler(fasta_file_path)
         all_reads = bam_handler.get_reads(contig_name,
@@ -22,6 +24,18 @@ class CandidateFinderCPP:
                                           ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
                                           ReadFilterOptions.MIN_MAPQ,
                                           ReadFilterOptions.MIN_BASEQ)
+
+        if haplotag != 0:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: HAPLOTAG FOUND: " + str(haplotag) + " REMOVING OTHER HAPLOTAGGED READS\n")
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL READS BEFORE FILTERING: " + str(len(all_reads)) + ".\n")
+            filtered_set = []
+            for read in all_reads:
+                if read.hp_tag == 0 or read.hp_tag == haplotag:
+                    filtered_set.append(read)
+            all_reads = filtered_set
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL READS AFTER FILTERING: " + str(len(all_reads)) + ".\n")
+
+
 
         ref_start = max(0, self.region_start - (CandidateFinderOptions.SAFE_BASES * 2))
         ref_end = self.region_end + (CandidateFinderOptions.SAFE_BASES * 2)

@@ -24,7 +24,8 @@ def call_variant(bam_filepath,
                  num_workers,
                  sample_name,
                  linear_candidate_finder,
-                 downsample_rate):
+                 downsample_rate,
+                 split_candidates):
     """
     Run all the sub-modules to polish an input assembly.
     """
@@ -123,7 +124,8 @@ def call_variant(bam_filepath,
                            bam_filepath,
                            sample_name,
                            candidate_output_directory,
-                           threads)
+                           threads,
+                           split_candidates)
     else:
         process_candidates_basic(prediction_output_directory,
                                  fasta_filepath,

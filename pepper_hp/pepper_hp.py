@@ -130,6 +130,13 @@ def add_call_variant_arguments(parser):
         default=1.0,
         help="Downsample rate of reads while generating images."
     )
+    parser.add_argument(
+        "-split",
+        "--split_candidates",
+        default=False,
+        action='store_true',
+        help="If set then candidates will be split between haplotags."
+    )
     return parser
 
 
@@ -318,6 +325,13 @@ def add_find_candidates_arguments(parser):
         type=int,
         help="Number of threads."
     )
+    parser.add_argument(
+        "-split",
+        "--split_candidates",
+        default=False,
+        action='store_true',
+        help="If set then candidates will be split between haplotags."
+    )
     return parser
 
 
@@ -422,7 +436,8 @@ def main():
                      FLAGS.num_workers,
                      FLAGS.sample_name,
                      FLAGS.linear,
-                     FLAGS.downsample_rate)
+                     FLAGS.downsample_rate,
+                     FLAGS.split_candidates)
 
     elif FLAGS.sub_command == 'make_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
@@ -453,7 +468,8 @@ def main():
                                FLAGS.bam,
                                FLAGS.sample_name,
                                FLAGS.output_dir,
-                               FLAGS.threads)
+                               FLAGS.threads,
+                               FLAGS.split_candidates)
         else:
             process_candidates_basic(FLAGS.input_dir,
                                      FLAGS.fasta,
