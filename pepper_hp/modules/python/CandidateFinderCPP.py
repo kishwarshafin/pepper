@@ -35,8 +35,6 @@ class CandidateFinderCPP:
             all_reads = filtered_set
             sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL READS AFTER FILTERING: " + str(len(all_reads)) + ".\n")
 
-
-
         ref_start = max(0, self.region_start - (CandidateFinderOptions.SAFE_BASES * 2))
         ref_end = self.region_end + (CandidateFinderOptions.SAFE_BASES * 2)
 

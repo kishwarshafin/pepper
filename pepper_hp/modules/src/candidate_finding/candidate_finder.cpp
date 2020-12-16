@@ -218,6 +218,9 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
 bool CandidateFinder::filter_candidate(Candidate candidate) {
     double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
 
+    if(allele_frequency >= 0.10)return true;
+    else return false;
+
     // CONDITIONS FOR INSERT
     if(candidate.allele.alt_type == SNP_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
@@ -525,7 +528,6 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                 candidate.alt_prob_h2 = alt_prob_h2;
                 candidate.non_ref_prob = non_ref_prob;
             }
-
             if(filter_candidate(candidate)) positional_record.candidates.push_back(candidate);
         }
 
