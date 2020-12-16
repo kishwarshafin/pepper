@@ -26,14 +26,14 @@ class CandidateFinderCPP:
                                           ReadFilterOptions.MIN_BASEQ)
 
         if haplotag != 0:
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: HAPLOTAG FOUND: " + str(haplotag) + " REMOVING OTHER HAPLOTAGGED READS\n")
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL READS BEFORE FILTERING: " + str(len(all_reads)) + ".\n")
+            # sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: HAPLOTAG FOUND: " + str(haplotag) + " REMOVING OTHER HAPLOTAGGED READS\n")
+            # sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL READS BEFORE FILTERING: " + str(len(all_reads)) + ".\n")
             filtered_set = []
             for read in all_reads:
                 if read.hp_tag == 0 or read.hp_tag == haplotag:
                     filtered_set.append(read)
             all_reads = filtered_set
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL READS AFTER FILTERING: " + str(len(all_reads)) + ".\n")
+            # sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL READS AFTER FILTERING: " + str(len(all_reads)) + ".\n")
 
         ref_start = max(0, self.region_start - (CandidateFinderOptions.SAFE_BASES * 2))
         ref_end = self.region_end + (CandidateFinderOptions.SAFE_BASES * 2)
