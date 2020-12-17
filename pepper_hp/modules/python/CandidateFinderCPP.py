@@ -51,7 +51,7 @@ class CandidateFinderCPP:
                                                      ref_end)
 
         # find candidates
-        positional_candidate_list = candidate_finder.find_candidates(all_reads, all_positions, all_indicies, all_predictions_hp1, all_predictions_hp2)
+        positional_candidate_list = candidate_finder.find_candidates(all_reads, all_positions, all_indicies, all_predictions_hp1, all_predictions_hp2, haplotag)
         positional_candidate_list = sorted(positional_candidate_list)
         # print(positional_candidate_list)
 

@@ -215,12 +215,14 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
 }
 
 
-bool CandidateFinder::filter_candidate(Candidate candidate) {
+bool CandidateFinder::filter_candidate(Candidate candidate, int hp_tag) {
     double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
 
     // CONDITIONS FOR INSERT
     if(candidate.allele.alt_type == SNP_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+        if(hp_tag == 1) allele_weight = candidate.alt_prob_h1;
+        if(hp_tag == 2) allele_weight = candidate.alt_prob_h2;
 
         if(allele_weight >= 0.01 && allele_frequency >= 0.10) return true;
         else return false;
@@ -242,6 +244,8 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
     // CONDITIONS FOR INSERT
     else if (candidate.allele.alt_type == INSERT_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+        if(hp_tag == 1) allele_weight = candidate.alt_prob_h1;
+        if(hp_tag == 2) allele_weight = candidate.alt_prob_h2;
         if(allele_weight >= 0.05 & allele_frequency >= 0.10) return true;
         else return false;
 
@@ -258,6 +262,8 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
     // CONDITIONS FOR DELETE
     else if (candidate.allele.alt_type == DELETE_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+        if(hp_tag == 1) allele_weight = candidate.alt_prob_h1;
+        if(hp_tag == 2) allele_weight = candidate.alt_prob_h2;
         if(allele_weight >= 0.05 && allele_frequency >= 0.10) return true;
         else return false;
 
@@ -293,7 +299,7 @@ int get_index_from_base(char base) {
     return  -1;
 }
 
-vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > base_predictions_h1, vector< vector<int> > base_predictions_h2) {
+vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > base_predictions_h1, vector< vector<int> > base_predictions_h2, int hp_tag) {
 
     // populate all the prediction maps
 
@@ -532,7 +538,7 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                 candidate.alt_prob_h2 = alt_prob_h2;
                 candidate.non_ref_prob = non_ref_prob;
             }
-            if(filter_candidate(candidate)) positional_record.candidates.push_back(candidate);
+            if(filter_candidate(candidate, hp_tag)) positional_record.candidates.push_back(candidate);
         }
 
         if (!candidate_found) continue;
