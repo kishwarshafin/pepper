@@ -222,7 +222,7 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
     if(candidate.allele.alt_type == SNP_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
 
-        if(allele_weight >= 0.2 && allele_frequency >= 0.10) return true;
+        if(allele_weight >= 0.01 && allele_frequency >= 0.10) return true;
         else return false;
 
         if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
@@ -242,7 +242,7 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
     // CONDITIONS FOR INSERT
     else if (candidate.allele.alt_type == INSERT_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
-        if(allele_weight >= 0.2 && allele_frequency >= 0.15) return true;
+        if(allele_weight >= 0.05 & allele_frequency >= 0.10) return true;
         else return false;
 
         if(allele_frequency < LinearRegression::IN_LOWER_FREQ_THRESHOLD) {
@@ -258,7 +258,7 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
     // CONDITIONS FOR DELETE
     else if (candidate.allele.alt_type == DELETE_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
-        if(allele_weight >= 0.2 && allele_frequency >= 0.15) return true;
+        if(allele_weight >= 0.05 && allele_frequency >= 0.10) return true;
         else return false;
 
         if(allele_frequency < LinearRegression::DEL_LOWER_FREQ_THRESHOLD) {
