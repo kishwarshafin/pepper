@@ -22,7 +22,7 @@ INSERT_EVENT = 2
 DELETE_EVENT = 3
 
 
-def candidates_to_variants(candidates, contig):
+def candidates_to_variants(candidates, contig, hp_tag):
     max_h1_prob = 0.0
     max_h2_prob = 0.0
     h1_indx = -1
@@ -33,7 +33,12 @@ def candidates_to_variants(candidates, contig):
     overall_non_ref_prob = -1.0
 
     # sort candidates by allele-weight, non-ref prob then allele frequency
-    candidates = sorted(candidates, key=lambda x: (-max(x[10], x[11]), -x[12], -x[6]))
+    if hp_tag == 1:
+        candidates = sorted(candidates, key=lambda x: (-x[10], -x[12], -x[6]))
+    elif hp_tag == 2:
+        candidates = sorted(candidates, key=lambda x: (-x[11], -x[12], -x[6]))
+    else:
+        candidates = sorted(candidates, key=lambda x: (-max(x[10], x[11]), -x[12], -x[6]))
 
     if len(candidates) > CandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE:
         candidates = candidates[0: CandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE]
@@ -244,7 +249,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                                             candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2,
                                             candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
             if found_candidate:
-                variant = candidates_to_variants(list(selected_candidates), contig)
+                variant = candidates_to_variants(list(selected_candidates), contig, haplotag)
                 if variant is not None:
                     selected_candidate_list.append(variant)
 
