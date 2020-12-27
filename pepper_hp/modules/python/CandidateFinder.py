@@ -277,3 +277,64 @@ def find_candidates(input_dir, reference_file_path, bam_file, contig, sequence_c
     all_selected_candidates = sorted(all_selected_candidates, key=lambda x: x[1])
     # print("SORTED")
     return all_selected_candidates
+
+
+def small_chunk_stitch_ccs(reference_file_path, bam_file_path, region_chunks, haplotag):
+
+    # for chunk_key in small_chunk_keys:
+    selected_candidate_list = []
+
+    # Find candidates per chunk
+    for contig, contig_start, contig_end in region_chunks:
+        cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
+
+        # find candidates
+        candidate_map = cpp_candidate_finder.find_candidates_ccs(bam_file_path,
+                                                                 reference_file_path,
+                                                                 contig,
+                                                                 contig_start,
+                                                                 contig_end,
+                                                                 haplotag)
+
+        for pos in candidate_map.keys():
+            selected_candidates = []
+            found_candidate = False
+            for candidate in candidate_map[pos]:
+                # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                #       "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
+                #       "H0 supp", candidate.read_support_h0, "H1 supp",  candidate.read_support_h1, "H2 supp",  candidate.read_support_h2,
+                #       "ALT prob h1:", candidate.alt_prob_h1, "ALT prob h2:", candidate.alt_prob_h2, "Non-ref prob:", candidate.non_ref_prob)
+                found_candidate = True
+                selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                                            candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2,
+                                            candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
+            if found_candidate:
+                variant = candidates_to_variants(list(selected_candidates), contig, haplotag)
+                if variant is not None:
+                    selected_candidate_list.append(variant)
+
+    return selected_candidate_list
+
+
+def find_candidates_ccs(all_intervals, reference_file_path, bam_file, contig, threads, haplotag):
+    sequence_chunk_keys = sorted(all_intervals)
+    all_selected_candidates = list()
+
+    # generate the dictionary in parallel
+    with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
+        region_chunks = chunks(sequence_chunk_keys, max(2, int(len(sequence_chunk_keys) / threads) + 1))
+
+        futures = [executor.submit(small_chunk_stitch_ccs, reference_file_path, bam_file, region_chunk, haplotag)
+                   for region_chunk in region_chunks]
+        for fut in concurrent.futures.as_completed(futures):
+            if fut.exception() is None:
+                positional_candidates = fut.result()
+                all_selected_candidates.extend(positional_candidates)
+            else:
+                sys.stderr.write("ERROR IN THREAD: " + str(fut.exception()) + "\n")
+            fut._result = None  # python issue 27144
+
+    # print("TOTAL CANDIDATES IN ", contig, len(all_selected_candidates))
+    all_selected_candidates = sorted(all_selected_candidates, key=lambda x: x[1])
+    # print("SORTED")
+    return all_selected_candidates
