@@ -23,7 +23,8 @@ def call_variant(bam_filepath,
                  device_ids,
                  num_workers,
                  sample_name,
-                 downsample_rate):
+                 downsample_rate,
+                 set_profile):
     """
     Run all the sub-modules to polish an input assembly.
     """
@@ -114,14 +115,15 @@ def call_variant(bam_filepath,
                   distributed,
                   threads)
 
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3: RUNNING STITCH\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3: RUNNING FIND CANDIDATES\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION OUTPUT: " + str(output_dir) + "\n")
     snp_candidate_finder(prediction_output_directory,
                          fasta_filepath,
                          bam_filepath,
                          sample_name,
                          output_dir,
-                         threads)
+                         threads,
+                         set_profile)
 
     end_time = time.time()
     mins = int((end_time - start_time) / 60)

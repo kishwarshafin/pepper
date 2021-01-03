@@ -30,8 +30,7 @@ namespace Genotype {
     static constexpr int HOM_ALT = 2;
 };
 
-namespace LinearRegression {
-
+namespace ONTLinearRegression {
     static constexpr double SNP_ALT_FREQ_COEF = 0;
     static constexpr double SNP_NON_REF_PROB_COEF = 0.145468;
     static constexpr double SNP_ALLELE_WEIGHT_COEF = 1.049319;
@@ -41,22 +40,20 @@ namespace LinearRegression {
     static constexpr double SNP_THRESHOLD = 0.1;
     static constexpr double SNP_LOWER_FREQ_THRESHOLD = 0.10;
     static constexpr double SNP_UPPER_FREQ = 0.4;
+}
 
-    static constexpr double INSERT_ALT_FREQ_COEF = 0;
-    static constexpr double INSERT_NON_REF_PROB_COEF = 0.155456;
-    static constexpr double INSERT_ALLELE_WEIGHT_COEF = 0.8824;
-    static constexpr double INSERT_BIAS_TERM = 0.00118;
-    static constexpr double INSERT_THRESHOLD = 0.2;
-    static constexpr double IN_LOWER_FREQ_THRESHOLD = 0.10;
-    static constexpr double IN_UPPER_FREQ = 0.5;
 
-    static constexpr double DELETE_ALT_FREQ_COEF = 0;
-    static constexpr double DELETE_NON_REF_PROB_COEF = 0.066555;
-    static constexpr double DELETE_ALLELE_WEIGHT_COEF = 0.771722;
-    static constexpr double DELETE_BIAS_TERM = -0.003433;
-    static constexpr double DELETE_THRESHOLD = 0.2;
-    static constexpr double DEL_LOWER_FREQ_THRESHOLD = 0.20;
-    static constexpr double DEL_UPPER_FREQ_THRESHOLD = 0.5;
+namespace CCSLinearRegression {
+
+    static constexpr double SNP_ALT_FREQ_COEF = 0;
+    static constexpr double SNP_NON_REF_PROB_COEF = -0.09069;
+    static constexpr double SNP_ALLELE_WEIGHT_COEF = 1.41247;
+    static constexpr double SNP_ALT_PROB1_COEF = 0.004009;
+    static constexpr double SNP_ALT_PROB2_COEF = 0.004335;
+    static constexpr double SNP_BIAS_TERM = -0.331464;
+    static constexpr double SNP_THRESHOLD = 0.1;
+    static constexpr double SNP_LOWER_FREQ_THRESHOLD = 0.1;
+    static constexpr double SNP_UPPER_FREQ = 0.4;
 }
 
 struct CandidateAllele{
@@ -180,8 +177,9 @@ public:
                     long long ref_end);
     void add_read_alleles(type_read &read, vector<int> &coverage);
 
-    vector<PositionalCandidateRecord> find_candidates(vector<type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > predictions);
-    bool filter_candidate(Candidate candidate);
+    vector<PositionalCandidateRecord> find_candidates(vector<type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > predictions, int profile);
+    bool filter_candidate_ont(Candidate candidate);
+    bool filter_candidate_ccs(Candidate candidate);
     // this is for speed-up, we are going to memorize all position wise read-indicies
     map<long long, set<int> > position_to_read_map;
 };

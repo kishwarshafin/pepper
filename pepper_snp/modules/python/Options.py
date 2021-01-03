@@ -13,7 +13,6 @@ class ImageSizeOptions(object):
     class_weights = [1.0,  0.1,  1.0,  1.0,  1.0,  1.0,  0.1,  1.0,  1.0,  1.0,  0.1,  1.0,  1.0,  0.1,  1.0]
 
 
-
 class TrainOptions(object):
     # these two parameters are important, make sure you are sliding in a way that you cover the full sequence length
     # the training loop breaks when current_index + TRAIN_WINDOW > LAST_INDEX. You may lose information if you don't
@@ -22,6 +21,12 @@ class TrainOptions(object):
     WINDOW_JUMP = 50
     GRU_LAYERS = 1
     HIDDEN_SIZE = 128
+
+
+class Profiles(object):
+    # line 274 candidate_finder.cpp
+    ONT_PROFILE = 0
+    CCS_PROFILE = 1
 
 
 class CandidateFinderOptions(object):
