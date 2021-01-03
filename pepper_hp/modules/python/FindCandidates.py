@@ -5,10 +5,12 @@ from os.path import isfile, join
 from os import listdir
 import re
 import time
-from pepper_hp.modules.python.CandidateFinder import find_candidates
+from pepper_hp.build import PEPPER_HP
+from pepper_hp.modules.python.CandidateFinder import find_candidates, find_candidates_ccs
 from pepper_hp.modules.python.VcfWriter import VCFWriter
 from pepper_hp.modules.python.ImageGenerationUI import UserInterfaceSupport
 from pepper_hp.modules.python.Options import CandidateFinderOptions
+from pepper_hp.modules.python.ExcludeContigs import EXCLUDED_HUMAN_CONTIGS
 
 
 def candidates_to_variants(candidates, contig):
@@ -125,45 +127,96 @@ def get_file_paths_from_directory(directory_path):
     return file_paths
 
 
-def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_path, threads):
-    all_prediction_files = get_file_paths_from_directory(input_dir)
+def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_path, threads, split_candidates):
+    hp_tags = [0]
 
-    all_contigs = set()
-    for prediction_file in all_prediction_files:
-        with h5py.File(prediction_file, 'r') as hdf5_file:
-            if 'predictions' in hdf5_file.keys():
-                contigs = list(hdf5_file['predictions'].keys())
-                all_contigs.update(contigs)
-    all_contigs = sorted(all_contigs, key=natural_key)
+    if split_candidates:
+        hp_tags = [1, 2]
 
-    vcf_file = VCFWriter(reference_file, all_contigs, sample_name, output_path, "candidates_as_variants")
+    for haplotag in hp_tags:
+        all_prediction_files = get_file_paths_from_directory(input_dir)
 
-    for contig in sorted(all_contigs, key=natural_key):
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + "\n")
-        local_start_time = time.time()
-        all_chunk_keys = list()
+        all_contigs = set()
         for prediction_file in all_prediction_files:
             with h5py.File(prediction_file, 'r') as hdf5_file:
                 if 'predictions' in hdf5_file.keys():
-                    if contig in hdf5_file['predictions'].keys():
-                        chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
-                        for chunk_key in chunk_keys:
-                            all_chunk_keys.append((prediction_file, chunk_key))
+                    contigs = list(hdf5_file['predictions'].keys())
+                    all_contigs.update(contigs)
+        all_contigs = sorted(all_contigs, key=natural_key)
 
-        selected_candidates = find_candidates(input_dir, reference_file, bam_file, contig, all_chunk_keys, threads)
+        vcf_file = VCFWriter(reference_file, all_contigs, sample_name, output_path, "PEPPER_HP_OUTPUT_" + str(haplotag))
 
-        end_time = time.time()
-        mins = int((end_time - local_start_time) / 60)
-        secs = int((end_time - local_start_time)) % 60
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", TOTAL CANDIDATES FOUND: "
-                         + str(len(selected_candidates)) + " TOTAL TIME SPENT: " + str(mins) + " Min " + str(secs) + " Sec\n")
+        for contig in sorted(all_contigs, key=natural_key):
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + "\n")
+            local_start_time = time.time()
+            all_chunk_keys = list()
+            for prediction_file in all_prediction_files:
+                with h5py.File(prediction_file, 'r') as hdf5_file:
+                    if 'predictions' in hdf5_file.keys():
+                        if contig in hdf5_file['predictions'].keys():
+                            chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
+                            for chunk_key in chunk_keys:
+                                all_chunk_keys.append((prediction_file, chunk_key))
 
-        vcf_file.write_vcf_records(selected_candidates)
+            selected_candidates = find_candidates(input_dir, reference_file, bam_file, contig, all_chunk_keys, threads, haplotag)
 
-    hdf5_file.close()
+            end_time = time.time()
+            mins = int((end_time - local_start_time) / 60)
+            secs = int((end_time - local_start_time)) % 60
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", TOTAL CANDIDATES FOUND: "
+                             + str(len(selected_candidates)) + " TOTAL TIME SPENT: " + str(mins) + " Min " + str(secs) + " Sec\n")
+
+            vcf_file.write_vcf_records(selected_candidates)
+
+        hdf5_file.close()
 
 
-def process_candidates(input_dir, reference, bam_file, sample_name, output_dir, threads):
+def candidate_finder_ccs(reference_file, bam_file, sample_name, output_path, threads, split_candidates):
+    hp_tags = [0]
+
+    if split_candidates:
+        hp_tags = [1, 2]
+
+    for haplotag in hp_tags:
+        fasta_handler = PEPPER_HP.FASTA_handler(reference_file)
+        bam_handler = PEPPER_HP.BAM_handler(bam_file)
+        bam_contigs = bam_handler.get_chromosome_sequence_names()
+        fasta_contigs = fasta_handler.get_chromosome_names()
+        common_contigs = list(set(fasta_contigs) & set(bam_contigs))
+        common_contigs = list(set(common_contigs) - set(EXCLUDED_HUMAN_CONTIGS))
+        all_contigs = common_contigs
+
+        vcf_file = VCFWriter(reference_file, all_contigs, sample_name, output_path, "PEPPER_HP_OUTPUT_" + str(haplotag))
+
+        for contig in sorted(all_contigs, key=natural_key):
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + "\n")
+            local_start_time = time.time()
+            all_chunk_keys = list()
+
+            interval_start, interval_end = (0, fasta_handler.get_chromosome_sequence_length(contig) - 1)
+            interval_size = interval_end - interval_start
+
+            # this is the interval size each of the process is going to get which is 10^6
+            # I will split this into 10^4 size inside the worker process
+            all_intervals = []
+            for pos in range(interval_start, interval_end, 100000):
+                pos_start = max(interval_start, pos)
+                pos_end = min(interval_end, pos + 100000)
+
+                all_intervals.append((contig, pos_start, pos_end))
+
+            selected_candidates = find_candidates_ccs(all_intervals, reference_file, bam_file, contig, threads, haplotag)
+
+            end_time = time.time()
+            mins = int((end_time - local_start_time) / 60)
+            secs = int((end_time - local_start_time)) % 60
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", TOTAL CANDIDATES FOUND: "
+                             + str(len(selected_candidates)) + " TOTAL TIME SPENT: " + str(mins) + " Min " + str(secs) + " Sec\n")
+
+            vcf_file.write_vcf_records(selected_candidates)
+
+
+def process_candidates(input_dir, reference, bam_file, sample_name, output_dir, threads, split_candidates):
     output_dir = UserInterfaceSupport.handle_output_directory(output_dir)
 
     candidate_finder(input_dir,
@@ -171,4 +224,15 @@ def process_candidates(input_dir, reference, bam_file, sample_name, output_dir, 
                      bam_file,
                      sample_name,
                      output_dir,
-                     threads)
+                     threads,
+                     split_candidates)
+
+
+def process_candidates_ccs(reference, bam_file, sample_name, output_dir, threads, split_candidates):
+    output_dir = UserInterfaceSupport.handle_output_directory(output_dir)
+    candidate_finder_ccs(reference,
+                         bam_file,
+                         sample_name,
+                         output_dir,
+                         threads,
+                         split_candidates)

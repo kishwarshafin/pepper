@@ -135,6 +135,7 @@ PYBIND11_MODULE(PEPPER_HP, m) {
         py::class_<CandidateFinder>(m, "CandidateFinder")
             .def(py::init<const string &, const string &, long long &, long long&, long long&, long long&>())
             .def_readwrite("position_to_read_map", &CandidateFinder::position_to_read_map)
+            .def("find_candidates_ccs", &CandidateFinder::find_candidates_ccs)
             .def("find_candidates", &CandidateFinder::find_candidates);
 
         py::class_<CandidateAllele>(m, "CandidateAllele")

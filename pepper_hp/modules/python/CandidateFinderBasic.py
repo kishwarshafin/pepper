@@ -146,15 +146,13 @@ def small_chunk_stitch(input_dir, reference_file_path, contig, small_chunk_keys,
             smaller_chunks = set(hdf5_file['predictions'][contig][chunk_name].keys()) - {'contig_start', 'contig_end'}
 
         smaller_chunks = sorted(smaller_chunks)
-        process_chunks = []
-        for c_name in smaller_chunks:
-            if int(c_name.split('-')[1]) == hp_tag:
-                process_chunks.append(c_name)
-        smaller_chunks = process_chunks
 
         for chunk in smaller_chunks:
             with h5py.File(file_name, 'r') as hdf5_file:
-                base_predictions = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
+                if hp_tag == 1:
+                    base_predictions = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions_hp1'][()]
+                elif hp_tag == 2:
+                    base_predictions = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions_hp2'][()]
                 bases = np.argmax(base_predictions, axis=1)
                 positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
                 indices = hdf5_file['predictions'][contig][chunk_name][chunk]['index'][()]

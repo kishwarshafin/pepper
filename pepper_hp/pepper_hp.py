@@ -5,8 +5,7 @@ from datetime import datetime
 from pepper.version import __version__
 from pepper_hp.modules.python.MakeImages import make_images
 from pepper_hp.modules.python.RunInference import run_inference
-from pepper_hp.modules.python.FindCandidates import process_candidates
-from pepper_hp.modules.python.FindCandidatesBasic import process_candidates_basic
+from pepper_hp.modules.python.FindCandidates import process_candidates, process_candidates_ccs
 from pepper_hp.modules.python.MergeVCFsWithSimplify import haploid2diploid
 from pepper_hp.modules.python.CallVariant import call_variant
 
@@ -129,6 +128,13 @@ def add_call_variant_arguments(parser):
         type=float,
         default=1.0,
         help="Downsample rate of reads while generating images."
+    )
+    parser.add_argument(
+        "-split",
+        "--split_candidates",
+        default=False,
+        action='store_true',
+        help="If set then candidates will be split between haplotags."
     )
     return parser
 
@@ -284,6 +290,13 @@ def add_find_candidates_arguments(parser):
         help="BAM file containing mapping between reads and the draft assembly."
     )
     parser.add_argument(
+        "-c",
+        "--ccs",
+        default=False,
+        action='store_true',
+        help="If set then CCS mode is enabled and only frequncy based candidates will be proposed."
+    )
+    parser.add_argument(
         "-f",
         "--fasta",
         type=str,
@@ -305,18 +318,18 @@ def add_find_candidates_arguments(parser):
         help="Path to output directory."
     )
     parser.add_argument(
-        "-l",
-        "--linear",
-        default=False,
-        action='store_true',
-        help="If set then the basic candidate finder will be activated. Will not use regression model."
-    )
-    parser.add_argument(
         "-t",
         "--threads",
         required=True,
         type=int,
         help="Number of threads."
+    )
+    parser.add_argument(
+        "-split",
+        "--split_candidates",
+        default=False,
+        action='store_true',
+        help="If set then candidates will be split between haplotags."
     )
     return parser
 
@@ -422,7 +435,8 @@ def main():
                      FLAGS.num_workers,
                      FLAGS.sample_name,
                      FLAGS.linear,
-                     FLAGS.downsample_rate)
+                     FLAGS.downsample_rate,
+                     FLAGS.split_candidates)
 
     elif FLAGS.sub_command == 'make_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
@@ -447,19 +461,21 @@ def main():
 
     elif FLAGS.sub_command == 'find_candidates':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FIND CANDIDATE MODULE SELECTED\n")
-        if not FLAGS.linear:
+        if not FLAGS.ccs:
             process_candidates(FLAGS.input_dir,
                                FLAGS.fasta,
                                FLAGS.bam,
                                FLAGS.sample_name,
                                FLAGS.output_dir,
-                               FLAGS.threads)
+                               FLAGS.threads,
+                               FLAGS.split_candidates)
         else:
-            process_candidates_basic(FLAGS.input_dir,
-                                     FLAGS.fasta,
-                                     FLAGS.sample_name,
-                                     FLAGS.output_dir,
-                                     FLAGS.threads)
+            process_candidates_ccs(FLAGS.fasta,
+                                   FLAGS.bam,
+                                   FLAGS.sample_name,
+                                   FLAGS.output_dir,
+                                   FLAGS.threads,
+                                   FLAGS.split_candidates)
 
     elif FLAGS.sub_command == 'merge_vcf':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MERGE VCFs MODULE SELECTED\n")

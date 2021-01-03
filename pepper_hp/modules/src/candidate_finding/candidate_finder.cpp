@@ -215,12 +215,17 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
 }
 
 
-bool CandidateFinder::filter_candidate(Candidate candidate) {
+bool CandidateFinder::filter_candidate(Candidate candidate, int hp_tag) {
     double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
 
     // CONDITIONS FOR INSERT
     if(candidate.allele.alt_type == SNP_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+        if(hp_tag == 1) allele_weight = candidate.alt_prob_h1;
+        if(hp_tag == 2) allele_weight = candidate.alt_prob_h2;
+
+        if(allele_weight >= 0.01 && allele_frequency >= 0.10) return true;
+        else return false;
 
         if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
             //if(allele_frequency >= 0.05) {
@@ -239,6 +244,10 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
     // CONDITIONS FOR INSERT
     else if (candidate.allele.alt_type == INSERT_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+        if(hp_tag == 1) allele_weight = candidate.alt_prob_h1;
+        if(hp_tag == 2) allele_weight = candidate.alt_prob_h2;
+        if(allele_weight >= 0.05 & allele_frequency >= 0.10) return true;
+        else return false;
 
         if(allele_frequency < LinearRegression::IN_LOWER_FREQ_THRESHOLD) {
             // if(allele_frequency >= 0.05 && allele_weight >= 0.8) return true;
@@ -253,6 +262,10 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
     // CONDITIONS FOR DELETE
     else if (candidate.allele.alt_type == DELETE_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+        if(hp_tag == 1) allele_weight = candidate.alt_prob_h1;
+        if(hp_tag == 2) allele_weight = candidate.alt_prob_h2;
+        if(allele_weight >= 0.05 && allele_frequency >= 0.10) return true;
+        else return false;
 
         if(allele_frequency < LinearRegression::DEL_LOWER_FREQ_THRESHOLD) {
             // if(allele_frequency >= 0.10 && allele_weight >= 0.5) return true;
@@ -286,7 +299,7 @@ int get_index_from_base(char base) {
     return  -1;
 }
 
-vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > base_predictions_h1, vector< vector<int> > base_predictions_h2) {
+vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > base_predictions_h1, vector< vector<int> > base_predictions_h2, int hp_tag) {
 
     // populate all the prediction maps
 
@@ -525,8 +538,111 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                 candidate.alt_prob_h2 = alt_prob_h2;
                 candidate.non_ref_prob = non_ref_prob;
             }
+            if(filter_candidate(candidate, hp_tag)) positional_record.candidates.push_back(candidate);
+        }
 
-            if(filter_candidate(candidate)) positional_record.candidates.push_back(candidate);
+        if (!candidate_found) continue;
+
+        all_records.push_back(positional_record);
+    }
+
+    return all_records;
+}
+
+
+bool CandidateFinder::filter_candidate_ccs(Candidate candidate, int hp_tag) {
+    double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
+
+    // CONDITIONS FOR INSERT
+    if(candidate.allele.alt_type == SNP_TYPE) {
+        if(allele_frequency >= 0.10) return true;
+        else return false;
+    }
+    // CONDITIONS FOR INSERT
+    else if (candidate.allele.alt_type == INSERT_TYPE) {
+        if(allele_frequency >= 0.12) return true;
+        else return false;
+    }
+    // CONDITIONS FOR DELETE
+    else if (candidate.allele.alt_type == DELETE_TYPE) {
+        if(allele_frequency >= 0.12) return true;
+        else return false;
+    }
+    return false;
+}
+
+
+
+vector<PositionalCandidateRecord> CandidateFinder::find_candidates_ccs(vector <type_read>& reads, int hp_tag) {
+
+    // o candidate finding
+    map<long long, vector <Candidate> > all_positional_candidates;
+    set<long long> filtered_candidate_positions;
+
+    vector<int> coverage(region_end - region_start + 1, 0);
+    vector<int> allele_ends(region_end - region_start + 1, 0);
+    vector<PositionalCandidateRecord> all_records;
+    int read_index = 0;
+    for (auto &read:reads) {
+        add_read_alleles(read, coverage);
+        read_index += 1;
+    }
+
+    // allele maps are ready now filter through candidates
+    int ref_buffer = region_start - ref_start;
+    for (long long i = 0; i < coverage.size(); i++) {
+        allele_ends[i] = 1;
+        int max_del_length = 0;
+        // first figure out the longest delete and figure out the end position of the allele
+        for (auto &candidate: AlleleMap[i]) {
+            double freq_can = 0.0;
+            if (coverage[i] > 0)
+                freq_can = 100.0 * ((double) AlleleFrequencyMap[candidate] / (double) coverage[i]);
+
+            if (freq_can >= CandidateFinder_options::freq_threshold &&
+                AlleleFrequencyMap[candidate] >= CandidateFinder_options::min_count_threshold) {
+                if(candidate.allele.alt_type == DELETE_TYPE) {
+                    allele_ends[i] = max(allele_ends[i], (int) candidate.allele.ref.length());
+                    max_del_length = max(max_del_length, (int) candidate.allele.ref.length());
+                }
+            }
+        }
+
+        PositionalCandidateRecord positional_record;
+        positional_record.chromosome_name = this->chromosome_name;
+        positional_record.pos_start = this->region_start + i;
+        positional_record.pos_end = positional_record.pos_start + allele_ends[i];
+
+        bool candidate_found = false;
+
+        for (auto &can: AlleleMap[i]) {
+            Candidate candidate = can;
+            double alt_freq =(int) (((double) AlleleFrequencyMap[candidate] / max(1.0, (double) coverage[i])) * 100.0);
+            int supported_reads = AlleleFrequencyMap[candidate];
+            if(alt_freq < CandidateFinder_options::freq_threshold || supported_reads < CandidateFinder_options::min_count_threshold) continue;
+
+            candidate_found = true;
+            filtered_candidate_positions.insert(i + this->region_start);
+            // allele, depth and frequency
+            candidate.set_depth_values(coverage[i], AlleleFrequencyMap[candidate], AlleleFrequencyMapH0[candidate], AlleleFrequencyMapH1[candidate], AlleleFrequencyMapH2[candidate]);
+
+            // all set, now calculate allele_prob and non_ref_prob
+            if(candidate.allele.alt_type == SNP_TYPE) {
+                candidate.alt_prob_h1 = 1.0;
+                candidate.alt_prob_h2 = 1.0;
+                candidate.non_ref_prob = 1.0;
+            }
+            else if(candidate.allele.alt_type == INSERT_TYPE) {
+                candidate.alt_prob_h1 = 1.0;
+                candidate.alt_prob_h2 = 1.0;
+                candidate.non_ref_prob = 1.0;
+            }
+            else if(candidate.allele.alt_type == DELETE_TYPE) {
+                candidate.alt_prob_h1 = 1.0;
+                candidate.alt_prob_h2 = 1.0;
+                candidate.non_ref_prob = 1.0;
+            }
+            if(filter_candidate_ccs(candidate, hp_tag)) positional_record.candidates.push_back(candidate);
         }
 
         if (!candidate_found) continue;
