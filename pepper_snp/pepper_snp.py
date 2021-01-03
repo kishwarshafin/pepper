@@ -3,6 +3,7 @@ import sys
 import torch
 from datetime import datetime
 from pepper.version import __version__
+from pepper_snp.modules.python.Options import Profiles
 from pepper_snp.modules.python.MakeImages import make_images
 from pepper_snp.modules.python.RunInference import run_inference
 from pepper_snp.modules.python.FindSNPCandidates import snp_candidate_finder
@@ -25,6 +26,7 @@ def add_call_variant_arguments(parser):
     :param parser: argeparse object
     :return:
     """
+
     parser.add_argument(
         "-b",
         "--bam",
@@ -137,6 +139,16 @@ def add_call_variant_arguments(parser):
         default=1.0,
         help="Downsample rate of reads while generating images."
     )
+    profile_group = parser.add_mutually_exclusive_group(required=True)
+    profile_group.add_argument("--ont",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on ONT reads.")
+
+    profile_group.add_argument("--ccs",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on CCS reads.")
     return parser
 
 
@@ -326,6 +338,16 @@ def add_find_candidates_arguments(parser):
         type=int,
         help="Number of threads."
     )
+    profile_group = parser.add_mutually_exclusive_group(required=True)
+    profile_group.add_argument("--ont",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on ONT reads.")
+
+    profile_group.add_argument("--ccs",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on CCS reads.")
     return parser
 
 
@@ -392,8 +414,20 @@ def main():
     FLAGS, unparsed = parser.parse_known_args()
 
     if FLAGS.sub_command == 'call_variant':
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CALL VARIANT MODULE SELECTED\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CALL VARIANT MODULE SELECTED.\n")
         distributed = not FLAGS.distributed_off
+
+        set_profile = Profiles.ONT_PROFILE
+        if FLAGS.ont:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT PROFILE SET FOR VARIANT CALLING.\n")
+            set_profile = Profiles.ONT_PROFILE
+        elif FLAGS.ccs:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CCS PROFILE SET FOR VARIANT CALLING.\n")
+            set_profile = Profiles.CCS_PROFILE
+        else:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO PROFILES SELECTED.\n")
+            exit(1)
+
         call_variant(FLAGS.bam,
                      FLAGS.fasta,
                      FLAGS.output_dir,
@@ -407,7 +441,8 @@ def main():
                      FLAGS.device_ids,
                      FLAGS.num_workers,
                      FLAGS.sample_name,
-                     FLAGS.downsample_rate)
+                     FLAGS.downsample_rate,
+                     set_profile)
 
     elif FLAGS.sub_command == 'make_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
@@ -433,13 +468,26 @@ def main():
                       FLAGS.threads)
 
     elif FLAGS.sub_command == 'find_candidates':
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STITCH MODULE SELECTED\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FIND CANDIDATES MODULE SELECTED\n")
+
+        set_profile = Profiles.ONT_PROFILE
+        if FLAGS.ont:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT PROFILE SET FOR VARIANT CALLING.\n")
+            set_profile = Profiles.ONT_PROFILE
+        elif FLAGS.ccs:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CCS PROFILE SET FOR VARIANT CALLING.\n")
+            set_profile = Profiles.CCS_PROFILE
+        else:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO PROFILES SELECTED.\n")
+            exit(1)
+
         snp_candidate_finder(FLAGS.input_dir,
                              FLAGS.fasta,
                              FLAGS.bam,
                              FLAGS.sample_name,
                              FLAGS.output_dir,
-                             FLAGS.threads)
+                             FLAGS.threads,
+                             set_profile)
 
     # elif FLAGS.sub_command == 'download_models':
     #     sys.stderr.write("INFO: DOWNLOAD MODELS SELECTED\n")

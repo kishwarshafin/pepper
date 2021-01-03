@@ -91,18 +91,19 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
 }
 
 
-bool CandidateFinder::filter_candidate(Candidate candidate) {
+bool CandidateFinder::filter_candidate_ont(Candidate candidate) {
     double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
 
 //    if(allele_frequency >= 0.10) return true;
 //    else return false;
+
     // CONDITIONS FOR SNP
     if(candidate.allele.alt_type == SNP_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
 
-        double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + candidate.alt_prob_h1 * LinearRegression::SNP_ALT_PROB1_COEF + candidate.alt_prob_h2 * LinearRegression::SNP_ALT_PROB2_COEF + LinearRegression::SNP_BIAS_TERM;
+        double predicted_val = allele_weight * ONTLinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * ONTLinearRegression::SNP_NON_REF_PROB_COEF + candidate.alt_prob_h1 * ONTLinearRegression::SNP_ALT_PROB1_COEF + candidate.alt_prob_h2 * ONTLinearRegression::SNP_ALT_PROB2_COEF + ONTLinearRegression::SNP_BIAS_TERM;
 
-        if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
+        if(allele_frequency < ONTLinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
             if(allele_weight >= 0.05) {
                 if(predicted_val >= 0.5) return true;
                 else return false;
@@ -110,9 +111,36 @@ bool CandidateFinder::filter_candidate(Candidate candidate) {
             return false;
         }
 
+        if(predicted_val >= ONTLinearRegression::SNP_THRESHOLD) return true;
+        if(allele_frequency >= ONTLinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
+        return false;
+    }
+    return false;
+}
 
-        if(predicted_val >= LinearRegression::SNP_THRESHOLD) return true;
-        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
+
+bool CandidateFinder::filter_candidate_ccs(Candidate candidate) {
+    double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
+
+//    if(allele_frequency >= 0.10) return true;
+//    else return false;
+
+    // CONDITIONS FOR SNP
+    if(candidate.allele.alt_type == SNP_TYPE) {
+        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+
+        double predicted_val = allele_weight * CCSLinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * CCSLinearRegression::SNP_NON_REF_PROB_COEF + candidate.alt_prob_h1 * CCSLinearRegression::SNP_ALT_PROB1_COEF + candidate.alt_prob_h2 * CCSLinearRegression::SNP_ALT_PROB2_COEF + CCSLinearRegression::SNP_BIAS_TERM;
+
+        if(allele_frequency < CCSLinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
+            if(allele_weight >= 0.05) {
+                if(predicted_val >= 0.5) return true;
+                else return false;
+            }
+            return false;
+        }
+
+        if(predicted_val >= CCSLinearRegression::SNP_THRESHOLD) return true;
+        if(allele_frequency >= CCSLinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
         return false;
     }
     return false;
@@ -133,7 +161,7 @@ int get_index_from_base(char base) {
     return  -1;
 }
 
-vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > predictions) {
+vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > predictions, int profile) {
     // populate all the prediction maps
     vector<string> lables {"**", "AA", "AC", "AT", "AG", "A*", "CC", "CT", "CG", "C*", "TT", "TG", "T*", "GG", "G*"};
 
@@ -242,8 +270,12 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
 //                cout<<"SNP: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" Alt-prob-1: "<<alt_prob_h1<<" alt-prob-2: "<<alt_prob_h2<<" non-ref-prob: "<<non_ref_prob<<" Read support: "<<AlleleFrequencyMap[candidate]<<" Allele freq: "<<alt_freq<<endl;
 //                cout<<"------------------"<<endl;
             }
-
-            if(filter_candidate(candidate)) positional_record.candidates.push_back(candidate);
+            // profile 0 is ONT
+            if(profile == 0){
+                if(filter_candidate_ont(candidate)) positional_record.candidates.push_back(candidate);
+            } else if(profile == 1) {
+                if(filter_candidate_ccs(candidate)) positional_record.candidates.push_back(candidate);
+            }
         }
 
         if (!candidate_found) continue;

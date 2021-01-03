@@ -26,7 +26,7 @@ def get_file_paths_from_directory(directory_path):
     return file_paths
 
 
-def snp_candidate_finder(input_dir, reference_file, bam_file, sample_name, output_path, threads):
+def snp_candidate_finder(input_dir, reference_file, bam_file, sample_name, output_path, threads, set_profile):
     all_prediction_files = get_file_paths_from_directory(input_dir)
 
     all_contigs = set()
@@ -51,7 +51,7 @@ def snp_candidate_finder(input_dir, reference_file, bam_file, sample_name, outpu
                         for chunk_key in chunk_keys:
                             all_chunk_keys.append((prediction_file, chunk_key))
 
-        selected_candidates = find_candidates(reference_file, bam_file, contig, all_chunk_keys, threads)
+        selected_candidates = find_candidates(reference_file, bam_file, contig, all_chunk_keys, threads, set_profile)
 
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", TOTAL CANDIDATES FOUND: "
                          + str(len(selected_candidates)) + ".\n")

@@ -191,7 +191,7 @@ def chunks(file_names, threads):
     return chunks
 
 
-def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_keys):
+def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_keys, set_profile):
 
     # for chunk_key in small_chunk_keys:
     selected_candidate_list = []
@@ -234,7 +234,8 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                                                              contig_end,
                                                              all_positions,
                                                              all_indicies,
-                                                             all_predictions)
+                                                             all_predictions,
+                                                             set_profile)
         for pos in candidate_map.keys():
             selected_candidates = []
             found_candidate = False
@@ -255,7 +256,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
     return selected_candidate_list
 
 
-def find_candidates(reference_file_path, bam_file, contig, sequence_chunk_keys, threads):
+def find_candidates(reference_file_path, bam_file, contig, sequence_chunk_keys, threads, set_profile):
     sequence_chunk_keys = sorted(sequence_chunk_keys)
     all_selected_candidates = list()
 
@@ -263,7 +264,7 @@ def find_candidates(reference_file_path, bam_file, contig, sequence_chunk_keys, 
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
         file_chunks = chunks(sequence_chunk_keys, max(2, int(len(sequence_chunk_keys) / threads) + 1))
 
-        futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, contig, file_chunk)
+        futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, contig, file_chunk, set_profile)
                    for file_chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
