@@ -134,6 +134,7 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
         hp_tags = [1, 2]
 
     for haplotag in hp_tags:
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING HAPLOTAG: " + str(haplotag) + "\n")
         all_prediction_files = get_file_paths_from_directory(input_dir)
 
         all_contigs = set()
@@ -147,7 +148,11 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
         vcf_file = VCFWriter(reference_file, all_contigs, sample_name, output_path, "PEPPER_HP_OUTPUT_" + str(haplotag))
 
         for contig in sorted(all_contigs, key=natural_key):
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + "\n")
+            if len(hp_tags) > 1:
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + " WITH HP-TAG: " + str(haplotag) + "\n")
+            else:
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + "\n")
+
             local_start_time = time.time()
             all_chunk_keys = list()
             for prediction_file in all_prediction_files:
@@ -190,7 +195,7 @@ def candidate_finder_ccs(reference_file, bam_file, sample_name, output_path, thr
         vcf_file = VCFWriter(reference_file, all_contigs, sample_name, output_path, "PEPPER_HP_OUTPUT_" + str(haplotag))
 
         for contig in sorted(all_contigs, key=natural_key):
-            if len(hg_tags) > 1:
+            if len(hp_tags) > 1:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + " WITH HP-TAG: " + str(haplotag) + "\n")
             else:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + "\n")
