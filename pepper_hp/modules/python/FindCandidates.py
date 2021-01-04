@@ -127,7 +127,7 @@ def get_file_paths_from_directory(directory_path):
     return file_paths
 
 
-def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_path, threads, split_candidates):
+def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_path, threads, split_candidates, set_profile):
     hp_tags = [0]
 
     if split_candidates:
@@ -158,7 +158,7 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
                             for chunk_key in chunk_keys:
                                 all_chunk_keys.append((prediction_file, chunk_key))
 
-            selected_candidates = find_candidates(input_dir, reference_file, bam_file, contig, all_chunk_keys, threads, haplotag)
+            selected_candidates = find_candidates(input_dir, reference_file, bam_file, contig, all_chunk_keys, threads, haplotag, set_profile)
 
             end_time = time.time()
             mins = int((end_time - local_start_time) / 60)
@@ -178,6 +178,7 @@ def candidate_finder_ccs(reference_file, bam_file, sample_name, output_path, thr
         hp_tags = [1, 2]
 
     for haplotag in hp_tags:
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING HAPLOTAG: " + str(haplotag) + "\n")
         fasta_handler = PEPPER_HP.FASTA_handler(reference_file)
         bam_handler = PEPPER_HP.BAM_handler(bam_file)
         bam_contigs = bam_handler.get_chromosome_sequence_names()
@@ -189,7 +190,10 @@ def candidate_finder_ccs(reference_file, bam_file, sample_name, output_path, thr
         vcf_file = VCFWriter(reference_file, all_contigs, sample_name, output_path, "PEPPER_HP_OUTPUT_" + str(haplotag))
 
         for contig in sorted(all_contigs, key=natural_key):
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + "\n")
+            if len(hg_tags) > 1:
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + " WITH HP-TAG: " + str(haplotag) + "\n")
+            else:
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + "\n")
             local_start_time = time.time()
             all_chunk_keys = list()
 
@@ -216,7 +220,7 @@ def candidate_finder_ccs(reference_file, bam_file, sample_name, output_path, thr
             vcf_file.write_vcf_records(selected_candidates)
 
 
-def process_candidates(input_dir, reference, bam_file, sample_name, output_dir, threads, split_candidates):
+def process_candidates(input_dir, reference, bam_file, sample_name, output_dir, threads, split_candidates, set_profile):
     output_dir = UserInterfaceSupport.handle_output_directory(output_dir)
 
     candidate_finder(input_dir,
@@ -225,7 +229,8 @@ def process_candidates(input_dir, reference, bam_file, sample_name, output_dir, 
                      sample_name,
                      output_dir,
                      threads,
-                     split_candidates)
+                     split_candidates,
+                     set_profile)
 
 
 def process_candidates_ccs(reference, bam_file, sample_name, output_dir, threads, split_candidates):

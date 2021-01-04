@@ -23,6 +23,13 @@ class CandidateFinderOptions(object):
     ALT_PROB_THRESHOLD = 0.01
 
 
+class Profiles(object):
+    # line 274 candidate_finder.cpp
+    ONT_PROFILE = 0
+    ONT_ASM_PROFILE = 1
+    CCS_ASM_PROFILE = 2
+
+
 class TrainOptions(object):
     # these two parameters are important, make sure you are sliding in a way that you cover the full sequence length
     # the training loop breaks when current_index + TRAIN_WINDOW > LAST_INDEX. You may lose information if you don't

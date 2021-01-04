@@ -30,7 +30,7 @@ namespace Genotype {
     static constexpr int HOM_ALT = 2;
 };
 
-namespace LinearRegression {
+namespace ONTLinearRegression {
 
     static constexpr double SNP_ALT_FREQ_COEF = 0;
     static constexpr double SNP_NON_REF_PROB_COEF = -0.002397;
@@ -177,9 +177,10 @@ public:
                     long long ref_start,
                     long long ref_end);
     void add_read_alleles(type_read &read, vector<int> &coverage);
-    vector<PositionalCandidateRecord> find_candidates(vector<type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > predictions_hp1, vector< vector<int> > predictions_hp2, int hp_tag);
+    vector<PositionalCandidateRecord> find_candidates(vector<type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > predictions_hp1, vector< vector<int> > predictions_hp2, int hp_tag, int profile);
     vector<PositionalCandidateRecord> find_candidates_ccs(vector<type_read>& reads, int hp_tag);
-    bool filter_candidate(Candidate candidate, int hp_tag);
+    bool filter_candidate_ont_variant_call(Candidate candidate);
+    bool filter_candidate_ont_asm(Candidate candidate, int hp_tag);
     bool filter_candidate_ccs(Candidate candidate, int hp_tag);
     // this is for speed-up, we are going to memorize all position wise read-indicies
     map<long long, set<int> > position_to_read_map;

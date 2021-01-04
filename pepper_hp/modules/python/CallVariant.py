@@ -25,7 +25,8 @@ def call_variant(bam_filepath,
                  sample_name,
                  linear_candidate_finder,
                  downsample_rate,
-                 split_candidates):
+                 split_candidates,
+                 set_profile):
     """
     Run all the sub-modules to polish an input assembly.
     """
@@ -125,7 +126,8 @@ def call_variant(bam_filepath,
                            sample_name,
                            candidate_output_directory,
                            threads,
-                           split_candidates)
+                           split_candidates,
+                           set_profile)
     else:
         process_candidates_basic(prediction_output_directory,
                                  fasta_filepath,

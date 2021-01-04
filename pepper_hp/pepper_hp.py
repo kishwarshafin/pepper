@@ -3,6 +3,7 @@ import sys
 import torch
 from datetime import datetime
 from pepper.version import __version__
+from pepper_hp.modules.python.Options import Profiles
 from pepper_hp.modules.python.MakeImages import make_images
 from pepper_hp.modules.python.RunInference import run_inference
 from pepper_hp.modules.python.FindCandidates import process_candidates, process_candidates_ccs
@@ -129,13 +130,20 @@ def add_call_variant_arguments(parser):
         default=1.0,
         help="Downsample rate of reads while generating images."
     )
-    parser.add_argument(
-        "-split",
-        "--split_candidates",
-        default=False,
-        action='store_true',
-        help="If set then candidates will be split between haplotags."
-    )
+    profile_group = parser.add_mutually_exclusive_group(required=True)
+    profile_group.add_argument("--ont",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on ONT reads.")
+    profile_group.add_argument("--ont_asm",
+                               default=False,
+                               action='store_true',
+                               help="Set to find candidates for ONT-based assembly polishing.")
+
+    profile_group.add_argument("--ccs_asm",
+                               default=False,
+                               action='store_true',
+                               help="Set to find candidates for CCS-based assembly polishing.")
     return parser
 
 
@@ -290,13 +298,6 @@ def add_find_candidates_arguments(parser):
         help="BAM file containing mapping between reads and the draft assembly."
     )
     parser.add_argument(
-        "-c",
-        "--ccs",
-        default=False,
-        action='store_true',
-        help="If set then CCS mode is enabled and only frequncy based candidates will be proposed."
-    )
-    parser.add_argument(
         "-f",
         "--fasta",
         type=str,
@@ -324,13 +325,21 @@ def add_find_candidates_arguments(parser):
         type=int,
         help="Number of threads."
     )
-    parser.add_argument(
-        "-split",
-        "--split_candidates",
-        default=False,
-        action='store_true',
-        help="If set then candidates will be split between haplotags."
-    )
+
+    profile_group = parser.add_mutually_exclusive_group(required=True)
+    profile_group.add_argument("--ont",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on ONT reads.")
+    profile_group.add_argument("--ont_asm",
+                               default=False,
+                               action='store_true',
+                               help="Set to find candidates for ONT-based assembly polishing.")
+
+    profile_group.add_argument("--ccs_asm",
+                               default=False,
+                               action='store_true',
+                               help="Set to find candidates for CCS-based assembly polishing.")
     return parser
 
 
@@ -422,21 +431,48 @@ def main():
 
     if FLAGS.sub_command == 'call_variant':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CALL VARIANT MODULE SELECTED\n")
-        call_variant(FLAGS.bam,
-                     FLAGS.fasta,
-                     FLAGS.output_dir,
-                     FLAGS.threads,
-                     FLAGS.region,
-                     FLAGS.model_path,
-                     FLAGS.batch_size,
-                     FLAGS.gpu,
-                     FLAGS.callers_per_gpu,
-                     FLAGS.device_ids,
-                     FLAGS.num_workers,
-                     FLAGS.sample_name,
-                     FLAGS.linear,
-                     FLAGS.downsample_rate,
-                     FLAGS.split_candidates)
+
+        set_profile = Profiles.ONT_PROFILE
+        split_candidates = False
+        if FLAGS.ont:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING PROFILE SET.\n")
+            set_profile = Profiles.ONT_PROFILE
+        elif FLAGS.ont_asm:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT ASSEMBLY POLISHING PROFILE SET.\n")
+            set_profile = Profiles.ONT_ASM_PROFILE
+            split_candidates = True
+        elif FLAGS.ccs_asm:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CCS ASSEMBLY POLISHING PROFILE SET.\n")
+            set_profile = Profiles.CCS_ASM_PROFILE
+            split_candidates = True
+        else:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO PROFILES SELECTED.\n")
+            exit(1)
+
+        if set_profile == Profiles.CCS_ASM_PROFILE:
+            process_candidates_ccs(FLAGS.fasta,
+                                   FLAGS.bam,
+                                   FLAGS.sample_name,
+                                   FLAGS.output_dir,
+                                   FLAGS.threads,
+                                   split_candidates)
+        else:
+            call_variant(FLAGS.bam,
+                         FLAGS.fasta,
+                         FLAGS.output_dir,
+                         FLAGS.threads,
+                         FLAGS.region,
+                         FLAGS.model_path,
+                         FLAGS.batch_size,
+                         FLAGS.gpu,
+                         FLAGS.callers_per_gpu,
+                         FLAGS.device_ids,
+                         FLAGS.num_workers,
+                         FLAGS.sample_name,
+                         FLAGS.linear,
+                         FLAGS.downsample_rate,
+                         split_candidates,
+                         set_profile)
 
     elif FLAGS.sub_command == 'make_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
@@ -461,6 +497,24 @@ def main():
 
     elif FLAGS.sub_command == 'find_candidates':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FIND CANDIDATE MODULE SELECTED\n")
+
+        set_profile = Profiles.ONT_PROFILE
+        split_candidates = False
+        if FLAGS.ont:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING PROFILE SET.\n")
+            set_profile = Profiles.ONT_PROFILE
+        elif FLAGS.ont_asm:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT ASSEMBLY POLISHING PROFILE SET.\n")
+            set_profile = Profiles.ONT_ASM_PROFILE
+            split_candidates = True
+        elif FLAGS.ccs_asm:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CCS ASSEMBLY POLISHING PROFILE SET.\n")
+            set_profile = Profiles.CCS_ASM_PROFILE
+            split_candidates = True
+        else:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO PROFILES SELECTED.\n")
+            exit(1)
+
         if not FLAGS.ccs:
             process_candidates(FLAGS.input_dir,
                                FLAGS.fasta,
@@ -468,14 +522,15 @@ def main():
                                FLAGS.sample_name,
                                FLAGS.output_dir,
                                FLAGS.threads,
-                               FLAGS.split_candidates)
+                               split_candidates,
+                               set_profile)
         else:
             process_candidates_ccs(FLAGS.fasta,
                                    FLAGS.bam,
                                    FLAGS.sample_name,
                                    FLAGS.output_dir,
                                    FLAGS.threads,
-                                   FLAGS.split_candidates)
+                                   split_candidates)
 
     elif FLAGS.sub_command == 'merge_vcf':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MERGE VCFs MODULE SELECTED\n")
