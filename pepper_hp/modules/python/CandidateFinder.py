@@ -33,7 +33,12 @@ def candidates_to_variants(candidates, contig, hp_tag):
     overall_non_ref_prob = -1.0
 
     # sort candidates by allele-weight, non-ref prob then allele frequency
-    candidates = sorted(candidates, key=lambda x: (-max(x[10], x[11]), -x[12], -x[6]))
+    if hp_tag == 1:
+        candidates = sorted(candidates, key=lambda x: (-x[10], -x[12], -x[6]))
+    elif hp_tag == 2:
+        candidates = sorted(candidates, key=lambda x: (-x[11], -x[12], -x[6]))
+    else:
+        candidates = sorted(candidates, key=lambda x: (-max(x[10], x[11]), -x[12], -x[6]))
 
     if len(candidates) > CandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE:
         candidates = candidates[0: CandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE]
