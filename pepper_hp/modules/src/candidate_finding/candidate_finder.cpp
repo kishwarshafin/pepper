@@ -225,7 +225,7 @@ bool CandidateFinder::filter_candidate_ont_asm(Candidate candidate, int hp_tag) 
         if(hp_tag == 2) allele_weight = candidate.alt_prob_h2;
 
         if(allele_weight >= 0.01 && allele_frequency >= 0.10) return true;
-        else if(allele_frequency >= 0.5) return true;
+//        else if(allele_frequency >= 0.5) return true;
         else return false;
     }
         // CONDITIONS FOR INSERT
@@ -234,7 +234,7 @@ bool CandidateFinder::filter_candidate_ont_asm(Candidate candidate, int hp_tag) 
         if(hp_tag == 1) allele_weight = candidate.alt_prob_h1;
         if(hp_tag == 2) allele_weight = candidate.alt_prob_h2;
         if(allele_weight >= 0.05 & allele_frequency >= 0.10) return true;
-        else if(allele_frequency >= 0.5) return true;
+//        else if(allele_frequency >= 0.5) return true;
         else return false;
     }
         // CONDITIONS FOR DELETE
@@ -244,7 +244,7 @@ bool CandidateFinder::filter_candidate_ont_asm(Candidate candidate, int hp_tag) 
         if(hp_tag == 2) allele_weight = candidate.alt_prob_h2;
 
         if(allele_weight >= 0.05 && allele_frequency >= 0.10) return true;
-        else if(allele_frequency >= 0.5) return true;
+//        else if(allele_frequency >= 0.5) return true;
         else return false;
     }
     return false;
