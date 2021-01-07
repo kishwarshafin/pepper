@@ -515,7 +515,7 @@ def main():
             sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO PROFILES SELECTED.\n")
             exit(1)
 
-        if not FLAGS.ccs:
+        if set_profile != Profiles.CCS_ASM_PROFILE:
             process_candidates(FLAGS.input_dir,
                                FLAGS.fasta,
                                FLAGS.bam,
