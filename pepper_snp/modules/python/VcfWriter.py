@@ -27,7 +27,8 @@ class VCFWriter:
                 continue
             last_position = ref_start
             alleles = tuple([ref_seq]) + tuple(alleles)
-            qual = -10 * math.log10(max(0.000001, 1.0 - max(0.0001, overall_non_ref_prob)))
+            qual = max(1, int(-10 * math.log10(max(0.000001, 1.0 - max(0.0001, overall_non_ref_prob)))))
+            overall_non_ref_prob = qual
 
             vafs = [round(ad/max(1, max(dps)), 3) for ad in ads]
             if genotype == [0, 0]:

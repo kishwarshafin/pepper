@@ -32,7 +32,7 @@ class Profiles(object):
 class CandidateFinderOptions(object):
     MOST_ALLOWED_CANDIDATES_PER_SITE = 2
     SAFE_BASES = 20
-    ALT_PROB_THRESHOLD = 0.01
+    ALT_PROB_THRESHOLD = 0.0001
 
 
 class ReadFilterOptions(object):
