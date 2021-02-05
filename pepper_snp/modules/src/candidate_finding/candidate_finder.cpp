@@ -132,15 +132,15 @@ bool CandidateFinder::filter_candidate_ccs(Candidate candidate) {
         double predicted_val = allele_weight * CCSLinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * CCSLinearRegression::SNP_NON_REF_PROB_COEF + candidate.alt_prob_h1 * CCSLinearRegression::SNP_ALT_PROB1_COEF + candidate.alt_prob_h2 * CCSLinearRegression::SNP_ALT_PROB2_COEF + CCSLinearRegression::SNP_BIAS_TERM;
 
         if(allele_frequency < CCSLinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
-            if(allele_weight >= 0.05) {
-                if(predicted_val >= 0.5) return true;
-                else return false;
-            }
+//            if(allele_weight >= 0.05) {
+//                if(predicted_val >= 0.5) return true;
+//                else return false;
+//            }
             return false;
         }
 
         if(predicted_val >= CCSLinearRegression::SNP_THRESHOLD) return true;
-        if(allele_frequency >= CCSLinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
+//        if(allele_frequency >= CCSLinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
         return false;
     }
     return false;
