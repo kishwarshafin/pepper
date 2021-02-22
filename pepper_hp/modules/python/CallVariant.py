@@ -7,7 +7,6 @@ from pepper_hp.modules.python.ImageGenerationUI import UserInterfaceSupport
 from pepper_hp.modules.python.MakeImages import make_images
 from pepper_hp.modules.python.RunInference import run_inference
 from pepper_hp.modules.python.FindCandidates import process_candidates
-from pepper_hp.modules.python.FindCandidatesBasic import process_candidates_basic
 from pepper_hp.build import PEPPER_HP
 
 
@@ -23,7 +22,6 @@ def call_variant(bam_filepath,
                  device_ids,
                  num_workers,
                  sample_name,
-                 linear_candidate_finder,
                  downsample_rate,
                  split_candidates,
                  set_profile):
@@ -118,22 +116,15 @@ def call_variant(bam_filepath,
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] STEP 3.1: CALLING VARIANTS\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(candidate_output_directory) + "\n")
-    if not linear_candidate_finder:
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] BASIC CANDIDATE FINDER SELECTED.\n")
-        process_candidates(prediction_output_directory,
-                           fasta_filepath,
-                           bam_filepath,
-                           sample_name,
-                           candidate_output_directory,
-                           threads,
-                           split_candidates,
-                           set_profile)
-    else:
-        process_candidates_basic(prediction_output_directory,
-                                 fasta_filepath,
-                                 sample_name,
-                                 candidate_output_directory,
-                                 threads)
+
+    process_candidates(prediction_output_directory,
+                       fasta_filepath,
+                       bam_filepath,
+                       sample_name,
+                       candidate_output_directory,
+                       threads,
+                       split_candidates,
+                       set_profile)
 
     end_time = time.time()
     mins = int((end_time - start_time) / 60)

@@ -7,7 +7,6 @@ from pepper_hp.modules.python.Options import Profiles
 from pepper_hp.modules.python.MakeImages import make_images
 from pepper_hp.modules.python.RunInference import run_inference
 from pepper_hp.modules.python.FindCandidates import process_candidates, process_candidates_ccs
-from pepper_hp.modules.python.MergeVCFsWithSimplify import haploid2diploid
 from pepper_hp.modules.python.CallVariant import call_variant
 
 def boolean_string(s):
@@ -115,13 +114,6 @@ def add_call_variant_arguments(parser):
         required=False,
         default=4,
         help="Number of workers for loading images. Default is 4."
-    )
-    parser.add_argument(
-        "-l",
-        "--linear",
-        default=False,
-        action='store_true',
-        help="If set then the basic candidate finder will be activated. Will not use regression model."
     )
     parser.add_argument(
         "-d",
@@ -343,38 +335,6 @@ def add_find_candidates_arguments(parser):
     return parser
 
 
-def add_merge_vcf_arguments(parser):
-    parser.add_argument(
-        "-v1",
-        "--vcf_h1",
-        type=str,
-        required=True,
-        help="VCF of haplotype 1."
-    )
-    parser.add_argument(
-        "-v2",
-        "--vcf_h2",
-        type=str,
-        required=True,
-        help="VCF of haplotype 1."
-    )
-    parser.add_argument(
-        "-r",
-        "--reference",
-        type=str,
-        required=True,
-        help="FASTA file containing the reference assembly."
-    )
-    parser.add_argument(
-        "-o",
-        "--output_dir",
-        type=str,
-        default="candidate_finder_output/",
-        help="Path to output directory, if it doesn't exist it will be created."
-    )
-    return parser
-
-
 def main():
     """
     Main interface for PEPPER. The submodules supported as of now are these:
@@ -417,9 +377,6 @@ def main():
 
     parser_find_candidates = subparsers.add_parser('find_candidates', help="Find candidate variants.")
     add_find_candidates_arguments(parser_find_candidates)
-
-    parser_find_candidates = subparsers.add_parser('merge_vcf', help="Merge haplotype 1 and 2 variants to generate a phased VCF.")
-    add_merge_vcf_arguments(parser_find_candidates)
 
     # parser_download_model = subparsers.add_parser('download_models', help="Download available models.")
     # add_download_models_arguments(parser_download_model)
@@ -469,7 +426,6 @@ def main():
                          FLAGS.device_ids,
                          FLAGS.num_workers,
                          FLAGS.sample_name,
-                         FLAGS.linear,
                          FLAGS.downsample_rate,
                          split_candidates,
                          set_profile)
@@ -531,15 +487,6 @@ def main():
                                    FLAGS.output_dir,
                                    FLAGS.threads,
                                    split_candidates)
-
-    elif FLAGS.sub_command == 'merge_vcf':
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MERGE VCFs MODULE SELECTED\n")
-        haploid2diploid(FLAGS.vcf_h1,
-                        FLAGS.vcf_h2,
-                        FLAGS.reference,
-                        FLAGS.output_dir,
-                        adjacent=False,
-                        discard_phase=False)
 
     elif FLAGS.sub_command == 'torch_stat':
         sys.stderr.write("TORCH VERSION: " + str(torch.__version__) + "\n\n")
