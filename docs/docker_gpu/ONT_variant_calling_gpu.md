@@ -1,7 +1,7 @@
-## Oxford Nanopore variant calling workflow
+## Oxford Nanopore variant calling workflow [ON GPU]
 PEPPER-Margin-DeepVariant is a haplotype-aware variant calling pipeline for long reads.
 
-<img src="../img/PMDV_variant_calling_ONT.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow" height="220p">
+<img src="../../img/PMDV_variant_calling_ONT.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow" height="220p">
 
 ----
 
@@ -16,7 +16,29 @@ Reference:  GRCh38_no_alt
 ```
 
 #### Command-line instructions
-##### Step 1: Install docker
+##### Preprocessing: Install CUDA [must be installed by root]
+Install CUDA toolkit 11.0 from the [CUDA archive](https://developer.nvidia.com/cuda-toolkit-archive).
+
+Here are the instructions to install CUDA 11.0 on Ubuntu 20.04LTS:
+```bash
+# Verify you have CUDA capable GPUs:
+lspci | grep -i nvidia
+
+# Verify Linux version
+uname -m && cat /etc/*release
+# Expected output: x86_64
+
+sudo apt-get -qq -y update
+sudo apt-get -qq -y install gcc wget make
+
+# Install proper kernel headers: This is for ubuntu
+# Details: https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
+sudo apt-get install linux-headers-$(uname -r)
+
+wget https://developer.download.nvidia.com/compute/cuda/11.2.0/local_installers/cuda_11.2.0_460.27.04_linux.run
+sudo sh cuda_11.2.0_460.27.04_linux.run
+```
+##### Step 1.1: Install docker
 Please install docker and wget if you don't have it installed already. You can install docker for other distros from here:
 * [CentOS](https://docs.docker.com/engine/install/centos/) docker installation guide
 * [Debian/Raspbian](https://docs.docker.com/engine/install/debian/) docker installation guide
@@ -42,6 +64,37 @@ stable"
 sudo apt-get -qq -y update
 sudo apt-get -qq -y install docker-ce
 docker --version
+
+# To add the user to avoid running docker with sudo:
+# Details: https://docs.docker.com/engine/install/linux-postinstall/
+
+sudo groupadd docker
+sudo usermod -aG docker $USER
+
+# Log out and log back in so that your group membership is re-evaluated.
+
+# After logging back in.
+docker run hello-world
+
+# If you can run docker without sudo then change the following commands accordingly.
+```
+
+##### Step 1.1: Install nvidia-docker
+Install nvidia docker following these [instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#getting-started).
+
+```bash
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
+&& curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
+&& curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+
+sudo apt-get update
+
+sudo apt-get install -y nvidia-docker2
+
+sudo systemctl restart docker
+
+sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
+# The output show show all your GPUs, if you enabled Docker for users then you should be able to run nvidia-docker without sudo
 ```
 
 ##### Step 2: Download and prepare input data
@@ -79,6 +132,7 @@ sudo docker pull kishwars/pepper_deepvariant:r0.4
 
 # Run PEPPER-Margin-DeepVariant
 sudo docker run --ipc=host \
+--gpus all \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
 kishwars/pepper_deepvariant:r0.4 \
@@ -88,6 +142,7 @@ run_pepper_margin_deepvariant call_variant \
 -o "${OUTPUT_DIR}" \
 -p "${OUTPUT_PREFIX}" \
 -t ${THREADS} \
+-g \
 --ont
 
 # Optional parameters:

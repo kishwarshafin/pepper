@@ -1,14 +1,16 @@
-## PacBio-HiFi variant calling workflow
+## Oxford Nanopore variant calling workflow
 PEPPER-Margin-DeepVariant is a haplotype-aware variant calling pipeline for long reads.
 
-<img src="../img/PMDV_variant_calling_HiFi.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow" width="820p">
+<img src="../../img/PMDV_variant_calling_ONT.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow" height="220p">
 
 ----
-### PacBio-HiFi HG002 chr20 case-study
-We evaluated this pipeline on `~35x` HG002 data. The data is publicly available, please feel free to download, run and evaluate the pipeline.
+
+### HG002 chr20 case-study
+We evaluated this pipeline on `~50x` HG002 data. The data is publicly available, please feel free to download, run and evaluate the pipeline.
 ```bash
 Sample:     HG002
-Coverage:   ~35x
+Coverage:   ~50-80x
+Basecaller: Guppy 3.6.0 or higher
 Region:     chr20
 Reference:  GRCh38_no_alt
 ```
@@ -40,35 +42,50 @@ stable"
 sudo apt-get -qq -y update
 sudo apt-get -qq -y install docker-ce
 docker --version
+
+# To add the user to avoid running docker with sudo:
+# Details: https://docs.docker.com/engine/install/linux-postinstall/
+
+sudo groupadd docker
+sudo usermod -aG docker $USER
+
+# Log out and log back in so that your group membership is re-evaluated.
+
+# After logging back in.
+docker run hello-world
+
+# If you can run docker without sudo then change the following commands accordingly.
 ```
 
 ##### Step 2: Download and prepare input data
 ```bash
-BASE="${HOME}/hifi-case-study"
+BASE="${HOME}/ont-case-study"
 
 # Set up input data
 INPUT_DIR="${BASE}/input/data"
 REF="GRCh38_no_alt.chr20.fa"
-BAM="HG002_PacBio_HiFi_35x_2_GRCh38_no_alt.chr20.bam"
+BAM="HG002_ONT_50x_2_GRCh38.chr20.bam"
 
 # Set the number of CPUs to use
 THREADS="64"
 
 # Set up output directory
 OUTPUT_DIR="${BASE}/output"
+OUTPUT_PREFIX="HG002_ONT_50x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
+OUTPUT_VCF="HG002_ONT_50x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
 
 ## Create local directory structure
 mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${INPUT_DIR}"
 
 # Download the data to input directory
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_PacBio_HiFi_35x_2_GRCh38_no_alt.chr20.bam
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_PacBio_HiFi_35x_2_GRCh38_no_alt.chr20.bam.bai
+wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_ONT_50x_2_GRCh38.chr20.bam
+wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_ONT_50x_2_GRCh38.chr20.bam.bai
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/GRCh38_no_alt.chr20.fa
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/GRCh38_no_alt.chr20.fa.fai
 ```
 
-##### Step 3: Run PEPPER-Margin to generate a phased bam
+##### Step 3: Run PEPPER-Margin-DeepVariant
 ```bash
 ## Pull the docker image.
 sudo docker pull kishwars/pepper_deepvariant:r0.4
@@ -82,52 +99,19 @@ run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
 -o "${OUTPUT_DIR}" \
+-p "${OUTPUT_PREFIX}" \
 -t ${THREADS} \
---ccs
+--ont
 
-# This generates a Phased bam in the output directory: MARGIN_PHASED.PEPPER_SNP_MARGIN.haplotagged.bam
-```
-##### Step 4: Run DeepVariant
-```bash
-PHASED_BAM=MARGIN_PHASED.PEPPER_SNP_MARGIN.haplotagged.bam
-OUTPUT_PREFIX="HG002_HiFi_35x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
-OUTPUT_VCF="HG002_HiFi_35x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
-
-sudo docker pull google/deepvariant:1.1.0
-
-sudo docker run \
--v "${INPUT_DIR}":"${INPUT_DIR}" \
--v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-google/deepvariant:1.1.0 \
-/opt/deepvariant/bin/run_deepvariant \
---model_type=PACBIO \
---ref="${INPUT_DIR}/${REF}" \
---reads="${OUTPUT_DIR}/${PHASED_BAM}" \
---output_vcf="${OUTPUT_DIR}/${OUTPUT_VCF}" \
---num_shards=${THREADS} \
---use_hp_information
-```
-
-##### Step 5: Phase the output VCF with Margin (Optional)
-```bash
-sudo docker run --ipc=host \
--v "${INPUT_DIR}":"${INPUT_DIR}" \
--v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.4 \
-margin phase \
-"${INPUT_DIR}/${BAM}" \
-"${INPUT_DIR}/${REF}" \
-"${OUTPUT_DIR}/${OUTPUT_VCF}" \
-/opt/margin_dir/params/misc/allParams.phase_vcf.json \
--t ${THREADS} \
--M \
--o "${OUTPUT_DIR}/${OUTPUT_PREFIX}"
-
-OUTPUT_PHASED_VCF=${OUTPUT_PREFIX}.phased.vcf
+# Optional parameters:
+# -s HG002 # optional: Sets Sample Name
+# --gvcf # optional: Produces gVCF output
+# --phased_output # optional: Produces phased output
 ```
 
 ###### Evaluation using hap.py (Optional)
 You can evaluate the variants using `hap.py`.
+
 Download benchmarking data:
 ```bash
 # Set up input data
@@ -164,8 +148,8 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 |  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives |  Recall  | Precision | F1-Score |
 |:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:--------:|:---------:|:--------:|
-| INDEL |      11256     |       11175       |         81         |         94         | 0.992804 |  0.991953 | 0.992378 |
-|  SNP  |      71333     |       71277       |         56         |          8         | 0.999215 |  0.999888 | 0.999551 |
+| INDEL |      11256     |        6045       |        5211        |         934        | 0.537047 |  0.868617 | 0.663726 |
+|  SNP  |      71333     |       71105       |         228        |         255        | 0.996804 |  0.996428 | 0.996616 |
 
 ### Authors:
 This pipeline is developed in a collaboration between UCSC genomics institute and the genomics team at Google health.
