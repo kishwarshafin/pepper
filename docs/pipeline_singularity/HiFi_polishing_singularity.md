@@ -1,7 +1,7 @@
 ## PacBio-HiFi assembly polishing [Using singularity]
 PEPPER-Margin-DeepVariant can be used to polish nanopore-based assemblies in a diploid manner.
 
-<img src="../../img/PMDV_polishing.png" alt="PEPPER-Margin-DeepVariant Polishing Workflow" width="820p">
+<img src="../../img/PMDV_polishing.png" alt="PEPPER-Margin-DeepVariant Polishing Workflow">
 
 ----
 

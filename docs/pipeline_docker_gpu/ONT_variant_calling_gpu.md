@@ -1,7 +1,7 @@
 ## Oxford Nanopore variant calling workflow [ON GPU]
 PEPPER-Margin-DeepVariant is a haplotype-aware variant calling pipeline for long reads.
 
-<img src="../../img/PMDV_variant_calling_ONT.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow" height="220p">
+<img src="../../img/PMDV_variant_calling_ONT.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow">
 
 ----
 
