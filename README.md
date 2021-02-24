@@ -12,7 +12,6 @@
 `PEPPER-Margin-DeepVariant` variant calling and assembly polishing [pipelines](./module_usage/pipeline_usage.md) can be run on [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) or [Singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps).
 
 Please pick the case-study of your pipeline of interest and the associated container runtime Docker or Singularity. The case-studies include input data and benchmarking of the run:
-<center>
 
 |                       Pipeline                       |                         Docker                         |                               Singularity                               |                     NVIDIA-docker<br>(GPU)                     |
 |:----------------------------------------------------:|:------------------------------------------------------:|:-----------------------------------------------------------------------:|:--------------------------------------------------------------:|
@@ -21,9 +20,8 @@ Please pick the case-study of your pipeline of interest and the associated conta
 |   Nanopore assembly polishing<br>with nanopore data  |     [Link](./docs/pipeline_docker/ONT_polishing.md)    |     [Link](./docs/pipeline_singularity/ONT_polishing_singularity.md)    |     [Link](./docs/pipeline_docker_gpu/ONT_polishing_gpu.md)    |
 | Nanopore assembly polishing<br>with PacBio-HiFi data |    [Link](./docs/pipeline_docker/HiFi_polishing.md)    |    [Link](./docs/pipeline_singularity/HiFi_polishing_singularity.md)    |    [Link](./docs/pipeline_docker_gpu/HiFi_polishing_gpu.md)    |
 
-</center>
 
-### Use PEPPER or Margin independently
+#### Use PEPPER or Margin independently
 * If you want to run `PEPPER` or `Margin` independent of the pipeline, please follow this [documentation](./module_usage/module_usage.md).
 * If you want to install `PEPPER` locally for development, please follow this [documentation](./local_install/install_pepper_locally.md)
 
