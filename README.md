@@ -22,8 +22,8 @@ Please pick the case-study of your pipeline of interest and the associated conta
 
 
 #### Use PEPPER or Margin independently
-* If you want to run `PEPPER` or `Margin` independent of the pipeline, please follow this [documentation](./module_usage/module_usage.md).
-* If you want to install `PEPPER` locally for development, please follow this [documentation](./local_install/install_pepper_locally.md)
+* If you want to run `PEPPER` or `Margin` independent of the pipeline, please follow this [documentation](./docs/module_usage/module_usage.md).
+* If you want to install `PEPPER` locally for development, please follow this [documentation](./docs/local_install/install_pepper_locally.md)
 
 
 ### Why use PEPPER-Margin-DeepVariant?
