@@ -2,9 +2,10 @@
 [![Build Status](https://travis-ci.com/kishwarshafin/pepper.svg?branch=master)](https://travis-ci.com/kishwarshafin/pepper)
 
 `PEPPER` is a genome inference module based on recurrent neural networks that enables long-read variant calling and nanopore assembly polishing in the `PEPPER-Margin-DeepVariant` pipeline. `PEPPER-Margin-DeepVariant` produces state-of-the-art variant calling results for both PacBio-HiFi and Oxford Nanopore data.
-
+<p align="center">
 <img src="./img/PMDV_variant_calling_ONT.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow" width="720p"></img>
-
+</p>
+ 
 PEPPER-Margin-DeepVariant pipeline is developed in a collaboration between [UC Santa Cruz genomics institute](https://ucscgenomics.soe.ucsc.edu/) and the [Genomics team in Google Health](https://health.google/health-research/genomics/).
 
 ### How to run PEPPER-Margin-DeepVariant
