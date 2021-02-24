@@ -1,7 +1,7 @@
 ## P.E.P.P.E.R.
 [![Build Status](https://travis-ci.com/kishwarshafin/pepper.svg?branch=master)](https://travis-ci.com/kishwarshafin/pepper)
 
-`PEPPER` is a genome inference module based on recurrent neural networks that enables long-read variant calling and nanopore assembly polishing in the `PEPPER-Margin-DeepVariant` pipeline. This pipeline enables nanopore-based variant calling with [DeepVariant](https://github.com/google/deepvariant).
+`PEPPER` is a genome inference module based on recurrent neural networks that enables long-read variant calling and nanopore assembly polishing in the [PEPPER](https://github.com/kishwarshafin/pepper)-[Margin](https://github.com/UCSC-nanopore-cgl/margin)-[DeepVariant](https://github.com/google/deepvariant) pipeline. This pipeline enables nanopore-based variant calling with [DeepVariant](https://github.com/google/deepvariant).
 
 <p align="center">
 <img src="./img/PMDV_variant_calling_ONT.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow" width="720p"></img>
@@ -9,7 +9,7 @@
 
 ### How to run
 
-`PEPPER-Margin-DeepVariant` variant calling and assembly polishing [pipelines](./module_usage/pipeline_usage.md) can be run on [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) or [Singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps).
+The variant calling and assembly polishing [pipelines](./module_usage/pipeline_usage.md) can be run on [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) or [Singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps).
 
 Please pick the case-study of your pipeline of interest and the associated container runtime Docker or Singularity. The case-studies include input data and benchmarking of the run:
 
@@ -26,34 +26,21 @@ Please pick the case-study of your pipeline of interest and the associated conta
 * If you want to install `PEPPER` locally for development, please follow this [documentation](./local_install/install_pepper_locally.md)
 
 
-### Why use PEPPER-Margin-DeepVariant
+### Why use PEPPER-Margin-DeepVariant?
  * **Accuracy:** Our pipeline won the [precisionFDA truth challenge v2](https://www.biorxiv.org/content/10.1101/2020.11.13.380741v1) for all benchmarking region and difficult to map region in the Oxford Nanopore category.
  * **Speed:** `PEPPER-Margin-DeepVariant` provides a cheaper and faster solution to PacBio-HiFi haplotype-aware variant calling.
  * **Phased output**: `PEPPER-Margin-DeepVariant` can produce high-quality phasing of variants without trio information with nanopore and PacBio-HiFi reads.
 
 ### Acknowledgement
-We are thankful to the developers of these packages: </br>
+We are thankful to the developers of these packages:
 * [htslib & samtools](http://www.htslib.org/)
-* [ssw library](https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library)
-* [hdf5 python (h5py)](https://www.h5py.org/)
 * [pytorch](https://pytorch.org/)
+* [ONNX](https://onnx.ai/)
+* [hdf5 python (h5py)](https://www.h5py.org/)
+
 
 ### Authors
-`PEPPER-Margin-DeepVariant` pipeline is developed in a collaboration between [UC Santa Cruz genomics institute](https://ucscgenomics.soe.ucsc.edu/) and the [Genomics team in Google Health](https://health.google/health-research/genomics/).
-
-#### UCSC Genomics Institute:
-* Kishwar Shafin
-* Trevor Pesout
-* Miten Jain
-* Benedict Paten
-
-#### Genomics team at Google Health:
-* Maria Nattestad
-* Alexey Kolesnikov
-* Sidharth Goel
-* Gunjan Baid
-* Pi-Chuan Chang
-* Andrew Carroll
+[PEPPER](https://github.com/kishwarshafin/pepper)-[Margin](https://github.com/UCSC-nanopore-cgl/margin)-[DeepVariant](https://github.com/google/deepvariant) pipeline is developed in a collaboration between [UC Santa Cruz genomics institute](https://ucscgenomics.soe.ucsc.edu/) and the [Genomics team in Google Health](https://health.google/health-research/genomics/).
 
 
 ### Fun Fact
