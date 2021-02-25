@@ -25,6 +25,8 @@ Please pick the case-study of your pipeline of interest and the associated conta
 * If you want to run `PEPPER` or `Margin` independent of the pipeline, please follow this [documentation](./docs/module_usage/module_usage.md).
 * If you want to install `PEPPER` locally for development, please follow this [documentation](./docs/local_install/install_pepper_locally.md)
 
+#### License
+[PEPPER license](./LICENSE), [Margin License](https://github.com/UCSC-nanopore-cgl/margin/blob/master/LICENSE.txt) and [DeepVariant License](https://github.com/google/deepvariant/blob/r1.1/LICENSE) extend to the trained models (PEPPER, Margin and DeepVariant) and container environment (Docker and Singularity).
 
 ### Why use PEPPER-Margin-DeepVariant?
  * **Accuracy:** Our pipeline won the [precisionFDA truth challenge v2](https://www.biorxiv.org/content/10.1101/2020.11.13.380741v1) for all benchmarking region and difficult to map region in the Oxford Nanopore category.
