@@ -32,7 +32,6 @@ pkg-config \
 git \
 cryptsetup
 
-
 # Install Go on linux: https://golang.org/doc/install
 export VERSION=1.14.12 OS=linux ARCH=amd64 && \
 wget https://dl.google.com/go/go$VERSION.$OS-$ARCH.tar.gz && \
@@ -55,7 +54,7 @@ make -C builddir && \
 sudo make -C builddir install  
 
 # After installation is complete log out and log in
-sigularity help
+singularity help
 ```
 
 ##### Step 2: Download and prepare input data
