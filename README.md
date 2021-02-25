@@ -9,12 +9,12 @@
 
 ### Quickstart
 Please follow the quickstart guides to assess your setup. Please follow case-study documentations for detailed instructions.
-* **Docker**: [Oxford Nanopore and PacBio-HiFi variant calling with docker](./docs/quickstart/variant_calling_docker_quickstart.md).
-* **Singularity**: [Oxford Nanopore and PacBio-HiFi variant calling with singularity](./docs/quickstart/variant_calling_singularity_quickstart.md).
+* **Docker**: [Oxford Nanopore and PacBio-HiFi variant calling quick start](./docs/quickstart/variant_calling_docker_quickstart.md).
+* **Singularity**: [Oxford Nanopore and PacBio-HiFi variant calling quick start](./docs/quickstart/variant_calling_singularity_quickstart.md).
 
 ### Case studies
 
-The variant calling and assembly polishing [pipelines](./module_usage/pipeline_usage.md) can be run on [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) or [Singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps). The case studies are designed on `chr20` of `HG002` sample.
+The variant calling and assembly polishing [pipelines](./docs/module_usage/pipeline_usage.md) can be run on [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) or [Singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps). The case studies are designed on `chr20` of `HG002` sample.
 
 Please pick the case-study of your pipeline of interest and the associated container runtime Docker or Singularity. The case-studies include input data and benchmarking of the run:
 

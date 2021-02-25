@@ -36,13 +36,6 @@ margin phase --help
 # Margin models can be invoked from inside the docker
 # /opt/margin_dir/params/misc/allParams.phase_vcf.json
 
-# Margin haplotag
-docker run --ipc=host \
--v ${INPUT_DIR}:${INPUT_DIR} \
--v ${OUTPUT_DIR}:${OUTPUT_DIR} \
-kishwars/pepper_deepvariant:r0.4 \
-margin halotag --help
-
 # Margin halotag models can be invoked from inside the docker
 # /opt/margin_dir/params/misc/allParams.ont_haplotag.json
 # /opt/margin_dir/params/misc/allParams.ccs_haplotag.json
@@ -79,11 +72,6 @@ margin phase --help
 
 # Margin models can be invoked from inside the docker
 # /opt/margin_dir/params/misc/allParams.phase_vcf.json
-
-# Margin haplotag
-singularity exec --bind /usr/lib/locale/ \
-pepper_deepvariant_r0.4.sif \
-margin halotag --help
 
 # Margin halotag models can be invoked from inside the docker
 # /opt/margin_dir/params/misc/allParams.ont_haplotag.json
