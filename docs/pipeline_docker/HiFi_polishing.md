@@ -1,4 +1,4 @@
-## Oxford Nanopore assembly polishing
+## Oxford Nanopore assembly polishing with PacBio HiFi reads
 PEPPER-Margin-DeepVariant can be used to polish nanopore-based assemblies in a diploid manner.
 
 <img src="../../img/PMDV_polishing.png" alt="PEPPER-Margin-DeepVariant Polishing Workflow">
@@ -6,11 +6,11 @@ PEPPER-Margin-DeepVariant can be used to polish nanopore-based assemblies in a d
 ----
 
 ### HG002 chr20 Shasta assembly polishing case-study
-Here we evaluate our pipeline on Shasta assembly and polish it with `~35x` PacBio-HiFi data.
+Here we evaluate our pipeline on Shasta assembly and polish it with `~35x` PacBio HiFi data.
 ```bash
 Sample:     HG002
 Assembler:  Shasta
-Data:       PacBio-HiFi
+Data:       PacBio HiFi
 Coverage:   ~35x
 Region:     chr20
 ```

@@ -1,10 +1,10 @@
-## PacBio-HiFi variant calling workflow [Using singularity]
+## PacBio HiFi variant calling workflow [Using singularity]
 PEPPER-Margin-DeepVariant is a haplotype-aware variant calling pipeline for long reads.
 
 <img src="../../img/PMDV_variant_calling_HiFi.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow">
 
 ----
-### PacBio-HiFi HG002 chr20 case-study
+### PacBio HiFi HG002 chr20 case-study
 We evaluated this pipeline on `~35x` HG002 data.
 ```bash
 Sample:     HG002

@@ -16,7 +16,7 @@ run_pepper_margin_deepvariant call_variant \
 -t <THREADS> \
 --gvcf \ # optional: Produces gVCF output
 --phased_output \ # optional: Produces phased output
---ont # use --ccs for PacBio-HiFi data
+--ont # use --ccs for PacBio HiFi data
 ```
 
 ## Nanopore-based **Assembly polishing** with Oxford Nanopore data:
@@ -32,5 +32,5 @@ run_pepper_margin_deepvariant polish_assembly \
 -o /output/OUTPUT_DIR/ \
 -t <THREADS> \
 -s <SAMPLE_NAME> \
---ont # use --ccs for PacBio-HiFi reads aligned to the assembly
+--ont # use --ccs for PacBio HiFi reads aligned to the assembly
 ```

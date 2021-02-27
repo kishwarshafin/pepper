@@ -1,8 +1,8 @@
 ## Variant calling quickstart (Using docker)
-Here we show a quickstart for the Oxford Nanopore and PacBio-HiFi variant calling.
+Here we show a quickstart for the Oxford Nanopore and PacBio HiFi variant calling.
 
 ### Install docker
-Please see our [ONT](../pipeline_docker/ONT_variant_calling.md) or [PacBio-HiFi](../pipeline_docker/HiFi_variant_calling.md) case-study documentation to see instructions on how to install docker.
+Please see our [ONT](../pipeline_docker/ONT_variant_calling.md) or [PacBio HiFi](../pipeline_docker/HiFi_variant_calling.md) case-study documentation to see instructions on how to install docker.
 
 ## Quickstart: Nanopore variant calling
 ```bash
@@ -77,7 +77,7 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 |  SNP  |       39       |         39        |         39         |         39         |   1.0  |    1.0    |    1.0   |
 
 
-## Quickstart: PacBio-HiFi variant calling
+## Quickstart: PacBio HiFi variant calling
 ```bash
 BASE="${HOME}/hifi-quickstart"
 

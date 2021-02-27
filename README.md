@@ -9,8 +9,8 @@
 
 ### Quickstart
 Please follow the quickstart guides to assess your setup. Please follow case-study documentations for detailed instructions.
-* **Docker**: [Oxford Nanopore and PacBio-HiFi variant calling quick start](./docs/quickstart/variant_calling_docker_quickstart.md).
-* **Singularity**: [Oxford Nanopore and PacBio-HiFi variant calling quick start](./docs/quickstart/variant_calling_singularity_quickstart.md).
+* **Docker**: [Oxford Nanopore and PacBio HiFi variant calling quick start](./docs/quickstart/variant_calling_docker_quickstart.md).
+* **Singularity**: [Oxford Nanopore and PacBio HiFi variant calling quick start](./docs/quickstart/variant_calling_singularity_quickstart.md).
 
 ### Case studies
 
@@ -21,9 +21,9 @@ Please pick the case-study of your pipeline of interest and the associated conta
 |                       Pipeline                       |                         Docker                         |                               Singularity                               |                     NVIDIA-docker<br>(GPU)                     |
 |:----------------------------------------------------:|:------------------------------------------------------:|:-----------------------------------------------------------------------:|:--------------------------------------------------------------:|
 |              Nanopore<br>variant calling             |  [Link](./docs/pipeline_docker/ONT_variant_calling.md) |  [Link](./docs/pipeline_singularity/ONT_variant_calling_singularity.md) |  [Link](./docs/pipeline_docker_gpu/ONT_variant_calling_gpu.md) |
-|            PacBio-HiFi<br>variant calling            | [Link](./docs/pipeline_docker/HiFi_variant_calling.md) | [Link](./docs/pipeline_singularity/HiFi_variant_calling_singularity.md) | [Link](./docs/pipeline_docker_gpu/HiFi_variant_calling_gpu.md) |
+|            PacBio HiFi<br>variant calling            | [Link](./docs/pipeline_docker/HiFi_variant_calling.md) | [Link](./docs/pipeline_singularity/HiFi_variant_calling_singularity.md) | [Link](./docs/pipeline_docker_gpu/HiFi_variant_calling_gpu.md) |
 |   Nanopore assembly polishing<br>with nanopore data  |     [Link](./docs/pipeline_docker/ONT_polishing.md)    |     [Link](./docs/pipeline_singularity/ONT_polishing_singularity.md)    |     [Link](./docs/pipeline_docker_gpu/ONT_polishing_gpu.md)    |
-| Nanopore assembly polishing<br>with PacBio-HiFi data |    [Link](./docs/pipeline_docker/HiFi_polishing.md)    |    [Link](./docs/pipeline_singularity/HiFi_polishing_singularity.md)    |    [Link](./docs/pipeline_docker_gpu/HiFi_polishing_gpu.md)    |
+| Nanopore assembly polishing<br>with PacBio HiFi data |    [Link](./docs/pipeline_docker/HiFi_polishing.md)    |    [Link](./docs/pipeline_singularity/HiFi_polishing_singularity.md)    |    [Link](./docs/pipeline_docker_gpu/HiFi_polishing_gpu.md)    |
 
 
 #### Use PEPPER or Margin independently
@@ -35,8 +35,8 @@ Please pick the case-study of your pipeline of interest and the associated conta
 
 ### Why use PEPPER-Margin-DeepVariant?
  * **Accuracy:** Our pipeline won the [precisionFDA truth challenge v2](https://www.biorxiv.org/content/10.1101/2020.11.13.380741v1) for all benchmarking region and difficult to map region in the Oxford Nanopore category.
- * **Speed:** `PEPPER-Margin-DeepVariant` provides a cheaper and faster solution to PacBio-HiFi haplotype-aware variant calling.
- * **Phased output**: `PEPPER-Margin-DeepVariant` can produce high-quality phasing of variants without trio information with nanopore and PacBio-HiFi reads.
+ * **Speed:** `PEPPER-Margin-DeepVariant` provides a cheaper and faster solution to PacBio HiFi haplotype-aware variant calling.
+ * **Phased output**: `PEPPER-Margin-DeepVariant` can produce high-quality phasing of variants without trio information with nanopore and PacBio HiFi reads.
 
 ### Acknowledgement
 We are thankful to the developers of these packages:

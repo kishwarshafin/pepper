@@ -1,4 +1,4 @@
-## Oxford Nanopore assembly polishing [Using singularity]
+## Oxford Nanopore assembly polishing with nanopore reads [Using singularity]
 PEPPER-Margin-DeepVariant can be used to polish nanopore-based assemblies in a diploid manner.
 
 <img src="../../img/PMDV_polishing.png" alt="PEPPER-Margin-DeepVariant Polishing Workflow">

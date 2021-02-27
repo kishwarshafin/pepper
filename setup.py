@@ -9,7 +9,7 @@ import subprocess
 
 __pkg_name__ = 'pepper'
 __author__ = 'Kishwar Shafin'
-__description__ = 'RNN based standalone assembly polisher.'
+__description__ = 'RNN based genome inference tool.'
 
 
 class CMakeExtension(Extension):
