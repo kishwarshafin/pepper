@@ -40,20 +40,20 @@ def add_make_train_images_arguments(parser):
         help="FASTA file containing the draft assembly."
     )
     parser.add_argument(
-        "-tb",
-        "--truth_bam",
+        "-tb1",
+        "--truth_bam_hp1",
         type=str,
         required=True,
         default=None,
         help="BAM file containing mapping of true assembly to the draft assembly."
     )
     parser.add_argument(
-        "-hp",
-        "--hp_tag",
-        type=int,
+        "-tb2",
+        "--truth_bam_hp2",
+        type=str,
         required=True,
         default=None,
-        help="Haplotype tag to process from the BAM file."
+        help="BAM file containing mapping of true assembly to the draft assembly."
     )
     parser.add_argument(
         "-r",
@@ -82,6 +82,13 @@ def add_make_train_images_arguments(parser):
         type=int,
         default=5,
         help="Number of threads to use. Default is 5."
+    )
+    parser.add_argument(
+        "-d",
+        "--downsample_rate",
+        type=float,
+        default=1.0,
+        help="Downsample rate of reads while generating images."
     )
     return parser
 
@@ -321,12 +328,13 @@ def main():
 
         make_train_images(FLAGS.bam,
                           FLAGS.fasta,
-                          FLAGS.truth_bam,
+                          FLAGS.truth_bam_hp1,
+                          FLAGS.truth_bam_hp2,
                           FLAGS.region,
                           FLAGS.region_bed,
                           FLAGS.output_dir,
-                          FLAGS.hp_tag,
-                          FLAGS.threads)
+                          FLAGS.threads,
+                          FLAGS.downsample_rate)
     elif FLAGS.sub_command == 'train_model':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN MODEL MODULE SELECTED\n")
         distributed = not FLAGS.distributed_off

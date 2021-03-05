@@ -46,14 +46,15 @@ class DataStore(object):
         self._meta = self.meta
         self._meta.update(meta)
 
-    def write_prediction(self, contig, contig_start, contig_end, chunk_id, position, index, ref_seq, predicted_bases):
+    def write_prediction(self, contig, contig_start, contig_end, chunk_id, position, index, ref_seq, base_predictions_hp1, base_predictions_hp2):
         chunk_name_prefix = str(contig) + "-" + str(contig_start.item()) + "-" + str(contig_end.item())
         chunk_name_suffix = str(chunk_id.item())
 
-        name = contig + chunk_name_prefix + chunk_name_suffix
+        name = chunk_name_prefix + "-" + chunk_name_suffix
 
         if 'predictions' not in self.meta:
             self.meta['predictions'] = set()
+
         if 'predictions_contig' not in self.meta:
             self.meta['predictions_contig'] = set()
 
@@ -66,6 +67,7 @@ class DataStore(object):
 
         if name not in self.meta['predictions']:
             self.meta['predictions'].add(name)
+
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
                                                       chunk_name_suffix, 'position')] = np.array(position, dtype=np.int32)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
@@ -73,6 +75,6 @@ class DataStore(object):
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
                                                       chunk_name_suffix, 'ref_seq')] = np.array(ref_seq, dtype=np.uint8)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                      chunk_name_suffix, 'bases')] = predicted_bases.astype(np.uint8)
-
-
+                                                      chunk_name_suffix, 'base_predictions_hp1')] = base_predictions_hp1.astype(np.uint8)
+            self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
+                                                      chunk_name_suffix, 'base_predictions_hp2')] = base_predictions_hp2.astype(np.uint8)

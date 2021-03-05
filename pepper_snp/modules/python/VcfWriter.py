@@ -1,96 +1,55 @@
 from pysam import VariantFile, VariantHeader
-import time
-import collections
 from pepper_snp.build import PEPPER_SNP
+import collections
+import math
 Candidate = collections.namedtuple('Candidate', 'chromosome_name pos_start pos_end ref '
                                                 'alternate_alleles allele_depths '
                                                 'allele_frequencies genotype qual gq predictions')
 
 
 class VCFWriter:
-    def __init__(self, reference_path, sample_name, output_dir, contigs):
-        self.fasta_handler = PEPPER_SNP.FASTA_handler(reference_path)
-        vcf_header = self.get_vcf_header(sample_name, contigs)
-        time_str = time.strftime("%m%d%Y_%H%M%S")
+    def __init__(self, reference_file_path, contigs, sample_name, output_dir, filename):
+        self.fasta_handler = PEPPER_SNP.FASTA_handler(reference_file_path)
+        self.contigs = contigs
+        self.vcf_header = self.get_vcf_header(sample_name, contigs)
+        self.output_dir = output_dir
+        self.filename = filename
+        self.vcf_file = VariantFile(self.output_dir + self.filename + '.vcf', 'w', header=self.vcf_header)
 
-        self.vcf_file = VariantFile(output_dir + "CANDIDATES_PEPPER" + '_' + time_str + '.vcf', 'w', header=vcf_header)
+    def write_vcf_records(self, variants_list):
+        last_position = -1
+        for called_variant in variants_list:
+            contig, ref_start, ref_end, ref_seq, alleles, genotype, dps, alt_probs, alt_prob_h1s, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob = called_variant
 
-    def get_genotype(self, ref, alt1, alt2):
-        alt1_gt = 1
-        alt2_gt = 2
-        if ref == alt1 or alt1 == '*':
-            alt1_gt = 0
-        if ref == alt2 or alt2 == '*':
-            alt2_gt = 0
-
-        if alt1 == alt2:
-            alt2_gt = alt1_gt
-        gt = sorted([alt1_gt, alt2_gt])
-
-        if gt == [0, 0]:
-            return ref, [], [0, 0]
-        if gt == [0, 1]:
-            return ref, [alt1], [0, 1]
-        if gt == [1, 1]:
-            return ref, [alt1], [1, 1]
-        if gt == [0, 2]:
-            return ref, [alt2], [0, 1]
-        if gt == [2, 2]:
-            return ref, [alt2], [1, 1]
-        if gt == [1, 2]:
-            return ref, [alt1, alt2], [1, 2]
-
-        return sorted([alt1_gt, alt2_gt])
-
-    def get_alleles(self, ref_base, alt_predictions):
-        alts1 = set()
-        alts2 = set()
-        for alt1, alt2 in alt_predictions:
-            if alt1 != '*' and alt1 != ref_base:
-                alts1.add(alt1)
-            if alt2 != '*' and alt2 != ref_base:
-                alts2.add(alt2)
-
-        return list(alts1), list(alts2)
-
-    def write_vcf_records(self, chromosome_name, called_variants, reference_dict, positions):
-        for pos in sorted(positions):
-            ref_base = reference_dict[pos]
-
-            if ref_base == 'n' or ref_base == 'N':
+            if len(alleles) <= 0:
                 continue
-
-            alts1, alts2 = self.get_alleles(ref_base, called_variants[pos])
-            if alts1:
-                alt1 = alts1[0]
-            else:
-                alt1 = ref_base
-
-            if alts2:
-                alt2 = alts2[0]
-            else:
-                alt2 = ref_base
-
-            ref, alt_alleles, gt = self.get_genotype(ref_base, alt1, alt2)
-
-            if gt == [0, 0]:
+            if ref_start == last_position:
                 continue
-            # add extra alleles not used here
-            for i in range(1, len(alts1)):
-                alt_alleles.append(alts1[i])
-            # add extra alleles not used
-            for i in range(1, len(alts2)):
-                alt_alleles.append(alts2[i])
+            last_position = ref_start
+            alleles = tuple([ref_seq]) + tuple(alleles)
+            qual = max(1, int(-10 * math.log10(max(0.000001, 1.0 - max(0.0001, overall_non_ref_prob)))))
+            overall_non_ref_prob = qual
 
-            alleles = tuple([ref]) + tuple(set(alt_alleles))
-            # print(str(chrm), st_pos, end_pos, qual, rec_filter, alleles, genotype, gq)
-            vcf_record = self.vcf_file.new_record(contig=str(chromosome_name), start=pos,
-                                                  stop=pos+1, id='.', qual=60,
-                                                  filter='PASS', alleles=alleles, GT=gt, GQ=60)
+            vafs = [round(ad/max(1, max(dps)), 3) for ad in ads]
+            if genotype == [0, 0]:
+                vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
+                                                      stop=ref_end, id='.', qual=qual,
+                                                      filter='refCall', alleles=alleles, GT=genotype,
+                                                      AP=alt_probs, APM=max(alt_probs), AP1=alt_prob_h1s, AP2=alt_prob_h2s,
+                                                      NR=non_ref_probs, NRM=max(non_ref_probs),
+                                                      GQ=overall_non_ref_prob, VAF=vafs)
+            else:
+                vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
+                                                      stop=ref_end, id='.', qual=qual,
+                                                      filter='PASS', alleles=alleles, GT=genotype,
+                                                      AP=alt_probs, APM=max(alt_probs), AP1=alt_prob_h1s, AP2=alt_prob_h2s,
+                                                      NR=non_ref_probs, NRM=max(non_ref_probs),
+                                                      GQ=overall_non_ref_prob, VAF=vafs)
             self.vcf_file.write(vcf_record)
 
     def get_vcf_header(self, sample_name, contigs):
         header = VariantHeader()
+
         items = [('ID', "PASS"),
                  ('Description', "All filters passed")]
         header.add_meta(key='FILTER', items=items)
@@ -111,13 +70,63 @@ class VCFWriter:
                  ('Type', 'String'),
                  ('Description', "Genotype")]
         header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "DP"),
+                 ('Number', 1),
+                 ('Type', 'Integer'),
+                 ('Description', "Depth")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "AD"),
+                 ('Number', 1),
+                 ('Type', 'String'),
+                 ('Description', "Depth")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "VAF"),
+                 ('Number', "A"),
+                 ('Type', 'Float'),
+                 ('Description', "Variant allele fractions.")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "AP"),
+                 ('Number', "A"),
+                 ('Type', 'Float'),
+                 ('Description', "Maximum variant allele probability for each allele.")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "APM"),
+                 ('Number', 1),
+                 ('Type', 'Float'),
+                 ('Description', "Maximum variant allele probability for the site.")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "AP1"),
+                 ('Number', "A"),
+                 ('Type', 'Float'),
+                 ('Description', "Maximum variant allele probability from hp1.")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "AP2"),
+                 ('Number', "A"),
+                 ('Type', 'Float'),
+                 ('Description', "Maximum variant allele probability from hp2.")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "NR"),
+                 ('Number', "A"),
+                 ('Type', 'Float'),
+                 ('Description', "Max probability of observing a non-ref allele for each allele.")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "NRM"),
+                 ('Number', 1),
+                 ('Type', 'Float'),
+                 ('Description', "Max probability of observing a non-ref allele for the site.")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "GT"),
+                 ('Number', 1),
+                 ('Type', 'String'),
+                 ('Description', "Genotype")]
+        header.add_meta(key='FORMAT', items=items)
         items = [('ID', "GQ"),
                  ('Number', 1),
                  ('Type', 'Float'),
                  ('Description', "Genotype Quality")]
         header.add_meta(key='FORMAT', items=items)
-        sqs = self.fasta_handler.get_chromosome_names()
 
+        sqs = self.fasta_handler.get_chromosome_names()
         for sq in sqs:
             if sq not in contigs:
                 continue
@@ -126,5 +135,6 @@ class VCFWriter:
             header.contigs.add(sq_id, length=ln)
 
         header.add_sample(sample_name)
+
 
         return header

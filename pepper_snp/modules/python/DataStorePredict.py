@@ -70,9 +70,9 @@ class DataStore(object):
                                                       chunk_name_suffix, 'position')] = np.array(position, dtype=np.int32)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
                                                       chunk_name_suffix, 'index')] = np.array(index, dtype=np.int32)
+            # self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
+            #                                           chunk_name_suffix, 'ref_seq')] = np.array(ref_seq, dtype=np.uint8)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                      chunk_name_suffix, 'ref_seq')] = np.array(ref_seq, dtype=np.uint8)
-            self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                      chunk_name_suffix, 'bases')] = predicted_bases.astype(np.uint8)
+                                                      chunk_name_suffix, 'bases')] = predicted_bases.astype(np.int32)
 
 

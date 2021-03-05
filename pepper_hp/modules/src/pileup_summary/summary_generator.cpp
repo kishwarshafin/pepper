@@ -57,9 +57,10 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
     int read_index = 0;
     long long ref_position = read.pos;
     int cigar_index = 0;
-    int base_quality = 0;
     long long reference_index;
-
+    // scaled mapping quality
+    float mapping_quality = min(60, read.mapping_quality) / 60.0;
+    float base_quality = 0;
     for (auto &cigar: read.cigar_tuples) {
         if (ref_position > region_end) break;
         switch (cigar.operation) {
@@ -77,9 +78,24 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                     //read.base_qualities[read_index] base quality
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
+                        base_quality = min(100, read.base_qualities[read_index]) / 100.0;
 
                         // update the summary of base
-                        base_summaries[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                        if(read.hp_tag == 0) {
+                            base_summaries_hp1[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                            base_summaries_hp2[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                            coverage_hp1[ref_position] += 1;
+                            coverage_hp2[ref_position] += 1;
+                        }
+                        else if(read.hp_tag == 1) {
+                            base_summaries_hp1[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                            coverage_hp1[ref_position] += 1;
+                        }
+                        else if(read.hp_tag == 2) {
+                            base_summaries_hp2[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
+                            coverage_hp2[ref_position] += 1;
+                        }
+
                         coverage[ref_position] += 1.0;
 
                     }
@@ -98,7 +114,19 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                     alt = read.sequence.substr(read_index, cigar.length);
                     for (int i = 0; i < cigar.length; i++) {
                         pair<long long, int> position_pair = make_pair(ref_position - 1, i);
-                        insert_summaries[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
+
+                        base_quality = min(100, read.base_qualities[read_index + i]) / 100.0;
+
+                        if(read.hp_tag == 0) {
+                            insert_summaries_hp1[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
+                            insert_summaries_hp2[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
+                        }
+                        else if(read.hp_tag == 1) {
+                            insert_summaries_hp1[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
+                        }
+                        else if(read.hp_tag == 2)    {
+                            insert_summaries_hp2[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
+                        }
                     }
                     longest_insert_count[ref_position - 1] = std::max(longest_insert_count[ref_position - 1],
                                                                       (long long) alt.length());
@@ -110,11 +138,23 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
             case CIGAR_OPERATIONS::DEL:
 //                base_quality = read.base_qualities[max(0, read_index)];
                 reference_index = ref_position - ref_start - 1;
+                base_quality = min(100, read.base_qualities[read_index]) / 100.0;
                 // process delete allele here
                 for (int i = 0; i < cigar.length; i++) {
                     if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                         // update the summary of base
-                        base_summaries[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                        if(read.hp_tag == 0) {
+                            base_summaries_hp1[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                            base_summaries_hp2[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                            coverage_hp1[ref_position] += 1;
+                            coverage_hp2[ref_position] += 1;
+                        } else if(read.hp_tag == 1) {
+                            base_summaries_hp1[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                            coverage_hp1[ref_position] += 1;
+                        } else if(read.hp_tag == 2) {
+                            base_summaries_hp2[make_pair(ref_position + i, get_feature_index('*', read.flags.is_reverse))] += 1.0;
+                            coverage_hp2[ref_position] += 1;
+                        }
                         coverage[ref_position] += 1.0;
                     }
                 }
@@ -129,17 +169,6 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
     }
 }
 
-//int SummaryGenerator::get_sequence_length(long long start_pos, long long end_pos) {
-//    int length = 0;
-//    for (int i = start_pos; i <= end_pos; i++) {
-//        length += 1;
-//        if (longest_insert_count[i] > 0) {
-//            length += longest_insert_count[i];
-//        }
-//    }
-//    return length;
-//}
-
 bool check_base(char base) {
     if(base=='A' || base=='a' ||
        base=='C' || base=='c' ||
@@ -148,7 +177,7 @@ bool check_base(char base) {
     return false;
 }
 
-void SummaryGenerator::generate_labels(type_read read, long long region_start, long long region_end) {
+void SummaryGenerator::generate_labels(type_read read, long long region_start, long long region_end, int hp_tag) {
     int read_index = 0;
     long long ref_position = read.pos;
     int cigar_index = 0;
@@ -172,7 +201,10 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
 //                    cout<<ref_position<<" "<<ref_end<<" "<<region_end<<endl;
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
-                        base_labels[ref_position] = base;
+                        if(hp_tag == 1)
+                            base_labels_hp1[ref_position] = base;
+                        else
+                            base_labels_hp2[ref_position] = base;
                     }
                     read_index += 1;
                     ref_position += 1;
@@ -192,7 +224,10 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
                             base = alt[i];
                         }
                         pair<long long, int> position_pair = make_pair(ref_position - 1, i);
-                        insert_labels[position_pair] = base;
+                        if(hp_tag == 1)
+                            insert_labels_hp1[position_pair] = base;
+                        else
+                            insert_labels_hp2[position_pair] = base;
                     }
                 }
                 read_index += cigar.length;
@@ -208,7 +243,10 @@ void SummaryGenerator::generate_labels(type_read read, long long region_start, l
                         if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                             // DELETE
                             char base = '*';
-                            base_labels[ref_position + i] = '*';
+                            if(hp_tag == 1)
+                                base_labels_hp1[ref_position + i] = '*';
+                            else
+                                base_labels_hp2[ref_position + i] = '*';
                         }
                     }
                 }
@@ -235,19 +273,36 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
     }
     cout << endl;
     for (int i = start_pos; i <= end_pos; i++) {
-        if(i==start_pos) cout<<"TRH:\t";
-        cout << "  " <<base_labels[i] << "\t";
+        if(i==start_pos) cout<<"TRH1:\t";
+        cout << "  " <<base_labels_hp1[i] << "\t";
         if (longest_insert_count[i] > 0) {
             for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                if (insert_labels[make_pair(i, ii)]) cout << "  "<< insert_labels[make_pair(i, ii)] << "\t";
+                if (insert_labels_hp1[make_pair(i, ii)]) cout << "  "<< insert_labels_hp1[make_pair(i, ii)] << "\t";
                 else cout << "  *" << "\t";
             }
         }
     }
     cout << endl;
-    for (int i = 0; i < labels.size(); i++) {
-        if(i==0) cout<<"LBL:\t";
-        printf("%3d\t", labels[i]);
+    for (int i = 0; i < labels_hp1.size(); i++) {
+        if(i==0) cout<<"LBL1:\t";
+        printf("%3d\t", labels_hp1[i]);
+    }
+    cout << endl;
+
+    for (int i = start_pos; i <= end_pos; i++) {
+        if(i==start_pos) cout<<"TRH2:\t";
+        cout << "  " <<base_labels_hp2[i] << "\t";
+        if (longest_insert_count[i] > 0) {
+            for (int ii = 0; ii < longest_insert_count[i]; ii++) {
+                if (insert_labels_hp2[make_pair(i, ii)]) cout << "  "<< insert_labels_hp2[make_pair(i, ii)] << "\t";
+                else cout << "  *" << "\t";
+            }
+        }
+    }
+    cout << endl;
+    for (int i = 0; i < labels_hp1.size(); i++) {
+        if(i==0) cout<<"LBL2:\t";
+        printf("%3d\t", labels_hp2[i]);
     }
     cout << endl;
 
@@ -267,20 +322,58 @@ void SummaryGenerator::debug_print(long long start_pos, long long end_pos) {
     cout << endl;
 
     cout << "-------------" << endl;
-    for (int i = 0; i < image[0].size(); i++) {
-        if(i==0)cout<<"AFW:\t";
-        if(i==1)cout<<"CFW:\t";
-        if(i==2)cout<<"GFW:\t";
-        if(i==3)cout<<"TFW:\t";
-        if(i==4)cout<<"ARV:\t";
-        if(i==5)cout<<"CRV:\t";
-        if(i==6)cout<<"GRV:\t";
-        if(i==7)cout<<"TRV:\t";
-        if(i==8)cout<<"GFW:\t";
-        if(i==9)cout<<"GRV:\t";
+    for (int i = 0; i < image_hp1[0].size(); i++) {
+        if(i==0)cout<<"AFW1:\t";
+        if(i==1)cout<<"CFW1:\t";
+        if(i==2)cout<<"GFW1:\t";
+        if(i==3)cout<<"TFW1:\t";
+        if(i==4)cout<<"ARV1:\t";
+        if(i==5)cout<<"CRV1:\t";
+        if(i==6)cout<<"GRV1:\t";
+        if(i==7)cout<<"TRV1:\t";
+        if(i==8)cout<<"*FW1:\t";
+        if(i==9)cout<<"*RV1:\t";
+        if(i==10)cout<<"AFW2:\t";
+        if(i==11)cout<<"CFW2:\t";
+        if(i==12)cout<<"GFW2:\t";
+        if(i==13)cout<<"TFW2:\t";
+        if(i==14)cout<<"ARV2:\t";
+        if(i==15)cout<<"CRV2:\t";
+        if(i==16)cout<<"GRV2:\t";
+        if(i==17)cout<<"TRV2:\t";
+        if(i==18)cout<<"*FW2:\t";
+        if(i==19)cout<<"*RV2:\t";
 
-        for (int j = 0; j < image.size(); j++) {
-            printf("%3d\t", image[j][i]);
+        for (int j = 0; j < image_hp1.size(); j++) {
+            printf("%3d\t", image_hp1[j][i]);
+        }
+        cout << endl;
+    }
+    cout << "-------------" << endl;
+    for (int i = 0; i < image_hp2[0].size(); i++) {
+        if(i==0)cout<<"AFW2:\t";
+        if(i==1)cout<<"CFW2:\t";
+        if(i==2)cout<<"GFW2:\t";
+        if(i==3)cout<<"TFW2:\t";
+        if(i==4)cout<<"ARV2:\t";
+        if(i==5)cout<<"CRV2:\t";
+        if(i==6)cout<<"GRV2:\t";
+        if(i==7)cout<<"TRV2:\t";
+        if(i==8)cout<<"*FW2:\t";
+        if(i==9)cout<<"*RV2:\t";
+        if(i==10)cout<<"AFW1:\t";
+        if(i==11)cout<<"CFW1:\t";
+        if(i==12)cout<<"GFW1:\t";
+        if(i==13)cout<<"TFW1:\t";
+        if(i==14)cout<<"ARV1:\t";
+        if(i==15)cout<<"CRV1:\t";
+        if(i==16)cout<<"GRV1:\t";
+        if(i==17)cout<<"TRV1:\t";
+        if(i==18)cout<<"*FW1:\t";
+        if(i==19)cout<<"*RV1:\t";
+
+        for (int j = 0; j < image_hp2.size(); j++) {
+            printf("%3d\t", image_hp2[j][i]);
         }
         cout << endl;
     }
@@ -291,35 +384,78 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
     // at this point labels and positions are generated, now generate the pileup
     for (long long i = start_pos; i <= end_pos; i++) {
 
-        vector<uint8_t> row;
-        uint8_t pixel_value = 0;
+        vector<uint8_t> row_h1;
+        vector<uint8_t> row_h2;
+        uint8_t pixel_value_h1 = 0;
+        uint8_t pixel_value_h1_encoding_h2 = 0;
+        uint8_t pixel_value_h2 = 0;
+        uint8_t pixel_value_h2_encoding_h1 = 0;
+
         // iterate through the summaries
         for(int j = 0; j <= 9; j++) {
-            pixel_value = (base_summaries[make_pair(i, j)] / max(1.0, coverage[i])) * ImageOptions::MAX_COLOR_VALUE;
-            row.push_back(pixel_value);
+            pixel_value_h1 = (base_summaries_hp1[make_pair(i, j)] / max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE;
+            pixel_value_h2 = (base_summaries_hp2[make_pair(i, j)] / max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE;
+
+            row_h1.push_back(pixel_value_h1);
+            row_h2.push_back(pixel_value_h2);
         }
 
-        assert(row.size() == 10);
-        image.push_back(row);
+        // this loop mounts summaries from the other haplotype to this one
+//        for(int j = 0; j <= 9; j++) {
+//            // you can remove these if you want to remove encoding of HP2 when inferring HP1
+//            pixel_value_h2_encoding_h1 = 0.2 * (base_summaries_hp1[make_pair(i, j)] / max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE;
+//            pixel_value_h1_encoding_h2 = 0.2 * (base_summaries_hp2[make_pair(i, j)] / max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE;
+//
+//            // you can remove these if you want to remove encoding of HP2 when inferring HP2
+//            row_h1.push_back(pixel_value_h1_encoding_h2);
+//            row_h2.push_back(pixel_value_h2_encoding_h1);
+//        }
+
+//        assert(row_h1.size() == 10);
+//        assert(row_h2.size() == 10);
+        image_hp1.push_back(row_h1);
+        image_hp2.push_back(row_h2);
 
         if (longest_insert_count[i] > 0) {
-
             for (int ii = 0; ii < longest_insert_count[i]; ii++) {
-                vector<uint8_t> ins_row;
+                vector<uint8_t> ins_row_hp1;
+                vector<uint8_t> ins_row_hp2;
 
                 // iterate through the summaries
                 for(int j = 0; j <= 9; j++) {
-                    pixel_value = (insert_summaries[make_pair(make_pair(i, ii), j)] /
-                            max(1.0, coverage[i])) * ImageOptions::MAX_COLOR_VALUE ;
-                    ins_row.push_back(pixel_value);
+                    pixel_value_h1 = (insert_summaries_hp1[make_pair(make_pair(i, ii), j)] /
+                            max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE ;
+                    pixel_value_h2 = (insert_summaries_hp2[make_pair(make_pair(i, ii), j)] /
+                                   max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE ;
+
+                    ins_row_hp1.push_back(pixel_value_h1);
+                    ins_row_hp2.push_back(pixel_value_h2);
                 }
-                assert(ins_row.size() == 10);
-                image.push_back(ins_row);
+
+                // this loop mounts summaries from the other haplotype to this one
+//                for(int j = 0; j <= 9; j++) {
+//                    // you can remove these if you want to remove encoding of HP2 when inferring HP2
+//                    pixel_value_h2_encoding_h1 = 0.2 * (insert_summaries_hp1[make_pair(make_pair(i, ii), j)] /
+//                                                        max(1.0, coverage_hp1[i])) * ImageOptions::MAX_COLOR_VALUE ;
+//
+//                    pixel_value_h1_encoding_h2 = 0.2 * (insert_summaries_hp2[make_pair(make_pair(i, ii), j)] /
+//                                                        max(1.0, coverage_hp2[i])) * ImageOptions::MAX_COLOR_VALUE ;
+//
+//                    // you can remove these if you want to remove encoding of HP2 when inferring HP2
+//                    ins_row_hp1.push_back(pixel_value_h1_encoding_h2); // this line 1
+//                    ins_row_hp2.push_back(pixel_value_h2_encoding_h1); // this line 2
+//                }
+
+//                assert(ins_row_hp1.size() == 10);
+//                assert(ins_row_hp2.size() == 10);
+                image_hp1.push_back(ins_row_hp1);
+                image_hp2.push_back(ins_row_hp2);
             }
         }
     }
 
-    assert(image.size() == genomic_pos.size());
+//    assert(image_hp1.size() == genomic_pos.size());
+//    assert(image_hp1.size() == image_hp2.size());
 }
 
 
@@ -327,58 +463,69 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
 void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
                                               long long start_pos,
                                               long long end_pos,
-                                              type_read truth_read,
-                                              int hp_tag) {
+                                              type_read truth_read_hp1,
+                                              type_read truth_read_hp2) {
 
 
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
-        if(read.mapping_quality > 0) {
-            if(read.hp_tag == hp_tag or read.hp_tag == 0) {
-                iterate_over_read(read, start_pos, end_pos);
-            }
-        }
+        iterate_over_read(read, start_pos, end_pos);
     }
 
     // this populates base_labels and insert_labels dictionaries
-    generate_labels(truth_read, start_pos, end_pos + 1);
+    generate_labels(truth_read_hp1, start_pos, end_pos + 1, 1);
+    generate_labels(truth_read_hp2, start_pos, end_pos + 1, 2);
 
     // after all the dictionaries are populated, we can simply walk through the region and generate a sequence
     for (long long pos = start_pos; pos <= end_pos; pos++) {
 
         if(coverage[pos] > 0) {
-            labels.push_back(get_labels(base_labels[pos]));
+            labels_hp1.push_back(get_labels(base_labels_hp1[pos]));
+            labels_hp2.push_back(get_labels(base_labels_hp2[pos]));
         } else {
-            labels.push_back(get_labels('*'));
+            labels_hp1.push_back(get_labels('*'));
+            labels_hp2.push_back(get_labels('*'));
         }
 
         // if the label contains anything but ACTG
-        if(!check_base(base_labels[pos])) {
+        if(!check_base(base_labels_hp1[pos]) || !check_base(base_labels_hp2[pos])) {
 //            cerr<<"INFO: INVALID REFERENCE BASE INDEX FOUND: ["<<chromosome_name<<":"<<start_pos<<"-"<<end_pos<<"] " <<
 //                pos<<" "<<" "<<base_labels[pos]<<endl;
-            bad_label_positions.push_back(labels.size());
+            bad_label_positions.push_back(labels_hp1.size());
         }
 
         genomic_pos.push_back(make_pair(pos, 0));
         if (longest_insert_count[pos] > 0) {
             for (int ii = 0; ii < longest_insert_count[pos]; ii++) {
                 genomic_pos.push_back(make_pair(pos, ii + 1));
-                if (insert_labels[make_pair(pos, ii)]) {
-                    labels.push_back(get_labels(insert_labels[make_pair(pos, ii)]));
+                if (insert_labels_hp1[make_pair(pos, ii)]) {
+                    labels_hp1.push_back(get_labels(insert_labels_hp1[make_pair(pos, ii)]));
 
                     // if the label contains anything but ACTG
-                    if(!check_base(insert_labels[make_pair(pos, ii)])) {
+                    if(!check_base(insert_labels_hp1[make_pair(pos, ii)])) {
 //                        cerr<<"INFO: INVALID REFERENCE INSERT BASE INDEX FOUND: "<<chromosome_name<<" "<<
 //                            pos<<" "<<insert_labels[make_pair(pos, ii)]<<endl;
-                        bad_label_positions.push_back(labels.size());
+                        bad_label_positions.push_back(labels_hp1.size());
                     }
                 }
-                else labels.push_back(get_labels('#'));
+                else labels_hp1.push_back(get_labels('#'));
+                if (insert_labels_hp2[make_pair(pos, ii)]) {
+                    labels_hp2.push_back(get_labels(insert_labels_hp2[make_pair(pos, ii)]));
+
+                    // if the label contains anything but ACTG
+                    if(!check_base(insert_labels_hp2[make_pair(pos, ii)])) {
+//                        cerr<<"INFO: INVALID REFERENCE INSERT BASE INDEX FOUND: "<<chromosome_name<<" "<<
+//                            pos<<" "<<insert_labels[make_pair(pos, ii)]<<endl;
+                        bad_label_positions.push_back(labels_hp2.size());
+                    }
+                }
+                else labels_hp2.push_back(get_labels('#'));
             }
         }
     }
-    bad_label_positions.push_back(labels.size());
-    assert(labels.size() == genomic_pos.size());
+    bad_label_positions.push_back(labels_hp1.size());
+//    assert(labels_hp1.size() == genomic_pos.size());
+//    assert(labels_hp1.size() == labels_hp2.size());
 
     // generate reference sequence
     for (int i = start_pos; i <= end_pos; i++) {
@@ -399,17 +546,12 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
 
 void SummaryGenerator::generate_summary(vector <type_read> &reads,
                                         long long start_pos,
-                                        long long end_pos,
-                                        int hp_tag) {
+                                        long long end_pos) {
     int read_count = 0;
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
-        if(read.mapping_quality > 0) {
-            if(read.hp_tag == hp_tag or read.hp_tag == 0) {
-                read_count += 1;
-                iterate_over_read(read, start_pos, end_pos);
-            }
-        }
+        read_count += 1;
+        iterate_over_read(read, start_pos, end_pos);
     }
 
     // generate reference sequence
@@ -437,7 +579,6 @@ void SummaryGenerator::generate_summary(vector <type_read> &reads,
 //    debug_print(start_pos, end_pos);
 }
 
-
 ImageSummary SummaryGenerator::chunk_image(int chunk_size, int chunk_overlap, int image_height) {
     int chunk_start = 0;
     int chunk_id = 0;
@@ -446,30 +587,35 @@ ImageSummary SummaryGenerator::chunk_image(int chunk_size, int chunk_overlap, in
     ImageSummary chunked_summary;
 
     while(true) {
-//        cout<<"Chunk info: "<<chunk_start<<" "<<chunk_end<<" "<<chunk_id<<endl;
-        vector< vector<uint8_t> > image_chunk(image.begin() + chunk_start, image.begin() + chunk_end);
+        vector< vector<uint8_t> > image_chunk_hp1(image_hp1.begin() + chunk_start, image_hp1.begin() + chunk_end);
+        vector< vector<uint8_t> > image_chunk_hp2(image_hp2.begin() + chunk_start, image_hp2.begin() + chunk_end);
         vector<pair<long long, int> > pos_chunk(genomic_pos.begin() + chunk_start, genomic_pos.begin() + chunk_end);
         vector<uint8_t> ref_chunk(ref_image.begin() + chunk_start, ref_image.begin() + chunk_end);
-        vector<uint8_t> label_chunk((int)(chunk_end - chunk_start), 0);
+        vector<uint8_t> label_chunk_hp1((int)(chunk_end - chunk_start), 0);
+        vector<uint8_t> label_chunk_hp2((int)(chunk_end - chunk_start), 0);
 
-        int padding_required = chunk_size - (int) image_chunk.size();
+        int padding_required = chunk_size - (int) image_chunk_hp1.size();
         if(padding_required > 0) {
             for(int i=0; i < padding_required; i++) {
                 vector<uint8_t> image_padding(image_height, 0);
                 pair<long long, int> pos_pair = make_pair(-1, -1);
 
-                image_chunk.push_back(image_padding);
+                image_chunk_hp1.push_back(image_padding);
+                image_chunk_hp2.push_back(image_padding);
                 pos_chunk.push_back(pos_pair);
                 ref_chunk.push_back(0);
-                label_chunk.push_back(0);
+                label_chunk_hp1.push_back(0);
+                label_chunk_hp2.push_back(0);
             }
         }
 //        cout<<"Sizes: "<< image_chunk.size()<<" "<<pos_chunk.size()<<" "<<label_chunk.size()<<" "<<chunk_size<<endl;
-        assert (image_chunk.size() == pos_chunk.size() == label_chunk.size() == chunk_size);
+//        assert (image_chunk_hp1.size() == image_chunk_hp2.size() == pos_chunk.size() == label_chunk_hp1.size() == label_chunk_hp2.size() == chunk_size);
 
-        chunked_summary.images.push_back(image_chunk);
+        chunked_summary.images_hp1.push_back(image_chunk_hp1);
+        chunked_summary.images_hp2.push_back(image_chunk_hp2);
         chunked_summary.positions.push_back(pos_chunk);
-        chunked_summary.labels.push_back(label_chunk);
+        chunked_summary.labels_hp1.push_back(label_chunk_hp1);
+        chunked_summary.labels_hp2.push_back(label_chunk_hp2);
         chunked_summary.refs.push_back(ref_chunk);
         chunked_summary.chunk_ids.push_back(chunk_id);
 
@@ -486,9 +632,9 @@ ImageSummary SummaryGenerator::chunk_image(int chunk_size, int chunk_overlap, in
 }
 
 
-ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overlap, int image_height) {
+ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overlap, int image_height, int chunk_id_start) {
     int chunk_start = 0;
-    int chunk_id = 0;
+    int chunk_id = chunk_id_start;
     int chunk_end = 0;
 
     ImageSummary chunked_summary;
@@ -503,17 +649,21 @@ ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overl
                 if(i > 0 and chunk_start < bad_label_positions[i - 1]) break;
             }
 //            cout<<"ST END: "<<chunk_start<<" "<<chunk_end<<endl;
-            vector< vector<uint8_t> > image_chunk(image.begin() + chunk_start, image.begin() + chunk_end);
+            vector< vector<uint8_t> > image_chunk_hp1(image_hp1.begin() + chunk_start, image_hp1.begin() + chunk_end);
+            vector< vector<uint8_t> > image_chunk_hp2(image_hp2.begin() + chunk_start, image_hp2.begin() + chunk_end);
             vector<pair<long long, int> > pos_chunk(genomic_pos.begin() + chunk_start, genomic_pos.begin() + chunk_end);
             vector<uint8_t> ref_chunk(ref_image.begin() + chunk_start, ref_image.begin() + chunk_end);
-            vector<uint8_t> label_chunk(labels.begin() + chunk_start, labels.begin() + chunk_end);
+            vector<uint8_t> label_chunk_hp1(labels_hp1.begin() + chunk_start, labels_hp1.begin() + chunk_end);
+            vector<uint8_t> label_chunk_hp2(labels_hp2.begin() + chunk_start, labels_hp2.begin() + chunk_end);
 
 //            cout<<"Sizes: "<< image_chunk.size()<<" "<<pos_chunk.size()<<" "<<label_chunk.size()<<" "<<chunk_size<<endl;
-            assert (image_chunk.size() == pos_chunk.size() == label_chunk.size() == chunk_size);
+//            assert (image_chunk_hp1.size() == image_chunk_hp2.size() == pos_chunk.size() == label_chunk_hp1.size() == label_chunk_hp2.size() == chunk_size);
 
-            chunked_summary.images.push_back(image_chunk);
+            chunked_summary.images_hp1.push_back(image_chunk_hp1);
+            chunked_summary.images_hp2.push_back(image_chunk_hp2);
             chunked_summary.positions.push_back(pos_chunk);
-            chunked_summary.labels.push_back(label_chunk);
+            chunked_summary.labels_hp1.push_back(label_chunk_hp1);
+            chunked_summary.labels_hp2.push_back(label_chunk_hp2);
             chunked_summary.refs.push_back(ref_chunk);
             chunked_summary.chunk_ids.push_back(chunk_id);
             chunk_id += 1;

@@ -1,10 +1,10 @@
 import sys
 import os
 import torch
-import torch.distributed as dist
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import torch.multiprocessing as mp
+import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
 from datetime import datetime
 
@@ -44,16 +44,22 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     batch_completed = 0
     total_batches = len(data_loader)
     with torch.no_grad():
-        for contig, contig_start, contig_end, chunk_id, images, position, index, ref_seq in data_loader:
+        for contig, contig_start, contig_end, chunk_id, images_hp1, images_hp2, position, index, ref_seq in data_loader:
             sys.stderr.flush()
-            images = images.type(torch.FloatTensor)
-            hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+            images_hp1 = images_hp1.type(torch.FloatTensor)
+            images_hp2 = images_hp2.type(torch.FloatTensor)
+            hidden_hp1 = torch.zeros(images_hp1.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+            hidden_hp2 = torch.zeros(images_hp2.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
-            prediction_base_tensor = torch.zeros((images.size(0), images.size(1), ImageSizeOptions.TOTAL_LABELS))
+            prediction_base_tensor_hp1 = torch.zeros((images_hp1.size(0), images_hp1.size(1), ImageSizeOptions.TOTAL_LABELS))
+            prediction_base_tensor_hp2 = torch.zeros((images_hp2.size(0), images_hp2.size(1), ImageSizeOptions.TOTAL_LABELS))
 
-            images = images.to(device_id)
-            hidden = hidden.to(device_id)
-            prediction_base_tensor = prediction_base_tensor.to(device_id)
+            images_hp1 = images_hp1.to(device_id)
+            images_hp2 = images_hp2.to(device_id)
+            hidden_hp1 = hidden_hp1.to(device_id)
+            hidden_hp2 = hidden_hp2.to(device_id)
+            prediction_base_tensor_hp1 = prediction_base_tensor_hp1.to(device_id)
+            prediction_base_tensor_hp2 = prediction_base_tensor_hp2.to(device_id)
 
             for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
                 if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
@@ -61,10 +67,12 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                 chunk_start = i
                 chunk_end = i + TrainOptions.TRAIN_WINDOW
                 # chunk all the data
-                image_chunk = images[:, chunk_start:chunk_end]
+                image_chunk_hp1 = images_hp1[:, chunk_start:chunk_end]
+                image_chunk_hp2 = images_hp2[:, chunk_start:chunk_end]
 
                 # run inference
-                output_base, hidden = transducer_model(image_chunk, hidden)
+                output_base_hp1, hidden_hp1 = transducer_model(image_chunk_hp1, hidden_hp1)
+                output_base_hp2, hidden_hp2 = transducer_model(image_chunk_hp2, hidden_hp2)
 
                 # now calculate how much padding is on the top and bottom of this chunk so we can do a simple
                 # add operation
@@ -80,19 +88,24 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                 inference_layers = inference_layers.to(device_id)
 
                 # run the softmax and padding layers
-                base_prediction = (inference_layers(output_base) * 10).type(torch.IntTensor).to(device_id)
+                base_prediction_hp1 = (inference_layers(output_base_hp1) * 10).type(torch.IntTensor).to(device_id)
+                base_prediction_hp2 = (inference_layers(output_base_hp2) * 10).type(torch.IntTensor).to(device_id)
 
                 # now simply add the tensor to the global counter
-                prediction_base_tensor = torch.add(prediction_base_tensor, base_prediction)
+                prediction_base_tensor_hp1 = torch.add(prediction_base_tensor_hp1, base_prediction_hp1)
+                prediction_base_tensor_hp2 = torch.add(prediction_base_tensor_hp2, base_prediction_hp2)
 
                 del inference_layers
                 torch.cuda.empty_cache()
 
-            base_values, base_labels = torch.max(prediction_base_tensor, 2)
+            # base_values, base_labels = torch.max(prediction_base_tensor, 2)
 
-            predicted_base_labels = base_labels.cpu().numpy()
+            # predicted_base_labels = base_labels.cpu().numpy()
 
-            for i in range(images.size(0)):
+            prediction_base_tensor_hp1 = prediction_base_tensor_hp1.cpu().numpy().astype(int)
+            prediction_base_tensor_hp2 = prediction_base_tensor_hp2.cpu().numpy().astype(int)
+
+            for i in range(images_hp1.size(0)):
                 prediction_data_file.write_prediction(contig[i],
                                                       contig_start[i],
                                                       contig_end[i],
@@ -100,14 +113,14 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                                                       position[i],
                                                       index[i],
                                                       ref_seq[i],
-                                                      predicted_base_labels[i])
+                                                      prediction_base_tensor_hp1[i],
+                                                      prediction_base_tensor_hp2[i])
             batch_completed += 1
 
-            if rank == 0:
+            if rank == 0 and batch_completed % 5 == 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
                 sys.stderr.flush()
-
 
 
 def cleanup():

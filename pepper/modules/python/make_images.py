@@ -45,7 +45,7 @@ def make_images(bam_filepath, fasta_filepath, region, output_dir, threads):
                                                           train_mode=False)
 
 
-def make_train_images(bam_filepath, truth_bam_filepath, fasta_filepath, region, region_bed, output_dir, threads):
+def make_train_images(bam_filepath, truth_bam_filepath, fasta_filepath, region, output_dir, threads, downsample_rate):
     """
     GENERATE IMAGES WITHOUT ANY LABELS. THIS IS USED BY pepper.py
     :param bam_filepath: Path to the input bam file.
@@ -54,6 +54,7 @@ def make_train_images(bam_filepath, truth_bam_filepath, fasta_filepath, region, 
     :param region: Specific region of interest.
     :param output_dir: Path to the output directory.
     :param threads: Number of threads to use.
+    :param downsample_rate: Downsample rate for reads
     :return:
     """
     # check the bam file
@@ -88,4 +89,5 @@ def make_train_images(bam_filepath, truth_bam_filepath, fasta_filepath, region, 
                                                           truth_bam=truth_bam_filepath,
                                                           output_path=output_dir,
                                                           total_threads=threads,
-                                                          train_mode=True)
+                                                          train_mode=True,
+                                                          downsample_rate=downsample_rate)

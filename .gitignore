@@ -45,5 +45,6 @@ build/
 
 # debug outputs
 outputs/
+out
 out.txt
 .DS_store

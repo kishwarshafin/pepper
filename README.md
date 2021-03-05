@@ -1,212 +1,58 @@
-# P.E.P.P.E.R.
-###### Program for Evaluating Patterns in the Pileups of Erroneous Reads
-
+## P.E.P.P.E.R.
 [![Build Status](https://travis-ci.com/kishwarshafin/pepper.svg?branch=master)](https://travis-ci.com/kishwarshafin/pepper)
-[![PyPI version](https://badge.fury.io/py/pepper-polish.svg)](https://badge.fury.io/py/pepper-polish)
 
-`P.E.P.P.E.R.` is a deep neural network based polisher designed to work with Oxford Nanopore Sequencing technology. `P.E.P.P.E.R.` uses a Recurrent Neural Network (RNN) based encoder-decoder model to call a consensus sequence from the summary statistics of each genomic position. The local realignment process using [SSW](https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library) is used and the module does not require any prior polishing with other tools (i.e. racon).
+`PEPPER` is a genome inference module based on recurrent neural networks that enables long-read variant calling and nanopore assembly polishing in the [PEPPER](https://github.com/kishwarshafin/pepper)-[Margin](https://github.com/UCSC-nanopore-cgl/margin)-[DeepVariant](https://github.com/google/deepvariant) pipeline. This pipeline enables nanopore-based variant calling with [DeepVariant](https://github.com/google/deepvariant).
 
-© 2020 Kishwar Shafin, Trevor Pesout, Miten Jain, Benedict Paten. <br/>
-Computational Genomics Lab (CGL), University of California, Santa Cruz.
-
-----
-## Polishing Microbial genomes
-Please consult the [documentation provided here](./docs/PEPPER_microbial_data_polishing.md) on how to polish microbial genome assemblies with PEPPER.
-
-----
-
-----
-## Oxford Nanopore variant calling workflow (Limited support release)
-In collaboration with the [DeepVariant](https://github.com/google/deepvariant) group, we are developing a haplotype-aware variant calling pipeline for Oxford Nanopore sequencing technology. We are releasing the pipeline with limited support until we finalize the pipeline for full support.
-
-<img src="img/PEPPER_DeepVariant.png" alt="PEPPER DeepVariant workflow">
-
-## How to run the variant calling pipeline
-Please consult the [documentation provided here](./docs/PEPPER_variant_calling.md) on how to run the variant calling pipeline.
-
-----
-
-## Polisher workflow
- * Sequence a genome and get a basecalled reads file (`reads.fastq`).
- * Use an assembler to get an assembly from the basecalled data (`assembly.fa`).
- * Use [minimap2](https://github.com/lh3/minimap2) to map `reads.fastq` to `assembly.fa` and get a bam file (`reads_2_assembly.bam`).
- * Use `pepper polish` to polish a genome.
- <p align="center">
- <img src="img/PEPPER_pipeline.svg" alt="pipeline.svg" height="640p">
- </p>
-
-
-## Installation
-We recommend using `Linux` environment to run `PEPPER`.
-
-### Install dependencies
-```bash
-sudo apt-get -y install cmake make git gcc g++ autoconf bzip2 lzma-dev zlib1g-dev \
-libcurl4-openssl-dev libpthread-stubs0-dev libbz2-dev \
-liblzma-dev libhdf5-dev python3-pip python3-virtualenv
-```
-
-### <img src="img/pip_logo.svg" alt="" height="20p"> Install using pip
-```bash
-python3 -m pip install pepper-polish
-# if you get permission error, then try:
-python3 -m pip install --user pepper-polish
-
-python3 -m pepper.pepper --help
-python3 -m pepper.pepper polish --help
-```
-If you want to directly call `PEPPER`. You can do:
-```bash
-echo 'export PATH="$(python3 -m site --user-base)/bin":$PATH' >> ~/.bashrc
-source ~/.bashrc
-
-pepper --version
-pepper --help
-pepper polish --help
-```
-### <img src="img/terminal.svg" alt="" height="20p"> Install from source
-We recommend using `virtualenv` to run pepper:
-```bash
-git clone https://github.com/kishwarshafin/pepper.git
-cd pepper
-make install
-. ./vnev/bin/activate
-
-pepper --help
-pepper polish --help
-```
-
-### Use Docker container
-
-##### CPU based docker container
-```bash
-# SEE INSTALLATION CONFIGURATION
-docker run --rm -it --ipc=host kishwars/pepper:latest pepper torch_stat
-
-# RUN PEPPER
-docker run -it --ipc=host --user=`id -u`:`id -g` --cpus="16" \
--v </directory/with/inputs_outputs>:/data kishwars/pepper:latest \
-pepper --help
-```
-
-##### GPU based docker container
-```bash
-sudo apt-get install -y nvidia-docker2
-
-# CHECK GPU STATE:
-nvidia-docker run -it --ipc=host kishwars/pepper:latest pepper torch_stat
-
-# RUN PEPPER
-nvidia-docker run -it --ipc=host --user=`id -u`:`id -g` --cpus="16" \
--v </directory/with/inputs_outputs>:/data kishwars/pepper:latest \
-pepper --help
-```
-
-## Usage
-
-Polishing involves three sub-processes `make_images`, `call_consensus`, `stitch`. You can run all three steps using `pepper polish` or run each step separately.
-
-###  Download models
-You can download all available `PEPPER` models in one command.
-
-```bash
-pepper download_models \
---output_dir </path/to/pepper_model_directory/>
-```
-###  One step polishing
-#### Case 1: CPU machine
-If you are using a CPU-only machine you ca use the following command:
-```bash
-pepper polish \
---bam </path/to/reads_2_draft_assembly.bam> \
---fasta <path/to/draft_assembly.fasta> \
---model_path <path/to/pepper/models/XXX.pkl> \
---output_file <path/to/output_polished_sequence/output_file_prefix> \
---threads <total_threads> \
---batch_size 128
-```
-
-#### Case 2: GPU machine
-You can check your `CUDA` availability by running `pepper torch_stat`. If you have CUDA available and GPU devices on your machine, you can do:
-```bash
-pepper polish \
---bam </path/to/reads_2_draft_assembly.bam> \
---fasta <path/to/draft_assembly.fasta> \
---model_path <path/to/pepper/models/XXX.pkl> \
---output_file <path/to/output_polished_sequence/output_file_prefix> \
---threads <number_of_threads> \
---batch_size 512 \
---gpu \
---num_workers <num_workers>
-```
-You can select which `CUDA` devices to use with `--device_ids` parameter.
-
-```bash
-ARGUMENT DETAILS:
-  -h, --help            show this help message and exit
-  -b BAM, --bam BAM     BAM file containing mapping between reads and the
-                        draft assembly.
-  -f FASTA, --fasta FASTA
-                        FASTA file containing the draft assembly.
-  -m MODEL_PATH, --model_path MODEL_PATH
-                        Path to a trained model.
-  -o OUTPUT_FILE, --output_file OUTPUT_FILE
-                        Path to output file with an expected prefix (i.e. -o
-                        ./outputs/polished_genome)
-  -t THREADS, --threads THREADS
-                        Number of threads to use. Default is 5.
-  -r REGION, --region REGION
-                        Region in [contig_name:start-end] format
-  -bs BATCH_SIZE, --batch_size BATCH_SIZE
-                        Batch size for testing, default is 100. Suggested
-                        values: 256/512/1024.
-  -g, --gpu             If set then PyTorch will use GPUs for inference. CUDA
-                        required.
-  -dx, --distributed_off
-                        Turn off distributed inference. This mode will disable
-                        the use of multiple callers.
-  -d_ids DEVICE_IDS, --device_ids DEVICE_IDS
-                        List of gpu device ids to use for inference. Only used
-                        in distributed setting. Example usage: --device_ids
-                        0,1,2 (this will create three callers in id 'cuda:0,
-                        cuda:1 and cuda:2' If none then it will use all
-                        available devices.
-  -w NUM_WORKERS, --num_workers NUM_WORKERS
-                        Number of workers for loading images. Default is 4.
-  -tpc THREADS_PER_CALLER, --threads_per_caller THREADS_PER_CALLER
-                        Total threads to be used per caller. A sane value
-                        would be num_callers * threads <= total_threads.
-  -c CALLERS, --callers CALLERS
-                        Total number of callers to spawn if doing CPU
-                        inference in distributed mode.
-```
-
-## Results
-
-#### PEPPER achieves lower error rate than ONT suggested pipeline.
-We compared `PEPPER` against `Racon-Medaka` pipeline and we demonstrate significantly better results for microbial genomes. We used Staphylococcus Aureus samples to evaluate these two pipelines. The PEPPER microbial model was trained on samples excluding Staphylococcus Aureus. We used `r941_prom_high` model to run `Medaka`.
 <p align="center">
-<img src="img/PEPPER_error_rate.png" alt="PEPPER_error_rate.png" height="420">
+<img src="./img/PMDV_variant_calling_ONT.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow" width="720p"></img>
 </p>
 
-#### New R10 chemistry shows further improvement in polishing results
-The new `R10` data is now available for `MinION` and we polished the assembly generated with `R9` data using the `R10` reads. The R10 data provides significant improvement in overall quality of the genome.
-<p align="center">
-<img src="img/PEPPER_chemistry.png" alt="PEPPER_chemistry.png" height="420p">
-</p>
+### Quickstart
+Please follow the quickstart guides to assess your setup. Please follow case-study documentations for detailed instructions.
+* **Docker**: [Oxford Nanopore and PacBio HiFi variant calling quick start](./docs/quickstart/variant_calling_docker_quickstart.md).
+* **Singularity**: [Oxford Nanopore and PacBio HiFi variant calling quick start](./docs/quickstart/variant_calling_singularity_quickstart.md).
 
-## Acknowledgement
-We are thankful to the developers of these packages: </br>
-* [Medaka](https://github.com/nanoporetech/medaka)
+### Case studies
+
+The variant calling and assembly polishing [pipelines](./docs/module_usage/pipeline_usage.md) can be run on [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) or [Singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps). The case studies are designed on `chr20` of `HG002` sample.
+
+Please pick the case-study of your pipeline of interest and the associated container runtime Docker or Singularity. The case-studies include input data and benchmarking of the run:
+
+|                       Pipeline                       |                         Docker                         |                               Singularity                               |                     NVIDIA-docker<br>(GPU)                     |
+|:----------------------------------------------------:|:------------------------------------------------------:|:-----------------------------------------------------------------------:|:--------------------------------------------------------------:|
+|              Nanopore<br>variant calling             |  [Link](./docs/pipeline_docker/ONT_variant_calling.md) |  [Link](./docs/pipeline_singularity/ONT_variant_calling_singularity.md) |  [Link](./docs/pipeline_docker_gpu/ONT_variant_calling_gpu.md) |
+|            PacBio HiFi<br>variant calling            | [Link](./docs/pipeline_docker/HiFi_variant_calling.md) | [Link](./docs/pipeline_singularity/HiFi_variant_calling_singularity.md) | [Link](./docs/pipeline_docker_gpu/HiFi_variant_calling_gpu.md) |
+|   Nanopore assembly polishing<br>with nanopore data  |     [Link](./docs/pipeline_docker/ONT_polishing.md)    |     [Link](./docs/pipeline_singularity/ONT_polishing_singularity.md)    |     [Link](./docs/pipeline_docker_gpu/ONT_polishing_gpu.md)    |
+| Nanopore assembly polishing<br>with PacBio HiFi data |    [Link](./docs/pipeline_docker/HiFi_polishing.md)    |    [Link](./docs/pipeline_singularity/HiFi_polishing_singularity.md)    |    [Link](./docs/pipeline_docker_gpu/HiFi_polishing_gpu.md)    |
+
+
+#### Use PEPPER or Margin independently
+* If you want to run `PEPPER` or `Margin` independent of the pipeline, please follow this [documentation](./docs/module_usage/module_usage.md).
+* If you want to install `PEPPER` locally for development, please follow this [documentation](./docs/local_install/install_pepper_locally.md)
+
+#### License
+[PEPPER license](./LICENSE), [Margin License](https://github.com/UCSC-nanopore-cgl/margin/blob/master/LICENSE.txt) and [DeepVariant License](https://github.com/google/deepvariant/blob/r1.1/LICENSE) extend to the trained models (PEPPER, Margin and DeepVariant) and container environment (Docker and Singularity).
+
+### Why use PEPPER-Margin-DeepVariant?
+ * **Accuracy:** Our pipeline won the [precisionFDA truth challenge v2](https://www.biorxiv.org/content/10.1101/2020.11.13.380741v1) for all benchmarking region and difficult to map region in the Oxford Nanopore category.
+ * **Speed:** `PEPPER-Margin-DeepVariant` provides a cheaper and faster solution to PacBio HiFi haplotype-aware variant calling.
+ * **Phased output**: `PEPPER-Margin-DeepVariant` can produce high-quality phasing of variants without trio information with nanopore and PacBio HiFi reads.
+
+### Acknowledgement
+We are thankful to the developers of these packages:
 * [htslib & samtools](http://www.htslib.org/)
-* [ssw library](https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library)
-* [hdf5 python (h5py)](https://www.h5py.org/)
 * [pytorch](https://pytorch.org/)
+* [ONNX](https://onnx.ai/)
+* [hdf5 python (h5py)](https://www.h5py.org/)
 
-## Fun Fact
+
+### Authors
+[PEPPER](https://github.com/kishwarshafin/pepper)-[Margin](https://github.com/UCSC-nanopore-cgl/margin)-[DeepVariant](https://github.com/google/deepvariant) pipeline is developed in a collaboration between [UC Santa Cruz genomics institute](https://ucscgenomics.soe.ucsc.edu/) and the [Genomics team in Google Health](https://health.google/health-research/genomics/).
+
+
+### Fun Fact
 <img src="https://vignette.wikia.nocookie.net/marveldatabase/images/7/72/Anthony_Stark_%28Earth-616%29_from_Iron_Man_Vol_5_2_002.jpg/revision/latest?cb=20130407031815" alt="guppy235" width="240p"> <br/>
 
-The name "P.E.P.P.E.R." is also inspired from an A.I. created by Tony Stark in the  Marvel Comics (Earth-616). PEPPER is named after Tony Stark's then friend and the CEO of Resilient, Pepper Potts.
+The name "P.E.P.P.E.R." is inspired from an A.I. created by Tony Stark in the  Marvel Comics (Earth-616).
 
-
-© 2020 Kishwar Shafin, Trevor Pesout, Miten Jain, Benedict Paten.
+PEPPER is named after Tony Stark's then friend and the CEO of Resilient, Pepper Potts.

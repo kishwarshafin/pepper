@@ -34,7 +34,10 @@ class SequenceDataset(Dataset):
                     image_names = list(hdf5_file['summaries'].keys())
 
                     for image_name in image_names:
-                        file_image_pair.append((hdf5_file_path, image_name))
+                        # for hp_tag 1
+                        file_image_pair.append((hdf5_file_path, image_name, 1))
+                        # for hp_tag 2
+                        file_image_pair.append((hdf5_file_path, image_name, 2))
                 else:
                     sys.stderr.write("WARN: NO IMAGES FOUND IN FILE: " + hdf5_file_path + "\n")
 
@@ -42,11 +45,15 @@ class SequenceDataset(Dataset):
 
     def __getitem__(self, index):
         # load the image
-        hdf5_filepath, image_name = self.all_images[index]
+        hdf5_filepath, image_name, hp_tag = self.all_images[index]
 
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
-            image = hdf5_file['summaries'][image_name]['image'][()]
-            label = hdf5_file['summaries'][image_name]['label'][()]
+            if hp_tag == 1:
+                image = hdf5_file['summaries'][image_name]['image_hp1'][()]
+                label = hdf5_file['summaries'][image_name]['label_hp1'][()]
+            else:
+                image = hdf5_file['summaries'][image_name]['image_hp2'][()]
+                label = hdf5_file['summaries'][image_name]['label_hp2'][()]
 
         return image, label
 

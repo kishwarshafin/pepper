@@ -20,6 +20,7 @@ script:
   - cmake ..
   - make
 
+
 env:
   global:
   - LANG="en_US.UTF-8"

@@ -3,11 +3,10 @@ import sys
 import torch
 from datetime import datetime
 from pepper.version import __version__
+from pepper_hp.modules.python.Options import Profiles
 from pepper_hp.modules.python.MakeImages import make_images
 from pepper_hp.modules.python.RunInference import run_inference
-from pepper_hp.modules.python.FindCandidates import process_candidates
-from pepper_hp.modules.python.MergeVCFsWithSimplify import haploid2diploid
-# from pepper_hp.modules.python.MergeVCFs import haploid2diploid
+from pepper_hp.modules.python.FindCandidates import process_candidates, process_candidates_ccs
 from pepper_hp.modules.python.CallVariant import call_variant
 
 def boolean_string(s):
@@ -117,6 +116,27 @@ def add_call_variant_arguments(parser):
         default=4,
         help="Number of workers for loading images. Default is 4."
     )
+    parser.add_argument(
+        "-d",
+        "--downsample_rate",
+        type=float,
+        default=1.0,
+        help="Downsample rate of reads while generating images."
+    )
+    profile_group = parser.add_mutually_exclusive_group(required=True)
+    profile_group.add_argument("--ont",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on ONT reads.")
+    profile_group.add_argument("--ont_asm",
+                               default=False,
+                               action='store_true',
+                               help="Set to find candidates for ONT-based assembly polishing.")
+
+    profile_group.add_argument("--ccs_asm",
+                               default=False,
+                               action='store_true',
+                               help="Set to find candidates for CCS-based assembly polishing.")
     return parser
 
 
@@ -141,14 +161,6 @@ def add_make_images_arguments(parser):
         help="FASTA file containing the draft assembly."
     )
     parser.add_argument(
-        "-hp",
-        "--hp_tag",
-        type=int,
-        required=True,
-        default=None,
-        help="Haplotype tag to process from the BAM file."
-    )
-    parser.add_argument(
         "-t",
         "--threads",
         required=True,
@@ -167,6 +179,13 @@ def add_make_images_arguments(parser):
         type=str,
         default="pepper_hp_output/",
         help="Path to output directory, if it doesn't exist it will be created."
+    )
+    parser.add_argument(
+        "-d",
+        "--downsample_rate",
+        type=float,
+        default=1.0,
+        help="Downsample rate of reads while generating images."
     )
     return parser
 
@@ -265,8 +284,15 @@ def add_find_candidates_arguments(parser):
         help="Path to directory containing HDF files."
     )
     parser.add_argument(
-        "-r",
-        "--input_reference",
+        "-b",
+        "--bam",
+        type=str,
+        required=True,
+        help="BAM file containing mapping between reads and the draft assembly."
+    )
+    parser.add_argument(
+        "-f",
+        "--fasta",
         type=str,
         required=True,
         help="Input reference/assembly file."
@@ -293,38 +319,21 @@ def add_find_candidates_arguments(parser):
         type=int,
         help="Number of threads."
     )
-    return parser
 
+    profile_group = parser.add_mutually_exclusive_group(required=True)
+    profile_group.add_argument("--ont",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on ONT reads.")
+    profile_group.add_argument("--ont_asm",
+                               default=False,
+                               action='store_true',
+                               help="Set to find candidates for ONT-based assembly polishing.")
 
-def add_merge_vcf_arguments(parser):
-    parser.add_argument(
-        "-v1",
-        "--vcf_h1",
-        type=str,
-        required=True,
-        help="VCF of haplotype 1."
-    )
-    parser.add_argument(
-        "-v2",
-        "--vcf_h2",
-        type=str,
-        required=True,
-        help="VCF of haplotype 1."
-    )
-    parser.add_argument(
-        "-r",
-        "--reference",
-        type=str,
-        required=True,
-        help="FASTA file containing the reference assembly."
-    )
-    parser.add_argument(
-        "-o",
-        "--output_dir",
-        type=str,
-        default="candidate_finder_output/",
-        help="Path to output directory, if it doesn't exist it will be created."
-    )
+    profile_group.add_argument("--ccs_asm",
+                               default=False,
+                               action='store_true',
+                               help="Set to find candidates for CCS-based assembly polishing.")
     return parser
 
 
@@ -371,9 +380,6 @@ def main():
     parser_find_candidates = subparsers.add_parser('find_candidates', help="Find candidate variants.")
     add_find_candidates_arguments(parser_find_candidates)
 
-    parser_find_candidates = subparsers.add_parser('merge_vcf', help="Merge haplotype 1 and 2 variants to generate a phased VCF.")
-    add_merge_vcf_arguments(parser_find_candidates)
-
     # parser_download_model = subparsers.add_parser('download_models', help="Download available models.")
     # add_download_models_arguments(parser_download_model)
 
@@ -384,18 +390,47 @@ def main():
 
     if FLAGS.sub_command == 'call_variant':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CALL VARIANT MODULE SELECTED\n")
-        call_variant(FLAGS.bam,
-                     FLAGS.fasta,
-                     FLAGS.output_dir,
-                     FLAGS.threads,
-                     FLAGS.region,
-                     FLAGS.model_path,
-                     FLAGS.batch_size,
-                     FLAGS.gpu,
-                     FLAGS.callers_per_gpu,
-                     FLAGS.device_ids,
-                     FLAGS.num_workers,
-                     FLAGS.sample_name)
+
+        set_profile = Profiles.ONT_PROFILE
+        split_candidates = False
+        if FLAGS.ont:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING PROFILE SET.\n")
+            set_profile = Profiles.ONT_PROFILE
+        elif FLAGS.ont_asm:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT ASSEMBLY POLISHING PROFILE SET.\n")
+            set_profile = Profiles.ONT_ASM_PROFILE
+            split_candidates = True
+        elif FLAGS.ccs_asm:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CCS ASSEMBLY POLISHING PROFILE SET.\n")
+            set_profile = Profiles.CCS_ASM_PROFILE
+            split_candidates = True
+        else:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO PROFILES SELECTED.\n")
+            exit(1)
+
+        if set_profile == Profiles.CCS_ASM_PROFILE:
+            process_candidates_ccs(FLAGS.fasta,
+                                   FLAGS.bam,
+                                   FLAGS.sample_name,
+                                   FLAGS.output_dir,
+                                   FLAGS.threads,
+                                   split_candidates)
+        else:
+            call_variant(FLAGS.bam,
+                         FLAGS.fasta,
+                         FLAGS.output_dir,
+                         FLAGS.threads,
+                         FLAGS.region,
+                         FLAGS.model_path,
+                         FLAGS.batch_size,
+                         FLAGS.gpu,
+                         FLAGS.callers_per_gpu,
+                         FLAGS.device_ids,
+                         FLAGS.num_workers,
+                         FLAGS.sample_name,
+                         FLAGS.downsample_rate,
+                         split_candidates,
+                         set_profile)
 
     elif FLAGS.sub_command == 'make_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
@@ -403,8 +438,8 @@ def main():
                     FLAGS.fasta,
                     FLAGS.region,
                     FLAGS.output_dir,
-                    FLAGS.hp_tag,
-                    FLAGS.threads)
+                    FLAGS.threads,
+                    FLAGS.downsample_rate)
 
     elif FLAGS.sub_command == 'run_inference':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN INFERENCE MODULE SELECTED.\n")
@@ -420,20 +455,40 @@ def main():
 
     elif FLAGS.sub_command == 'find_candidates':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FIND CANDIDATE MODULE SELECTED\n")
-        process_candidates(FLAGS.input_dir,
-                           FLAGS.input_reference,
-                           FLAGS.sample_name,
-                           FLAGS.output_dir,
-                           FLAGS.threads)
 
-    elif FLAGS.sub_command == 'merge_vcf':
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MERGE VCFs MODULE SELECTED\n")
-        haploid2diploid(FLAGS.vcf_h1,
-                        FLAGS.vcf_h2,
-                        FLAGS.reference,
-                        FLAGS.output_dir,
-                        adjacent=False,
-                        discard_phase=False)
+        set_profile = Profiles.ONT_PROFILE
+        split_candidates = False
+        if FLAGS.ont:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING PROFILE SET.\n")
+            set_profile = Profiles.ONT_PROFILE
+        elif FLAGS.ont_asm:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT ASSEMBLY POLISHING PROFILE SET.\n")
+            set_profile = Profiles.ONT_ASM_PROFILE
+            split_candidates = True
+        elif FLAGS.ccs_asm:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CCS ASSEMBLY POLISHING PROFILE SET.\n")
+            set_profile = Profiles.CCS_ASM_PROFILE
+            split_candidates = True
+        else:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO PROFILES SELECTED.\n")
+            exit(1)
+
+        if set_profile != Profiles.CCS_ASM_PROFILE:
+            process_candidates(FLAGS.input_dir,
+                               FLAGS.fasta,
+                               FLAGS.bam,
+                               FLAGS.sample_name,
+                               FLAGS.output_dir,
+                               FLAGS.threads,
+                               split_candidates,
+                               set_profile)
+        else:
+            process_candidates_ccs(FLAGS.fasta,
+                                   FLAGS.bam,
+                                   FLAGS.sample_name,
+                                   FLAGS.output_dir,
+                                   FLAGS.threads,
+                                   split_candidates)
 
     elif FLAGS.sub_command == 'torch_stat':
         sys.stderr.write("TORCH VERSION: " + str(torch.__version__) + "\n\n")

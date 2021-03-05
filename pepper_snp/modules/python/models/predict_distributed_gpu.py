@@ -1,10 +1,10 @@
 import sys
 import os
 import torch
-import torch.distributed as dist
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import torch.multiprocessing as mp
+import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
 from pepper_snp.modules.python.models.dataloader_predict import SequenceDataset
 from datetime import datetime
@@ -79,7 +79,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                 inference_layers = inference_layers.to(device_id)
 
                 # run the softmax and padding layers
-                base_prediction = (inference_layers(output_base) * 10).type(torch.IntTensor).to(device_id)
+                base_prediction = (inference_layers(output_base) * 100000).type(torch.IntTensor).to(device_id)
 
                 # now simply add the tensor to the global counter
                 prediction_base_tensor = torch.add(prediction_base_tensor, base_prediction)
@@ -94,10 +94,9 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                                                       position[i], index[i], prediction_base_tensor[i], ref_seq[i])
             batch_completed += 1
 
-            if rank == 0:
+            if rank == 0 and batch_completed % 5 == 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
-
 
 
 def cleanup():

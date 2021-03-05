@@ -93,7 +93,8 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
     int read_index = 0;
     long long ref_position = read.pos;
     int cigar_index = 0;
-    int base_quality = 0;
+    float mapping_quality = min(60, read.mapping_quality) / 60.0;
+    float base_quality = 0;
     long long reference_index;
 
     for (auto &cigar: read.cigar_tuples) {
@@ -113,6 +114,7 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                     //read.base_qualities[read_index] base quality
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
+                        base_quality = min(100, read.base_qualities[read_index]) / 100.0;
 
                         // update the summary of base
                         base_summaries[make_pair(ref_position, get_feature_index(base, read.flags.is_reverse))] += 1.0;
@@ -134,6 +136,8 @@ void SummaryGenerator::iterate_over_read(type_read read, long long region_start,
                     alt = read.sequence.substr(read_index, cigar.length);
                     for (int i = 0; i < cigar.length; i++) {
                         pair<long long, int> position_pair = make_pair(ref_position - 1, i);
+                        base_quality = min(100, read.base_qualities[read_index + i]) / 100.0;
+
                         insert_summaries[make_pair(position_pair, get_feature_index(alt[i], read.flags.is_reverse))] += 1.0;
                     }
                     longest_insert_count[ref_position - 1] = std::max(longest_insert_count[ref_position - 1],
@@ -352,7 +356,7 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
             pixel_value = (base_summaries[make_pair(i, j)] / max(1.0, coverage[i])) * ImageOptions::MAX_COLOR_VALUE;
             row.push_back(pixel_value);
         }
-        assert(row.size() == 10);
+//        assert(row.size() == 10);
         image.push_back(row);
 
         if (longest_insert_count[i] > 0 && ImageOptions::GENERATE_INSERTS) {
@@ -368,13 +372,13 @@ void SummaryGenerator::generate_image(long long start_pos, long long end_pos) {
                         ins_row.push_back(pixel_value);
                     }
                 }
-                assert(ins_row.size() == 10);
+//                assert(ins_row.size() == 10);
                 image.push_back(ins_row);
             }
         }
     }
-    assert(image.size() == genomic_pos.size());
-    assert(image.size() == ref_image.size());
+//    assert(image.size() == genomic_pos.size());
+//    assert(image.size() == ref_image.size());
 }
 
 
@@ -460,7 +464,7 @@ void SummaryGenerator::generate_train_summary(vector <type_read> &reads,
         }
     }
     bad_label_positions.push_back(labels.size());
-    assert(labels.size() == genomic_pos.size());
+//    assert(labels.size() == genomic_pos.size());
 
 
     // generate reference sequence
@@ -543,7 +547,7 @@ ImageSummary SummaryGenerator::chunk_image(int chunk_size, int chunk_overlap, in
             }
         }
 //        cout<<"Sizes: "<< image_chunk.size()<<" "<<pos_chunk.size()<<" "<<label_chunk.size()<<" "<<chunk_size<<endl;
-        assert (image_chunk.size() == pos_chunk.size() == label_chunk.size() == chunk_size);
+//        assert (image_chunk.size() == pos_chunk.size() == label_chunk.size() == chunk_size);
 
         chunked_summary.images.push_back(image_chunk);
         chunked_summary.positions.push_back(pos_chunk);
@@ -564,9 +568,9 @@ ImageSummary SummaryGenerator::chunk_image(int chunk_size, int chunk_overlap, in
 }
 
 
-ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overlap, int image_height) {
+ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overlap, int image_height, int chunk_id_start) {
     int chunk_start = 0;
-    int chunk_id = 0;
+    int chunk_id = chunk_id_start;
     int chunk_end = 0;
 
     ImageSummary chunked_summary;
@@ -587,7 +591,7 @@ ImageSummary SummaryGenerator::chunk_image_train(int chunk_size, int chunk_overl
             vector<uint8_t> label_chunk(labels.begin() + chunk_start, labels.begin() + chunk_end);
 
 //            cout<<"Sizes: "<< image_chunk.size()<<" "<<pos_chunk.size()<<" "<<label_chunk.size()<<" "<<chunk_size<<endl;
-            assert (image_chunk.size() == pos_chunk.size() == label_chunk.size() == chunk_size);
+//            assert (image_chunk.size() == pos_chunk.size() == label_chunk.size() == chunk_size);
 
             chunked_summary.images.push_back(image_chunk);
             chunked_summary.positions.push_back(pos_chunk);
