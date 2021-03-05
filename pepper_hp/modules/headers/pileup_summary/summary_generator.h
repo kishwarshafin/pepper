@@ -26,14 +26,6 @@ namespace ImageOptions {
     static constexpr int MAX_COLOR_VALUE = 254;
 };
 
-struct ImageSummary {
-    vector< vector< vector<uint8_t> > > images;
-    vector< vector<pair<long long, int> > > positions;
-    vector< vector<uint8_t> > refs;
-    vector< vector<uint8_t> > labels;
-    vector<int> chunk_ids;
-};
-
 class SummaryGenerator {
     long long ref_start;
     long long ref_end;
