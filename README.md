@@ -7,6 +7,15 @@
 <img src="./img/PMDV_variant_calling_ONT.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow" width="720p"></img>
 </p>
 
+### How to cite
+If you use `PEPPER-Margin-DeepVariant` please cite the following manuscript:
+
+[Haplotype-aware variant calling enables high accuracy in nanopore long-reads using deep neural networks.](https://www.biorxiv.org/content/10.1101/2021.03.04.433952v1)
+<details>
+<summary>Authors</summary>
+Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey Kolesnikov, Sidharth Goel, Gunjan Baid, Jordan M Eizenga, Karen H Miga, Paolo Carnevali, Miten Jain, Andrew Carroll, Benedict Paten.
+</details>
+
 ### Quickstart
 Please follow the quickstart guides to assess your setup. Please follow case-study documentations for detailed instructions.
 * **Docker**: [Oxford Nanopore and PacBio HiFi variant calling quick start](./docs/quickstart/variant_calling_docker_quickstart.md).
