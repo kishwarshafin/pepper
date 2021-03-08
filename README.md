@@ -10,10 +10,10 @@
 ### How to cite
 If you use `PEPPER-Margin-DeepVariant` please cite the following manuscript:
 
-[Haplotype-aware variant calling enables high accuracy in nanopore long-reads using deep neural networks.](https://www.biorxiv.org/content/10.1101/2021.03.04.433952v1)
-\<details>
-<summary>Authors</summary>
-Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey Kolesnikov, Sidharth Goel, Gunjan Baid, Jordan M Eizenga, Karen H Miga, Paolo Carnevali, Miten Jain, Andrew Carroll, Benedict Paten.
+
+<details>
+<summary><a href="https://www.biorxiv.org/content/10.1101/2021.03.04.433952v1"><b>bioRxiv:</b> Haplotype-aware variant calling enables high accuracy in nanopore long-reads using deep neural networks.</a></summary>
+Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey Kolesnikov, Sidharth Goel, <br/> Gunjan Baid, Jordan M Eizenga, Karen H Miga, Paolo Carnevali, Miten Jain, Andrew Carroll, Benedict Paten.
 </details>
 
 ### Quickstart
