@@ -1,56 +1,17 @@
 //
-// Created by Kishwar Shafin on 6/12/18.
+// Created by Kishwar Shafin on 3/21/21.
 //
 
-#ifndef PEPPER_VARIANT_BAM_HANDLER_H
-#define PEPPER_VARIANT_BAM_HANDLER_H
+#ifndef PEPPER_PRIVATE_READ_H
+#define PEPPER_PRIVATE_READ_H
 
 #include <iostream>
 #include <sstream>
 #include <set>
-#include <stdio.h>
 #include <string>
-#include <vector>
-#include <map>
 #include <algorithm>
-#include "sam.h"
-#include "hts.h"
-#include "cram.h"
-#include "hts_endian.h"
-
+#include "cigar.h"
 using namespace std;
-
-#define SNP_TYPE 1
-#define INSERT_TYPE 2
-#define DELETE_TYPE 3
-
-//typedef struct type_read type_read;
-//typedef struct LinearAlignment LinearAlignment;
-
-struct CigarOp {
-    CigarOp() : operation(-1), length(0) {}
-    CigarOp(int op, int len) : operation(op), length(len) {}
-
-    bool operator==(const CigarOp& that) const {
-        return operation == that.operation && length == that.length;
-    }
-
-    void operator=(const CigarOp& that) {
-        this->operation = that.operation;
-        this->length = that.length;
-    }
-
-    void set_operation(int op) {
-        operation = op;
-    }
-
-    void set_length(int len) {
-        length = len;
-    }
-
-    int operation;
-    int length;
-};
 
 struct type_read_flags{
     bool is_paired;
@@ -146,48 +107,6 @@ struct type_read{
     }
 };
 
-typedef struct{
-    string sequence_name;
-    int sequence_length;
-} type_sequence;
 
 
-class CIGAR_OPERATIONS {
-public:
-    static constexpr int MATCH = 0;
-    static constexpr int IN = 1;
-    static constexpr int DEL = 2;
-    static constexpr int REF_SKIP = 3;
-    static constexpr int SOFT_CLIP = 4;
-    static constexpr int HARD_CLIP = 5;
-    static constexpr int PAD = 6;
-    static constexpr int EQUAL = 7;
-    static constexpr int DIFF = 8;
-    static constexpr int BACK = 9;
-    static constexpr int UNSPECIFIED = -1;
-};
-
-class BAM_handler {
-    public:
-        htsFile* hts_file;
-        hts_idx_t* idx;
-        bam_hdr_t* header;
-
-        BAM_handler(string path);
-
-        // this will divide reads in haplotype bins and then return
-        vector<type_read> get_reads(string region,
-                                    long long start,
-                                    long long stop,
-                                    bool include_supplementary,
-                                    int min_mapq,
-                                    int min_baseq);
-        vector<string> get_chromosome_sequence_names();
-        vector<type_sequence> get_chromosome_sequence_names_with_length();
-        set<string> get_sample_names();
-        type_read_flags get_read_flags(int flag);
-
-    	~BAM_handler();
-};
-
-#endif // BAM_HANDLER_H
+#endif //PEPPER_PRIVATE_READ_H

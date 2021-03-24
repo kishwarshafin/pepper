@@ -132,7 +132,7 @@ if __name__ == '__main__':
         packages=['pepper/', 'pepper/modules/python', 'pepper/modules/python/models', 'pepper/modules/python/helper',
                   'pepper_snp/', 'pepper_snp/modules/python', 'pepper_snp/modules/python/models', 'pepper_snp/modules/python/helper',
                   'pepper_hp/', 'pepper_hp/modules/python', 'pepper_hp/modules/python/models',
-                  'pepper_variant/', 'pepper_variant/modules/python', 'pepper_variant/modules/python/models'],
+                  'pepper_variant/', 'pepper_variant/modules/python', 'pepper_variant/modules/argparse', 'pepper_variant/modules/python/models'],
         package_dir={'pepper': 'pepper',
                      'pepper/modules/python': 'pepper/modules/python',
                      'pepper/modules/python/models': 'pepper/modules/python/models',
@@ -147,6 +147,7 @@ if __name__ == '__main__':
                      'pepper_hp/modules/python/helper': 'pepper_hp/modules/python/helper',
                      'pepper_variant': 'pepper_variant',
                      'pepper_variant/modules/python': 'pepper_variant/modules/python',
+                     'pepper_variant/modules/argparse': 'pepper_variant/modules/argparse',
                      'pepper_variant/modules/python/models': 'pepper_variant/modules/python/models',
                      'pepper_variant/modules/python/helper': 'pepper_variant/modules/python/helper'
                      },

@@ -7,3 +7,4 @@ recursive-include pepper/modules/headers *
 recursive-include pepper/modules/src *
 recursive-include pepper_snp/ *
 recursive-include pepper_hp/ *
+recursive-include pepper_variant/ *

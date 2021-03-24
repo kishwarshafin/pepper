@@ -2,7 +2,7 @@ import sys
 import torch
 import time
 from datetime import datetime
-from pepper_variant.modules.python.ImageGenerationUI import UserInterfaceSupport
+from pepper_variant.modules.python.ImageGenerationUI import ImageGenerationUtils
 from pepper_variant.modules.python.models.predict_distributed_cpu import predict_distributed_cpu
 from pepper_variant.modules.python.models.predict_distributed_gpu import predict_distributed_gpu
 from os.path import isfile, join
@@ -123,7 +123,7 @@ def run_inference(image_dir,
                   callers_per_gpu,
                   gpu_mode,
                   threads):
-    output_dir = UserInterfaceSupport.handle_output_directory(output_dir)
+    output_dir = ImageGenerationUtils.handle_output_directory(output_dir)
 
     if gpu_mode:
         polish_genome_distributed_gpu(image_dir,

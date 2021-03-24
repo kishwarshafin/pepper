@@ -54,7 +54,7 @@ target_link_libraries(PEPPER_HP PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
 
 
 # PEPPER_VARIANT
-pybind11_add_module(PEPPER_VARIANT pepper_variant/modules/src/pybind_api.cpp)
+pybind11_add_module(PEPPER_VARIANT pepper_variant/modules/cpp/pybind_api.cpp)
 
 add_dependencies(PEPPER_VARIANT htslib)
 

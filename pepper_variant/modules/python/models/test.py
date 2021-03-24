@@ -61,21 +61,14 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
             if gpu_mode:
                 hidden = hidden.cuda()
 
-            for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
-                if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
-                    break
+            output_, hidden = transducer_model(images, hidden)
 
-                image_chunk = images[:, i:i+TrainOptions.TRAIN_WINDOW]
-                label_chunk = labels[:, i:i+TrainOptions.TRAIN_WINDOW]
-                output_, hidden = transducer_model(image_chunk, hidden)
+            loss = criterion(output_.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
 
-                loss = criterion(output_.contiguous().view(-1, num_classes), label_chunk.contiguous().view(-1))
+            confusion_matrix.add(output_.data.contiguous().view(-1, num_classes), labels.data.contiguous().view(-1))
 
-                confusion_matrix.add(output_.data.contiguous().view(-1, num_classes),
-                                     label_chunk.data.contiguous().view(-1))
-
-                total_loss += loss.item()
-                total_images += images.size(0)
+            total_loss += loss.item()
+            total_images += images.size(0)
 
             if (ii + 1) % 10 == 0:
 

@@ -168,24 +168,17 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             if gpu_mode:
                 hidden = hidden.to(device_id)
 
-            for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
-                model_optimizer.zero_grad()
+            model_optimizer.zero_grad()
 
-                if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
-                    break
+            output_, hidden = transducer_model(images, hidden)
 
-                image_chunk = images[:, i:i+TrainOptions.TRAIN_WINDOW]
-                label_chunk = labels[:, i:i+TrainOptions.TRAIN_WINDOW]
+            loss = criterion(output_.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
+            loss.backward()
 
-                output_, hidden = transducer_model(image_chunk, hidden)
-
-                loss = criterion(output_.contiguous().view(-1, num_classes), label_chunk.contiguous().view(-1))
-                loss.backward()
-
-                model_optimizer.step()
-                total_loss += loss.item()
-                total_images += image_chunk.size(0)
-                hidden = hidden.detach()
+            model_optimizer.step()
+            total_loss += loss.item()
+            total_images += images.size(0)
+            hidden = hidden.detach()
 
             # update the progress bar
             avg_loss = (total_loss / total_images) if total_images else 0
@@ -287,8 +280,8 @@ def train_distributed(train_file, test_file, batch_size, epochs, gpu_mode, num_w
     args = (train_file, test_file, batch_size, epochs, gpu_mode, num_workers, retrain_model,
             retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
             stats_dir, total_callers, train_mode)
+
     mp.spawn(setup,
              args=(device_ids, args),
              nprocs=len(device_ids),
              join=True)
-    

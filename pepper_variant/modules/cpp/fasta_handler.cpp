@@ -2,7 +2,7 @@
 // Created by Kishwar Shafin on 6/14/18.
 //
 
-#include "../../headers/dataio/fasta_handler.h"
+#include "fasta_handler.h"
 
 FASTA_handler::FASTA_handler(string path) {
     this->fasta = fai_load(path.c_str());

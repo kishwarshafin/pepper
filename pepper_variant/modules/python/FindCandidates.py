@@ -7,7 +7,7 @@ import re
 import time
 from pepper_variant.modules.python.CandidateFinder import find_candidates
 from pepper_variant.modules.python.VcfWriter import VCFWriter
-from pepper_variant.modules.python.ImageGenerationUI import UserInterfaceSupport
+from pepper_variant.modules.python.ImageGenerationUI import ImageGenerationUtils
 from pepper_variant.modules.python.Options import CandidateFinderOptions
 
 
@@ -192,7 +192,7 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
 
 
 def process_candidates(input_dir, reference, bam_file, sample_name, output_dir, threads):
-    output_dir = UserInterfaceSupport.handle_output_directory(output_dir)
+    output_dir = ImageGenerationUtils.handle_output_directory(output_dir)
 
     candidate_finder(input_dir,
                      reference,

@@ -3,7 +3,7 @@ import sys
 import torch
 import time
 from datetime import datetime
-from pepper_variant.modules.python.ImageGenerationUI import UserInterfaceSupport
+from pepper_variant.modules.python.ImageGenerationUI import ImageGenerationUtils
 from pepper_variant.modules.python.MakeImages import make_images
 from pepper_variant.modules.python.RunInference import run_inference
 from pepper_variant.modules.python.FindCandidates import process_candidates
@@ -83,7 +83,7 @@ def call_variant(bam_filepath,
 
     timestr = time.strftime("%m%d%Y_%H%M%S")
 
-    output_dir = UserInterfaceSupport.handle_output_directory(output_dir)
+    output_dir = ImageGenerationUtils.handle_output_directory(output_dir)
 
     image_output_directory = output_dir + "images_" + str(timestr) + "/"
     prediction_output_directory = output_dir + "predictions_" + str(timestr) + "/"
@@ -93,12 +93,16 @@ def call_variant(bam_filepath,
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: IMAGE OUTPUT: " + str(image_output_directory) + "\n")
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STEP 1/3 GENERATING IMAGES:\n")
-    make_images(bam_filepath,
-                fasta_filepath,
-                region,
-                image_output_directory,
-                threads,
-                downsample_rate=downsample_rate)
+    make_images(bam=bam_filepath,
+                fasta=fasta_filepath,
+                truth_bam_h1=None,
+                truth_bam_h2=None,
+                region=region,
+                region_bed=None,
+                output_dir=image_output_directory,
+                threads=threads,
+                downsample_rate=downsample_rate,
+                train_mode=False)
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STEP 2/3 RUNNING INFERENCE\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OUTPUT: " + str(prediction_output_directory) + "\n")

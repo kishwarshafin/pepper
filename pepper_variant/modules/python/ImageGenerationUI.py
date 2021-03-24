@@ -12,8 +12,7 @@ from pepper_variant.modules.python.AlignmentSummarizer import AlignmentSummarize
 from pepper_variant.modules.python.Options import ImageSizeOptions
 
 
-
-class UserInterfaceView:
+class ImageGenerator:
     """
     Process manager that runs sequence of processes to generate images and their labels.
     """
@@ -23,7 +22,8 @@ class UserInterfaceView:
         :param chromosome_name: Name of the chromosome
         :param bam_file_path: Path to the BAM file
         :param draft_file_path: Path to the reference FASTA file
-        :param truth_bam: Path to the truth sequence to reference mapping file
+        :param truth_bam_h1: Path to the truth sequence of hp1 to reference mapping file
+        :param truth_bam_h2: Path to the truth sequence of hp2 to reference mapping file
         """
         # --- initialize handlers ---
         # create objects to handle different files and query
@@ -44,12 +44,14 @@ class UserInterfaceView:
         # name of the chromosome
         self.chromosome_name = chromosome_name
 
-    def parse_region(self, start_position, end_position, downsample_rate, realignment_flag, bed_list):
+    def generate_summary(self, start_position, end_position, downsample_rate, bed_list):
         """
         Generate labeled images of a given region of the genome
         :param start_position: Start position of the region
         :param end_position: End position of the region
+        :param downsample_rate: End position of the region
         :param realignment_flag: If true then realignment will be performed
+        :param bed_list: If true then realignment will be performed
         :return:
         """
         alignment_summarizer = AlignmentSummarizer(self.bam_handler,
@@ -58,18 +60,21 @@ class UserInterfaceView:
                                                    start_position,
                                                    end_position)
 
-        images, labels, positions, image_chunk_ids, all_ref_seq = \
-            alignment_summarizer.create_summary(self.truth_bam_handler_h1,
-                                                self.truth_bam_handler_h2,
-                                                self.train_mode,
-                                                downsample_rate,
-                                                realignment_flag,
-                                                bed_list)
+        region_summary = alignment_summarizer.create_summary(self.truth_bam_handler_h1,
+                                                             self.truth_bam_handler_h2,
+                                                             self.train_mode,
+                                                             downsample_rate,
+                                                             bed_list)
 
-        return images, labels, positions, image_chunk_ids, all_ref_seq
+        if region_summary is not None:
+            images, labels, positions, index, chunk_ids = region_summary
+        else:
+            images, labels, positions, index, chunk_ids = [], [], [], [], []
+
+        return images, labels, positions, index, chunk_ids
 
 
-class UserInterfaceSupport:
+class ImageGenerationUtils:
     """
     THIS CLASS HOLDS STATIC METHODS THAT HELP AS USER INTERFACE FOR IMAGE GENERATION
     """
@@ -120,13 +125,13 @@ class UserInterfaceSupport:
                 sys.stderr.flush()
                 exit(1)
 
-            common_contigs = sorted(common_contigs, key=UserInterfaceSupport.natural_key)
+            common_contigs = sorted(common_contigs, key=ImageGenerationUtils.natural_key)
             sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] INFO: COMMON CONTIGS FOUND: " + str(common_contigs) + "\n")
             sys.stderr.flush()
 
             for contig_name in common_contigs:
                 chromosome_name_list.append((contig_name, None))
-        else:
+        elif chromosome_names:
             split_names = chromosome_names.strip().split(',')
             split_names = [name.strip() for name in split_names]
             chromosome_name_list = []
@@ -186,35 +191,28 @@ class UserInterfaceSupport:
         return chromosome_name_list, region_bed_list
 
     @staticmethod
-    def single_worker(args, _start, _end):
-        chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate, bed_list = args
+    def generate_image_and_save_to_file(args, all_intervals, total_threads, process_id):
+        """
+        Method description
+        :param args:
+        :param all_intervals:
+        :param total_threads:
+        :param process_id:
+        :return:
+        """
+        thread_prefix = "[THREAD " + "{:02d}".format(process_id) + "]"
 
-        view = UserInterfaceView(chromosome_name=chr_name,
-                                 bam_file_path=bam_file,
-                                 draft_file_path=draft_file,
-                                 truth_bam_h1=truth_bam_h1,
-                                 truth_bam_h2=truth_bam_h2,
-                                 train_mode=train_mode)
+        output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate, bed_list = args
 
-        images, labels, positions, image_chunk_ids, ref_seq = view.parse_region(_start, _end, downsample_rate, realignment_flag, bed_list)
-        region = (chr_name, _start, _end)
-
-        return images, labels, positions, image_chunk_ids, region, ref_seq
-
-    @staticmethod
-    def image_generator(args, all_intervals, total_threads, thread_id):
-        thread_prefix = "[THREAD " + "{:02d}".format(thread_id) + "]"
-
-        output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate, bed_list = args
         timestr = time.strftime("%m%d%Y_%H%M%S")
-        file_name = output_path + "pepper_variants_images_thread_" + str(thread_id) + "_" + str(timestr) + ".hdf"
+        file_name = output_path + "pepper_variants_images_thread_" + str(process_id) + "_" + str(timestr) + ".hdf"
 
-        intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == thread_id]
+        intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == process_id]
 
         # initial notification
-        if thread_id == 0:
+        if process_id == 0:
             sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] INFO: "
-                             + "STARTING THREAD: " + str(thread_id)
+                             + "STARTING PROCESS: " + str(process_id)
                              + " FOR " + str(len(intervals)) + " INTERVALS\n")
         sys.stderr.flush()
 
@@ -222,19 +220,27 @@ class UserInterfaceSupport:
         with DataStore(file_name, 'w') as output_hdf_file:
             for counter, interval in enumerate(intervals):
                 chr_name, _start, _end = interval
-                img_args = (chr_name, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate, bed_list)
-                images, labels, positions, chunk_ids, region, ref_seqs = UserInterfaceSupport.single_worker(img_args, _start, _end)
+
+                image_generator = ImageGenerator(chromosome_name=chr_name,
+                                                 bam_file_path=bam_file,
+                                                 draft_file_path=draft_file,
+                                                 truth_bam_h1=truth_bam_h1,
+                                                 truth_bam_h2=truth_bam_h2,
+                                                 train_mode=train_mode)
+
+                images, labels, positions, indexes, chunk_ids = image_generator.generate_summary(_start, _end, downsample_rate, bed_list)
+                region = (chr_name, _start, _end)
 
                 for i, image in enumerate(images):
+                    position = positions[i]
+                    index = indexes[i]
                     label = labels[i]
-                    position, index = zip(*positions[i])
-                    ref_seq = ref_seqs[i]
                     chunk_id = chunk_ids[i]
                     summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
 
-                    output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name, ref_seq)
+                    output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
 
-                if counter > 0 and counter % 10 == 0 and thread_id == 0:
+                if counter > 0 and counter % 10 == 0 and process_id == 0:
                     percent_complete = int((100 * counter) / len(intervals))
                     time_now = time.time()
                     mins = int((time_now - start_time) / 60)
@@ -246,25 +252,35 @@ class UserInterfaceSupport:
                                      + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                     sys.stderr.flush()
 
-        return thread_id
+        return process_id
 
     @staticmethod
-    def chromosome_level_parallelization(chr_list,
-                                         bam_file,
-                                         draft_file,
-                                         truth_bam_h1,
-                                         truth_bam_h2,
-                                         output_path,
-                                         total_threads,
-                                         train_mode,
-                                         realignment_flag,
-                                         downsample_rate,
-                                         bed_list):
+    def generate_images(chr_list,
+                        bam_file,
+                        draft_file,
+                        truth_bam_h1,
+                        truth_bam_h2,
+                        output_path,
+                        total_processes,
+                        train_mode,
+                        downsample_rate,
+                        bed_list):
+        """
+        Description of this method
+        :param chr_list:
+        :param bam_file:
+        :param draft_file:
+        :param truth_bam_h1:
+        :param truth_bam_h2:
+        :param output_path:
+        :param total_processes:
+        :param train_mode:
+        :param downsample_rate:
+        :param bed_list:
+        :return:
+        """
 
-        if train_mode:
-            max_size = 100000
-        else:
-            max_size = 100000
+        max_size = 100000
 
         start_time = time.time()
         fasta_handler = PEPPER_VARIANT.FASTA_handler(draft_file)
@@ -306,19 +322,18 @@ class UserInterfaceSupport:
                          + " TOTAL BASES: " + str(total_bases) + "\n")
         sys.stderr.flush()
 
-        args = (output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, realignment_flag, downsample_rate, bed_list)
-        with concurrent.futures.ProcessPoolExecutor(max_workers=total_threads) as executor:
-            futures = [executor.submit(UserInterfaceSupport.image_generator, args, all_intervals, total_threads,
-                                       thread_id)
-                       for thread_id in range(0, total_threads)]
+        args = (output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate, bed_list)
+        with concurrent.futures.ProcessPoolExecutor(max_workers=total_processes) as executor:
+            futures = [executor.submit(ImageGenerationUtils.generate_image_and_save_to_file, args, all_intervals, total_processes, process_id)
+                       for process_id in range(0, total_processes)]
 
             for fut in concurrent.futures.as_completed(futures):
                 if fut.exception() is None:
                     # get the results
-                    thread_id = fut.result()
-                    if thread_id == 0:
+                    process_id = fut.result()
+                    if process_id == 0:
                         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
-                                         + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
+                                         + str(process_id) + " FINISHED SUCCESSFULLY.\n")
                 else:
                     sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
                 fut._result = None  # python issue 27144

@@ -5,11 +5,14 @@
 #ifndef PEPPER_VARIANT_PYBIND_API_H
 #define PEPPER_VARIANT_PYBIND_API_H
 
-#include "dataio/fasta_handler.h"
-#include "dataio/bam_handler.h"
-#include "realignment/simple_aligner.h"
-#include "pileup_summary/summary_generator.h"
-#include "candidate_finding/candidate_finder.h"
+#include "cigar.h"
+#include "read.h"
+#include "sequence.h"
+#include "fasta_handler.h"
+#include "bam_handler.h"
+#include "summary_generator.h"
+#include "candidate_finder.h"
+#include "region_summary.h"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/operators.h>
@@ -23,6 +26,7 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
             .def_readwrite("labels", &ImageSummary::labels)
             .def_readwrite("chunk_ids", &ImageSummary::chunk_ids);
 
+        // Generate summary
         py::class_<SummaryGenerator>(m, "SummaryGenerator")
             .def(py::init<const string &, const string &, long long &, long long &>())
             .def_readwrite("genomic_pos", &SummaryGenerator::genomic_pos)
@@ -30,46 +34,29 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
             .def_readwrite("labels", &SummaryGenerator::labels)
             .def_readwrite("image", &SummaryGenerator::image)
             .def_readwrite("bad_label_positions", &SummaryGenerator::bad_label_positions)
+            .def_readwrite("longest_insert_count", &SummaryGenerator::longest_insert_count)
             .def("generate_train_summary", &SummaryGenerator::generate_train_summary)
             .def("chunk_image", &SummaryGenerator::chunk_image)
             .def("chunk_image_train", &SummaryGenerator::chunk_image_train)
             .def("generate_summary", &SummaryGenerator::generate_summary);
 
-        // Alignment CLASS
-        py::class_<StripedSmithWaterman::Alignment>(m, "Alignment")
-            .def(py::init<>())
-            .def_readwrite("best_score", &StripedSmithWaterman::Alignment::sw_score)
-            .def_readwrite("best_score2", &StripedSmithWaterman::Alignment::sw_score_next_best)
-            .def_readwrite("reference_begin", &StripedSmithWaterman::Alignment::ref_begin)
-            .def_readwrite("reference_end", &StripedSmithWaterman::Alignment::ref_end)
-            .def_readwrite("query_begin", &StripedSmithWaterman::Alignment::query_begin)
-            .def_readwrite("query_end", &StripedSmithWaterman::Alignment::query_end)
-            .def_readwrite("ref_end_next_best", &StripedSmithWaterman::Alignment::ref_end_next_best)
-            .def_readwrite("mismatches", &StripedSmithWaterman::Alignment::mismatches)
-            .def_readwrite("cigar_string", &StripedSmithWaterman::Alignment::cigar_string)
-            .def_readwrite("cigar", &StripedSmithWaterman::Alignment::cigar)
-            .def("Clear", &StripedSmithWaterman::Alignment::Clear);
+        //
+        py::class_<RegionalImageSummary>(m, "RegionalImageSummary")
+            .def_readwrite("chunked_image_matrix", &RegionalImageSummary::chunked_image_matrix)
+            .def_readwrite("chunked_positions", &RegionalImageSummary::chunked_positions)
+            .def_readwrite("chunked_index", &RegionalImageSummary::chunked_index)
+            .def_readwrite("chunked_labels", &RegionalImageSummary::chunked_labels)
+            .def_readwrite("chunked_ids", &RegionalImageSummary::chunked_ids);
 
-        // Filter Class
-        py::class_<StripedSmithWaterman::Filter>(m, "Filter")
-            .def_readwrite("report_begin_position", &StripedSmithWaterman::Filter::report_begin_position)
-            .def_readwrite("report_cigar", &StripedSmithWaterman::Filter::report_cigar)
-            .def_readwrite("score_filter", &StripedSmithWaterman::Filter::score_filter)
-            .def_readwrite("distance_filter", &StripedSmithWaterman::Filter::distance_filter)
-            .def(py::init<>())
-            .def(py::init<const bool&, const bool&, const uint16_t&, const uint16_t&>());
-
-        // Aligner Class
-        py::class_<StripedSmithWaterman::Aligner>(m, "Aligner")
-            .def(py::init<>())
-            .def(py::init<const uint8_t&, const uint8_t&, const uint8_t&, const uint8_t&>())
-            .def("SetReferenceSequence", &StripedSmithWaterman::Aligner::SetReferenceSequence)
-            .def("Align_cpp", &StripedSmithWaterman::Aligner::Align_cpp);
-
-        // SSW alignment class
-        py::class_<ReadAligner>(m, "ReadAligner")
-            .def(py::init<const int &, const int &, const string &>())
-            .def("align_reads_to_reference", &ReadAligner::align_reads_to_reference);
+       // Generate regional summary
+       py::class_<RegionalSummaryGenerator>(m, "RegionalSummaryGenerator")
+            .def(py::init<long long &, long long &, string &>())
+            .def_readwrite("max_observed_insert", &RegionalSummaryGenerator::max_observed_insert)
+            .def_readwrite("cumulative_observed_insert", &RegionalSummaryGenerator::cumulative_observed_insert)
+            .def_readwrite("total_observered_insert_bases", &RegionalSummaryGenerator::total_observered_insert_bases)
+            .def("generate_summary", &RegionalSummaryGenerator::generate_summary)
+            .def("generate_labels", &RegionalSummaryGenerator::generate_labels)
+            .def("generate_max_insert_summary", &RegionalSummaryGenerator::generate_max_insert_summary);
 
         // data structure for sequence name and their length
         py::class_<type_sequence>(m, "type_sequence")

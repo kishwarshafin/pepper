@@ -2,7 +2,7 @@
 // Created by Kishwar Shafin
 //
 
-#include "../../headers/candidate_finding/candidate_finder.h"
+#include "candidate_finder.h"
 
 
 CandidateFinder::CandidateFinder(string reference_sequence,

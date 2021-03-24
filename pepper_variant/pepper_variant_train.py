@@ -1,7 +1,7 @@
 import argparse
 import sys
 import torch
-from pepper_variant.modules.python.MakeImages import make_train_images
+from pepper_variant.modules.python.MakeImages import make_images
 from pepper_variant.modules.python.TrainModule import train_pepper_hp_model
 from pepper_variant.modules.python.TestModule import do_test
 from datetime import datetime
@@ -326,15 +326,16 @@ def main():
     if FLAGS.sub_command == 'make_train_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE TRAIN IMAGE MODULE SELECTED\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DOWNSAMPLE RATE:\t" + str(FLAGS.downsample_rate) + "\n")
-        make_train_images(FLAGS.bam,
-                          FLAGS.fasta,
-                          FLAGS.truth_bam_hp1,
-                          FLAGS.truth_bam_hp2,
-                          FLAGS.region,
-                          FLAGS.region_bed,
-                          FLAGS.output_dir,
-                          FLAGS.threads,
-                          FLAGS.downsample_rate)
+        make_images(FLAGS.bam,
+                    FLAGS.fasta,
+                    FLAGS.truth_bam_hp1,
+                    FLAGS.truth_bam_hp2,
+                    FLAGS.region,
+                    FLAGS.region_bed,
+                    FLAGS.output_dir,
+                    FLAGS.threads,
+                    FLAGS.downsample_rate,
+                    train_mode=True)
     elif FLAGS.sub_command == 'train_model':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN MODEL MODULE SELECTED\n")
         distributed = not FLAGS.distributed_off

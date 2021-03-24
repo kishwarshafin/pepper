@@ -19,6 +19,12 @@ class ReadFilterOptions(object):
     INCLUDE_SUPPLEMENTARY = False
 
 
+class TruthFilterOptions(object):
+    MIN_MAPQ = 60
+    MIN_BASEQ = 0
+    INCLUDE_SUPPLEMENTARY = True
+
+
 class CandidateFinderOptions(object):
     ALLELE_FREQ_THRESHOLD = 0.00
 

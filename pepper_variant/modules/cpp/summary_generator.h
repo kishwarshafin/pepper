@@ -10,7 +10,7 @@
 #include <iomanip>
 #include <assert.h>
 using namespace std;
-#include "../dataio/bam_handler.h"
+#include "bam_handler.h"
 
 
 namespace ImageOptions {
@@ -33,7 +33,7 @@ class SummaryGenerator {
 
     map< pair< pair<long long, int>, int>, double> insert_summaries;
     map< pair<long long, int>, double> base_summaries;
-    map<long long, long long> longest_insert_count;
+
     map<long long, double> coverage;
 
     map< pair<long long, int>, char> insert_labels_hp1;
@@ -42,6 +42,8 @@ class SummaryGenerator {
     map< long long, char> base_labels_hp2;
 
 public:
+    map<long long, long long> longest_insert_count;
+
     vector< vector<uint8_t> > image;
     vector<uint8_t> labels;
 

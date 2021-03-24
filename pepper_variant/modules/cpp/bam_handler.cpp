@@ -1,7 +1,7 @@
 //
 // Created by Kishwar Shafin on 6/14/18.
 //
-#include "../../headers/dataio/bam_handler.h"
+#include "bam_handler.h"
 
 BAM_handler::BAM_handler(string path) {
     this->hts_file = sam_open(path.c_str(), "r");

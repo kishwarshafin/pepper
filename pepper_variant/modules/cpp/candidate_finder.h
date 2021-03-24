@@ -8,7 +8,7 @@
 #include <cmath>
 #include <numeric>
 #include <vector>
-#include "../dataio/bam_handler.h"
+#include "bam_handler.h"
 using namespace std;
 
 namespace CandidateFinder_options {
@@ -31,7 +31,6 @@ namespace Genotype {
 };
 
 namespace LinearRegression {
-
     static constexpr double SNP_ALT_FREQ_COEF = 0;
     static constexpr double SNP_NON_REF_PROB_COEF = 0;
     static constexpr double SNP_ALLELE_WEIGHT_COEF = 0.991822;
