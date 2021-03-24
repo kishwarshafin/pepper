@@ -5,6 +5,7 @@
 #ifndef PEPPER_PRIVATE_REGION_SUMMARY_H
 #define PEPPER_PRIVATE_REGION_SUMMARY_H
 
+#include <cstring>
 #include <iostream>
 #include <algorithm>
 
