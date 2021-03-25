@@ -4,16 +4,18 @@
 
 #include "region_summary.h"
 
+#include <utility>
+
 RegionalSummaryGenerator::RegionalSummaryGenerator(long long region_start, long long region_end, string reference_sequence) {
     this->ref_start = region_start;
     this->ref_end = region_end;
-    this->reference_sequence = reference_sequence;
+    this->reference_sequence = std::move(reference_sequence);
     this->total_observered_insert_bases = 0;
     this->max_observed_insert.resize(region_end-region_start+1, 0);
     this->cumulative_observed_insert.resize(region_end-region_start+1, 0);
 }
 
-void RegionalSummaryGenerator::generate_max_insert_observed(type_read read) {
+void RegionalSummaryGenerator::generate_max_insert_observed(const type_read& read) {
     int read_index = 0;
     long long ref_position = read.pos;
     int cigar_index = 0;
@@ -172,7 +174,7 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
 
-                        int base_index = ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start];
+                        int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
                         if(hp_tag == 1)
                             labels_hp1[base_index] = check_truth_base(base);
                         else
@@ -195,7 +197,7 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
                         if (i < alt.length()) {
                             base = alt[i];
                         }
-                        int base_index = (ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start] + (i + 1);
+                        int base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start] + (i + 1));
 
                         if(hp_tag == 1)
                             labels_hp1[base_index] = check_truth_base(base);
@@ -217,7 +219,7 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
                         if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                             // DELETE
                             char base = '*';
-                            int base_index = ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i];
+                            int base_index = (int)(ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i]);
 
                             if(hp_tag == 1)
                                 labels_hp1[base_index] = base;
@@ -238,9 +240,9 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
 }
 
 
-void RegionalSummaryGenerator::generate_labels(type_read truth_read_hp1,
-                                               type_read truth_read_hp2) {
-    int region_size = ref_end - ref_start + total_observered_insert_bases;
+void RegionalSummaryGenerator::generate_labels(const type_read& truth_read_hp1,
+                                               const type_read& truth_read_hp2) {
+    int region_size = (int) (ref_end - ref_start + total_observered_insert_bases + 1);
     labels_hp1.resize(region_size + 1, '*');
     labels_hp2.resize(region_size + 1, '*');
 
@@ -291,7 +293,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
 
-                        int base_index = ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start];
+                        int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
                         int feature_index = get_feature_index(base, read.flags.is_reverse);
 
                         // update the summary of base
@@ -312,7 +314,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                     string alt;
                     alt = read.sequence.substr(read_index, cigar.length);
                     for (int i = 0; i < cigar.length; i++) {
-                        int base_index = (ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start] + (i + 1);
+                        int base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start] + (i + 1));
                         int feature_index = get_feature_index(alt[i], read.flags.is_reverse);
                         image_matrix[base_index][feature_index] += 1.0;
                     }
@@ -326,7 +328,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                 for (int i = 0; i < cigar.length; i++) {
                     if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                         // update the summary of base
-                        int base_index = ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i];
+                        int base_index = (int)(ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i]);
                         int feature_index = get_feature_index('*', read.flags.is_reverse);
 
                         image_matrix[base_index][feature_index] += 1;
@@ -352,9 +354,10 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
                                                                 bool train_mode) {
     RegionalImageSummary summary{};
 
-    int region_size = ref_end - ref_start + total_observered_insert_bases;
+    int region_size = (int) (ref_end - ref_start + total_observered_insert_bases + 1);
     // Generate a cover vector of chunk size. Chunk size = 10kb defining the region
     int coverage_vector[ref_end - ref_start + 1];
+
     // generate the image matrix of chunk_size (10kb) * feature_size (10)
     int** image_matrix = new int*[region_size + 1];
 
@@ -376,7 +379,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     }
 
     // once the image matrix is generated, scale the counted values.
-    for(int i=0;i<region_size + 1;i++){
+    for(int i=0;i<region_size;i++){
         for(int j=0;j<feature_size;j++){
             image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptions::MAX_COLOR_VALUE);
         }
@@ -385,7 +388,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     labels.resize(region_size + 1, 0);
     // check if train mode, if yes, then generate labels
     if(train_mode) {
-        for (int i = 0; i <= labels_hp1.size(); i++) {
+        for (int i = 0; i < labels_hp1.size(); i++) {
             labels[i] = get_label_index(labels_hp1[i], labels_hp2[i]);
         }
     }
@@ -447,7 +450,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
         // in train mode, we don't go outside the window
         if(train_mode) {
             if(chunk_end > region_size) {
-                int padding_required = chunk_end - region_size - 1;
+                int padding_required = (int)(chunk_end - region_size);
                 chunk_start -= padding_required;
                 chunk_end = chunk_start + smaller_chunk_size;
                 if(chunk_start < 0) break;
@@ -510,7 +513,7 @@ void RegionalSummaryGenerator::debug_print_matrix(int** image_matrix) {
         if(i==8)cout<<"*FW:\t";
         if(i==9)cout<<"*RV:\t";
 
-        int region_size = ref_end - ref_start + total_observered_insert_bases;
+        int region_size = (int) (ref_end - ref_start + total_observered_insert_bases + 1);
 
         for (int j = 0; j < region_size; j++) {
             printf("%3d\t", image_matrix[j][i]);

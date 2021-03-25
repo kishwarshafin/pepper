@@ -294,7 +294,7 @@ class AlignmentSummarizer:
                 #         if image_summary.labels[i][j] != regional_image_summary.chunked_labels[i][j]:
                 #             print("NOT EQUAL", i, j, image_summary.labels[i][j][1], regional_image_summary.chunked_labels[i][j])
                 # print("PASSED LABELS")
-
+                #
                 # for i in range(0, len(image_summary.images)):
                 #     for j in range(0, len(image_summary.images[i])):
                 #         for k in range(0, len(image_summary.images[i][j])):

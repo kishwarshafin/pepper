@@ -33,7 +33,7 @@ public:
 
     RegionalSummaryGenerator(long long region_start, long long region_end, string reference_sequence);
 
-    void generate_max_insert_observed(type_read read);
+    void generate_max_insert_observed(const type_read& read);
 
     void generate_max_insert_summary(vector <type_read> &reads);
 
@@ -41,13 +41,13 @@ public:
 
     char check_base(char base);
 
-    void generate_labels(type_read truth_read_hp1, type_read truth_read_hp2);
+    void generate_labels(const type_read& truth_read_hp1, const type_read& truth_read_hp2);
 
     void populate_summary_matrix(int **image_matrix,
                                  int *coverage_vector,
                                  type_read read);
 
-    int get_feature_index(char base, bool is_reverse);
+    static int get_feature_index(char base, bool is_reverse);
 
     void debug_print_matrix(int** image_matrix);
 
