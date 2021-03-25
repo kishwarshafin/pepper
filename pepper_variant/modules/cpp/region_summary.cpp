@@ -460,6 +460,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     }
 
 //    debug_print_matrix(image_matrix);
+    free(image_matrix);
 
     return summary;
 }
