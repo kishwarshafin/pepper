@@ -59,7 +59,7 @@ class CandidateFinderOptions(object):
 
 
 class PEPPERVariantCandidateFinderOptions(object):
-    MOST_ALLOWED_CANDIDATES_PER_SITE = 4
+    MOST_ALLOWED_CANDIDATES_PER_SITE = 2
 
     SNP_ALT_FREQ_COEF = 0
     SNP_NON_REF_PROB_COEF = 0
@@ -86,7 +86,7 @@ class PEPPERVariantCandidateFinderOptions(object):
     DEL_UPPER_FREQ_THRESHOLD = 0.5
 
     SAFE_BASES = 20
-    ALT_PROB_THRESHOLD = 0.01
+    ALT_PROB_THRESHOLD = 0.1
 
 
 class TrainOptions(object):

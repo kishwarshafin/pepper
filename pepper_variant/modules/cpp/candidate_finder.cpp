@@ -307,16 +307,14 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
         local_region_end = max(local_region_end, position);
     }
 
-    cout<<local_region_start<<" "<<local_region_end<<endl;
     int local_region_size = (int) (local_region_end - local_region_start + 1);
-    cout<<local_region_size<<endl;
 
     vector<int> max_observed_insert;
     vector<uint64_t> cumulative_observed_insert;
     uint64_t total_observered_insert_bases = 0;
 
-    max_observed_insert.resize(local_region_size, 0);
-    cumulative_observed_insert.resize(local_region_size, 0);
+    max_observed_insert.resize(local_region_size + 1, 0);
+    cumulative_observed_insert.resize(local_region_size + 1, 0);
 
     for(int i=0; i < (int) positions.size(); i++) {
         if(positions[i] < 0) continue;
@@ -325,6 +323,7 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
         max_observed_insert[pos-local_region_start] = max(max_observed_insert[pos-local_region_start], index);
     }
 
+    total_observered_insert_bases = max_observed_insert[0];
     for(int i=1;i < max_observed_insert.size(); i++) {
         cumulative_observed_insert[i] = cumulative_observed_insert[i-1] + max_observed_insert[i-1];
         total_observered_insert_bases += max_observed_insert[i];
@@ -353,16 +352,17 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
             base_predictions_h1[base_1_index] += predictions[i][j];
             base_predictions_h2[base_2_index] += predictions[i][j];
         }
+        int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start] + index);
 
         for(int j=0; j < base_predictions_h1.size(); j++) {
-            int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start] + index);
+
 
             prediction_map_h1[position_index][j] = base_predictions_h1[j];
             prediction_map_h2[position_index][j] = base_predictions_h2[j];
         }
 
+
     }
-//    cout<<"GENERATED PREDICTION MAP"<<endl;
 
     // all prediction maps populated now do candidate finding
     set<long long> filtered_candidate_positions;
@@ -406,6 +406,7 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
 
         for (auto &can: AlleleMap[i]) {
             Candidate candidate = can;
+
             if(candidate.pos > local_region_end || candidate.pos < local_region_start) continue;
 
             double alt_freq =(int) (((double) AlleleFrequencyMap[candidate] / max(1.0, (double) coverage[i])) * 100.0);

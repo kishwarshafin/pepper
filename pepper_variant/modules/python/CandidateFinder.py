@@ -150,23 +150,22 @@ def candidates_to_variants(candidates, contig):
         else:
             genotype = [1, 2]
 
-    # alleles = selected_alts + other_alts
-    # dps = selected_dps + other_dps
-    # alt_probs = selected_alt_probs + other_alt_probs
-    # alt_prob_h1s = selected_alt_prob_h1s + other_alt_prob_h1s
-    # alt_prob_h2s = selected_alt_prob_h2s + other_alt_prob_h2s
-    # non_ref_probs = selected_non_ref_probs + other_non_ref_probs
-    # ads = selected_ads + other_ads
+    alleles = selected_alts + other_alts
+    dps = selected_dps + other_dps
+    alt_probs = selected_alt_probs + other_alt_probs
+    alt_prob_h1s = selected_alt_prob_h1s + other_alt_prob_h1s
+    alt_prob_h2s = selected_alt_prob_h2s + other_alt_prob_h2s
+    non_ref_probs = selected_non_ref_probs + other_non_ref_probs
+    ads = selected_ads + other_ads
 
     # only report the selected alts
-    alleles = selected_alts
-    dps = selected_dps
-    ads = selected_ads
-    alt_probs = selected_alt_probs
-    alt_prob_h1s = selected_alt_prob_h1s
-    alt_prob_h2s = selected_alt_prob_h2s
-    non_ref_probs = selected_non_ref_probs
-    # print(contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_prob_h1s, alt_prob_h2s, ads, overall_non_ref_prob)
+    # alleles = selected_alts
+    # dps = selected_dps
+    # ads = selected_ads
+    # alt_probs = selected_alt_probs
+    # alt_prob_h1s = selected_alt_prob_h1s
+    # alt_prob_h2s = selected_alt_prob_h2s
+    # non_ref_probs = selected_non_ref_probs
 
     return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_prob_h1s, alt_probs, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob
 
