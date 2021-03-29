@@ -1,13 +1,14 @@
 import sys
 import os
 import torch
+import time
 import torch.onnx
-import torch.distributed as dist
 import torch.nn as nn
 import onnxruntime
 from datetime import datetime
+import concurrent.futures
 from torch.utils.data import DataLoader
-import torch.multiprocessing as mp
+import numpy as np
 
 from pepper_variant.modules.python.models.dataloader_predict import SequenceDataset
 from pepper_variant.modules.python.models.ModelHander import ModelHandler
@@ -44,45 +45,22 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
             images = images.type(torch.FloatTensor)
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
-            prediction_base_tensor = torch.zeros((images.size(0), images.size(1), ImageSizeOptions.TOTAL_LABELS))
+            # run inference on onnx mode, which takes numpy inputs
+            ort_inputs = {ort_session.get_inputs()[0].name: images.cpu().numpy(),
+                          ort_session.get_inputs()[1].name: hidden.cpu().numpy()}
+            output_base, hidden = ort_session.run(None, ort_inputs)
+            output_base = torch.from_numpy(output_base)
 
-            for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
-                if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
-                    break
-                chunk_start = i
-                chunk_end = i + TrainOptions.TRAIN_WINDOW
-                # chunk all the data
-                image_chunk = images[:, chunk_start:chunk_end]
+            # do softmax and get prediction
+            # we run a softmax a padding to make the output tensor compatible for adding
+            inference_layers = nn.Sequential(
+                nn.Softmax(dim=2),
+            )
 
-                # run inference on onnx mode, which takes numpy inputs
-                ort_inputs = {ort_session.get_inputs()[0].name: image_chunk.cpu().numpy(),
-                              ort_session.get_inputs()[1].name: hidden.cpu().numpy()}
-                output_base, hidden = ort_session.run(None, ort_inputs)
-                output_base = torch.from_numpy(output_base)
-                hidden = torch.from_numpy(hidden)
+            # run the softmax and padding layers
+            base_prediction = (inference_layers(output_base) * 1000000).type(torch.IntTensor)
 
-                # now calculate how much padding is on the top and bottom of this chunk so we can do a simple
-                # add operation
-                top_zeros = chunk_start
-                bottom_zeros = ImageSizeOptions.SEQ_LENGTH - chunk_end
-
-                # do softmax and get prediction
-                # we run a softmax a padding to make the output tensor compatible for adding
-                inference_layers = nn.Sequential(
-                    nn.Softmax(dim=2),
-                    nn.ZeroPad2d((0, 0, top_zeros, bottom_zeros))
-                )
-
-                # run the softmax and padding layers
-                base_prediction = (inference_layers(output_base) * 10).type(torch.IntTensor)
-
-                # now simply add the tensor to the global counter
-                prediction_base_tensor = torch.add(prediction_base_tensor, base_prediction)
-
-            # base_values, base_labels = torch.max(prediction_base_tensor, 2)
-            #
-            # predicted_base_labels = base_labels.cpu().numpy()
-            prediction_base_tensor = prediction_base_tensor.cpu().numpy().astype(int)
+            base_prediction = base_prediction.cpu().numpy().astype(np.uint32)
 
             for i in range(images.size(0)):
                 prediction_data_file.write_prediction(contig[i],
@@ -91,7 +69,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                                                       chunk_id[i],
                                                       position[i],
                                                       index[i],
-                                                      prediction_base_tensor[i])
+                                                      base_prediction[i])
             batch_completed += 1
 
             if thread_id == 0 and batch_completed % 5 == 0:
@@ -100,26 +78,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                 sys.stderr.flush()
 
 
-def cleanup():
-    dist.destroy_process_group()
-
-
-def setup(rank, total_callers, args, all_input_files):
-    os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12355'
-
-    # initialize the process group
-    dist.init_process_group("gloo", rank=rank, world_size=total_callers)
-
-    filepath, output_filepath, model_path, batch_size, threads, num_workers = args
-
-    # Explicitly setting seed to make sure that models created in two processes
-    # start from same random weights and biases.
-    predict(filepath, all_input_files[rank],  output_filepath, model_path, batch_size, num_workers, threads, rank)
-    cleanup()
-
-
-def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, callers, threads, num_workers):
+def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads_per_caller, num_workers):
     """
     Create a prediction table/dictionary of an images set using a trained model.
     :param filepath: Path to image files to predict on
@@ -127,8 +86,8 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
     :param batch_size: Batch size used for prediction
     :param model_path: Path to a trained model
     :param output_filepath: Path to output directory
-    :param callers: Number of callers to start
-    :param threads: Number of threads per caller.
+    :param total_callers: Number of callers to start
+    :param threads_per_caller: Number of threads per caller.
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
@@ -138,7 +97,6 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
                                                     image_features=ImageSizeOptions.IMAGE_HEIGHT,
                                                     seq_len=ImageSizeOptions.SEQ_LENGTH,
                                                     num_classes=ImageSizeOptions.TOTAL_LABELS)
-
     transducer_model.eval()
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL LOADING TO ONNX\n")
@@ -159,10 +117,25 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
                                         'output_pred': {0: 'batch_size'},
                                         'output_hidden': {0: 'batch_size'}})
 
-    transducer_model.eval()
-    args = (filepath, output_filepath, model_path, batch_size, threads, num_workers)
+    start_time = time.time()
+    with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
+        futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
+                   for thread_id in range(0, total_callers)]
 
-    mp.spawn(setup,
-             args=(callers, args, file_chunks),
-             nprocs=callers,
-             join=True)
+        for fut in concurrent.futures.as_completed(futures):
+            if fut.exception() is None:
+                # get the results
+                thread_id = fut.result()
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
+                                 + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
+            else:
+                sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
+            fut._result = None  # python issue 27144
+
+    end_time = time.time()
+    mins = int((end_time - start_time) / 60)
+    secs = int((end_time - start_time)) % 60
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PREDICTION\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
+
+

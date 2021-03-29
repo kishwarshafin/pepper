@@ -163,7 +163,7 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
                 all_contigs.update(contigs)
     all_contigs = sorted(all_contigs, key=natural_key)
 
-    vcf_file = VCFWriter(reference_file, all_contigs, sample_name, output_path, "candidates_as_variants")
+    vcf_file = VCFWriter(reference_file, all_contigs, sample_name, output_path, "PEPPER_VARIANT_SNP_OUTPUT")
 
     for contig in sorted(all_contigs, key=natural_key):
         local_start_time = time.time()

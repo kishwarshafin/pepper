@@ -362,46 +362,46 @@ class AlignmentSummarizer:
 
 
             ############ Test
-            summary_generator = PEPPER_VARIANT.SummaryGenerator(ref_seq,
-                                                                self.chromosome_name,
-                                                                self.region_start_position,
-                                                                self.region_end_position)
-            summary_generator.generate_summary(all_reads,
-                                               self.region_start_position,
-                                               self.region_end_position)
-
-            image_summary = summary_generator.chunk_image(ImageSizeOptions.SEQ_LENGTH,
-                                                          ImageSizeOptions.SEQ_OVERLAP,
-                                                          ImageSizeOptions.IMAGE_HEIGHT)
-
-            for i in range(0, len(image_summary.positions)):
-                for j in range(0, len(image_summary.positions[i])):
-                    if image_summary.positions[i][j][0] != regional_image_summary.chunked_positions[i][j]:
-                        print("NOT EQUAL", i, j, image_summary.positions[i][j][0], regional_image_summary.chunked_positions[i][j])
-            print("PASSED POSITIONS")
-
-            for i in range(0, len(image_summary.positions)):
-                for j in range(0, len(image_summary.positions[i])):
-                    if image_summary.positions[i][j][1] != regional_image_summary.chunked_index[i][j]:
-                        print("NOT EQUAL", i, j, image_summary.positions[i][j][1], regional_image_summary.chunked_index[i][j])
-            print("PASSED INDEX")
-
-            for i in range(0, len(image_summary.chunk_ids)):
-                if image_summary.chunk_ids[i] != regional_image_summary.chunked_ids[i]:
-                    print("NOT EQUAL", i, image_summary.chunk_ids[i], regional_image_summary.chunked_ids[i])
-            print("PASSED CHUNK IDs")
-
-            for i in range(0, len(image_summary.labels)):
-                for j in range(0, len(image_summary.labels[i])):
-                    if image_summary.labels[i][j] != regional_image_summary.chunked_labels[i][j]:
-                        print("NOT EQUAL", i, j, image_summary.labels[i][j][1], regional_image_summary.chunked_labels[i][j])
-            print("PASSED LABELS")
-
-            for i in range(0, len(image_summary.images)):
-                for j in range(0, len(image_summary.images[i])):
-                    for k in range(0, len(image_summary.images[i][j])):
-                        if image_summary.images[i][j][k] != regional_image_summary.chunked_image_matrix[i][j][k]:
-                            print("NOT EQUAL", i, j, image_summary.images[i][j][k], regional_image_summary.chunked_image_matrix[i][j][k])
-            print("PASSED IMAGES")
+            # summary_generator = PEPPER_VARIANT.SummaryGenerator(ref_seq,
+            #                                                     self.chromosome_name,
+            #                                                     self.region_start_position,
+            #                                                     self.region_end_position)
+            # summary_generator.generate_summary(all_reads,
+            #                                    self.region_start_position,
+            #                                    self.region_end_position)
+            #
+            # image_summary = summary_generator.chunk_image(ImageSizeOptions.SEQ_LENGTH,
+            #                                               ImageSizeOptions.SEQ_OVERLAP,
+            #                                               ImageSizeOptions.IMAGE_HEIGHT)
+            #
+            # for i in range(0, len(image_summary.positions)):
+            #     for j in range(0, len(image_summary.positions[i])):
+            #         if image_summary.positions[i][j][0] != regional_image_summary.chunked_positions[i][j]:
+            #             print("NOT EQUAL", i, j, image_summary.positions[i][j][0], regional_image_summary.chunked_positions[i][j])
+            # print("PASSED POSITIONS")
+            #
+            # for i in range(0, len(image_summary.positions)):
+            #     for j in range(0, len(image_summary.positions[i])):
+            #         if image_summary.positions[i][j][1] != regional_image_summary.chunked_index[i][j]:
+            #             print("NOT EQUAL", i, j, image_summary.positions[i][j][1], regional_image_summary.chunked_index[i][j])
+            # print("PASSED INDEX")
+            #
+            # for i in range(0, len(image_summary.chunk_ids)):
+            #     if image_summary.chunk_ids[i] != regional_image_summary.chunked_ids[i]:
+            #         print("NOT EQUAL", i, image_summary.chunk_ids[i], regional_image_summary.chunked_ids[i])
+            # print("PASSED CHUNK IDs")
+            #
+            # for i in range(0, len(image_summary.labels)):
+            #     for j in range(0, len(image_summary.labels[i])):
+            #         if image_summary.labels[i][j] != regional_image_summary.chunked_labels[i][j]:
+            #             print("NOT EQUAL", i, j, image_summary.labels[i][j][1], regional_image_summary.chunked_labels[i][j])
+            # print("PASSED LABELS")
+            #
+            # for i in range(0, len(image_summary.images)):
+            #     for j in range(0, len(image_summary.images[i])):
+            #         for k in range(0, len(image_summary.images[i][j])):
+            #             if image_summary.images[i][j][k] != regional_image_summary.chunked_image_matrix[i][j][k]:
+            #                 print("NOT EQUAL", i, j, image_summary.images[i][j][k], regional_image_summary.chunked_image_matrix[i][j][k])
+            # print("PASSED IMAGES")
 
         return all_images, all_labels, all_positions, all_index, all_chunk_ids

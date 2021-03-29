@@ -423,7 +423,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
         summary.chunked_ids[current_chunk] = chunk_id_start + current_chunk;
         for(int64_t i = chunk_start; i < chunk_end; i++) {
 
-            if(i<=region_size) {
+            if(i<region_size) {
                 summary.chunked_positions[current_chunk][i - chunk_start] = positions[i];
                 summary.chunked_index[current_chunk][i - chunk_start] = index[i];
                 summary.chunked_labels[current_chunk][i - chunk_start] = labels[i];

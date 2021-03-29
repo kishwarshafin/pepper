@@ -15,14 +15,11 @@ BASE_ERROR_RATE = 0.0
 label_decoder = {1: 'A', 2: 'C', 3: 'G', 4: 'T', 0: ''}
 label_decoder_ref = {1: 'A', 2: 'C', 3: 'G', 4: 'T', 0: 'N'}
 label_decoder_snp = {1: 'A', 2: 'C', 3: 'G', 4: 'T', 0: '*'}
-MATCH_PENALTY = 4
-MISMATCH_PENALTY = 6
-GAP_PENALTY = 8
-GAP_EXTEND_PENALTY = 2
 MIN_SEQUENCE_REQUIRED_FOR_MULTITHREADING = 1
 SNP_EVENT = 1
 INSERT_EVENT = 2
 DELETE_EVENT = 3
+
 
 def candidates_to_variants(candidates, contig):
     max_h1_prob = 0.0
@@ -153,19 +150,22 @@ def candidates_to_variants(candidates, contig):
         else:
             genotype = [1, 2]
 
-    alleles = selected_alts + other_alts
-    dps = selected_dps + other_dps
-    alt_probs = selected_alt_probs + other_alt_probs
-    alt_prob_h1s = selected_alt_prob_h1s + other_alt_prob_h1s
-    alt_prob_h2s = selected_alt_prob_h2s + other_alt_prob_h2s
-    non_ref_probs = selected_non_ref_probs + other_non_ref_probs
-    ads = selected_ads + other_ads
+    # alleles = selected_alts + other_alts
+    # dps = selected_dps + other_dps
+    # alt_probs = selected_alt_probs + other_alt_probs
+    # alt_prob_h1s = selected_alt_prob_h1s + other_alt_prob_h1s
+    # alt_prob_h2s = selected_alt_prob_h2s + other_alt_prob_h2s
+    # non_ref_probs = selected_non_ref_probs + other_non_ref_probs
+    # ads = selected_ads + other_ads
 
     # only report the selected alts
-    # alleles = selected_alts
-    # dps = selected_dps
-    # gts = selected_gts
-    # ads = selected_ads
+    alleles = selected_alts
+    dps = selected_dps
+    ads = selected_ads
+    alt_probs = selected_alt_probs
+    alt_prob_h1s = selected_alt_prob_h1s
+    alt_prob_h2s = selected_alt_prob_h2s
+    non_ref_probs = selected_non_ref_probs
     # print(contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_prob_h1s, alt_prob_h2s, ads, overall_non_ref_prob)
 
     return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_prob_h1s, alt_probs, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob

@@ -178,9 +178,7 @@ public:
                     long long ref_end);
     void add_read_alleles(type_read &read, vector<int> &coverage);
     vector<PositionalCandidateRecord> find_candidates(vector<type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > predictions);
-    bool filter_candidate(Candidate candidate);
-    // this is for speed-up, we are going to memorize all position wise read-indicies
-    map<long long, set<int> > position_to_read_map;
+    static bool filter_candidate(const Candidate& candidate);
 };
 
 
