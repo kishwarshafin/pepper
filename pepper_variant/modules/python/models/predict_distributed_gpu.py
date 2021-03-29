@@ -45,36 +45,6 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     total_batches = len(data_loader)
     with torch.no_grad():
         for contig, contig_start, contig_end, chunk_id, images, position, index in data_loader:
-
-            # images = images.type(torch.FloatTensor)
-            # hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-            #
-            # # run inference on onnx mode, which takes numpy inputs
-            # ort_inputs = {ort_session.get_inputs()[0].name: images.cpu().numpy(),
-            #               ort_session.get_inputs()[1].name: hidden.cpu().numpy()}
-            # output_base, hidden = ort_session.run(None, ort_inputs)
-            # output_base = torch.from_numpy(output_base)
-            #
-            # # do softmax and get prediction
-            # # we run a softmax a padding to make the output tensor compatible for adding
-            # inference_layers = nn.Sequential(
-            #     nn.Softmax(dim=2),
-            # )
-            #
-            # # run the softmax and padding layers
-            # base_prediction = (inference_layers(output_base) * 1000000).type(torch.IntTensor)
-            #
-            # base_prediction = base_prediction.cpu().numpy().astype(np.uint32)
-            #
-            # for i in range(images.size(0)):
-            #     prediction_data_file.write_prediction(contig[i],
-            #                                           contig_start[i],
-            #                                           contig_end[i],
-            #                                           chunk_id[i],
-            #                                           position[i],
-            #                                           index[i],
-            #                                           base_prediction[i])
-
             sys.stderr.flush()
             images = images.type(torch.FloatTensor)
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)

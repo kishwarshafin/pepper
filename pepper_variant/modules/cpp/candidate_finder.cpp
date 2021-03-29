@@ -306,7 +306,10 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
         local_region_start = min(local_region_start, position);
         local_region_end = max(local_region_end, position);
     }
+
+    cout<<local_region_start<<" "<<local_region_end<<endl;
     int local_region_size = (int) (local_region_end - local_region_start + 1);
+    cout<<local_region_size<<endl;
 
     vector<int> max_observed_insert;
     vector<uint64_t> cumulative_observed_insert;
