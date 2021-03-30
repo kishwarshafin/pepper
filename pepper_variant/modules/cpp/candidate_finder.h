@@ -33,10 +33,10 @@ namespace Genotype {
 
 namespace LinearRegression {
     static constexpr double SNP_ALT_FREQ_COEF = 0;
-    static constexpr double SNP_NON_REF_PROB_COEF = 0;
-    static constexpr double SNP_ALLELE_WEIGHT_COEF = 0.990881;
-    static constexpr double SNP_BIAS_TERM = -0.001663;
-    static constexpr double SNP_THRESHOLD = 0.1;
+    static constexpr double SNP_NON_REF_PROB_COEF = -0.020743;
+    static constexpr double SNP_ALLELE_WEIGHT_COEF = 1.01154;
+    static constexpr double SNP_BIAS_TERM = -0.001517;
+    static constexpr double SNP_THRESHOLD = 0.2;
     static constexpr double SNP_LOWER_FREQ_THRESHOLD = 0.10;
     static constexpr double SNP_UPPER_FREQ = 0.4;
 
