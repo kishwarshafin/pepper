@@ -32,7 +32,7 @@ def candidates_to_variants(candidates, contig):
     overall_non_ref_prob = -1.0
 
     # sort candidates by allele-weight, non-ref prob then allele frequency
-    candidates = sorted(candidates, key=lambda x: (-max(x[10], x[11]), -x[6], -x[12]))
+    candidates = sorted(candidates, key=lambda x: (-max(x[10], x[11]), -x[12], -x[6]))
 
     if len(candidates) > PEPPERVariantCandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE:
         candidates = candidates[0: PEPPERVariantCandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE]
@@ -40,23 +40,7 @@ def candidates_to_variants(candidates, contig):
     # found_candidates = False
     for i, candidate in enumerate(candidates):
         pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
-        read_support_h0, read_support_h1, read_support_h2, alt_prob, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
-
-        # valid_candidate = True
-        # for base in list(ref):
-        #     if base.upper() not in ['A', 'C', 'G', 'T']:
-        #         valid_candidate = False
-        #         break
-        #
-        # for base in list(alt):
-        #     if base.upper() not in ['A', 'C', 'G', 'T']:
-        #         valid_candidate = False
-        #         break
-        #
-        # if not valid_candidate:
-        #     continue
-        #
-        # found_candidates = True
+        read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
 
         if overall_non_ref_prob < 0:
             overall_non_ref_prob = non_ref_prob
@@ -112,7 +96,7 @@ def candidates_to_variants(candidates, contig):
     other_ads = []
     for i, candidate in enumerate(candidates):
         pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
-        read_support_h0, read_support_h1, read_support_h2, alt_prob, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
+        read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
 
         if pos_end < max_pos_end:
             bases_needed = max_pos_end - pos_end
@@ -123,7 +107,7 @@ def candidates_to_variants(candidates, contig):
             selected_alts.append(alt)
             selected_dps.append(depth)
             selected_ads.append(read_support)
-            selected_alt_probs.append(alt_prob)
+            selected_alt_probs.append(max(alt_prob_h1, alt_prob_h2))
             selected_alt_prob_h1s.append(alt_prob_h1)
             selected_alt_prob_h2s.append(alt_prob_h2)
             selected_non_ref_probs.append(non_ref_prob)
@@ -131,7 +115,7 @@ def candidates_to_variants(candidates, contig):
             other_alts.append(alt)
             other_dps.append(depth)
             other_ads.append(read_support)
-            other_alt_probs.append(alt_prob)
+            other_alt_probs.append(max(alt_prob_h1, alt_prob_h2))
             other_alt_prob_h1s.append(alt_prob_h1)
             other_alt_prob_h2s.append(alt_prob_h2)
             other_non_ref_probs.append(non_ref_prob)
@@ -167,7 +151,7 @@ def candidates_to_variants(candidates, contig):
     # alt_prob_h2s = selected_alt_prob_h2s
     # non_ref_probs = selected_non_ref_probs
 
-    return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_prob_h1s, alt_probs, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob
+    return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_probs, alt_prob_h1s, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob
 
 
 
@@ -188,83 +172,6 @@ def chunks(file_names, threads):
     for i in range(0, len(file_names), threads):
         chunks.append(file_names[i:i + threads])
     return chunks
-
-
-def group_adjacent_mismatches(mismatches):
-    all_groups = []
-    current_group = []
-    for mismatch in mismatches:
-        if len(current_group) == 0:
-            current_group.append(mismatch)
-        elif abs(current_group[-1][0] - mismatch[0]) == 0:
-            # this means the previous position and this position has the same value, meaning it is an insert
-            current_group.append(mismatch)
-        elif abs(current_group[-1][0] - mismatch[0]) == 1 and mismatch[5] == DELETE_EVENT:
-            # this means that this position has a delete that needs to be anchored to the previous position
-            current_group.append(mismatch)
-        else:
-            # otherwise stop the current group and start a new one
-            all_groups.append(current_group)
-            current_group = [mismatch]
-
-    return all_groups
-
-
-def mismatch_groups_to_variants(mismatch_group):
-    ref_dict = defaultdict()
-    allele_dict = defaultdict()
-    all_positions = set()
-
-    mismatch_group = sorted(mismatch_group, key=operator.itemgetter(0, 1, 4))
-    for pos, indx, ref_base, alt, hp_tag, v_type in mismatch_group:
-        all_positions.add((pos, indx))
-        ref_dict[(pos, indx)] = ref_base
-        allele_dict[(pos, indx, hp_tag)] = alt
-
-    all_positions = list(all_positions)
-    all_positions = sorted(all_positions, key=operator.itemgetter(0, 1))
-    start_pos = all_positions[0][0]
-    start_indx = all_positions[0][1]
-    end_pos = all_positions[-1][0]
-    start_ref = ref_dict[(start_pos, start_indx)]
-
-    if start_indx > 0 or start_ref == 0:
-        # print("GROUP ERROR: ", mismatch_group)
-        return None
-
-    ref_allele = []
-    alt_allele_1 = []
-    alt_allele_2 = []
-    for pos, indx in all_positions:
-        ref_base = 0
-        if indx == 0:
-            ref_base = ref_dict[(pos, indx)]
-            ref_allele.append(ref_base)
-
-        if (pos, indx, 1) in allele_dict.keys():
-            alt_allele_1.append(allele_dict[(pos, indx, 1)])
-        else:
-            alt_allele_1.append(ref_base)
-
-        if (pos, indx, 2) in allele_dict.keys():
-            alt_allele_2.append(allele_dict[(pos, indx, 2)])
-        else:
-            alt_allele_2.append(ref_base)
-
-    ref_seq = ''.join(label_decoder_ref[i] for i in ref_allele)
-    alt1_seq = ''.join(label_decoder[i] for i in alt_allele_1)
-    alt2_seq = ''.join(label_decoder[i] for i in alt_allele_2)
-
-    if alt1_seq == ref_seq:
-        alt1_seq = ''
-    if alt2_seq == ref_seq:
-        alt2_seq = ''
-
-    v_type = 'SNP'
-    if len(ref_seq) > 1 or max(len(alt1_seq), len(alt2_seq)) > 1:
-        v_type = 'INDEL'
-
-    return start_pos, end_pos+1, ref_seq, alt1_seq, alt2_seq, v_type
 
 
 def get_anchor_positions(base_predictions, ref_seq, indices, positions):
@@ -354,7 +261,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                 found_candidate = True
                 selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
                                             candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2,
-                                            candidate.alt_prob, candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
+                                            candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
             if found_candidate:
                 variant = candidates_to_variants(list(selected_candidates), contig)
                 if variant is not None:

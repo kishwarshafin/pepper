@@ -20,45 +20,46 @@ void RegionalSummaryGenerator::generate_max_insert_observed(const type_read& rea
     long long ref_position = read.pos;
     int cigar_index = 0;
     long long reference_index;
+    if(ImageOptionsRegion::GENERATE_INDELS == true) {
+        for (auto &cigar: read.cigar_tuples) {
+            if (ref_position > ref_end) break;
+            switch (cigar.operation) {
+                case CIGAR_OPERATIONS::EQUAL:
+                case CIGAR_OPERATIONS::DIFF:
+                case CIGAR_OPERATIONS::MATCH:
+                    cigar_index = 0;
+                    if (ref_position < ref_start) {
+                        cigar_index = min(ref_start - ref_position, (long long) cigar.length);
+                        read_index += cigar_index;
+                        ref_position += cigar_index;
+                    }
+                    for (int i = cigar_index; i < cigar.length; i++) {
+                        reference_index = ref_position - ref_start;
+                        read_index += 1;
+                        ref_position += 1;
+                    }
+                    break;
+                case CIGAR_OPERATIONS::IN:
+                    reference_index = ref_position - ref_start - 1;
 
-    for (auto &cigar: read.cigar_tuples) {
-        if (ref_position > ref_end) break;
-        switch (cigar.operation) {
-            case CIGAR_OPERATIONS::EQUAL:
-            case CIGAR_OPERATIONS::DIFF:
-            case CIGAR_OPERATIONS::MATCH:
-                cigar_index = 0;
-                if (ref_position < ref_start) {
-                    cigar_index = min(ref_start - ref_position, (long long) cigar.length);
-                    read_index += cigar_index;
-                    ref_position += cigar_index;
-                }
-                for (int i = cigar_index; i < cigar.length; i++) {
-                    reference_index = ref_position - ref_start;
-                    read_index += 1;
-                    ref_position += 1;
-                }
-                break;
-            case CIGAR_OPERATIONS::IN:
-                reference_index = ref_position - ref_start - 1;
-
-                if (ref_position - 1 >= ref_start &&
-                    ref_position - 1 <= ref_end) {
-                    max_observed_insert[reference_index] = std::max(max_observed_insert[reference_index], (uint64_t) cigar.length);
-                }
-                read_index += cigar.length;
-                break;
-            case CIGAR_OPERATIONS::REF_SKIP:
-            case CIGAR_OPERATIONS::PAD:
-            case CIGAR_OPERATIONS::DEL:
-                reference_index = ref_position - ref_start - 1;
-                ref_position += cigar.length;
-                break;
-            case CIGAR_OPERATIONS::SOFT_CLIP:
-                read_index += cigar.length;
-                break;
-            case CIGAR_OPERATIONS::HARD_CLIP:
-                break;
+                    if (ref_position - 1 >= ref_start &&
+                        ref_position - 1 <= ref_end) {
+                        max_observed_insert[reference_index] = std::max(max_observed_insert[reference_index], (uint64_t) cigar.length);
+                    }
+                    read_index += cigar.length;
+                    break;
+                case CIGAR_OPERATIONS::REF_SKIP:
+                case CIGAR_OPERATIONS::PAD:
+                case CIGAR_OPERATIONS::DEL:
+                    reference_index = ref_position - ref_start - 1;
+                    ref_position += cigar.length;
+                    break;
+                case CIGAR_OPERATIONS::SOFT_CLIP:
+                    read_index += cigar.length;
+                    break;
+                case CIGAR_OPERATIONS::HARD_CLIP:
+                    break;
+            }
         }
     }
 }
@@ -187,7 +188,7 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
             case CIGAR_OPERATIONS::IN:
                 reference_index = ref_position - ref_start - 1;
                 if (ref_position - 1 >= ref_start &&
-                    ref_position - 1 <= ref_end) {
+                    ref_position - 1 <= ref_end && ImageOptionsRegion::GENERATE_INDELS) {
                     // process insert allele here
                     string alt;
                     alt = read.sequence.substr(read_index, cigar.length);
@@ -309,7 +310,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                 break;
             case CIGAR_OPERATIONS::IN:
                 if (ref_position - 1 >= ref_start &&
-                    ref_position - 1 <= ref_end) {
+                    ref_position - 1 <= ref_end && ImageOptionsRegion::GENERATE_INDELS) {
                     // process insert allele here
                     string alt;
                     alt = read.sequence.substr(read_index, cigar.length);
@@ -355,6 +356,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     RegionalImageSummary summary{};
 
     int region_size = (int) (ref_end - ref_start + total_observered_insert_bases + 1);
+
     // Generate a cover vector of chunk size. Chunk size = 10kb defining the region
     int coverage_vector[ref_end - ref_start + 1];
 
@@ -381,7 +383,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     // once the image matrix is generated, scale the counted values.
     for(int i=0;i<region_size;i++){
         for(int j=0;j<feature_size;j++){
-            image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptions::MAX_COLOR_VALUE);
+            image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
         }
     }
 
@@ -459,37 +461,40 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
         current_chunk += 1;
     }
 
-//    debug_print_matrix(image_matrix);
+//    debug_print_matrix(image_matrix, train_mode);
     free(image_matrix);
 
     return summary;
 }
 
 
-void RegionalSummaryGenerator::debug_print_matrix(int** image_matrix) {
+void RegionalSummaryGenerator::debug_print_matrix(int** image_matrix, bool train_mode) {
     cout << "------------- IMAGE MATRIX" << endl;
 
     cout << setprecision(3);
-    for (int i = ref_start; i <= ref_end; i++) {
+    for (long long i = ref_start; i <= ref_end; i++) {
         if(i==ref_start) cout<<"REF:\t";
         cout << "  " << reference_sequence[i - ref_start] << "\t";
+        cout<<i<<" "<<ref_start<<endl;
         if (max_observed_insert[i - ref_start] > 0) {
             for (uint64_t ii = 0; ii < max_observed_insert[i - ref_start]; ii++)cout << "  *" << "\t";
         }
     }
     cout << endl;
 
-    for (int i = 0; i <= ref_end-ref_start + total_observered_insert_bases; i++) {
-        if(i==0) cout<<"TRH1:\t";
-        cout << "  " <<labels_hp1[i] << "\t";
-    }
-    cout << endl;
+    if(train_mode) {
+        for (int i = 0; i <= ref_end - ref_start + total_observered_insert_bases; i++) {
+            if (i == 0) cout << "TRH1:\t";
+            cout << "  " << labels_hp1[i] << "\t";
+        }
+        cout << endl;
 
-    for (int i = 0; i <= ref_end-ref_start + total_observered_insert_bases; i++) {
-        if(i==0) cout<<"TRH2:\t";
-        cout << "  " <<labels_hp2[i] << "\t";
+        for (int i = 0; i <= ref_end - ref_start + total_observered_insert_bases; i++) {
+            if (i == 0) cout << "TRH2:\t";
+            cout << "  " << labels_hp2[i] << "\t";
+        }
+        cout << endl;
     }
-    cout << endl;
 
 //    for (int i = 0; i < labels.size(); i++) {
 //        if(i==0) cout<<"LBL:\t";
@@ -498,8 +503,8 @@ void RegionalSummaryGenerator::debug_print_matrix(int** image_matrix) {
 //    cout << endl;
 
     cout<<"POS:\t";
-    for (int i = 0; i < positions.size(); i++) {
-        printf("%3lld\t", (positions[i]) % 100);
+    for (unsigned long long & position : positions) {
+        printf("%3lld\t", position % 100);
     }
     cout << endl;
     for (int i = 0; i < 10; i++) {

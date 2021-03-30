@@ -42,25 +42,46 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     total_batches = len(data_loader)
     with torch.no_grad():
         for contig, contig_start, contig_end, chunk_id, images, position, index in data_loader:
+            sys.stderr.flush()
             images = images.type(torch.FloatTensor)
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
-            # run inference on onnx mode, which takes numpy inputs
-            ort_inputs = {ort_session.get_inputs()[0].name: images.cpu().numpy(),
-                          ort_session.get_inputs()[1].name: hidden.cpu().numpy()}
-            output_base, hidden = ort_session.run(None, ort_inputs)
-            output_base = torch.from_numpy(output_base)
+            prediction_base_tensor = torch.zeros((images.size(0), images.size(1), ImageSizeOptions.TOTAL_LABELS))
 
-            # do softmax and get prediction
-            # we run a softmax a padding to make the output tensor compatible for adding
-            inference_layers = nn.Sequential(
-                nn.Softmax(dim=2),
-            )
+            for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
+                if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
+                    break
+                chunk_start = i
+                chunk_end = i + TrainOptions.TRAIN_WINDOW
+                # chunk all the data
+                image_chunk = images[:, chunk_start:chunk_end]
 
-            # run the softmax and padding layers
-            base_prediction = (inference_layers(output_base) * 1000000).type(torch.IntTensor)
+                # run inference on onnx mode, which takes numpy inputs
+                ort_inputs = {ort_session.get_inputs()[0].name: image_chunk.cpu().numpy(),
+                              ort_session.get_inputs()[1].name: hidden.cpu().numpy()}
+                output_base, hidden = ort_session.run(None, ort_inputs)
+                output_base = torch.from_numpy(output_base)
+                hidden = torch.from_numpy(hidden)
 
-            base_prediction = base_prediction.cpu().numpy().astype(np.uint32)
+                # now calculate how much padding is on the top and bottom of this chunk so we can do a simple
+                # add operation
+                top_zeros = chunk_start
+                bottom_zeros = ImageSizeOptions.SEQ_LENGTH - chunk_end
+
+                # do softmax and get prediction
+                # we run a softmax a padding to make the output tensor compatible for adding
+                inference_layers = nn.Sequential(
+                    nn.Softmax(dim=2),
+                    nn.ZeroPad2d((0, 0, top_zeros, bottom_zeros))
+                )
+
+                # run the softmax and padding layers
+                base_prediction = (inference_layers(output_base) * 100000).type(torch.IntTensor)
+
+                # now simply add the tensor to the global counter
+                prediction_base_tensor = torch.add(prediction_base_tensor, base_prediction)
+
+            prediction_base_tensor = prediction_base_tensor.cpu().numpy().astype(int)
 
             for i in range(images.size(0)):
                 prediction_data_file.write_prediction(contig[i],
@@ -69,7 +90,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                                                       chunk_id[i],
                                                       position[i],
                                                       index[i],
-                                                      base_prediction[i])
+                                                      prediction_base_tensor[i])
             batch_completed += 1
 
             if thread_id == 0 and batch_completed % 5 == 0:

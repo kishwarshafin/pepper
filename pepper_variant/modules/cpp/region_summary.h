@@ -9,6 +9,12 @@
 #include <iostream>
 #include <algorithm>
 
+namespace ImageOptionsRegion {
+    static constexpr int MAX_COLOR_VALUE = 254;
+    static constexpr bool GENERATE_INDELS = false;
+};
+
+
 struct RegionalImageSummary {
     vector< vector< vector<uint8_t> > > chunked_image_matrix;
     vector< vector<int64_t> > chunked_positions;
@@ -49,7 +55,7 @@ public:
 
     static int get_feature_index(char base, bool is_reverse);
 
-    void debug_print_matrix(int** image_matrix);
+    void debug_print_matrix(int** image_matrix, bool train_mode);
 
     RegionalImageSummary generate_summary(vector <type_read> &reads,
                                           int chunk_overlap,

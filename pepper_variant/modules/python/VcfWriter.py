@@ -45,6 +45,7 @@ class VCFWriter:
                                                       AP=alt_probs, APM=max(alt_probs), AP1=alt_prob_h1s, AP2=alt_prob_h2s,
                                                       NR=non_ref_probs, NRM=max(non_ref_probs),
                                                       GQ=overall_non_ref_prob, VAF=vafs)
+
             self.vcf_file.write(vcf_record)
 
     def get_vcf_header(self, sample_name, contigs):
