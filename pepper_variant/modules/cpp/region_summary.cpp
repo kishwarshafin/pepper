@@ -503,8 +503,8 @@ void RegionalSummaryGenerator::debug_print_matrix(int** image_matrix, bool train
 //    cout << endl;
 
     cout<<"POS:\t";
-    for (unsigned long long & position : positions) {
-        printf("%3lld\t", position % 100);
+    for(int i=0; i < positions.size(); i++ ) {
+        printf("%3lld\t", positions[i] % 100);
     }
     cout << endl;
     for (int i = 0; i < 10; i++) {
