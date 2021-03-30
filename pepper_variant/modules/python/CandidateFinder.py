@@ -32,15 +32,14 @@ def candidates_to_variants(candidates, contig):
     overall_non_ref_prob = -1.0
 
     # sort candidates by allele-weight, non-ref prob then allele frequency
-    candidates = sorted(candidates, key=lambda x: (-max(x[10], x[11]), -x[12], -x[6]))
+    candidates = sorted(candidates, key=lambda x: (-max(x[7], x[8]), -x[9], -x[6]))
 
     if len(candidates) > PEPPERVariantCandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE:
         candidates = candidates[0: PEPPERVariantCandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE]
 
     # found_candidates = False
     for i, candidate in enumerate(candidates):
-        pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
-        read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
+        pos_start, pos_end, ref, alt, alt_type, depth, read_support, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
 
         if overall_non_ref_prob < 0:
             overall_non_ref_prob = non_ref_prob
@@ -95,8 +94,7 @@ def candidates_to_variants(candidates, contig):
     other_non_ref_probs = []
     other_ads = []
     for i, candidate in enumerate(candidates):
-        pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
-        read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
+        pos_start, pos_end, ref, alt, alt_type, depth, read_support, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
 
         if pos_end < max_pos_end:
             bases_needed = max_pos_end - pos_end
@@ -260,8 +258,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
                 #       "ALT prob h1:", candidate.alt_prob_h1, "ALT prob h2:", candidate.alt_prob_h2, "Non-ref prob:", candidate.non_ref_prob)
                 found_candidate = True
                 selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                                            candidate.depth, candidate.read_support, candidate.read_support_h0, candidate.read_support_h1, candidate.read_support_h2,
-                                            candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
+                                            candidate.depth, candidate.read_support, candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
             if found_candidate:
                 variant = candidates_to_variants(list(selected_candidates), contig)
                 if variant is not None:

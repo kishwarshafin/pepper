@@ -67,27 +67,8 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
 
                             if (AlleleFrequencyMap.find(candidate_alt) != AlleleFrequencyMap.end()) {
                                 AlleleFrequencyMap[candidate_alt] += 1;
-
-                                if(read.hp_tag == 0) {
-                                    AlleleFrequencyMapH0[candidate_alt] += 1;
-                                } else if(read.hp_tag == 1) {
-                                    AlleleFrequencyMapH1[candidate_alt] += 1;
-                                } else if(read.hp_tag == 2) {
-                                    AlleleFrequencyMapH2[candidate_alt] += 1;
-                                }
                             } else {
                                 AlleleFrequencyMap[candidate_alt] = 1;
-                                AlleleFrequencyMapH0[candidate_alt] = 0;
-                                AlleleFrequencyMapH1[candidate_alt] = 0;
-                                AlleleFrequencyMapH2[candidate_alt] = 0;
-
-                                if(read.hp_tag == 0) {
-                                    AlleleFrequencyMapH0[candidate_alt] += 1;
-                                } else if(read.hp_tag == 1) {
-                                    AlleleFrequencyMapH1[candidate_alt] += 1;
-                                } else if(read.hp_tag == 2) {
-                                    AlleleFrequencyMapH2[candidate_alt] += 1;
-                                }
                             }
 
                             if (AlleleMap[region_index].find(candidate_alt) == AlleleMap[region_index].end())
@@ -121,28 +102,8 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
                     Candidate candidate_alt(ref_position - 1, ref_position, ref, alt, AlleleType::INSERT_ALLELE);
                     if (AlleleFrequencyMap.find(candidate_alt) != AlleleFrequencyMap.end()) {
                         AlleleFrequencyMap[candidate_alt] += 1;
-
-                        if(read.hp_tag == 0) {
-                            AlleleFrequencyMapH0[candidate_alt] += 1;
-                        } else if(read.hp_tag == 1) {
-                            AlleleFrequencyMapH1[candidate_alt] += 1;
-                        } else if(read.hp_tag == 2) {
-                            AlleleFrequencyMapH2[candidate_alt] += 1;
-                        }
                     } else {
                         AlleleFrequencyMap[candidate_alt] = 1;
-
-                        AlleleFrequencyMapH0[candidate_alt] = 0;
-                        AlleleFrequencyMapH1[candidate_alt] = 0;
-                        AlleleFrequencyMapH2[candidate_alt] = 0;
-
-                        if(read.hp_tag == 0) {
-                            AlleleFrequencyMapH0[candidate_alt] += 1;
-                        } else if(read.hp_tag == 1) {
-                            AlleleFrequencyMapH1[candidate_alt] += 1;
-                        } else if(read.hp_tag == 2) {
-                            AlleleFrequencyMapH2[candidate_alt] += 1;
-                        }
                     }
 
                     if (AlleleMap[region_index].find(candidate_alt) == AlleleMap[region_index].end())
@@ -171,27 +132,8 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
 
                     if (AlleleFrequencyMap.find(candidate_alt) != AlleleFrequencyMap.end()) {
                         AlleleFrequencyMap[candidate_alt] += 1;
-                        if(read.hp_tag == 0) {
-                            AlleleFrequencyMapH0[candidate_alt] += 1;
-                        } else if(read.hp_tag == 1) {
-                            AlleleFrequencyMapH1[candidate_alt] += 1;
-                        } else if(read.hp_tag == 2) {
-                            AlleleFrequencyMapH2[candidate_alt] += 1;
-                        }
                     } else {
                         AlleleFrequencyMap[candidate_alt] = 1;
-
-                        AlleleFrequencyMapH0[candidate_alt] = 0;
-                        AlleleFrequencyMapH1[candidate_alt] = 0;
-                        AlleleFrequencyMapH2[candidate_alt] = 0;
-
-                        if(read.hp_tag == 0) {
-                            AlleleFrequencyMapH0[candidate_alt] += 1;
-                        } else if(read.hp_tag == 1) {
-                            AlleleFrequencyMapH1[candidate_alt] += 1;
-                        } else if(read.hp_tag == 2) {
-                            AlleleFrequencyMapH2[candidate_alt] += 1;
-                        }
                     }
 
 //                    cout<<"DEL: "<<ref_position<<" "<<ref<<" "<<alt<<" "<<AlleleFrequencyMap[candidate_alt]<<endl;
@@ -413,7 +355,7 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
             candidate_found = true;
             filtered_candidate_positions.insert(i + this->region_start);
             // allele, depth and frequency
-            candidate.set_depth_values(coverage[i], AlleleFrequencyMap[candidate], AlleleFrequencyMapH0[candidate], AlleleFrequencyMapH1[candidate], AlleleFrequencyMapH2[candidate]);
+            candidate.set_depth_values(coverage[i], AlleleFrequencyMap[candidate]);
 
             double non_ref_prob = 0.0;
             double alt_prob = 0.0;

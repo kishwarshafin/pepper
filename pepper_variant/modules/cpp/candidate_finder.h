@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <numeric>
+#include <utility>
 #include <vector>
 #include "bam_handler.h"
 using namespace std;
@@ -65,8 +66,8 @@ struct CandidateAllele{
     int alt_type;
 
     CandidateAllele(string ref, string alt, int alt_type) {
-        this->ref = ref;
-        this->alt = alt;
+        this->ref = std::move(ref);
+        this->alt = std::move(alt);
         this->alt_type = alt_type;
     }
 
@@ -80,9 +81,6 @@ struct Candidate{
     int genotype;
     int depth;
     int read_support;
-    int read_support_h0;
-    int read_support_h1;
-    int read_support_h2;
     double alt_prob;
     double alt_prob_h1;
     double alt_prob_h2;
@@ -92,24 +90,21 @@ struct Candidate{
         this->genotype = 0;
     }
 
-    void set_genotype(int genotype) {
-        this->genotype = genotype;
+    void set_genotype(int genotype_) {
+        this->genotype = genotype_;
     }
 
-    void set_depth_values(int depth, int read_support, int read_support_h0, int read_support_h1, int read_support_h2) {
-        this->depth = depth;
-        this->read_support = read_support;
-        this->read_support_h0 = read_support_h0;
-        this->read_support_h1 = read_support_h1;
-        this->read_support_h2 = read_support_h2;
+    void set_depth_values(int depth_, int read_support_) {
+        this->depth = depth_;
+        this->read_support = read_support_;
     }
 
-    Candidate(long long pos_start, long long pos_end, string ref, string alt, int alt_type) {
+    Candidate(long long pos_start, long long pos_end, string ref_, string alt_, int alt_type_) {
         this->pos = pos_start;
         this->pos_end = pos_end;
-        this->allele.alt = alt;
-        this->allele.ref = ref;
-        this->allele.alt_type = alt_type;
+        this->allele.alt = std::move(alt_);
+        this->allele.ref = std::move(ref_);
+        this->allele.alt_type = alt_type_;
         this->genotype = 0;
     }
     bool operator< (const Candidate& that ) const {
@@ -145,7 +140,7 @@ struct PositionalCandidateRecord{
     vector<Candidate> candidates;
 
     PositionalCandidateRecord(string chromosome_name, long long pos_start, long long pos_end, int depth) {
-        this->chromosome_name = chromosome_name;
+        this->chromosome_name = std::move(chromosome_name);
         this->pos_start = pos_start;
         this->pos_end = pos_end;
         this->depth = depth;
@@ -168,9 +163,6 @@ class CandidateFinder {
     string chromosome_name;
     string reference_sequence;
     map<Candidate, int> AlleleFrequencyMap;
-    map<Candidate, int> AlleleFrequencyMapH0;
-    map<Candidate, int> AlleleFrequencyMapH1;
-    map<Candidate, int> AlleleFrequencyMapH2;
     vector< set<Candidate> > AlleleMap;
 public:
     CandidateFinder(string reference_sequence,
