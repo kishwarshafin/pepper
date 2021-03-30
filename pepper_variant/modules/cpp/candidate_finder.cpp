@@ -235,21 +235,20 @@ bool CandidateFinder::filter_candidate(const Candidate& candidate) {
     if(candidate.allele.alt_type == SNP_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
 
-        if(allele_frequency>=0.10)return true;
-        else return false;
+        // if(allele_frequency>=0.10)return true;
+        // else return false;
 
         if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
-            if(allele_weight >= 0.05) {
-                if(allele_weight >= 0.1) return true;
-                else return false;
-            }
+            if(allele_weight >= 0.1) return true;
+            else return false;
+
             return false;
         }
 
         double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + LinearRegression::SNP_BIAS_TERM;
 
         if(predicted_val >= LinearRegression::SNP_THRESHOLD) return true;
-//        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
+        // if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
         return false;
 
     } else if (candidate.allele.alt_type == INSERT_TYPE) {
@@ -461,6 +460,7 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                 candidate.non_ref_prob = non_ref_prob;
             }
             else if(candidate.allele.alt_type == INSERT_TYPE) {
+                continue; // do not report any INSERTs in this mode
                 string alt_allele = candidate.allele.alt;
                 long long pos = candidate.pos;
                 int length = 0;
@@ -523,6 +523,7 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
 //                cout<<"-----------------------"<<endl;
             }
             else if(candidate.allele.alt_type == DELETE_TYPE) {
+                continue; // do not report any Deletes in this mode
                 int length = 0;
                 double non_ref_length = 0.0;
                 double non_ref_prob_h1 = 0.0;
