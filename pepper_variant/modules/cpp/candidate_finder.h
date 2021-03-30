@@ -16,6 +16,7 @@ namespace CandidateFinder_options {
     static constexpr int min_base_quality = 1;
     static constexpr int freq_threshold = 4;
     static constexpr int min_count_threshold = 2;
+    static constexpr bool report_indels = false;
 };
 
 namespace AlleleType {

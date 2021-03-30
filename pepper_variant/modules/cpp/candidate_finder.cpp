@@ -50,7 +50,7 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
                         read.base_qualities[read_index] >= CandidateFinder_options::min_base_quality) {
                         //look forward and make sure this is not an anchor base
                         bool check_this_base = true;
-                        if(i == cigar.length - 1 && cigar_i + 1 < read.cigar_tuples.size()) {
+                        if(i == cigar.length - 1 && cigar_i + 1 < read.cigar_tuples.size() && CandidateFinder_options::report_indels) {
                             CigarOp next_cigar = read.cigar_tuples[cigar_i + 1];
                             if(next_cigar.operation == CIGAR_OPERATIONS::IN ||
                                next_cigar.operation == CIGAR_OPERATIONS::DEL) {
@@ -59,7 +59,7 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
                                 check_this_base = false;
                             }
                         }
-                        if(check_this_base == 1) {
+                        if(check_this_base == true) {
                             // process the SNP allele here
                             string ref(1, reference_sequence[reference_index]);
                             string alt(1, read.sequence[read_index]);
@@ -111,7 +111,7 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
 
 
                 if (ref_position - 1 >= region_start &&
-                    ref_position - 1 <= region_end) {
+                    ref_position - 1 <= region_end && CandidateFinder_options::report_indels) {
                     // process insert allele here
                     string ref = reference_sequence.substr(reference_index, 1);
                     string alt;
@@ -158,7 +158,7 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
                 region_index = ref_position - region_start - 1;
 
                 if (ref_position - 1 >= region_start && ref_position - 1 <= region_end &&
-                    ref_position + cigar.length < ref_end) {
+                    ref_position + cigar.length < ref_end && CandidateFinder_options::report_indels) {
                     // process delete allele here
                     string ref = reference_sequence.substr(ref_position - ref_start - 1, cigar.length + 1);
                     string alt;
