@@ -248,7 +248,7 @@ bool CandidateFinder::filter_candidate(const Candidate& candidate) {
         }
 
         if(predicted_val >= LinearRegression::SNP_THRESHOLD) return true;
-        // if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
+         if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
         return false;
 
     } else if (candidate.allele.alt_type == INSERT_TYPE) {
