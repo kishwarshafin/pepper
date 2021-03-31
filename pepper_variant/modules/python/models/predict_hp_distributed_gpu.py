@@ -10,7 +10,7 @@ from datetime import datetime
 
 from pepper_variant.modules.python.models.dataloader_predict import SequenceDataset
 from pepper_variant.modules.python.models.ModelHander import ModelHandler
-from pepper_variant.modules.python.Options import ImageSizeOptions, TrainOptions
+from pepper_variant.modules.python.Options import ImageSizeOptionsHP, TrainOptions
 from pepper_variant.modules.python.DataStorePredict import DataStore
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 
@@ -18,10 +18,10 @@ os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 def predict_hp(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, theads_per_caller, device_id, rank):
     transducer_model, hidden_size, gru_layers, prev_ite = \
         ModelHandler.load_simple_model_for_training(model_path,
-                                                    input_channels=ImageSizeOptions.IMAGE_CHANNELS,
-                                                    image_features=ImageSizeOptions.IMAGE_HEIGHT,
-                                                    seq_len=ImageSizeOptions.SEQ_LENGTH,
-                                                    num_classes=ImageSizeOptions.TOTAL_LABELS)
+                                                    input_channels=ImageSizeOptionsHP.IMAGE_CHANNELS,
+                                                    image_features=ImageSizeOptionsHP.IMAGE_HEIGHT,
+                                                    seq_len=ImageSizeOptionsHP.SEQ_LENGTH,
+                                                    num_classes=ImageSizeOptionsHP.TOTAL_LABELS)
     transducer_model.eval()
     transducer_model = transducer_model.eval()
     # create output file
@@ -51,8 +51,8 @@ def predict_hp(input_filepath, file_chunks, output_filepath, model_path, batch_s
             hidden_hp1 = torch.zeros(images_hp1.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
             hidden_hp2 = torch.zeros(images_hp2.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
-            prediction_base_tensor_hp1 = torch.zeros((images_hp1.size(0), images_hp1.size(1), ImageSizeOptions.TOTAL_LABELS))
-            prediction_base_tensor_hp2 = torch.zeros((images_hp2.size(0), images_hp2.size(1), ImageSizeOptions.TOTAL_LABELS))
+            prediction_base_tensor_hp1 = torch.zeros((images_hp1.size(0), images_hp1.size(1), ImageSizeOptionsHP.TOTAL_LABELS))
+            prediction_base_tensor_hp2 = torch.zeros((images_hp2.size(0), images_hp2.size(1), ImageSizeOptionsHP.TOTAL_LABELS))
 
             images_hp1 = images_hp1.to(device_id)
             images_hp2 = images_hp2.to(device_id)
@@ -61,8 +61,8 @@ def predict_hp(input_filepath, file_chunks, output_filepath, model_path, batch_s
             prediction_base_tensor_hp1 = prediction_base_tensor_hp1.to(device_id)
             prediction_base_tensor_hp2 = prediction_base_tensor_hp2.to(device_id)
 
-            for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
-                if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
+            for i in range(0, ImageSizeOptionsHP.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
+                if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptionsHP.SEQ_LENGTH:
                     break
                 chunk_start = i
                 chunk_end = i + TrainOptions.TRAIN_WINDOW
@@ -77,7 +77,7 @@ def predict_hp(input_filepath, file_chunks, output_filepath, model_path, batch_s
                 # now calculate how much padding is on the top and bottom of this chunk so we can do a simple
                 # add operation
                 top_zeros = chunk_start
-                bottom_zeros = ImageSizeOptions.SEQ_LENGTH - chunk_end
+                bottom_zeros = ImageSizeOptionsHP.SEQ_LENGTH - chunk_end
 
                 # do softmax and get prediction
                 # we run a softmax a padding to make the output tensor compatible for adding
