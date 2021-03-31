@@ -8,7 +8,7 @@ import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel
 from datetime import datetime
 
-from pepper_variant.modules.python.models.dataloader_predict import SequenceDataset
+from pepper_variant.modules.python.models.dataloader_predict import SequenceDatasetHP
 from pepper_variant.modules.python.models.ModelHander import ModelHandler
 from pepper_variant.modules.python.Options import ImageSizeOptionsHP, TrainOptions
 from pepper_variant.modules.python.DataStorePredict import DataStore
@@ -29,7 +29,7 @@ def predict_hp(input_filepath, file_chunks, output_filepath, model_path, batch_s
     prediction_data_file = DataStore(output_filename, mode='w')
 
     # data loader
-    input_data = SequenceDataset(input_filepath, file_chunks)
+    input_data = SequenceDatasetHP(input_filepath, file_chunks)
     data_loader = DataLoader(input_data,
                              batch_size=batch_size,
                              shuffle=False,
