@@ -9,6 +9,7 @@ from pepper_variant.build import PEPPER_VARIANT
 from pepper_variant.modules.python.ExcludeContigs import EXCLUDED_HUMAN_CONTIGS
 from pepper_variant.modules.python.DataStore import DataStore
 from pepper_variant.modules.python.AlignmentSummarizer import AlignmentSummarizer
+from pepper_variant.modules.python.AlignmentSummarizerHP import AlignmentSummarizerHP
 from pepper_variant.modules.python.Options import ImageSizeOptions
 
 
@@ -16,7 +17,7 @@ class ImageGenerator:
     """
     Process manager that runs sequence of processes to generate images and their labels.
     """
-    def __init__(self, chromosome_name, bam_file_path, draft_file_path, truth_bam_h1, truth_bam_h2, train_mode):
+    def __init__(self, chromosome_name, bam_file_path, draft_file_path, use_hp_info, truth_bam_h1, truth_bam_h2, train_mode):
         """
         Initialize a manager object
         :param chromosome_name: Name of the chromosome
@@ -33,6 +34,7 @@ class ImageGenerator:
         self.fasta_handler = PEPPER_VARIANT.FASTA_handler(draft_file_path)
         self.train_mode = train_mode
         self.downsample_rate = 1.0
+        self.use_hp_info = use_hp_info
         self.truth_bam_handler_h1 = None
         self.truth_bam_handler_h2 = None
 
@@ -54,24 +56,45 @@ class ImageGenerator:
         :param bed_list: If true then realignment will be performed
         :return:
         """
-        alignment_summarizer = AlignmentSummarizer(self.bam_handler,
-                                                   self.fasta_handler,
-                                                   self.chromosome_name,
-                                                   start_position,
-                                                   end_position)
+        if not self.use_hp_info:
+            alignment_summarizer = AlignmentSummarizer(self.bam_handler,
+                                                       self.fasta_handler,
+                                                       self.chromosome_name,
+                                                       start_position,
+                                                       end_position)
 
-        region_summary = alignment_summarizer.create_summary(self.truth_bam_handler_h1,
-                                                             self.truth_bam_handler_h2,
-                                                             self.train_mode,
-                                                             downsample_rate,
-                                                             bed_list)
+            region_summary = alignment_summarizer.create_summary(self.truth_bam_handler_h1,
+                                                                 self.truth_bam_handler_h2,
+                                                                 self.train_mode,
+                                                                 downsample_rate,
+                                                                 bed_list)
 
-        if region_summary is not None:
-            images, labels, positions, index, chunk_ids = region_summary
+            if region_summary is not None:
+                images, labels, positions, index, chunk_ids = region_summary
+            else:
+                images, labels, positions, index, chunk_ids = [], [], [], [], []
+
+            return images, labels, positions, index, chunk_ids
         else:
-            images, labels, positions, index, chunk_ids = [], [], [], [], []
+            alignment_summarizer_hp = AlignmentSummarizerHP(self.bam_handler,
+                                                            self.fasta_handler,
+                                                            self.chromosome_name,
+                                                            start_position,
+                                                            end_position)
 
-        return images, labels, positions, index, chunk_ids
+            region_summary = alignment_summarizer_hp.create_summary(self.truth_bam_handler_h1,
+                                                                    self.truth_bam_handler_h2,
+                                                                    self.train_mode,
+                                                                    downsample_rate,
+                                                                    bed_list)
+
+            if region_summary is not None:
+                images_hp1, images_hp2, labels_hp1, labels_hp2, positions, index, image_chunk_ids = region_summary
+            else:
+                images_hp1, images_hp2, labels_hp1, labels_hp2, positions, index, image_chunk_ids = [], [], [], [], [], [], []
+
+            return images_hp1, images_hp2, labels_hp1, labels_hp2, positions, index, image_chunk_ids
+
 
 
 class ImageGenerationUtils:
@@ -202,10 +225,15 @@ class ImageGenerationUtils:
         """
         thread_prefix = "[THREAD " + "{:02d}".format(process_id) + "]"
 
-        output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate, bed_list = args
+        output_path, bam_file, draft_file, use_hp_info, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate, bed_list = args
 
         timestr = time.strftime("%m%d%Y_%H%M%S")
-        file_name = output_path + "pepper_variants_images_thread_" + str(process_id) + "_" + str(timestr) + ".hdf"
+        file_name = output_path + "pepper_variants_images_thread_" + str(process_id) + "_" + str(timestr)
+
+        if use_hp_info:
+            file_name = file_name + "_" + "hp"
+
+        file_name = file_name + ".hdf"
 
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == process_id]
 
@@ -224,33 +252,60 @@ class ImageGenerationUtils:
                 image_generator = ImageGenerator(chromosome_name=chr_name,
                                                  bam_file_path=bam_file,
                                                  draft_file_path=draft_file,
+                                                 use_hp_info=use_hp_info,
                                                  truth_bam_h1=truth_bam_h1,
                                                  truth_bam_h2=truth_bam_h2,
                                                  train_mode=train_mode)
 
-                images, labels, positions, indexes, chunk_ids = image_generator.generate_summary(_start, _end, downsample_rate, bed_list)
-                region = (chr_name, _start, _end)
+                if not use_hp_info:
+                    images, labels, positions, indexes, chunk_ids = image_generator.generate_summary(_start, _end, downsample_rate, bed_list)
+                    region = (chr_name, _start, _end)
 
-                for i, image in enumerate(images):
-                    position = positions[i]
-                    index = indexes[i]
-                    label = labels[i]
-                    chunk_id = chunk_ids[i]
-                    summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
+                    for i, image in enumerate(images):
+                        position = positions[i]
+                        index = indexes[i]
+                        label = labels[i]
+                        chunk_id = chunk_ids[i]
+                        summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
 
-                    output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
+                        output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
 
-                if counter > 0 and counter % 10 == 0 and process_id == 0:
-                    percent_complete = int((100 * counter) / len(intervals))
-                    time_now = time.time()
-                    mins = int((time_now - start_time) / 60)
-                    secs = int((time_now - start_time)) % 60
+                    if counter > 0 and counter % 10 == 0 and process_id == 0:
+                        percent_complete = int((100 * counter) / len(intervals))
+                        time_now = time.time()
+                        mins = int((time_now - start_time) / 60)
+                        secs = int((time_now - start_time)) % 60
 
-                    sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "]"
-                                     + " INFO: " + thread_prefix + " " + str(counter) + "/" + str(len(intervals))
-                                     + " COMPLETE (" + str(percent_complete) + "%)"
-                                     + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
-                    sys.stderr.flush()
+                        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "]"
+                                         + " INFO: " + thread_prefix + " " + str(counter) + "/" + str(len(intervals))
+                                         + " COMPLETE (" + str(percent_complete) + "%)"
+                                         + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
+                        sys.stderr.flush()
+                else:
+                    images_hp1, images_hp2, labels_hp1, labels_hp2, positions, indexes, chunk_ids = image_generator.generate_summary(_start, _end, downsample_rate, bed_list)
+                    region = (chr_name, _start, _end)
+
+                    for i, image_hp1 in enumerate(images_hp1):
+                        image_hp2 = images_hp2[i]
+                        position = positions[i]
+                        index = indexes[i]
+                        label_hp1 = labels_hp1[i]
+                        label_hp2 = labels_hp2[i]
+                        chunk_id = chunk_ids[i]
+                        summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
+
+                        output_hdf_file.write_summary_hp(region, image_hp1, image_hp2, label_hp1, label_hp2, position, index, chunk_id, summary_name)
+
+                    if counter > 0 and counter % 10 == 0 and process_id == 0:
+                        percent_complete = int((100 * counter) / len(intervals))
+                        time_now = time.time()
+                        mins = int((time_now - start_time) / 60)
+                        secs = int((time_now - start_time)) % 60
+
+                        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "]"
+                                         + " INFO: " + thread_prefix + " " + str(counter) + "/" + str(len(intervals))
+                                         + " COMPLETE (" + str(percent_complete) + "%)"
+                                         + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
 
         return process_id
 
@@ -258,6 +313,7 @@ class ImageGenerationUtils:
     def generate_images(chr_list,
                         bam_file,
                         draft_file,
+                        use_hp_info,
                         truth_bam_h1,
                         truth_bam_h2,
                         output_path,
@@ -270,6 +326,7 @@ class ImageGenerationUtils:
         :param chr_list:
         :param bam_file:
         :param draft_file:
+        :param use_hp_info:
         :param truth_bam_h1:
         :param truth_bam_h2:
         :param output_path:
@@ -322,7 +379,7 @@ class ImageGenerationUtils:
                          + " TOTAL BASES: " + str(total_bases) + "\n")
         sys.stderr.flush()
 
-        args = (output_path, bam_file, draft_file, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate, bed_list)
+        args = (output_path, bam_file, draft_file, use_hp_info, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate, bed_list)
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_processes) as executor:
             futures = [executor.submit(ImageGenerationUtils.generate_image_and_save_to_file, args, all_intervals, total_processes, process_id)
                        for process_id in range(0, total_processes)]

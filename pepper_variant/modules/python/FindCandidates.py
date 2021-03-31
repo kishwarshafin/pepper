@@ -152,7 +152,7 @@ def get_file_paths_from_directory(directory_path):
     return file_paths
 
 
-def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_path, threads):
+def candidate_finder(input_dir, reference_file, bam_file, use_hp_info, sample_name, output_path, threads):
     all_prediction_files = get_file_paths_from_directory(input_dir)
 
     all_contigs = set()
@@ -178,7 +178,7 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
                         for chunk_key in chunk_keys:
                             all_chunk_keys.append((prediction_file, chunk_key))
 
-        selected_candidates = find_candidates(input_dir, reference_file, bam_file, contig, all_chunk_keys, threads)
+        selected_candidates = find_candidates(input_dir, reference_file, bam_file, use_hp_info, contig, all_chunk_keys, threads)
         end_time = time.time()
         mins = int((end_time - local_start_time) / 60)
         secs = int((end_time - local_start_time)) % 60
@@ -191,12 +191,13 @@ def candidate_finder(input_dir, reference_file, bam_file, sample_name, output_pa
     hdf5_file.close()
 
 
-def process_candidates(input_dir, reference, bam_file, sample_name, output_dir, threads):
+def process_candidates(input_dir, reference, bam_file, use_hp_info, sample_name, output_dir, threads):
     output_dir = ImageGenerationUtils.handle_output_directory(output_dir)
 
     candidate_finder(input_dir,
                      reference,
                      bam_file,
+                     use_hp_info,
                      sample_name,
                      output_dir,
                      threads)

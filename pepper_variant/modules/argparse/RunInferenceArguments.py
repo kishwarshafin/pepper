@@ -75,4 +75,11 @@ def add_run_inference_arguments(parser):
         default=8,
         help="Total threads. Default is 8."
     )
+    parser.add_argument(
+        "-hp",
+        "--use_hp_info",
+        default=False,
+        action='store_true',
+        help="If set then haplotype-aware mode will be enabled."
+    )
     return parser

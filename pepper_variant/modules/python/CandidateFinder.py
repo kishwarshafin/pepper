@@ -204,7 +204,7 @@ def check_alleles(allele):
     return True
 
 
-def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_keys):
+def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, small_chunk_keys):
 
     # for chunk_key in small_chunk_keys:
     selected_candidate_list = []
@@ -218,63 +218,116 @@ def small_chunk_stitch(reference_file_path, bam_file_path, contig, small_chunk_k
 
         smaller_chunks = sorted(smaller_chunks)
 
-        all_positions = []
-        all_indicies = []
-        all_predictions = []
-        for i, chunk in enumerate(smaller_chunks):
-            with h5py.File(file_name, 'r') as hdf5_file:
-                bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
-                positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
-                indices = hdf5_file['predictions'][contig][chunk_name][chunk]['index'][()]
+        if not use_hp_info:
+            all_positions = []
+            all_indicies = []
+            all_predictions = []
+            for i, chunk in enumerate(smaller_chunks):
+                with h5py.File(file_name, 'r') as hdf5_file:
+                    bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
+                    positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
+                    indices = hdf5_file['predictions'][contig][chunk_name][chunk]['index'][()]
 
-            if i == 0:
-                all_positions = positions
-                all_indicies = indices
-                all_predictions = bases
-            else:
-                all_positions = np.concatenate((all_positions, positions), axis=0)
-                all_indicies = np.concatenate((all_indicies, indices), axis=0)
-                all_predictions = np.concatenate((all_predictions, bases), axis=0)
+                if i == 0:
+                    all_positions = positions
+                    all_indicies = indices
+                    all_predictions = bases
+                else:
+                    all_positions = np.concatenate((all_positions, positions), axis=0)
+                    all_indicies = np.concatenate((all_indicies, indices), axis=0)
+                    all_predictions = np.concatenate((all_predictions, bases), axis=0)
 
-        cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
+            cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
 
-        # find candidates
-        candidate_map = cpp_candidate_finder.find_candidates(bam_file_path,
-                                                             reference_file_path,
-                                                             contig,
-                                                             contig_start,
-                                                             contig_end,
-                                                             all_positions,
-                                                             all_indicies,
-                                                             all_predictions)
+            # find candidates
+            candidate_map = cpp_candidate_finder.find_candidates(bam_file_path,
+                                                                 reference_file_path,
+                                                                 contig,
+                                                                 contig_start,
+                                                                 contig_end,
+                                                                 all_positions,
+                                                                 all_indicies,
+                                                                 all_predictions)
 
-        for pos in candidate_map.keys():
-            selected_candidates = []
-            found_candidate = False
-            for candidate in candidate_map[pos]:
-                # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                #       "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
-                #       "H0 supp", candidate.read_support_h0, "H1 supp",  candidate.read_support_h1, "H2 supp",  candidate.read_support_h2,
-                #       "ALT prob h1:", candidate.alt_prob_h1, "ALT prob h2:", candidate.alt_prob_h2, "Non-ref prob:", candidate.non_ref_prob)
-                found_candidate = True
-                selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                                            candidate.depth, candidate.read_support, candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
-            if found_candidate:
-                variant = candidates_to_variants(list(selected_candidates), contig)
-                if variant is not None:
-                    selected_candidate_list.append(variant)
+            for pos in candidate_map.keys():
+                selected_candidates = []
+                found_candidate = False
+                for candidate in candidate_map[pos]:
+                    # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                    #       "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
+                    #       "H0 supp", candidate.read_support_h0, "H1 supp",  candidate.read_support_h1, "H2 supp",  candidate.read_support_h2,
+                    #       "ALT prob h1:", candidate.alt_prob_h1, "ALT prob h2:", candidate.alt_prob_h2, "Non-ref prob:", candidate.non_ref_prob)
+                    found_candidate = True
+                    selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                                                candidate.depth, candidate.read_support, candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
+                if found_candidate:
+                    variant = candidates_to_variants(list(selected_candidates), contig)
+                    if variant is not None:
+                        selected_candidate_list.append(variant)
+        else:
+            # for haplotype mode
+            all_positions = []
+            all_indicies = []
+            all_predictions_hp1 = []
+            all_predictions_hp2 = []
+
+            for i, chunk in enumerate(smaller_chunks):
+                with h5py.File(file_name, 'r') as hdf5_file:
+                    bases_hp1 = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions_hp1'][()]
+                    bases_hp2 = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions_hp2'][()]
+                    positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
+                    indices = hdf5_file['predictions'][contig][chunk_name][chunk]['index'][()]
+
+                if i == 0:
+                    all_positions = positions
+                    all_indicies = indices
+                    all_predictions_hp1 = bases_hp1
+                    all_predictions_hp2 = bases_hp2
+                else:
+                    all_positions = np.concatenate((all_positions, positions), axis=0)
+                    all_indicies = np.concatenate((all_indicies, indices), axis=0)
+                    all_predictions_hp1 = np.concatenate((all_predictions_hp1, bases_hp1), axis=0)
+                    all_predictions_hp2 = np.concatenate((all_predictions_hp2, bases_hp2), axis=0)
+
+            cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
+
+            # find candidates
+            candidate_map = cpp_candidate_finder.find_candidates_hp(bam_file_path,
+                                                                    reference_file_path,
+                                                                    contig,
+                                                                    contig_start,
+                                                                    contig_end,
+                                                                    all_positions,
+                                                                    all_indicies,
+                                                                    all_predictions_hp1,
+                                                                    all_predictions_hp2)
+            for pos in candidate_map.keys():
+                selected_candidates = []
+                found_candidate = False
+                for candidate in candidate_map[pos]:
+                    # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                    #       "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
+                    #       "H0 supp", candidate.read_support_h0, "H1 supp",  candidate.read_support_h1, "H2 supp",  candidate.read_support_h2,
+                    #       "ALT prob h1:", candidate.alt_prob_h1, "ALT prob h2:", candidate.alt_prob_h2, "Non-ref prob:", candidate.non_ref_prob)
+                    found_candidate = True
+                    selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
+                                                candidate.depth, candidate.read_support, candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
+                if found_candidate:
+                    variant = candidates_to_variants(list(selected_candidates), contig)
+                    if variant is not None:
+                        selected_candidate_list.append(variant)
 
     return selected_candidate_list
 
 
-def find_candidates(input_dir, reference_file_path, bam_file, contig, sequence_chunk_keys, threads):
+def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, contig, sequence_chunk_keys, threads):
     sequence_chunk_keys = sorted(sequence_chunk_keys)
     all_selected_candidates = list()
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
         file_chunks = chunks(sequence_chunk_keys, max(2, int(len(sequence_chunk_keys) / threads) + 1))
 
-        futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, contig, file_chunk)
+        futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, use_hp_info, contig, file_chunk)
                    for file_chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:

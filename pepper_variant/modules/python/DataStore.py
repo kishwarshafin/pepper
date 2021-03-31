@@ -65,3 +65,21 @@ class DataStore(object):
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_start')] = region_start
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_end')] = region_end
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'chunk_id')] = chunk_id
+
+    def write_summary_hp(self, region, image_hp1, image_hp2, label_hp1, label_hp2, position, index, chunk_id, summary_name):
+        contig_name, region_start, region_end = region
+        if 'summaries' not in self.meta:
+            self.meta['summaries'] = set()
+
+        if summary_name not in self.meta['summaries']:
+            self.meta['summaries'].add(summary_name)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'image_hp1')] = np.array(image_hp1, dtype=np.uint8)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'image_hp2')] = np.array(image_hp2, dtype=np.uint8)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'label_hp1')] = np.array(label_hp1, dtype=np.uint8)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'label_hp2')] = np.array(label_hp2, dtype=np.uint8)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'position')] = np.array(position, dtype=np.int32)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'index')] = np.array(index, dtype=np.int32)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'contig')] = contig_name
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_start')] = region_start
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_end')] = region_end
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'chunk_id')] = chunk_id

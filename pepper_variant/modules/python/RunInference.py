@@ -5,6 +5,8 @@ from datetime import datetime
 from pepper_variant.modules.python.ImageGenerationUI import ImageGenerationUtils
 from pepper_variant.modules.python.models.predict_distributed_cpu import predict_distributed_cpu
 from pepper_variant.modules.python.models.predict_distributed_gpu import predict_distributed_gpu
+from pepper_variant.modules.python.models.predict_hp_distributed_cpu import predict_hp_distributed_cpu
+from pepper_variant.modules.python.models.predict_hp_distributed_gpu import predict_hp_distributed_gpu
 from os.path import isfile, join
 from os import listdir
 
@@ -20,7 +22,7 @@ def get_file_paths_from_directory(directory_path):
     return file_paths
 
 
-def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, num_workers, output_dir, callers_per_gpu, device_ids):
+def distributed_gpu(image_dir, model_path, use_hp_info, batch_size, threads, num_workers, output_dir, callers_per_gpu, device_ids):
     start_time = time.time()
 
     if device_ids is None:
@@ -76,7 +78,12 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, nu
     threads_per_caller = max(1, int(threads/total_callers))
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(total_callers) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL THREADS PER CALLER: " + str(threads_per_caller) + "\n")
-    predict_distributed_gpu(image_dir, file_chunks, output_dir, model_path, batch_size, total_callers, threads_per_caller, device_ids, num_workers)
+
+    if not use_hp_info:
+        predict_distributed_gpu(image_dir, file_chunks, output_dir, model_path, batch_size, total_callers, threads_per_caller, device_ids, num_workers)
+    else:
+        predict_hp_distributed_gpu(image_dir, file_chunks, output_dir, model_path, batch_size, total_callers, threads_per_caller, device_ids, num_workers)
+
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION GENERATED SUCCESSFULLY.\n")
 
     end_time = time.time()
@@ -85,7 +92,7 @@ def polish_genome_distributed_gpu(image_dir, model_path, batch_size, threads, nu
     sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
 
-def polish_genome_distributed_cpu(image_dir, model_path, batch_size, threads, num_workers, output_dir):
+def distributed_cpu(image_dir, model_path, use_hp_info, batch_size, threads, num_workers, output_dir):
     start_time = time.time()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DISTRIBUTED CPU SETUP.\n")
 
@@ -105,7 +112,10 @@ def polish_genome_distributed_cpu(image_dir, model_path, batch_size, threads, nu
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(callers) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREADS PER CALLER: " + str(threads_per_caller) + "\n")
-    predict_distributed_cpu(image_dir, file_chunks, output_dir, model_path, batch_size, callers, threads_per_caller, num_workers)
+    if not use_hp_info:
+        predict_distributed_cpu(image_dir, file_chunks, output_dir, model_path, batch_size, callers, threads_per_caller, num_workers)
+    else:
+        predict_hp_distributed_cpu(image_dir, file_chunks, output_dir, model_path, batch_size, callers, threads_per_caller, num_workers)
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION FINISHED SUCCESSFULLY. \n")
 
     end_time = time.time()
@@ -116,6 +126,7 @@ def polish_genome_distributed_cpu(image_dir, model_path, batch_size, threads, nu
 
 def run_inference(image_dir,
                   model,
+                  use_hp_info,
                   batch_size,
                   num_workers,
                   output_dir,
@@ -126,18 +137,20 @@ def run_inference(image_dir,
     output_dir = ImageGenerationUtils.handle_output_directory(output_dir)
 
     if gpu_mode:
-        polish_genome_distributed_gpu(image_dir,
-                                      model,
-                                      batch_size,
-                                      threads,
-                                      num_workers,
-                                      output_dir,
-                                      callers_per_gpu,
-                                      device_ids)
+        distributed_gpu(image_dir,
+                        model,
+                        use_hp_info,
+                        batch_size,
+                        threads,
+                        num_workers,
+                        output_dir,
+                        callers_per_gpu,
+                        device_ids)
     else:
-        polish_genome_distributed_cpu(image_dir,
-                                      model,
-                                      batch_size,
-                                      threads,
-                                      num_workers,
-                                      output_dir)
+        distributed_cpu(image_dir,
+                        model,
+                        use_hp_info,
+                        batch_size,
+                        threads,
+                        num_workers,
+                        output_dir)

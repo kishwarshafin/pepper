@@ -100,4 +100,11 @@ def add_call_variant_arguments(parser):
         default=4,
         help="Number of workers for loading images. Default is 4."
     )
+    parser.add_argument(
+        "-hp",
+        "--use_hp_info",
+        default=False,
+        action='store_true',
+        help="If set then haplotype-aware mode will be enabled."
+    )
     return parser

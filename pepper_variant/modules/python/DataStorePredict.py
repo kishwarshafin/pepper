@@ -73,4 +73,35 @@ class DataStore(object):
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
                                                       chunk_name_suffix, 'base_predictions')] = np.array(base_predictions, dtype=np.int32)
 
+    def write_prediction_hp(self, contig, contig_start, contig_end, chunk_id, position, index, base_predictions_hp1, base_predictions_hp2):
+        chunk_name_prefix = str(contig) + "-" + str(contig_start.item()) + "-" + str(contig_end.item())
+        chunk_name_suffix = str(chunk_id.item())
+
+        name = chunk_name_prefix + "-" + chunk_name_suffix
+
+        if 'predictions' not in self.meta:
+            self.meta['predictions'] = set()
+
+        if 'predictions_contig' not in self.meta:
+            self.meta['predictions_contig'] = set()
+
+        if chunk_name_prefix not in self.meta['predictions_contig']:
+            self.meta['predictions_contig'].add(chunk_name_prefix)
+            self.file_handler['{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix, 'contig_start')] \
+                = contig_start.item()
+            self.file_handler['{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix, 'contig_end')] \
+                = contig_end.item()
+
+        if name not in self.meta['predictions']:
+            self.meta['predictions'].add(name)
+
+            self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
+                                                      chunk_name_suffix, 'position')] = np.array(position, dtype=np.int32)
+            self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
+                                                      chunk_name_suffix, 'index')] = np.array(index, dtype=np.int32)
+            self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
+                                                      chunk_name_suffix, 'base_predictions_hp1')] = base_predictions_hp1.astype(np.int)
+            self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
+                                                      chunk_name_suffix, 'base_predictions_hp2')] = base_predictions_hp2.astype(np.int)
+
 

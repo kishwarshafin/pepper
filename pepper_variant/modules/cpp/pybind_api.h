@@ -12,7 +12,9 @@
 #include "bam_handler.h"
 #include "summary_generator.h"
 #include "candidate_finder.h"
+#include "candidate_finder_hp.h"
 #include "region_summary.h"
+#include "region_summary_hp.h"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/operators.h>
@@ -48,7 +50,16 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
             .def_readwrite("chunked_labels", &RegionalImageSummary::chunked_labels)
             .def_readwrite("chunked_ids", &RegionalImageSummary::chunked_ids);
 
-       // Generate regional summary
+        py::class_<RegionalImageSummaryHP>(m, "RegionalImageSummaryHP")
+                .def_readwrite("chunked_image_matrix_hp1", &RegionalImageSummaryHP::chunked_image_matrix_hp1)
+                .def_readwrite("chunked_image_matrix_hp2", &RegionalImageSummaryHP::chunked_image_matrix_hp2)
+                .def_readwrite("chunked_positions", &RegionalImageSummaryHP::chunked_positions)
+                .def_readwrite("chunked_index", &RegionalImageSummaryHP::chunked_index)
+                .def_readwrite("chunked_labels_hp1", &RegionalImageSummaryHP::chunked_labels_hp1)
+                .def_readwrite("chunked_labels_hp2", &RegionalImageSummaryHP::chunked_labels_hp2)
+                .def_readwrite("chunked_ids", &RegionalImageSummaryHP::chunked_ids);
+
+    // Generate regional summary
        py::class_<RegionalSummaryGenerator>(m, "RegionalSummaryGenerator")
             .def(py::init<long long &, long long &, string &>())
             .def_readwrite("max_observed_insert", &RegionalSummaryGenerator::max_observed_insert)
@@ -57,6 +68,16 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
             .def("generate_summary", &RegionalSummaryGenerator::generate_summary)
             .def("generate_labels", &RegionalSummaryGenerator::generate_labels)
             .def("generate_max_insert_summary", &RegionalSummaryGenerator::generate_max_insert_summary);
+
+       // Generate regional summary
+       py::class_<RegionalSummaryGeneratorHP>(m, "RegionalSummaryGeneratorHP")
+               .def(py::init<long long &, long long &, string &>())
+               .def_readwrite("max_observed_insert", &RegionalSummaryGeneratorHP::max_observed_insert)
+               .def_readwrite("cumulative_observed_insert", &RegionalSummaryGeneratorHP::cumulative_observed_insert)
+               .def_readwrite("total_observered_insert_bases", &RegionalSummaryGeneratorHP::total_observered_insert_bases)
+               .def("generate_summary", &RegionalSummaryGeneratorHP::generate_summary)
+               .def("generate_labels", &RegionalSummaryGeneratorHP::generate_labels)
+               .def("generate_max_insert_summary", &RegionalSummaryGeneratorHP::generate_max_insert_summary);
 
         // data structure for sequence name and their length
         py::class_<type_sequence>(m, "type_sequence")
@@ -118,6 +139,10 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
         py::class_<CandidateFinder>(m, "CandidateFinder")
             .def(py::init<const string &, const string &, long long &, long long&, long long&, long long&>())
             .def("find_candidates", &CandidateFinder::find_candidates);
+
+        py::class_<CandidateFinderHP>(m, "CandidateFinderHP")
+            .def(py::init<const string &, const string &, long long &, long long&, long long&, long long&>())
+            .def("find_candidates", &CandidateFinderHP::find_candidates);
 
         py::class_<CandidateAllele>(m, "CandidateAllele")
             .def(py::init<>())

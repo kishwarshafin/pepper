@@ -45,4 +45,11 @@ def add_make_images_arguments(parser):
         default="pepper_hp_output/",
         help="Path to output directory, if it doesn't exist it will be created."
     )
+    parser.add_argument(
+        "-hp",
+        "--use_hp_info",
+        default=False,
+        action='store_true',
+        help="If set then haplotype-aware mode will be enabled."
+    )
     return parser

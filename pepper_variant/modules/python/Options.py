@@ -13,6 +13,20 @@ class ImageSizeOptions(object):
     class_weights = [0.1,  0.1,  1.0,  1.0,  1.0,  1.0,  0.1,  1.0,  1.0,  1.0,  0.1,  1.0,  1.0,  0.1,  1.0]
 
 
+class ImageSizeOptionsHP(object):
+    IMAGE_HEIGHT = 10
+    IMAGE_CHANNEL_HEIGHT = 10
+    IMAGE_CHANNELS = 1
+    SEQ_LENGTH = 1000
+    SEQ_OVERLAP = 50
+    LABEL_LENGTH = SEQ_LENGTH
+
+    TOTAL_LABELS = 5
+    MIN_SEQUENCE_LENGTH = 1000
+    MIN_IMAGE_OVERLAP = 100
+
+
+
 class ReadFilterOptions(object):
     MIN_MAPQ = 1
     MIN_BASEQ = 1

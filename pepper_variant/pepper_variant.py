@@ -55,6 +55,7 @@ def main():
         call_variant(FLAGS.bam,
                      FLAGS.fasta,
                      FLAGS.output_dir,
+                     FLAGS.use_hp_info,
                      FLAGS.threads,
                      FLAGS.region,
                      FLAGS.model_path,
@@ -70,6 +71,7 @@ def main():
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
         make_images(bam=FLAGS.bam,
                     fasta=FLAGS.fasta,
+                    use_hp_info=FLAGS.use_hp_info,
                     truth_bam_h1=None,
                     truth_bam_h2=None,
                     region=FLAGS.region,
@@ -83,6 +85,7 @@ def main():
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN INFERENCE MODULE SELECTED.\n")
         run_inference(FLAGS.image_dir,
                       FLAGS.model_path,
+                      FLAGS.use_hp_info,
                       FLAGS.batch_size,
                       FLAGS.num_workers,
                       FLAGS.output_dir,
@@ -96,6 +99,7 @@ def main():
         process_candidates(FLAGS.input_dir,
                            FLAGS.fasta,
                            FLAGS.bam,
+                           FLAGS.use_hp_info,
                            FLAGS.sample_name,
                            FLAGS.output_dir,
                            FLAGS.threads)

@@ -6,5 +6,7 @@
 #include "fasta_handler.cpp"
 #include "summary_generator.cpp"
 #include "candidate_finder.cpp"
+#include "candidate_finder_hp.cpp"
 #include "region_summary.cpp"
+#include "region_summary_hp.cpp"
 #include "pybind_api.h"
