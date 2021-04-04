@@ -342,11 +342,11 @@ void RegionalSummaryGeneratorHP::populate_summary_matrix(int **image_matrix_hp1,
 }
 
 RegionalImageSummaryHP RegionalSummaryGeneratorHP::generate_summary(vector <type_read> &reads,
-                                                                int chunk_overlap,
-                                                                int smaller_chunk_size,
-                                                                int feature_size,
-                                                                int chunk_id_start,
-                                                                bool train_mode) {
+                                                                    int chunk_overlap,
+                                                                    int smaller_chunk_size,
+                                                                    int feature_size,
+                                                                    int chunk_id_start,
+                                                                    bool train_mode) {
     RegionalImageSummaryHP summary{};
 
     int region_size = (int) (ref_end - ref_start + total_observered_insert_bases + 1);
@@ -478,8 +478,15 @@ RegionalImageSummaryHP RegionalSummaryGeneratorHP::generate_summary(vector <type
     }
 
 //    debug_print_matrix(image_matrix, train_mode);
+
+    for (int i = 0; i < region_size + 1; i++)
+    {
+        free(image_matrix_hp1[i]);
+        free(image_matrix_hp2[i]);
+    }
     free(image_matrix_hp1);
     free(image_matrix_hp2);
+
 
     return summary;
 }
