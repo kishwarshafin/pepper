@@ -462,6 +462,8 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     }
 
 //    debug_print_matrix(image_matrix, train_mode);
+    for (int i = 0; i < region_size + 1; i++)
+        free(image_matrix[i]);
     free(image_matrix);
 
     return summary;
