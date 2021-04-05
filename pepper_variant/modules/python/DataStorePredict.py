@@ -100,8 +100,8 @@ class DataStore(object):
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
                                                       chunk_name_suffix, 'index')] = np.array(index, dtype=np.int32)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                      chunk_name_suffix, 'base_predictions_hp1')] = base_predictions_hp1.astype(np.int8)
+                                                      chunk_name_suffix, 'base_predictions_hp1')] = base_predictions_hp1.astype(np.int32)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                      chunk_name_suffix, 'base_predictions_hp2')] = base_predictions_hp2.astype(np.int8)
+                                                      chunk_name_suffix, 'base_predictions_hp2')] = base_predictions_hp2.astype(np.int32)
 
 
