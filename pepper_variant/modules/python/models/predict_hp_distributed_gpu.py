@@ -88,8 +88,8 @@ def predict_hp(input_filepath, file_chunks, output_filepath, model_path, batch_s
                 inference_layers = inference_layers.to(device_id)
 
                 # run the softmax and padding layers
-                base_prediction_hp1 = (inference_layers(output_base_hp1) * 10).type(torch.IntTensor).to(device_id)
-                base_prediction_hp2 = (inference_layers(output_base_hp2) * 10).type(torch.IntTensor).to(device_id)
+                base_prediction_hp1 = (inference_layers(output_base_hp1) * 10000).type(torch.IntTensor).to(device_id)
+                base_prediction_hp2 = (inference_layers(output_base_hp2) * 10000).type(torch.IntTensor).to(device_id)
 
                 # now simply add the tensor to the global counter
                 prediction_base_tensor_hp1 = torch.add(prediction_base_tensor_hp1, base_prediction_hp1)
