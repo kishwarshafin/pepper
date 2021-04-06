@@ -33,10 +33,9 @@ def test_hp(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_
 
     # set the evaluation mode of the model
     transducer_model.eval()
-
-    class_weights = torch.Tensor()
+    print("TEST NUM CLASSES: ", num_classes)
     # Loss
-    criterion = nn.CrossEntropyLoss(class_weights)
+    criterion = nn.CrossEntropyLoss()
 
     if gpu_mode is True:
         criterion = criterion.cuda()
