@@ -171,11 +171,17 @@ int get_index_from_base(char base) {
     return  -1;
 }
 
-bool CandidateFinder::filter_candidate(const Candidate& candidate) {
+bool CandidateFinder::filter_candidate(const Candidate& candidate, bool freq_based, double freq) {
     double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
+
 
     if(candidate.allele.alt_type == SNP_TYPE) {
         double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+
+        if(freq_based) {
+            if(allele_frequency >= freq) return true;
+            return false;
+        }
 
         double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + candidate.alt_prob_h1 * LinearRegression::SNP_ALT_PROB1_COEF + candidate.alt_prob_h2 * LinearRegression::SNP_ALT_PROB2_COEF + LinearRegression::SNP_BIAS_TERM;
 
@@ -230,7 +236,12 @@ bool CandidateFinder::filter_candidate(const Candidate& candidate) {
 }
 
 
-vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_read>& reads, vector<long long> positions, vector<int>indices, vector< vector<int> > predictions) {
+vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_read>& reads,
+                                                                   vector<long long> positions,
+                                                                   vector<int>indices,
+                                                                   vector< vector<int> > predictions,
+                                                                   bool freq_based,
+                                                                   double freq) {
 
     // populate all the prediction maps
     vector<string> lables {"**", "AA", "AC", "AT", "AG", "A*", "CC", "CT", "CG", "C*", "TT", "TG", "T*", "GG", "G*"};
@@ -533,7 +544,7 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                 candidate.non_ref_prob = non_ref_prob;
             }
 
-            if(filter_candidate(candidate)) positional_record.candidates.push_back(candidate);
+            if(filter_candidate(candidate, freq_based, freq)) positional_record.candidates.push_back(candidate);
         }
 
         if (!candidate_found) continue;

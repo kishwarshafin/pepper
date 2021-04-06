@@ -14,6 +14,8 @@ def call_variant(bam_filepath,
                  fasta_filepath,
                  output_dir,
                  use_hp_info,
+                 freq_based,
+                 freq,
                  threads,
                  region,
                  model_path,
@@ -129,7 +131,9 @@ def call_variant(bam_filepath,
                        use_hp_info,
                        sample_name,
                        candidate_output_directory,
-                       threads)
+                       threads,
+                       freq_based,
+                       freq)
 
     end_time = time.time()
     mins = int((end_time - start_time) / 60)

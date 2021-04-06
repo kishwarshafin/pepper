@@ -67,8 +67,10 @@ public:
                                                       vector<long long> positions,
                                                       vector<int>indices,
                                                       const vector< vector<int> >& base_predictions_h1,
-                                                      const vector< vector<int> >& base_predictions_h2);
-    static bool filter_candidate(const Candidate& candidate);
+                                                      const vector< vector<int> >& base_predictions_h2,
+                                                      bool freq_based,
+                                                      double freq);
+    static bool filter_candidate(const Candidate& candidate, bool freq_based, double freq);
 };
 
 

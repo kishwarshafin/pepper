@@ -157,8 +157,12 @@ void CandidateFinderHP::add_read_alleles(type_read &read, vector<int> &coverage)
     }
 }
 
-bool CandidateFinderHP::filter_candidate(const Candidate& candidate) {
+bool CandidateFinderHP::filter_candidate(const Candidate& candidate, bool freq_based, double freq) {
     double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
+    if(freq_based) {
+        if(allele_frequency >= freq) return true;
+        return false;
+    }
 
     // CONDITIONS FOR INSERT
     if(candidate.allele.alt_type == SNP_TYPE) {
@@ -217,7 +221,9 @@ vector<PositionalCandidateRecord> CandidateFinderHP::find_candidates(vector <typ
                                                                      vector<long long> positions,
                                                                      vector<int>indices,
                                                                      const vector< vector<int> >& base_predictions_h1,
-                                                                     const vector< vector<int> >& base_predictions_h2) {
+                                                                     const vector< vector<int> >& base_predictions_h2,
+                                                                     bool freq_based,
+                                                                     double freq) {
     // first go over and see how many base positions are there.
     // all of the positions will be relative to the positions vector so we need to count where it starts and ends
     long long local_region_start = positions[0];
@@ -504,7 +510,7 @@ vector<PositionalCandidateRecord> CandidateFinderHP::find_candidates(vector <typ
                 candidate.non_ref_prob = non_ref_prob;
             }
 
-            if(filter_candidate(candidate)) positional_record.candidates.push_back(candidate);
+            if(filter_candidate(candidate, freq_based, freq)) positional_record.candidates.push_back(candidate);
         }
 
         if (!candidate_found) continue;

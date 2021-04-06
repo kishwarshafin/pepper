@@ -56,6 +56,8 @@ def main():
                      FLAGS.fasta,
                      FLAGS.output_dir,
                      FLAGS.use_hp_info,
+                     FLAGS.freq_based,
+                     FLAGS.freq,
                      FLAGS.threads,
                      FLAGS.region,
                      FLAGS.model_path,
@@ -102,7 +104,9 @@ def main():
                            FLAGS.use_hp_info,
                            FLAGS.sample_name,
                            FLAGS.output_dir,
-                           FLAGS.threads)
+                           FLAGS.threads,
+                           FLAGS.freq_based,
+                           FLAGS.freq)
 
     elif FLAGS.version is True:
         print("PEPPER VERSION: ", __version__)

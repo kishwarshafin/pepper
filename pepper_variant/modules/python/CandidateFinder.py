@@ -21,7 +21,7 @@ INSERT_EVENT = 2
 DELETE_EVENT = 3
 
 
-def candidates_to_variants(candidates, contig):
+def candidates_to_variants(candidates, contig, freq_based, freq):
     max_h1_prob = 0.0
     max_h2_prob = 0.0
     h1_indx = -1
@@ -35,7 +35,8 @@ def candidates_to_variants(candidates, contig):
     candidates = sorted(candidates, key=lambda x: (-max(x[7], x[8]), -x[9], -x[6]))
 
     if len(candidates) > PEPPERVariantCandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE:
-        candidates = candidates[0: PEPPERVariantCandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE]
+        if not freq_based:
+            candidates = candidates[0: PEPPERVariantCandidateFinderOptions.MOST_ALLOWED_CANDIDATES_PER_SITE]
 
     # found_candidates = False
     for i, candidate in enumerate(candidates):
@@ -132,22 +133,23 @@ def candidates_to_variants(candidates, contig):
         else:
             genotype = [1, 2]
 
-    # alleles = selected_alts + other_alts
-    # dps = selected_dps + other_dps
-    # alt_probs = selected_alt_probs + other_alt_probs
-    # alt_prob_h1s = selected_alt_prob_h1s + other_alt_prob_h1s
-    # alt_prob_h2s = selected_alt_prob_h2s + other_alt_prob_h2s
-    # non_ref_probs = selected_non_ref_probs + other_non_ref_probs
-    # ads = selected_ads + other_ads
-
-    # only report the selected alts
-    alleles = selected_alts
-    dps = selected_dps
-    ads = selected_ads
-    alt_probs = selected_alt_probs
-    alt_prob_h1s = selected_alt_prob_h1s
-    alt_prob_h2s = selected_alt_prob_h2s
-    non_ref_probs = selected_non_ref_probs
+    if freq_based:
+        alleles = selected_alts + other_alts
+        dps = selected_dps + other_dps
+        alt_probs = selected_alt_probs + other_alt_probs
+        alt_prob_h1s = selected_alt_prob_h1s + other_alt_prob_h1s
+        alt_prob_h2s = selected_alt_prob_h2s + other_alt_prob_h2s
+        non_ref_probs = selected_non_ref_probs + other_non_ref_probs
+        ads = selected_ads + other_ads
+    else:
+        # only report the selected alts
+        alleles = selected_alts
+        dps = selected_dps
+        ads = selected_ads
+        alt_probs = selected_alt_probs
+        alt_prob_h1s = selected_alt_prob_h1s
+        alt_prob_h2s = selected_alt_prob_h2s
+        non_ref_probs = selected_non_ref_probs
 
     return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_probs, alt_prob_h1s, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob
 
@@ -204,7 +206,7 @@ def check_alleles(allele):
     return True
 
 
-def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, small_chunk_keys):
+def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, small_chunk_keys, freq_based, freq):
 
     # for chunk_key in small_chunk_keys:
     selected_candidate_list = []
@@ -247,7 +249,9 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                                                                  contig_end,
                                                                  all_positions,
                                                                  all_indicies,
-                                                                 all_predictions)
+                                                                 all_predictions,
+                                                                 freq_based,
+                                                                 freq)
 
             for pos in candidate_map.keys():
                 selected_candidates = []
@@ -300,7 +304,9 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                                                                     all_positions,
                                                                     all_indicies,
                                                                     all_predictions_hp1,
-                                                                    all_predictions_hp2)
+                                                                    all_predictions_hp2,
+                                                                    freq_based,
+                                                                    freq)
             for pos in candidate_map.keys():
                 selected_candidates = []
                 found_candidate = False
@@ -313,21 +319,21 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                     selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
                                                 candidate.depth, candidate.read_support, candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
                 if found_candidate:
-                    variant = candidates_to_variants(list(selected_candidates), contig)
+                    variant = candidates_to_variants(list(selected_candidates), contig, freq_based, freq)
                     if variant is not None:
                         selected_candidate_list.append(variant)
 
     return selected_candidate_list
 
 
-def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, contig, sequence_chunk_keys, threads):
+def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, contig, sequence_chunk_keys, threads, freq_based, freq):
     sequence_chunk_keys = sorted(sequence_chunk_keys)
     all_selected_candidates = list()
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
         file_chunks = chunks(sequence_chunk_keys, max(2, int(len(sequence_chunk_keys) / threads) + 1))
 
-        futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, use_hp_info, contig, file_chunk)
+        futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, use_hp_info, contig, file_chunk, freq_based, freq)
                    for file_chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:

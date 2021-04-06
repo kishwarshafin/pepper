@@ -47,6 +47,19 @@ def add_find_candidates_arguments(parser):
         help="Number of threads."
     )
     parser.add_argument(
+        "--freq_based",
+        default=False,
+        action='store_true',
+        help="If set then frequency based variants will be reported."
+    )
+    parser.add_argument(
+        "--freq",
+        required=False,
+        type=float,
+        default=0.10,
+        help="If frequency based variant finding in enabled then this frequency will be the threshold."
+    )
+    parser.add_argument(
         "-hp",
         "--use_hp_info",
         default=False,
