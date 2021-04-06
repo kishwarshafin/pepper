@@ -33,7 +33,7 @@ def test_hp(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_
 
     # set the evaluation mode of the model
     transducer_model.eval()
-    print("TEST NUM CLASSES: ", num_classes)
+
     # Loss
     criterion = nn.CrossEntropyLoss()
 
