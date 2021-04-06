@@ -192,6 +192,17 @@ void RegionalSummaryGeneratorHP::generate_labels_from_truth_read(type_read read,
     }
 }
 
+uint8_t get_labels(char base) {
+    base = toupper(base);
+    if (base == 'A') return 1;
+    if (base == 'C') return 2;
+    if (base == 'G') return 3;
+    if (base == 'T') return 4;
+    if (base == '*') return 0; // this is for deleted bases, but the number is so small that it creates confusion
+    if (base == '#') return 0;
+    return 0;
+}
+
 
 void RegionalSummaryGeneratorHP::generate_labels(const type_read& truth_read_hp1,
                                                const type_read& truth_read_hp2) {
@@ -398,10 +409,10 @@ RegionalImageSummaryHP RegionalSummaryGeneratorHP::generate_summary(vector <type
     // check if train mode, if yes, then generate labels
     if(train_mode) {
         for (int i = 0; i < labels_hp1.size(); i++) {
-            labels_hp1_report[i] = labels_hp1[i];
+            labels_hp1_report[i] = get_labels(labels_hp1[i]);
         }
         for (int i = 0; i < labels_hp2.size(); i++) {
-            labels_hp2_report[i] = labels_hp2[i];
+            labels_hp2_report[i] = get_labels(labels_hp2[i]);
         }
     }
 
