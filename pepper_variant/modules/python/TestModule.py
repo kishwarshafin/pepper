@@ -50,7 +50,7 @@ def do_test(test_file, use_hp_info, batch_size, gpu_mode, num_workers, model_pat
 
     if use_hp_info:
         stats_dictioanry = test_hp(test_file, batch_size, gpu_mode, transducer_model, num_workers,
-                                   gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS)
+                                   gru_layers, hidden_size, num_classes=ImageSizeOptionsHP.TOTAL_LABELS)
     else:
         stats_dictioanry = test(test_file, batch_size, gpu_mode, transducer_model, num_workers,
                                 gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS)
