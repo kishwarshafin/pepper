@@ -8,10 +8,10 @@ import torch.multiprocessing as mp
 from datetime import datetime
 # Custom generator for our dataset
 from torch.utils.data import DataLoader
-from pepper_variant.modules.python.models.dataloader import SequenceDataset
+from pepper_variant.modules.python.models.dataloader import SequenceDatasetHP
 from pepper_variant.modules.python.models.ModelHander import ModelHandler
-from pepper_variant.modules.python.models.test import test
-from pepper_variant.modules.python.Options import ImageSizeOptions, TrainOptions
+from pepper_variant.modules.python.models.test_hp import test_hp
+from pepper_variant.modules.python.Options import ImageSizeOptionsHP, TrainOptions
 
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 
@@ -68,7 +68,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
     if rank == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOADING DATA\n")
 
-    train_data_set = SequenceDataset(train_file)
+    train_data_set = SequenceDatasetHP(train_file)
 
     train_sampler = torch.utils.data.distributed.DistributedSampler(
         train_data_set,
@@ -84,7 +84,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         pin_memory=True,
         sampler=train_sampler)
 
-    num_classes = ImageSizeOptions.TOTAL_LABELS
+    num_classes = ImageSizeOptionsHP.TOTAL_LABELS
 
     if retrain_model is True:
         if os.path.isfile(retrain_model_path) is False:
@@ -93,9 +93,9 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RETRAIN MODEL LOADING\n")
         transducer_model, hidden_size, gru_layers, prev_ite = \
             ModelHandler.load_simple_model_for_training(retrain_model_path,
-                                                        input_channels=ImageSizeOptions.IMAGE_CHANNELS,
-                                                        image_features=ImageSizeOptions.IMAGE_HEIGHT,
-                                                        seq_len=ImageSizeOptions.SEQ_LENGTH,
+                                                        input_channels=ImageSizeOptionsHP.IMAGE_CHANNELS,
+                                                        image_features=ImageSizeOptionsHP.IMAGE_HEIGHT,
+                                                        seq_len=ImageSizeOptionsHP.SEQ_LENGTH,
                                                         num_classes=num_classes)
 
         if train_mode is True:
@@ -103,8 +103,8 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RETRAIN MODEL LOADED\n")
     else:
-        transducer_model = ModelHandler.get_new_gru_model(input_channels=ImageSizeOptions.IMAGE_CHANNELS,
-                                                          image_features=ImageSizeOptions.IMAGE_HEIGHT,
+        transducer_model = ModelHandler.get_new_gru_model(input_channels=ImageSizeOptionsHP.IMAGE_CHANNELS,
+                                                          image_features=ImageSizeOptionsHP.IMAGE_HEIGHT,
                                                           gru_layers=gru_layers,
                                                           hidden_size=hidden_size,
                                                           num_classes=num_classes)
@@ -126,9 +126,8 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         transducer_model = transducer_model.to(device_id)
         transducer_model = nn.parallel.DistributedDataParallel(transducer_model, device_ids=[device_id])
 
-    class_weights = torch.Tensor(ImageSizeOptions.class_weights)
     # Loss
-    criterion = nn.CrossEntropyLoss(class_weights)
+    criterion = nn.CrossEntropyLoss()
 
     if gpu_mode is True:
         criterion = criterion.to(device_id)
@@ -168,10 +167,10 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             if gpu_mode:
                 hidden = hidden.to(device_id)
 
-            for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
+            for i in range(0, ImageSizeOptionsHP.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
                 model_optimizer.zero_grad()
 
-                if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
+                if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptionsHP.SEQ_LENGTH:
                     break
 
                 image_chunk = images[:, i:i+TrainOptions.TRAIN_WINDOW]
@@ -211,8 +210,8 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         dist.barrier()
 
         if rank == 0:
-            stats_dictioanry = test(test_file, batch_size * world_size, gpu_mode, transducer_model, num_workers,
-                                    gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS)
+            stats_dictioanry = test_hp(test_file, batch_size * world_size, gpu_mode, transducer_model, num_workers,
+                                       gru_layers, hidden_size, num_classes=ImageSizeOptionsHP.TOTAL_LABELS)
             stats['loss'] = stats_dictioanry['loss']
             stats['accuracy'] = stats_dictioanry['accuracy']
             stats['loss_epoch'].append((epoch, stats_dictioanry['loss']))
@@ -228,7 +227,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             # encoder_model, decoder_model, encoder_optimizer, decoder_optimizer, hidden_size, layers, epoch,
             # file_name
             save_best_model(transducer_model, model_optimizer,
-                            hidden_size, gru_layers, epoch, model_dir + "PEPPER_VARIANT_SNP_epoch_" + str(epoch + 1) + '_checkpoint.pkl')
+                            hidden_size, gru_layers, epoch, model_dir + "PEPPER_VARIANT_HP_epoch_" + str(epoch + 1) + '_checkpoint.pkl')
 
             test_loss_logger.write(str(epoch + 1) + "," + str(stats['loss']) + "," + str(stats['accuracy']) + "\n")
             confusion_matrix_logger.write(str(epoch + 1) + "\n" + str(stats_dictioanry['confusion_matrix']) + "\n")
@@ -280,15 +279,15 @@ def setup(rank, device_ids, args):
     cleanup()
 
 
-def train_distributed(train_file, test_file, batch_size, epochs, gpu_mode, num_workers, retrain_model,
-                      retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
-                      stats_dir, device_ids, total_callers, train_mode):
+def train_distributed_hp(train_file, test_file, batch_size, epochs, gpu_mode, num_workers, retrain_model,
+                         retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
+                         stats_dir, device_ids, total_callers, train_mode):
 
     args = (train_file, test_file, batch_size, epochs, gpu_mode, num_workers, retrain_model,
             retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
             stats_dir, total_callers, train_mode)
-
     mp.spawn(setup,
              args=(device_ids, args),
              nprocs=len(device_ids),
              join=True)
+    

@@ -2,7 +2,7 @@ import argparse
 import sys
 import torch
 from pepper_variant.modules.python.MakeImages import make_images
-from pepper_variant.modules.python.TrainModule import train_pepper_hp_model
+from pepper_variant.modules.python.TrainModule import train_pepper_model
 from pepper_variant.modules.python.TestModule import do_test
 from datetime import datetime
 from pepper.version import __version__
@@ -89,6 +89,13 @@ def add_make_train_images_arguments(parser):
         type=int,
         default=5,
         help="Number of threads to use. Default is 5."
+    )
+    parser.add_argument(
+        "-hp",
+        "--use_hp_info",
+        default=False,
+        action='store_true',
+        help="If set then haplotype-aware mode will be enabled."
     )
     return parser
 
@@ -186,6 +193,13 @@ def add_train_model_arguments(parser):
         default=False,
         help="Path to the model that will be retrained."
     )
+    parser.add_argument(
+        "-hp",
+        "--use_hp_info",
+        default=False,
+        action='store_true',
+        help="If set then haplotype-aware mode will be enabled."
+    )
 
     return parser
 
@@ -229,6 +243,13 @@ def add_test_model_arguments(parser):
         action='store_true',
         default=False,
         help="If true then prints debug messages."
+    )
+    parser.add_argument(
+        "-hp",
+        "--use_hp_info",
+        default=False,
+        action='store_true',
+        help="If set then haplotype-aware mode will be enabled."
     )
     return parser
 
@@ -328,6 +349,7 @@ def main():
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DOWNSAMPLE RATE:\t" + str(FLAGS.downsample_rate) + "\n")
         make_images(FLAGS.bam,
                     FLAGS.fasta,
+                    FLAGS.use_hp_info,
                     FLAGS.truth_bam_hp1,
                     FLAGS.truth_bam_hp2,
                     FLAGS.region,
@@ -340,22 +362,24 @@ def main():
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN MODEL MODULE SELECTED\n")
         distributed = not FLAGS.distributed_off
 
-        train_pepper_hp_model(FLAGS.train_image_dir,
-                              FLAGS.test_image_dir,
-                              FLAGS.output_dir,
-                              FLAGS.gpu,
-                              FLAGS.epoch_size,
-                              FLAGS.batch_size,
-                              FLAGS.num_workers,
-                              FLAGS.retrain_model,
-                              FLAGS.retrain_model_path,
-                              distributed,
-                              FLAGS.device_ids,
-                              FLAGS.callers_per_gpu)
+        train_pepper_model(FLAGS.train_image_dir,
+                           FLAGS.test_image_dir,
+                           FLAGS.use_hp_info,
+                           FLAGS.output_dir,
+                           FLAGS.gpu,
+                           FLAGS.epoch_size,
+                           FLAGS.batch_size,
+                           FLAGS.num_workers,
+                           FLAGS.retrain_model,
+                           FLAGS.retrain_model_path,
+                           distributed,
+                           FLAGS.device_ids,
+                           FLAGS.callers_per_gpu)
 
     elif FLAGS.sub_command == 'test_model':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST MODEL MODULE SELECTED\n")
         do_test(FLAGS.test_image_dir,
+                FLAGS.use_hp_info,
                 FLAGS.batch_size,
                 FLAGS.gpu,
                 FLAGS.num_workers,

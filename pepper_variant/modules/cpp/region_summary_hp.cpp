@@ -477,7 +477,7 @@ RegionalImageSummaryHP RegionalSummaryGeneratorHP::generate_summary(vector <type
         current_chunk += 1;
     }
 
-//    debug_print_matrix(image_matrix, train_mode);
+    // debug_print_matrix(image_matrix_hp1, image_matrix_hp2, train_mode);
 
     for (int i = 0; i < region_size + 1; i++)
     {

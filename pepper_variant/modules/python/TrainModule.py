@@ -5,6 +5,7 @@ import torch
 import sys
 
 from pepper_variant.modules.python.models.train_distributed import train_distributed
+from pepper_variant.modules.python.models.train_distributed_hp import train_distributed_hp
 from pepper_variant.modules.python.Options import TrainOptions
 
 
@@ -12,10 +13,11 @@ class TrainModule:
     """
     Train module
     """
-    def __init__(self, train_file, test_file, gpu_mode, max_epochs, batch_size, num_workers,
+    def __init__(self, train_file, test_file, use_hp_info, gpu_mode, max_epochs, batch_size, num_workers,
                  retrain_model, retrain_model_path, model_dir, stats_dir):
         self.train_file = train_file
         self.test_file = test_file
+        self.use_hp_info = use_hp_info
         self.gpu_mode = gpu_mode
         self.log_directory = stats_dir
         self.model_dir = model_dir
@@ -88,24 +90,43 @@ class TrainModule:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n")
                 exit()
 
-        # train a model
-        train_distributed(self.train_file,
-                          self.test_file,
-                          self.batch_size,
-                          self.epochs,
-                          self.gpu_mode,
-                          self.num_workers,
-                          self.retrain_model,
-                          self.retrain_model_path,
-                          self.gru_layers,
-                          self.hidden_size,
-                          self.learning_rate,
-                          self.weight_decay,
-                          self.model_dir,
-                          self.stats_dir,
-                          device_ids,
-                          total_callers,
-                          train_mode=True)
+        if self.use_hp_info:
+            train_distributed_hp(self.train_file,
+                                 self.test_file,
+                                 self.batch_size,
+                                 self.epochs,
+                                 self.gpu_mode,
+                                 self.num_workers,
+                                 self.retrain_model,
+                                 self.retrain_model_path,
+                                 self.gru_layers,
+                                 self.hidden_size,
+                                 self.learning_rate,
+                                 self.weight_decay,
+                                 self.model_dir,
+                                 self.stats_dir,
+                                 device_ids,
+                                 total_callers,
+                                 train_mode=True)
+        else:
+            # train a SNP model
+            train_distributed(self.train_file,
+                              self.test_file,
+                              self.batch_size,
+                              self.epochs,
+                              self.gpu_mode,
+                              self.num_workers,
+                              self.retrain_model,
+                              self.retrain_model_path,
+                              self.gru_layers,
+                              self.hidden_size,
+                              self.learning_rate,
+                              self.weight_decay,
+                              self.model_dir,
+                              self.stats_dir,
+                              device_ids,
+                              total_callers,
+                              train_mode=True)
 
 
 def handle_output_directory(output_dir):
@@ -134,11 +155,12 @@ def handle_output_directory(output_dir):
     return model_save_dir, stats_directory
 
 
-def train_pepper_hp_model(train_file, test_file, output_dir, gpu_mode, epoch_size, batch_size, num_workers,
+def train_pepper_model(train_file, test_file, use_hp_info, output_dir, gpu_mode, epoch_size, batch_size, num_workers,
                           retrain_model, retrain_model_path, distributed, device_ids, per_gpu_callers):
     model_out_dir, log_dir = handle_output_directory(output_dir)
     tm = TrainModule(train_file,
                      test_file,
+                     use_hp_info,
                      gpu_mode,
                      epoch_size,
                      batch_size,

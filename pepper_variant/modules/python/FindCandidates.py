@@ -23,7 +23,7 @@ def candidates_to_variants(candidates, contig):
 
     for i, candidate in enumerate(candidates):
         pos_start, pos_end, ref, alt, alt_type, depth, read_support, \
-        read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
+            read_support_h0, read_support_h1, read_support_h2, alt_prob_h1, alt_prob_h2, non_ref_prob = candidate
 
         if overall_non_ref_prob < 0:
             overall_non_ref_prob = non_ref_prob
@@ -163,7 +163,11 @@ def candidate_finder(input_dir, reference_file, bam_file, use_hp_info, sample_na
                 all_contigs.update(contigs)
     all_contigs = sorted(all_contigs, key=natural_key)
 
-    vcf_file = VCFWriter(reference_file, all_contigs, sample_name, output_path, "PEPPER_VARIANT_SNP_OUTPUT")
+    vcf_file_name = "PEPPER_VARIANT_SNP_OUTPUT"
+    if use_hp_info:
+        vcf_file_name = "PEPPER_VARIANT_HP_OUTPUT"
+
+    vcf_file = VCFWriter(reference_file, all_contigs, sample_name, output_path, vcf_file_name)
 
     for contig in sorted(all_contigs, key=natural_key):
         local_start_time = time.time()
