@@ -265,7 +265,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                     selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
                                                 candidate.depth, candidate.read_support, candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
                 if found_candidate:
-                    variant = candidates_to_variants(list(selected_candidates), contig)
+                    variant = candidates_to_variants(list(selected_candidates), contig, freq_based, freq)
                     if variant is not None:
                         selected_candidate_list.append(variant)
         else:
