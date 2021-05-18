@@ -50,10 +50,10 @@ class TransducerGRU(nn.Module):
         cell_state = cell_state.transpose(0, 1).contiguous()
 
         self.encoder.flatten_parameters()
-        x_out_lstm1, (hidden_out_lstm1, cell_state_lstm1) = self.gru_encoder(x, (hidden, cell_state))
+        x_out_lstm1, (hidden_out_lstm1, cell_state_lstm1) = self.encoder(x, (hidden, cell_state))
 
         self.decoder.flatten_parameters()
-        x_out_lstm2, (hidden_out_lstm2, cell_state_lstm2) = self.gru_decoder(x_out_lstm1,  (hidden_out_lstm1, cell_state_lstm1))
+        x_out_lstm2, (hidden_out_lstm2, cell_state_lstm2) = self.decoder(x_out_lstm1,  (hidden_out_lstm1, cell_state_lstm1))
 
         x_dropout1 = self.dropout_1(x_out_lstm2)
         x_linear1 = self.linear_1(x_dropout1)
