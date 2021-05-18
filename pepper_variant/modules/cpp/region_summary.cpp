@@ -174,12 +174,12 @@ uint8_t get_label_index(char base_h1, char base_h2, char reference_base) {
     if (base_h1 == 'G' && base_h2 == 'G') return 22;
     // G*
     if (base_h1 == 'G' && base_h2 == '*') return 23;
-    if (base_h1 == '*' && base_h2 == 'G') return 24;
+    if (base_h1 == '*' && base_h2 == 'G') return 23;
     // G*
-    if (base_h1 == 'G' && base_h2 == '#') return 25;
-    if (base_h1 == '#' && base_h2 == 'G') return 25;
+    if (base_h1 == 'G' && base_h2 == '#') return 24;
+    if (base_h1 == '#' && base_h2 == 'G') return 24;
     // **
-    if (base_h1 == '#' && base_h2 == '#') return 26;
+    if (base_h1 == '#' && base_h2 == '#') return 25;
     if (base_h1 == '*' && base_h2 == '*') return 0;
     if (base_h1 == '*' && base_h2 == '#') return 0;
     return 0;
