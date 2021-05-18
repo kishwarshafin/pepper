@@ -186,7 +186,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             loss.backward()
 
             model_optimizer.step()
-            total_loss += loss_base.item()
+            total_loss += loss.item()
             total_images += images.size(0)
 
             # update the progress bar
