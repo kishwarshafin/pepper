@@ -181,7 +181,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
             loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
             loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
-            loss = loss_base + loss_type
+            loss = loss_base
             loss.backward()
 
             model_optimizer.step()
