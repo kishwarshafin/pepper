@@ -12,7 +12,8 @@
 
 namespace ImageOptionsRegion {
 
-    static constexpr int MAX_COLOR_VALUE = 254;
+    static constexpr int MAX_COLOR_VALUE = 128;
+    static constexpr int BOOST_VALUE = 254;
     static constexpr int REFERENCE_INDEX_START = 0;
     static constexpr int REFERENCE_INDEX_SIZE = 5;
     static constexpr int BASE_INDEX_START = 5;
@@ -51,6 +52,7 @@ class RegionalSummaryGenerator {
     string reference_sequence;
     vector<char> labels_hp1;
     vector<char> labels_hp2;
+    vector<char> ref_at_labels;
 public:
     vector<uint16_t> labels;
     vector<uint64_t> max_observed_insert;

@@ -104,49 +104,84 @@ char check_truth_base(char base) {
     return '*';
 }
 
-uint8_t get_label_index(char base_h1, char base_h2) {
+uint8_t get_label_index(char base_h1, char base_h2, char reference_base) {
     base_h1 = toupper(base_h1);
     base_h2 = toupper(base_h2);
+
+    // homozygous reference
+    if(base_h1 == reference_base && base_h2 == reference_base) return 0;
+    if(base_h1 == 'A' && base_h2 == reference_base) return 1;
+    if(base_h2 == 'A' && base_h1 == reference_base) return 1;
+
+    if(base_h1 == 'C' && base_h2 == reference_base) return 2;
+    if(base_h2 == 'C' && base_h1 == reference_base) return 2;
+
+    if(base_h1 == 'G' && base_h2 == reference_base) return 3;
+    if(base_h2 == 'G' && base_h1 == reference_base) return 3;
+
+    if(base_h1 == 'T' && base_h2 == reference_base) return 4;
+    if(base_h2 == 'T' && base_h1 == reference_base) return 4;
+
+    if(base_h1 == '#' && base_h2 == reference_base) return 5;
+    if(base_h2 == '#' && base_h1 == reference_base) return 5;
+
+    if(base_h1 == '*' && base_h2 == reference_base) return 6;
+    if(base_h2 == '*' && base_h1 == reference_base) return 6;
+
     // AA
-    if (base_h1 == 'A' && base_h2 == 'A') return 1;
+    if (base_h1 == 'A' && base_h2 == 'A') return 7;
     // AC
-    if (base_h1 == 'A' && base_h2 == 'C') return 2;
-    if (base_h1 == 'C' && base_h2 == 'A') return 2;
+    if (base_h1 == 'A' && base_h2 == 'C') return 8;
+    if (base_h1 == 'C' && base_h2 == 'A') return 8;
     // AT
-    if (base_h1 == 'A' && base_h2 == 'T') return 3;
-    if (base_h1 == 'T' && base_h2 == 'A') return 3;
+    if (base_h1 == 'A' && base_h2 == 'T') return 9;
+    if (base_h1 == 'T' && base_h2 == 'A') return 9;
     // AG
-    if (base_h1 == 'A' && base_h2 == 'G') return 4;
-    if (base_h1 == 'G' && base_h2 == 'A') return 4;
+    if (base_h1 == 'A' && base_h2 == 'G') return 10;
+    if (base_h1 == 'G' && base_h2 == 'A') return 10;
     // A*
-    if (base_h1 == 'A' && base_h2 == '*') return 5;
-    if (base_h1 == '*' && base_h2 == 'A') return 5;
+    if (base_h1 == 'A' && base_h2 == '*') return 11;
+    if (base_h1 == '*' && base_h2 == 'A') return 11;
+    // A#
+    if (base_h1 == 'A' && base_h2 == '#') return 12;
+    if (base_h1 == '#' && base_h2 == 'A') return 12;
     // CC
-    if (base_h1 == 'C' && base_h2 == 'C') return 6;
+    if (base_h1 == 'C' && base_h2 == 'C') return 13;
     // CT
-    if (base_h1 == 'C' && base_h2 == 'T') return 7;
-    if (base_h1 == 'T' && base_h2 == 'C') return 7;
+    if (base_h1 == 'C' && base_h2 == 'T') return 14;
+    if (base_h1 == 'T' && base_h2 == 'C') return 14;
     // CG
-    if (base_h1 == 'C' && base_h2 == 'G') return 8;
-    if (base_h1 == 'G' && base_h2 == 'C') return 8;
+    if (base_h1 == 'C' && base_h2 == 'G') return 15;
+    if (base_h1 == 'G' && base_h2 == 'C') return 15;
     // C*
-    if (base_h1 == 'C' && base_h2 == '*') return 9;
-    if (base_h1 == '*' && base_h2 == 'C') return 9;
+    if (base_h1 == 'C' && base_h2 == '*') return 16;
+    if (base_h1 == '*' && base_h2 == 'C') return 16;
+    // C#
+    if (base_h1 == 'C' && base_h2 == '#') return 17;
+    if (base_h1 == '#' && base_h2 == 'C') return 17;
     // TT
-    if (base_h1 == 'T' && base_h2 == 'T') return 10;
+    if (base_h1 == 'T' && base_h2 == 'T') return 18;
     // TG
-    if (base_h1 == 'T' && base_h2 == 'G') return 11;
-    if (base_h1 == 'G' && base_h2 == 'T') return 11;
+    if (base_h1 == 'T' && base_h2 == 'G') return 19;
+    if (base_h1 == 'G' && base_h2 == 'T') return 19;
     // T*
-    if (base_h1 == 'T' && base_h2 == '*') return 12;
-    if (base_h1 == '*' && base_h2 == 'T') return 12;
+    if (base_h1 == 'T' && base_h2 == '*') return 20;
+    if (base_h1 == '*' && base_h2 == 'T') return 20;
+    // T#
+    if (base_h1 == 'T' && base_h2 == '#') return 21;
+    if (base_h1 == '#' && base_h2 == 'T') return 21;
     // GG
-    if (base_h1 == 'G' && base_h2 == 'G') return 13;
+    if (base_h1 == 'G' && base_h2 == 'G') return 22;
     // G*
-    if (base_h1 == 'G' && base_h2 == '*') return 14;
-    if (base_h1 == '*' && base_h2 == 'G') return 14;
+    if (base_h1 == 'G' && base_h2 == '*') return 23;
+    if (base_h1 == '*' && base_h2 == 'G') return 24;
+    // G*
+    if (base_h1 == 'G' && base_h2 == '#') return 25;
+    if (base_h1 == '#' && base_h2 == 'G') return 25;
     // **
+    if (base_h1 == '#' && base_h2 == '#') return 26;
     if (base_h1 == '*' && base_h2 == '*') return 0;
+    if (base_h1 == '*' && base_h2 == '#') return 0;
     return 0;
 }
 
@@ -202,8 +237,10 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
 
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
+                        char reference_base = reference_sequence[ref_position - ref_start];
 
                         int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
+                        ref_at_labels[base_index] = reference_base;
                         if(hp_tag == 1)
                             labels_hp1[base_index] = check_truth_base(base);
                         else
@@ -247,9 +284,11 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
 
                         if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                             // DELETE
-                            char base = '*';
+                            char base = '#';
                             int base_index = (int)(ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i]);
 
+                            char reference_base = reference_sequence[ref_position - ref_start + i];
+                            ref_at_labels[base_index] = reference_base;
                             if(hp_tag == 1)
                                 labels_hp1[base_index] = base;
                             else
@@ -274,6 +313,7 @@ void RegionalSummaryGenerator::generate_labels(const type_read& truth_read_hp1,
     int region_size = (int) (ref_end - ref_start + total_observered_insert_bases + 1);
     labels_hp1.resize(region_size + 1, '*');
     labels_hp2.resize(region_size + 1, '*');
+    ref_at_labels.resize(region_size + 1, '*');
 
     generate_labels_from_truth_read(truth_read_hp1, 1);
     generate_labels_from_truth_read(truth_read_hp2, 2);
@@ -414,15 +454,19 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     // once the image matrix is generated, scale the counted values.
     for(int i=0;i<region_size;i++){
         for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
-            image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
+            image_matrix[i][j] = ImageOptionsRegion::MAX_COLOR_VALUE + (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
         }
+        int fwd_feature_index = get_feature_index(ref_at_labels[i], false);
+        int rev_feature_index = get_feature_index(ref_at_labels[i], false);
+        image_matrix[i][fwd_feature_index] = ImageOptionsRegion::MAX_COLOR_VALUE - image_matrix[i][fwd_feature_index];
+        image_matrix[i][rev_feature_index] = ImageOptionsRegion::MAX_COLOR_VALUE - image_matrix[i][rev_feature_index];
     }
 
     labels.resize(region_size + 1, 0);
     // check if train mode, if yes, then generate labels
     if(train_mode) {
         for (int i = 0; i < labels_hp1.size(); i++) {
-            labels[i] = get_label_index(labels_hp1[i], labels_hp2[i]);
+            labels[i] = get_label_index(labels_hp1[i], labels_hp2[i], ref_at_labels[i]);
         }
     }
 
