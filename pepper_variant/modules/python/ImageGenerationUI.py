@@ -70,11 +70,11 @@ class ImageGenerator:
                                                                  bed_list)
 
             if region_summary is not None:
-                images, labels, positions, index, chunk_ids = region_summary
+                images, labels, type_labels, positions, index, chunk_ids = region_summary
             else:
-                images, labels, positions, index, chunk_ids = [], [], [], [], []
+                images, labels, type_labels, positions, index, chunk_ids = [], [], [], [], [], []
 
-            return images, labels, positions, index, chunk_ids
+            return images, labels, type_labels, positions, index, chunk_ids
         else:
             alignment_summarizer_hp = AlignmentSummarizerHP(self.bam_handler,
                                                             self.fasta_handler,
@@ -258,7 +258,7 @@ class ImageGenerationUtils:
                                                  train_mode=train_mode)
 
                 if not use_hp_info:
-                    images, labels, positions, indexes, chunk_ids = image_generator.generate_summary(_start, _end, downsample_rate, bed_list)
+                    images, labels, type_labels, positions, indexes, chunk_ids = image_generator.generate_summary(_start, _end, downsample_rate, bed_list)
                     region = (chr_name, _start, _end)
 
                     for i, image in enumerate(images):
@@ -266,9 +266,10 @@ class ImageGenerationUtils:
                         index = indexes[i]
                         label = labels[i]
                         chunk_id = chunk_ids[i]
+                        type_label = type_labels[i]
                         summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
 
-                        output_hdf_file.write_summary(region, image, label, position, index, chunk_id, summary_name)
+                        output_hdf_file.write_summary(region, image, label, type_label, position, index, chunk_id, summary_name)
 
                     if counter > 0 and counter % 10 == 0 and process_id == 0:
                         percent_complete = int((100 * counter) / len(intervals))

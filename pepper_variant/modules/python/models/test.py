@@ -34,27 +34,32 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     transducer_model.eval()
     class_weights = torch.Tensor(ImageSizeOptions.class_weights)
     # Loss
-    criterion = nn.NLLLoss(class_weights)
+    criterion_base = nn.NLLLoss(class_weights)
+    criterion_type = nn.NLLLoss()
 
     if gpu_mode is True:
-        criterion = criterion.cuda()
+        criterion_base = criterion_base.cuda()
+        criterion_type = criterion_type.cuda()
 
     # Test the Model
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST STARTING\n")
     confusion_matrix = meter.ConfusionMeter(num_classes)
+    confusion_matrix_type = meter.ConfusionMeter(10)
 
     total_loss = 0
     total_images = 0
     accuracy = 0
 
     with torch.no_grad():
-        for ii, (images, labels) in enumerate(test_loader):
+        for ii, (images, labels, type_labels) in enumerate(test_loader):
             labels = labels.type(torch.LongTensor)
+            type_labels = type_labels.type(torch.LongTensor)
             images = images.type(torch.FloatTensor)
             if gpu_mode:
                 # encoder_hidden = encoder_hidden.cuda()
                 images = images.cuda()
                 labels = labels.cuda()
+                type_labels = type_labels.cuda()
 
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
             cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
@@ -62,18 +67,21 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
             if gpu_mode:
                 hidden = hidden.cuda()
 
-            output_ = transducer_model(images, hidden, cell_state, train_mode=True)
+            output_base, output_type = transducer_model(images, hidden, cell_state, train_mode=True)
 
-            loss = criterion(output_.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
+            loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
+            loss_type = criterion_type(output_type.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
 
-            confusion_matrix.add(output_.data.contiguous().view(-1, num_classes),
+            confusion_matrix.add(output_base.data.contiguous().view(-1, num_classes),
                                  labels.data.contiguous().view(-1))
 
-            total_loss += loss.item()
+            confusion_matrix_type.add(output_type.data.contiguous().view(-1, num_classes),
+                                      type_labels.data.contiguous().view(-1))
+
+            total_loss += loss_base.item() + loss_type.item()
             total_images += images.size(0)
 
             if (ii + 1) % 10 == 0:
-
                 cm_value = confusion_matrix.value()
                 denom = cm_value.sum() if cm_value.sum() > 0 else 1.0
 
@@ -82,6 +90,15 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                     total_accurate = total_accurate + cm_value[i][i]
 
                 accuracy = (100.0 * total_accurate) / denom
+
+                cm_value_type = confusion_matrix_type.value()
+                denom = cm_value_type.sum() if cm_value_type.sum() > 0 else 1.0
+
+                total_accurate_type = 0
+                for i in range(0, ImageSizeOptions.TOTAL_TYPE_LABELS):
+                    total_accurate = total_accurate + cm_value_type[i][i]
+                accuracy_type = (100.0 * total_accurate_type) / denom
+
                 percent_complete = int((100 * (ii+1)) / len(test_loader))
                 time_now = time.time()
                 mins = int((time_now - start_time) / 60)
@@ -90,6 +107,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO:"
                                  + " BATCH: " + str(ii+1) + "/" + str(len(test_loader))
                                  + " ACCURACY: " + str(round(accuracy, 5))
+                                 + " ACCURACY TYPE: " + str(round(accuracy_type, 5))
                                  + " COMPLETE (" + str(percent_complete) + "%)"
                                  + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                 sys.stderr.flush()
@@ -105,6 +123,18 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
     for i, row in enumerate(confusion_matrix.value()):
         sys.stderr.write(str(ImageSizeOptions.decoded_labels[i]) + '   ')
+        for j, val in enumerate(row):
+            sys.stderr.write("{0:9d}".format(val) + '  ')
+        sys.stderr.write("\n")
+    sys.stderr.flush()
+
+
+    for label in ImageSizeOptions.decoded_type_labels:
+        sys.stderr.write(str(label) + '         ')
+    sys.stderr.write("\n")
+
+    for i, row in enumerate(confusion_matrix_type.value()):
+        sys.stderr.write(str(ImageSizeOptions.decoded_type_labels[i]) + '   ')
         for j, val in enumerate(row):
             sys.stderr.write("{0:9d}".format(val) + '  ')
         sys.stderr.write("\n")

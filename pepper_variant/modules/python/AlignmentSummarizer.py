@@ -120,6 +120,7 @@ class AlignmentSummarizer:
     def create_summary(self, truth_bam_handler_h1, truth_bam_handler_h2, train_mode, downsample_rate, bed_list):
         all_images = []
         all_labels = []
+        all_type_labels = []
         all_positions = []
         all_index = []
         all_chunk_ids = []
@@ -249,6 +250,7 @@ class AlignmentSummarizer:
                 #############################
                 all_images.extend(regional_image_summary.chunked_image_matrix)
                 all_labels.extend(regional_image_summary.chunked_labels)
+                all_type_labels.extend(regional_image_summary.chunked_type_labels)
                 all_positions.extend(regional_image_summary.chunked_positions)
                 all_index.extend(regional_image_summary.chunked_index)
                 all_chunk_ids.extend(regional_image_summary.chunked_ids)
@@ -404,4 +406,4 @@ class AlignmentSummarizer:
             #                 print("NOT EQUAL", i, j, image_summary.images[i][j][k], regional_image_summary.chunked_image_matrix[i][j][k])
             # print("PASSED IMAGES")
 
-        return all_images, all_labels, all_positions, all_index, all_chunk_ids
+        return all_images, all_labels, all_type_labels, all_positions, all_index, all_chunk_ids

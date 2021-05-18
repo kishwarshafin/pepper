@@ -12,7 +12,7 @@
 
 namespace ImageOptionsRegion {
 
-    static constexpr int MAX_COLOR_VALUE = 128;
+    static constexpr int MAX_COLOR_VALUE = 256;
     static constexpr int BOOST_VALUE = 254;
     static constexpr int REFERENCE_INDEX_START = 0;
     static constexpr int REFERENCE_INDEX_SIZE = 5;
@@ -38,11 +38,20 @@ namespace ImageOptionsRegion {
 };
 
 
+namespace VariantTypes {
+
+    static constexpr int HOM_REF = 0;
+    static constexpr int SNP = 1;
+    static constexpr int INSERT = 2;
+    static constexpr int DELETE = 3;
+};
+
 struct RegionalImageSummary {
     vector< vector< vector<uint8_t> > > chunked_image_matrix;
     vector< vector<int64_t> > chunked_positions;
     vector< vector<int32_t> > chunked_index;
     vector< vector<uint8_t> > chunked_labels;
+    vector< vector<uint8_t> > chunked_type_labels;
     vector<int> chunked_ids;
 };
 
@@ -52,9 +61,12 @@ class RegionalSummaryGenerator {
     string reference_sequence;
     vector<char> labels_hp1;
     vector<char> labels_hp2;
+    vector<int> variant_type_labels_hp1;
+    vector<int> variant_type_labels_hp2;
     vector<char> ref_at_labels;
 public:
     vector<uint16_t> labels;
+    vector<uint16_t> labels_variant_type;
     vector<uint64_t> max_observed_insert;
     vector<uint64_t> positions;
     vector<uint32_t> index;

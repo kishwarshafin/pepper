@@ -128,10 +128,12 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
     class_weights = torch.Tensor(ImageSizeOptions.class_weights)
     # Loss
-    criterion = nn.NLLLoss(class_weights)
+    criterion_base = nn.NLLLoss(class_weights)
+    criterion_type = nn.NLLLoss()
 
     if gpu_mode is True:
-        criterion = criterion.to(device_id)
+        criterion_base = criterion_base.to(device_id)
+        criterion_type = criterion_type.to(device_id)
 
     start_epoch = prev_ite
 
@@ -156,12 +158,14 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
         batch_no = 1
         transducer_model.train()
-        for images, labels in train_loader:
+        for images, labels, type_labels in train_loader:
             labels = labels.type(torch.LongTensor)
+            type_labels = type_labels.type(torch.LongTensor)
             images = images.type(torch.FloatTensor)
             if gpu_mode:
                 images = images.to(device_id)
                 labels = labels.to(device_id)
+                type_labels = type_labels.to(device_id)
 
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
             cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
@@ -171,9 +175,11 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
             model_optimizer.zero_grad()
 
-            output_ = transducer_model(images, hidden, cell_state, train_mode)
+            output_base, output_type = transducer_model(images, hidden, cell_state, train_mode)
 
-            loss = criterion(output_.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
+            loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
+            loss_type = criterion_type(output_type.contiguous().view(-1, num_classes), type_labels.contiguous().view(-1))
+            loss = loss_base + loss_type
             loss.backward()
 
             model_optimizer.step()
@@ -204,6 +210,8 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         dist.barrier()
 
         if rank == 0:
+            transducer_model.eval()
+            torch.cuda.empty_cache()
             stats_dictioanry = test(test_file, batch_size * world_size, gpu_mode, transducer_model, num_workers,
                                     gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS)
             stats['loss'] = stats_dictioanry['loss']

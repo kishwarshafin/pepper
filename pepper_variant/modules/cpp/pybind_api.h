@@ -48,6 +48,7 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
             .def_readwrite("chunked_positions", &RegionalImageSummary::chunked_positions)
             .def_readwrite("chunked_index", &RegionalImageSummary::chunked_index)
             .def_readwrite("chunked_labels", &RegionalImageSummary::chunked_labels)
+            .def_readwrite("chunked_type_labels", &RegionalImageSummary::chunked_type_labels)
             .def_readwrite("chunked_ids", &RegionalImageSummary::chunked_ids);
 
         py::class_<RegionalImageSummaryHP>(m, "RegionalImageSummaryHP")

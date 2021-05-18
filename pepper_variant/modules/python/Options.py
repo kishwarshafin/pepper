@@ -6,11 +6,13 @@ class ImageSizeOptions(object):
     SEQ_OVERLAP = 50
     LABEL_LENGTH = SEQ_LENGTH
 
-    TOTAL_LABELS = 26
+    TOTAL_LABELS = 15
+    TOTAL_TYPE_LABELS = 10
     MIN_SEQUENCE_LENGTH = 1000
     MIN_IMAGE_OVERLAP = 100
-    decoded_labels = ['RR', 'RA', 'RC', 'RG', 'RT', 'R*' 'R#', 'AA', 'AC', 'AT', 'AG', 'A*', 'A#', 'CC', 'CT', 'CG', 'C*', 'C#', 'TT', 'TG', 'T*', 'T#', 'GG', 'G*', 'G#', '##']
-    class_weights = [0.1,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    decoded_labels = ['**', 'AA', 'AC', 'AT', 'AG', 'A*', 'CC', 'CT', 'CG', 'C*', 'TT', 'TG', 'T*', 'GG', 'G*']
+    class_weights = [0.1,  0.1,  1.0,  1.0,  1.0,  1.0,  0.1,  1.0,  1.0,  1.0,  0.1,  1.0,  1.0,  0.1,  1.0]
+    decoded_type_labels = ['RR', 'RS', 'RI', 'RD', 'SS', 'SI', 'SD', 'II', 'ID', 'DD']
 
 
 class ImageSizeOptionsHP(object):

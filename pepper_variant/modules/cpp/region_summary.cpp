@@ -104,85 +104,83 @@ char check_truth_base(char base) {
     return '*';
 }
 
-uint8_t get_label_index(char base_h1, char base_h2, char reference_base) {
+uint8_t get_label_index(char base_h1, char base_h2) {
     base_h1 = toupper(base_h1);
     base_h2 = toupper(base_h2);
-
-    // homozygous reference
-    if(base_h1 == reference_base && base_h2 == reference_base) return 0;
-    if(base_h1 == 'A' && base_h2 == reference_base) return 1;
-    if(base_h2 == 'A' && base_h1 == reference_base) return 1;
-
-    if(base_h1 == 'C' && base_h2 == reference_base) return 2;
-    if(base_h2 == 'C' && base_h1 == reference_base) return 2;
-
-    if(base_h1 == 'G' && base_h2 == reference_base) return 3;
-    if(base_h2 == 'G' && base_h1 == reference_base) return 3;
-
-    if(base_h1 == 'T' && base_h2 == reference_base) return 4;
-    if(base_h2 == 'T' && base_h1 == reference_base) return 4;
-
-    if(base_h1 == '#' && base_h2 == reference_base) return 5;
-    if(base_h2 == '#' && base_h1 == reference_base) return 5;
-
-    if(base_h1 == '*' && base_h2 == reference_base) return 6;
-    if(base_h2 == '*' && base_h1 == reference_base) return 6;
-
     // AA
-    if (base_h1 == 'A' && base_h2 == 'A') return 7;
+    if (base_h1 == 'A' && base_h2 == 'A') return 1;
     // AC
-    if (base_h1 == 'A' && base_h2 == 'C') return 8;
-    if (base_h1 == 'C' && base_h2 == 'A') return 8;
+    if (base_h1 == 'A' && base_h2 == 'C') return 2;
+    if (base_h1 == 'C' && base_h2 == 'A') return 2;
     // AT
-    if (base_h1 == 'A' && base_h2 == 'T') return 9;
-    if (base_h1 == 'T' && base_h2 == 'A') return 9;
+    if (base_h1 == 'A' && base_h2 == 'T') return 3;
+    if (base_h1 == 'T' && base_h2 == 'A') return 3;
     // AG
-    if (base_h1 == 'A' && base_h2 == 'G') return 10;
-    if (base_h1 == 'G' && base_h2 == 'A') return 10;
+    if (base_h1 == 'A' && base_h2 == 'G') return 4;
+    if (base_h1 == 'G' && base_h2 == 'A') return 4;
     // A*
-    if (base_h1 == 'A' && base_h2 == '*') return 11;
-    if (base_h1 == '*' && base_h2 == 'A') return 11;
-    // A#
-    if (base_h1 == 'A' && base_h2 == '#') return 12;
-    if (base_h1 == '#' && base_h2 == 'A') return 12;
+    if (base_h1 == 'A' && base_h2 == '*') return 5;
+    if (base_h1 == '*' && base_h2 == 'A') return 5;
     // CC
-    if (base_h1 == 'C' && base_h2 == 'C') return 13;
+    if (base_h1 == 'C' && base_h2 == 'C') return 6;
     // CT
-    if (base_h1 == 'C' && base_h2 == 'T') return 14;
-    if (base_h1 == 'T' && base_h2 == 'C') return 14;
+    if (base_h1 == 'C' && base_h2 == 'T') return 7;
+    if (base_h1 == 'T' && base_h2 == 'C') return 7;
     // CG
-    if (base_h1 == 'C' && base_h2 == 'G') return 15;
-    if (base_h1 == 'G' && base_h2 == 'C') return 15;
+    if (base_h1 == 'C' && base_h2 == 'G') return 8;
+    if (base_h1 == 'G' && base_h2 == 'C') return 8;
     // C*
-    if (base_h1 == 'C' && base_h2 == '*') return 16;
-    if (base_h1 == '*' && base_h2 == 'C') return 16;
-    // C#
-    if (base_h1 == 'C' && base_h2 == '#') return 17;
-    if (base_h1 == '#' && base_h2 == 'C') return 17;
+    if (base_h1 == 'C' && base_h2 == '*') return 9;
+    if (base_h1 == '*' && base_h2 == 'C') return 9;
     // TT
-    if (base_h1 == 'T' && base_h2 == 'T') return 18;
+    if (base_h1 == 'T' && base_h2 == 'T') return 10;
     // TG
-    if (base_h1 == 'T' && base_h2 == 'G') return 19;
-    if (base_h1 == 'G' && base_h2 == 'T') return 19;
+    if (base_h1 == 'T' && base_h2 == 'G') return 11;
+    if (base_h1 == 'G' && base_h2 == 'T') return 11;
     // T*
-    if (base_h1 == 'T' && base_h2 == '*') return 20;
-    if (base_h1 == '*' && base_h2 == 'T') return 20;
-    // T#
-    if (base_h1 == 'T' && base_h2 == '#') return 21;
-    if (base_h1 == '#' && base_h2 == 'T') return 21;
+    if (base_h1 == 'T' && base_h2 == '*') return 12;
+    if (base_h1 == '*' && base_h2 == 'T') return 12;
     // GG
-    if (base_h1 == 'G' && base_h2 == 'G') return 22;
+    if (base_h1 == 'G' && base_h2 == 'G') return 13;
     // G*
-    if (base_h1 == 'G' && base_h2 == '*') return 23;
-    if (base_h1 == '*' && base_h2 == 'G') return 23;
-    // G*
-    if (base_h1 == 'G' && base_h2 == '#') return 24;
-    if (base_h1 == '#' && base_h2 == 'G') return 24;
+    if (base_h1 == 'G' && base_h2 == '*') return 14;
+    if (base_h1 == '*' && base_h2 == 'G') return 14;
     // **
-    if (base_h1 == '#' && base_h2 == '#') return 25;
     if (base_h1 == '*' && base_h2 == '*') return 0;
-    if (base_h1 == '*' && base_h2 == '#') return 0;
     return 0;
+}
+
+
+uint8_t get_variant_type_label_index(int type_h1, int type_h2) {
+
+    if (type_h1 == VariantTypes::HOM_REF && type_h2 == VariantTypes::HOM_REF) return 0;
+
+    if (type_h1 == VariantTypes::HOM_REF && type_h2 == VariantTypes::SNP) return 1;
+    if (type_h1 == VariantTypes::SNP && type_h2 == VariantTypes::HOM_REF) return 1;
+
+    if (type_h1 == VariantTypes::HOM_REF && type_h2 == VariantTypes::INSERT) return 2;
+    if (type_h1 == VariantTypes::INSERT && type_h2 == VariantTypes::HOM_REF) return 2;
+
+    if (type_h1 == VariantTypes::HOM_REF && type_h2 == VariantTypes::DELETE) return 3;
+    if (type_h1 == VariantTypes::DELETE && type_h2 == VariantTypes::HOM_REF) return 3;
+
+    if (type_h1 == VariantTypes::SNP && type_h2 == VariantTypes::SNP) return 4;
+
+    if (type_h1 == VariantTypes::SNP && type_h2 == VariantTypes::INSERT) return 5;
+    if (type_h1 == VariantTypes::INSERT && type_h2 == VariantTypes::SNP) return 5;
+
+    if (type_h1 == VariantTypes::SNP && type_h2 == VariantTypes::DELETE) return 6;
+    if (type_h1 == VariantTypes::DELETE && type_h2 == VariantTypes::SNP) return 6;
+
+    if (type_h1 == VariantTypes::INSERT && type_h2 == VariantTypes::INSERT) return 7;
+
+    if (type_h1 == VariantTypes::INSERT && type_h2 == VariantTypes::DELETE) return 8;
+    if (type_h1 == VariantTypes::DELETE && type_h2 == VariantTypes::INSERT) return 8;
+
+    if (type_h1 == VariantTypes::DELETE && type_h2 == VariantTypes::DELETE) return 9;
+
+    cout<<"ERROR: VARIANT LABEL NOT DEFINED: "<<type_h1<<" "<<type_h2<<endl;
+    exit(1);
 }
 
 
@@ -198,7 +196,6 @@ int RegionalSummaryGenerator::get_reference_feature_index(char base) {
 
 void RegionalSummaryGenerator::encode_reference_bases(int **image_matrix) {
     for (long long ref_position = ref_start; ref_position <= ref_end; ref_position++) {
-
         // encode the C base
         int base_index = (int) (ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
         int feature_index = get_reference_feature_index(reference_sequence[ref_position - ref_start]);
@@ -210,7 +207,6 @@ void RegionalSummaryGenerator::encode_reference_bases(int **image_matrix) {
             image_matrix[base_index][feature_index] = 255;
         }
     }
-
 }
 
 
@@ -241,10 +237,18 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
 
                         int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
                         ref_at_labels[base_index] = reference_base;
-                        if(hp_tag == 1)
+                        if(hp_tag == 1) {
                             labels_hp1[base_index] = check_truth_base(base);
-                        else
+                            if(base != reference_base) {
+                                variant_type_labels_hp1[base_index] = VariantTypes::SNP;
+                            }
+                        }
+                        else {
                             labels_hp2[base_index] = check_truth_base(base);
+                            if(base != reference_base) {
+                                variant_type_labels_hp2[base_index] = VariantTypes::SNP;
+                            }
+                        }
                     }
                     read_index += 1;
                     ref_position += 1;
@@ -265,10 +269,14 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
                         }
                         int base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start] + (i + 1));
 
-                        if(hp_tag == 1)
+                        if(hp_tag == 1) {
                             labels_hp1[base_index] = check_truth_base(base);
-                        else
+                            variant_type_labels_hp1[base_index] = VariantTypes::INSERT;
+                        }
+                        else {
                             labels_hp2[base_index] = check_truth_base(base);
+                            variant_type_labels_hp1[base_index] = VariantTypes::INSERT;
+                        }
                     }
                 }
                 read_index += cigar.length;
@@ -289,10 +297,14 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
 
                             char reference_base = reference_sequence[ref_position - ref_start + i];
                             ref_at_labels[base_index] = reference_base;
-                            if(hp_tag == 1)
+                            if(hp_tag == 1) {
                                 labels_hp1[base_index] = base;
-                            else
+                                variant_type_labels_hp1[base_index] = VariantTypes::DELETE;
+                            }
+                            else {
                                 labels_hp2[base_index] = base;
+                                variant_type_labels_hp2[base_index] = VariantTypes::DELETE;
+                            }
                         }
                     }
                 }
@@ -312,7 +324,9 @@ void RegionalSummaryGenerator::generate_labels(const type_read& truth_read_hp1,
                                                const type_read& truth_read_hp2) {
     int region_size = (int) (ref_end - ref_start + total_observered_insert_bases + 1);
     labels_hp1.resize(region_size + 1, '*');
+    variant_type_labels_hp1.resize(region_size + 1, VariantTypes::HOM_REF);
     labels_hp2.resize(region_size + 1, '*');
+    variant_type_labels_hp2.resize(region_size + 1, VariantTypes::HOM_REF);
     ref_at_labels.resize(region_size + 1, '*');
 
     generate_labels_from_truth_read(truth_read_hp1, 1);
@@ -433,8 +447,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     // generate the image matrix of chunk_size (10kb) * feature_size (10)
     int** image_matrix = new int*[region_size + 1];
 
-    for (int i = 0; i < region_size + 1; i++)
-    {
+    for (int i = 0; i < region_size + 1; i++) {
         image_matrix[i] = new int[feature_size];
         for (int j = 0; j < feature_size; j++)
             image_matrix[i][j] = 0;
@@ -454,19 +467,21 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     // once the image matrix is generated, scale the counted values.
     for(int i=0;i<region_size;i++){
         for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
-            image_matrix[i][j] = ImageOptionsRegion::MAX_COLOR_VALUE + (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
+            image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
         }
-        int fwd_feature_index = get_feature_index(ref_at_labels[i], false);
-        int rev_feature_index = get_feature_index(ref_at_labels[i], false);
-        image_matrix[i][fwd_feature_index] = ImageOptionsRegion::MAX_COLOR_VALUE - image_matrix[i][fwd_feature_index];
-        image_matrix[i][rev_feature_index] = ImageOptionsRegion::MAX_COLOR_VALUE - image_matrix[i][rev_feature_index];
+//        int fwd_feature_index = get_feature_index(ref_at_labels[i], false);
+//        int rev_feature_index = get_feature_index(ref_at_labels[i], false);
+//        image_matrix[i][fwd_feature_index] = ImageOptionsRegion::MAX_COLOR_VALUE - image_matrix[i][fwd_feature_index];
+//        image_matrix[i][rev_feature_index] = ImageOptionsRegion::MAX_COLOR_VALUE - image_matrix[i][rev_feature_index];
     }
 
     labels.resize(region_size + 1, 0);
+    labels_variant_type.resize(region_size + 1, 0);
     // check if train mode, if yes, then generate labels
     if(train_mode) {
         for (int i = 0; i < labels_hp1.size(); i++) {
-            labels[i] = get_label_index(labels_hp1[i], labels_hp2[i], ref_at_labels[i]);
+            labels[i] = get_label_index(labels_hp1[i], labels_hp2[i]);
+            labels_variant_type[i] = get_variant_type_label_index(variant_type_labels_hp1[i], variant_type_labels_hp2[i]);
         }
     }
 
@@ -488,6 +503,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     // once we know how many chunks there will be, we can generate a pre-defined vector and do the chunking
     summary.chunked_image_matrix.resize(total_chunks, vector<vector<uint8_t> >(smaller_chunk_size,vector<uint8_t>(feature_size)));
     summary.chunked_labels.resize(total_chunks, vector<uint8_t>(smaller_chunk_size));
+    summary.chunked_type_labels.resize(total_chunks, vector<uint8_t>(smaller_chunk_size));
     summary.chunked_positions.resize(total_chunks, vector<int64_t>(smaller_chunk_size));
     summary.chunked_index.resize(total_chunks, vector<int32_t>(smaller_chunk_size));
     summary.chunked_ids.resize(total_chunks);
@@ -504,10 +520,12 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
                 summary.chunked_positions[current_chunk][i - chunk_start] = positions[i];
                 summary.chunked_index[current_chunk][i - chunk_start] = index[i];
                 summary.chunked_labels[current_chunk][i - chunk_start] = labels[i];
+                summary.chunked_type_labels[current_chunk][i - chunk_start] = labels_variant_type[i];
             } else {
                 summary.chunked_positions[current_chunk][i - chunk_start] = -1;
                 summary.chunked_index[current_chunk][i - chunk_start] = -1;
                 summary.chunked_labels[current_chunk][i - chunk_start] = 0;
+                summary.chunked_type_labels[current_chunk][i - chunk_start] = 0;
             }
             for(int j=0; j < feature_size; j++) {
                 if(i<=region_size) {
@@ -576,6 +594,12 @@ void RegionalSummaryGenerator::debug_print_matrix(int** image_matrix, bool train
     for (int i = 0; i < labels.size(); i++) {
         if(i==0) cout<<"LBL:\t";
         printf("%3d\t", labels[i]);
+    }
+    cout << endl;
+
+    for (int i = 0; i < labels_variant_type.size(); i++) {
+        if(i==0) cout<<"TYP:\t";
+        printf("%3d\t", labels_variant_type[i]);
     }
     cout << endl;
 
