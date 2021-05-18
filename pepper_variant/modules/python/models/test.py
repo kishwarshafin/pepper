@@ -20,7 +20,7 @@ Returns:
 
 
 def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_layers, hidden_size,
-         num_classes=ImageSizeOptions.TOTAL_LABELS, print_details=False):
+         num_classes=ImageSizeOptions.TOTAL_LABELS, num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS, print_details=False):
     start_time = time.time()
     # data loader
     test_data = SequenceDataset(data_file)
@@ -70,7 +70,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
             output_base, output_type = transducer_model(images, hidden, cell_state, train_mode=True)
 
             loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
-            loss_type = criterion_type(output_type.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
+            loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), labels.contiguous().view(-1))
 
             confusion_matrix.add(output_base.data.contiguous().view(-1, num_classes),
                                  labels.data.contiguous().view(-1))
@@ -127,7 +127,6 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
             sys.stderr.write("{0:9d}".format(val) + '  ')
         sys.stderr.write("\n")
     sys.stderr.flush()
-
 
     for label in ImageSizeOptions.decoded_type_labels:
         sys.stderr.write(str(label) + '         ')

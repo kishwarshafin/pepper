@@ -85,6 +85,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         sampler=train_sampler)
 
     num_classes = ImageSizeOptions.TOTAL_LABELS
+    num_type_classes = ImageSizeOptions.TOTAL_TYPE_LABELS
 
     if retrain_model is True:
         if os.path.isfile(retrain_model_path) is False:
@@ -178,7 +179,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             output_base, output_type = transducer_model(images, hidden, cell_state, train_mode)
 
             loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
-            loss_type = criterion_type(output_type.contiguous().view(-1, num_classes), type_labels.contiguous().view(-1))
+            loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
             loss = loss_base + loss_type
             loss.backward()
 
@@ -213,7 +214,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
             transducer_model.eval()
             torch.cuda.empty_cache()
             stats_dictioanry = test(test_file, batch_size * world_size, gpu_mode, transducer_model, num_workers,
-                                    gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS)
+                                    gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS, num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
             stats['loss'] = stats_dictioanry['loss']
             stats['accuracy'] = stats_dictioanry['accuracy']
             stats['loss_epoch'].append((epoch, stats_dictioanry['loss']))
