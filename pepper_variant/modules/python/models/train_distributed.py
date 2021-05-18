@@ -128,9 +128,10 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         transducer_model = nn.parallel.DistributedDataParallel(transducer_model, device_ids=[device_id])
 
     class_weights = torch.Tensor(ImageSizeOptions.class_weights)
+    class_weights_type = torch.Tensor(ImageSizeOptions.class_weights_type)
     # Loss
     criterion_base = nn.NLLLoss(class_weights)
-    criterion_type = nn.NLLLoss()
+    criterion_type = nn.NLLLoss(class_weights_type)
 
     if gpu_mode is True:
         criterion_base = criterion_base.to(device_id)
@@ -213,7 +214,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         if rank == 0:
             transducer_model.eval()
             torch.cuda.empty_cache()
-            stats_dictioanry = test(test_file, batch_size * world_size, gpu_mode, transducer_model, num_workers,
+            stats_dictioanry = test(test_file, max(256, batch_size * world_size), gpu_mode, transducer_model, num_workers,
                                     gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS, num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
             stats['loss'] = stats_dictioanry['loss']
             stats['accuracy'] = stats_dictioanry['accuracy']

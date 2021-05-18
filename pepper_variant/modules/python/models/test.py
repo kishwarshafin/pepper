@@ -33,9 +33,10 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     # set the evaluation mode of the model
     transducer_model.eval()
     class_weights = torch.Tensor(ImageSizeOptions.class_weights)
+    class_weights_type = torch.Tensor(ImageSizeOptions.class_weights_type)
     # Loss
     criterion_base = nn.NLLLoss(class_weights)
-    criterion_type = nn.NLLLoss()
+    criterion_type = nn.NLLLoss(class_weights_type)
 
     if gpu_mode is True:
         criterion_base = criterion_base.cuda()
@@ -92,12 +93,12 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                 accuracy = (100.0 * total_accurate) / denom
 
                 cm_value_type = confusion_matrix_type.value()
-                denom = cm_value_type.sum() if cm_value_type.sum() > 0 else 1.0
+                denom_type = cm_value_type.sum() if cm_value_type.sum() > 0 else 1.0
 
                 total_accurate_type = 0
                 for i in range(0, ImageSizeOptions.TOTAL_TYPE_LABELS):
                     total_accurate = total_accurate + cm_value_type[i][i]
-                accuracy_type = (100.0 * total_accurate_type) / denom
+                accuracy_type = (100.0 * total_accurate_type) / denom_type
 
                 percent_complete = int((100 * (ii+1)) / len(test_loader))
                 time_now = time.time()
@@ -128,6 +129,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
         sys.stderr.write("\n")
     sys.stderr.flush()
 
+    sys.stderr.write("            ")
     for label in ImageSizeOptions.decoded_type_labels:
         sys.stderr.write(str(label) + '         ')
     sys.stderr.write("\n")
