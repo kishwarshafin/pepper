@@ -68,19 +68,20 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
             if gpu_mode:
                 hidden = hidden.cuda()
 
-            # output_base, output_type = transducer_model(images, hidden, cell_state, train_mode=True)
-            output_base = transducer_model(images, hidden, cell_state, train_mode=True)
+            output_base, output_type = transducer_model(images, hidden, cell_state, train_mode=True)
+            # output_base = transducer_model(images, hidden, cell_state, train_mode=True)
 
             loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
             loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
 
+            loss = loss_base + loss_type
             confusion_matrix.add(output_base.data.contiguous().view(-1, num_classes),
                                  labels.data.contiguous().view(-1))
 
             confusion_matrix_type.add(output_type.data.contiguous().view(-1, num_type_classes),
                                       type_labels.data.contiguous().view(-1))
 
-            total_loss += loss_base.item()
+            total_loss += loss.item()
             total_images += images.size(0)
 
             if (ii + 1) % 10 == 0:
@@ -92,7 +93,8 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                     total_accurate = total_accurate + cm_value[i][i]
 
                 accuracy = (100.0 * total_accurate) / denom
-                accuracy_type = 0
+
+
                 cm_value_type = confusion_matrix_type.value()
                 denom_type = cm_value_type.sum() if cm_value_type.sum() > 0 else 1.0
 
