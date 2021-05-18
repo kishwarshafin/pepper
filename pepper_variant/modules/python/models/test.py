@@ -100,7 +100,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
                 total_accurate_type = 0
                 for i in range(1, ImageSizeOptions.TOTAL_TYPE_LABELS):
-                    total_accurate = total_accurate + cm_value_type[i][i]
+                    total_accurate_type = total_accurate_type + cm_value_type[i][i]
                 accuracy_type = (100.0 * total_accurate_type) / denom_type
 
                 percent_complete = int((100 * (ii+1)) / len(test_loader))
