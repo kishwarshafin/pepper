@@ -45,7 +45,7 @@ class TransducerGRU(nn.Module):
         self.linear_5 = nn.Linear(self.linear_4_size, self.linear_5_size)
 
         self.output_layer = nn.Linear(self.linear_5_size, self.num_classes)
-        # self.output_layer_type = nn.Linear(self.linear_5_size, self.num_classes_type)
+        self.output_layer_type = nn.Linear(self.linear_5_size, self.num_classes_type)
 
     def forward(self, x, hidden, cell_state, train_mode):
         hidden = hidden.transpose(0, 1).contiguous()
@@ -73,13 +73,13 @@ class TransducerGRU(nn.Module):
         x = self.linear_5(x)
 
         x_base = self.output_layer(x)
-        # x_type = self.output_layer_type(x)
+        x_type = self.output_layer_type(x)
 
         if train_mode:
             log_softmax = nn.LogSoftmax(dim=1)
-            return log_softmax(x_base)
+            return log_softmax(x_base), log_softmax(x_type)
 
-        return x_base
+        return x_base, x_type
 
     def init_hidden(self, batch_size, num_layers, bidirectional=True):
         num_directions = 1
