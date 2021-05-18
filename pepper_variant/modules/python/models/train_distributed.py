@@ -177,7 +177,8 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
             model_optimizer.zero_grad()
 
-            output_base, output_type = transducer_model(images, hidden, cell_state, train_mode)
+            output_base = transducer_model(images, hidden, cell_state, train_mode)
+            # output_base, output_type = transducer_model(images, hidden, cell_state, train_mode)
 
             loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
             # loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
