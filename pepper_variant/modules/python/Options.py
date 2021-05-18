@@ -1,6 +1,6 @@
 class ImageSizeOptions(object):
-    IMAGE_HEIGHT = 10
-    IMAGE_CHANNEL_HEIGHT = 10
+    IMAGE_HEIGHT = 15
+    IMAGE_CHANNEL_HEIGHT = 15
     IMAGE_CHANNELS = 1
     SEQ_LENGTH = 1000
     SEQ_OVERLAP = 50
@@ -14,7 +14,7 @@ class ImageSizeOptions(object):
 
 
 class ImageSizeOptionsHP(object):
-    IMAGE_HEIGHT = 10
+    IMAGE_HEIGHT = 14
     IMAGE_CHANNEL_HEIGHT = 10
     IMAGE_CHANNELS = 1
     SEQ_LENGTH = 1000
@@ -28,7 +28,7 @@ class ImageSizeOptionsHP(object):
 
 
 class ReadFilterOptions(object):
-    MIN_MAPQ = 1
+    MIN_MAPQ = 5
     MIN_BASEQ = 1
     INCLUDE_SUPPLEMENTARY = False
 
@@ -85,7 +85,7 @@ class TrainOptions(object):
     TRAIN_WINDOW = 100
     WINDOW_JUMP = 50
     GRU_LAYERS = 1
-    HIDDEN_SIZE = 128
+    HIDDEN_SIZE = 256
 
 
 class AlingerOptions(object):

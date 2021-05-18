@@ -8,10 +8,32 @@
 #include <cstring>
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 
 namespace ImageOptionsRegion {
+
     static constexpr int MAX_COLOR_VALUE = 254;
-    static constexpr bool GENERATE_INDELS = false;
+    static constexpr int REFERENCE_INDEX_START = 0;
+    static constexpr int REFERENCE_INDEX_SIZE = 5;
+    static constexpr int BASE_INDEX_START = 5;
+    static constexpr int BASE_INDEX_SIZE = 10;
+    vector<string> column_values{"AREF:",
+                                 "CREF:",
+                                 "GREF:",
+                                 "TREF:",
+                                 "*REF:",
+                                 "AFRW:",
+                                 "CFRW:",
+                                 "GFRW:",
+                                 "TFRW:",
+                                 "*FRW:",
+                                 "AREV:",
+                                 "CREV:",
+                                 "GREV:",
+                                 "TREV:",
+                                 "*REV:"};
+
+    static constexpr bool GENERATE_INDELS = true;
 };
 
 
@@ -45,7 +67,9 @@ public:
 
     void generate_labels_from_truth_read(type_read read, int hp_tag);
 
-    char check_base(char base);
+    static int get_reference_feature_index(char base);
+
+    void encode_reference_bases(int **image_matrix);
 
     void generate_labels(const type_read& truth_read_hp1, const type_read& truth_read_hp2);
 

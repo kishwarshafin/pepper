@@ -151,6 +151,34 @@ uint8_t get_label_index(char base_h1, char base_h2) {
 }
 
 
+int RegionalSummaryGenerator::get_reference_feature_index(char base) {
+    base = toupper(base);
+    if (base == 'A') return ImageOptionsRegion::REFERENCE_INDEX_START;
+    if (base == 'C') return ImageOptionsRegion::REFERENCE_INDEX_START + 1;
+    if (base == 'G') return ImageOptionsRegion::REFERENCE_INDEX_START + 2;
+    if (base == 'T') return ImageOptionsRegion::REFERENCE_INDEX_START + 3;
+    return ImageOptionsRegion::REFERENCE_INDEX_START + 4;
+}
+
+
+void RegionalSummaryGenerator::encode_reference_bases(int **image_matrix) {
+    for (long long ref_position = ref_start; ref_position <= ref_end; ref_position++) {
+
+        // encode the C base
+        int base_index = (int) (ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
+        int feature_index = get_reference_feature_index(reference_sequence[ref_position - ref_start]);
+        image_matrix[base_index][feature_index] = 255;
+
+        for(int i = 1; i <= max_observed_insert[ref_position - ref_start]; i++) {
+            base_index = (int) (ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]) + i;
+            feature_index = get_reference_feature_index('*');
+            image_matrix[base_index][feature_index] = 255;
+        }
+    }
+
+}
+
+
 void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, int hp_tag) {
     int read_index = 0;
     long long ref_position = read.pos;
@@ -255,18 +283,18 @@ void RegionalSummaryGenerator::generate_labels(const type_read& truth_read_hp1,
 int RegionalSummaryGenerator::get_feature_index(char base, bool is_reverse) {
     base = toupper(base);
     if (is_reverse) {
-        if (base == 'A') return 0;
-        if (base == 'C') return 1;
-        if (base == 'G') return 2;
-        if (base == 'T') return 3;
-        return 8;
+        if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START;
+        if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 1;
+        if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 2;
+        if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 3;
+        return ImageOptionsRegion::BASE_INDEX_START + 4;
     } else {
         // tagged and forward
-        if (base == 'A') return 4;
-        if (base == 'C') return 5;
-        if (base == 'G') return 6;
-        if (base == 'T') return 7;
-        return 9;
+        if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 5;
+        if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 6;
+        if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 7;
+        if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 8;
+        return ImageOptionsRegion::BASE_INDEX_START + 9;
     }
 }
 
@@ -276,7 +304,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
     int read_index = 0;
     long long ref_position = read.pos;
     int cigar_index = 0;
-
+    double base_quality = 1.0 - pow(10.0 , (-1.0 * read.base_qualities[read_index])/10);
     for (auto &cigar: read.cigar_tuples) {
         if (ref_position > ref_end) break;
         switch (cigar.operation) {
@@ -291,6 +319,8 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                 }
                 for (int i = cigar_index; i < cigar.length; i++) {
                     //read.base_qualities[read_index] base quality
+//                    double base_quality = 1.0 - pow(10.0 , (-1.0 * read.base_qualities[read_index])/10);
+
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
 
@@ -372,6 +402,8 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
 
     memset(coverage_vector, 0, sizeof(coverage_vector));
 
+    encode_reference_bases(image_matrix);
+
     // now iterate over all of the reads and populate the image matrix and coverage matrix
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
@@ -379,10 +411,9 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
             populate_summary_matrix(image_matrix, coverage_vector, read);
         }
     }
-
     // once the image matrix is generated, scale the counted values.
     for(int i=0;i<region_size;i++){
-        for(int j=0;j<feature_size;j++){
+        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
             image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
         }
     }
@@ -465,6 +496,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     for (int i = 0; i < region_size + 1; i++)
         free(image_matrix[i]);
     free(image_matrix);
+//    exit(0);
 
     return summary;
 }
@@ -477,7 +509,6 @@ void RegionalSummaryGenerator::debug_print_matrix(int** image_matrix, bool train
     for (long long i = ref_start; i <= ref_end; i++) {
         if(i==ref_start) cout<<"REF:\t";
         cout << "  " << reference_sequence[i - ref_start] << "\t";
-        cout<<i<<" "<<ref_start<<endl;
         if (max_observed_insert[i - ref_start] > 0) {
             for (uint64_t ii = 0; ii < max_observed_insert[i - ref_start]; ii++)cout << "  *" << "\t";
         }
@@ -498,29 +529,20 @@ void RegionalSummaryGenerator::debug_print_matrix(int** image_matrix, bool train
         cout << endl;
     }
 
-//    for (int i = 0; i < labels.size(); i++) {
-//        if(i==0) cout<<"LBL:\t";
-//        printf("%3d\t", labels[i]);
-//    }
-//    cout << endl;
+    for (int i = 0; i < labels.size(); i++) {
+        if(i==0) cout<<"LBL:\t";
+        printf("%3d\t", labels[i]);
+    }
+    cout << endl;
 
     cout<<"POS:\t";
     for(int i=0; i < positions.size(); i++ ) {
         printf("%3lld\t", positions[i] % 100);
     }
     cout << endl;
-    for (int i = 0; i < 10; i++) {
-        if(i==0)cout<<"AFW:\t";
-        if(i==1)cout<<"CFW:\t";
-        if(i==2)cout<<"GFW:\t";
-        if(i==3)cout<<"TFW:\t";
-        if(i==4)cout<<"ARV:\t";
-        if(i==5)cout<<"CRV:\t";
-        if(i==6)cout<<"GRV:\t";
-        if(i==7)cout<<"TRV:\t";
-        if(i==8)cout<<"*FW:\t";
-        if(i==9)cout<<"*RV:\t";
-
+    int image_size = ImageOptionsRegion::REFERENCE_INDEX_SIZE + ImageOptionsRegion::BASE_INDEX_SIZE;
+    for (int i = 0; i < image_size; i++) {
+        cout<< ImageOptionsRegion::column_values[i] <<"\t";
         int region_size = (int) (ref_end - ref_start + total_observered_insert_bases + 1);
 
         for (int j = 0; j < region_size; j++) {

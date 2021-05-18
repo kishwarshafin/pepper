@@ -128,7 +128,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
     class_weights = torch.Tensor(ImageSizeOptions.class_weights)
     # Loss
-    criterion = nn.CrossEntropyLoss(class_weights)
+    criterion = nn.NLLLoss()
 
     if gpu_mode is True:
         criterion = criterion.to(device_id)
@@ -164,28 +164,21 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                 labels = labels.to(device_id)
 
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+            cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
             if gpu_mode:
                 hidden = hidden.to(device_id)
 
-            for i in range(0, ImageSizeOptions.SEQ_LENGTH, TrainOptions.WINDOW_JUMP):
-                model_optimizer.zero_grad()
+            model_optimizer.zero_grad()
 
-                if i + TrainOptions.TRAIN_WINDOW > ImageSizeOptions.SEQ_LENGTH:
-                    break
+            output_, hidden = transducer_model(images, hidden, cell_state, train_mode)
 
-                image_chunk = images[:, i:i+TrainOptions.TRAIN_WINDOW]
-                label_chunk = labels[:, i:i+TrainOptions.TRAIN_WINDOW]
+            loss = criterion(output_.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
+            loss.backward()
 
-                output_, hidden = transducer_model(image_chunk, hidden)
-
-                loss = criterion(output_.contiguous().view(-1, num_classes), label_chunk.contiguous().view(-1))
-                loss.backward()
-
-                model_optimizer.step()
-                total_loss += loss.item()
-                total_images += image_chunk.size(0)
-                hidden = hidden.detach()
+            model_optimizer.step()
+            total_loss += loss.item()
+            total_images += images.size(0)
 
             # update the progress bar
             avg_loss = (total_loss / total_images) if total_images else 0
