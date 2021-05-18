@@ -77,8 +77,8 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
             confusion_matrix.add(output_base.data.contiguous().view(-1, num_classes),
                                  labels.data.contiguous().view(-1))
 
-            confusion_matrix_type.add(output_type.data.contiguous().view(-1, num_type_classes),
-                                      type_labels.data.contiguous().view(-1))
+            # confusion_matrix_type.add(output_type.data.contiguous().view(-1, num_type_classes),
+            #                           type_labels.data.contiguous().view(-1))
 
             total_loss += loss_base.item()
             total_images += images.size(0)
