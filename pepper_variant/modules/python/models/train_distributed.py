@@ -162,12 +162,12 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
         transducer_model.train()
         for images, labels, type_labels in train_loader:
             labels = labels.type(torch.LongTensor)
-            # type_labels = type_labels.type(torch.LongTensor)
+            type_labels = type_labels.type(torch.LongTensor)
             images = images.type(torch.FloatTensor)
             if gpu_mode:
                 images = images.to(device_id)
                 labels = labels.to(device_id)
-                # type_labels = type_labels.to(device_id)
+                type_labels = type_labels.to(device_id)
 
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
             cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)

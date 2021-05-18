@@ -112,7 +112,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO:"
                                  + " BATCH: " + str(ii+1) + "/" + str(len(test_loader))
                                  + " ACCURACY: " + str(round(accuracy, 5))
-                                 # + " ACCURACY TYPE: " + str(round(accuracy_type, 5))
+                                 + " ACCURACY TYPE: " + str(round(accuracy_type, 5))
                                  + " COMPLETE (" + str(percent_complete) + "%)"
                                  + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                 sys.stderr.flush()
