@@ -30,8 +30,8 @@ class TrainModule:
         self.hidden_size = TrainOptions.HIDDEN_SIZE
         self.gru_layers = TrainOptions.GRU_LAYERS
         # {'l2': 1.4946789574136535e-05, 'lr': 0.000541365592065579}
-        self.learning_rate = 0.001
-        self.weight_decay = 0.0000001
+        self.learning_rate = 0.0001
+        self.weight_decay = 0
 
     def train_model_distributed(self, device_ids, callers_per_gpu):
         """
