@@ -68,7 +68,8 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
             if gpu_mode:
                 hidden = hidden.cuda()
 
-            output_base, output_type = transducer_model(images, hidden, cell_state, train_mode=True)
+            # output_base, output_type = transducer_model(images, hidden, cell_state, train_mode=True)
+            output_base = transducer_model(images, hidden, cell_state, train_mode=True)
 
             loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
             # loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
