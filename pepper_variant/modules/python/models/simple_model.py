@@ -35,13 +35,13 @@ class TransducerGRU(nn.Module):
         self.dropout_2 = nn.Dropout(p=0.1)
         self.linear_2 = nn.Linear(self.linear_1_size, self.linear_2_size)
 
-        self.dropout_3 = nn.Dropout(p=0.1)
+        self.dropout_3 = nn.Dropout(p=0.0)
         self.linear_3 = nn.Linear(self.linear_2_size, self.linear_3_size)
 
-        self.dropout_4 = nn.Dropout(p=0.2)
+        self.dropout_4 = nn.Dropout(p=0.1)
         self.linear_4 = nn.Linear(self.linear_3_size, self.linear_4_size)
 
-        self.dropout_5 = nn.Dropout(p=0.1)
+        self.dropout_5 = nn.Dropout(p=0.0)
         self.linear_5 = nn.Linear(self.linear_4_size, self.linear_5_size)
 
         self.output_layer = nn.Linear(self.linear_5_size, self.num_classes)

@@ -132,6 +132,8 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
         sys.stderr.write("\n")
     sys.stderr.flush()
 
+
+    sys.stderr.write("Type Confusion Matrix:" + "\n")
     sys.stderr.write("            ")
     for label in ImageSizeOptions.decoded_type_labels:
         sys.stderr.write(str(label) + '         ')
