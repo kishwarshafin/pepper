@@ -95,8 +95,11 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                 cm_value_type = confusion_matrix_type.value()
                 denom_type = cm_value_type.sum() if cm_value_type.sum() > 0 else 1.0
 
-                total_accurate_type = 0
                 for i in range(0, ImageSizeOptions.TOTAL_TYPE_LABELS):
+                    denom_type = denom_type - cm_value_type[0][i]
+
+                total_accurate_type = 0
+                for i in range(1, ImageSizeOptions.TOTAL_TYPE_LABELS):
                     total_accurate = total_accurate + cm_value_type[i][i]
                 accuracy_type = (100.0 * total_accurate_type) / denom_type
 
