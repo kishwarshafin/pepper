@@ -44,7 +44,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     # Test the Model
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST STARTING\n")
     confusion_matrix = meter.ConfusionMeter(num_classes)
-    confusion_matrix_type = meter.ConfusionMeter(10)
+    confusion_matrix_type = meter.ConfusionMeter(num_type_classes)
 
     total_loss = 0
     total_images = 0
@@ -70,12 +70,12 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
             output_base, output_type = transducer_model(images, hidden, cell_state, train_mode=True)
 
             loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
-            loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), labels.contiguous().view(-1))
+            loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
 
             confusion_matrix.add(output_base.data.contiguous().view(-1, num_classes),
                                  labels.data.contiguous().view(-1))
 
-            confusion_matrix_type.add(output_type.data.contiguous().view(-1, num_classes),
+            confusion_matrix_type.add(output_type.data.contiguous().view(-1, num_type_classes),
                                       type_labels.data.contiguous().view(-1))
 
             total_loss += loss_base.item() + loss_type.item()
