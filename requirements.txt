@@ -2,8 +2,8 @@ h5py==2.10.0
 tqdm==4.38.0
 numpy==1.16.6
 wget==3.2
-torch==1.4.0
-torchvision==0.5.0
+torch==1.8.1
+torchvision==0.8.2
 onnx
 onnxruntime
 hyperopt==0.2
