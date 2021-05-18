@@ -57,11 +57,12 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                 labels = labels.cuda()
 
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+            cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
             if gpu_mode:
                 hidden = hidden.cuda()
 
-            output_, hidden = transducer_model(images, hidden)
+            output_ = transducer_model(images, hidden, cell_state, train_mode=True)
 
             loss = criterion(output_.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
 
