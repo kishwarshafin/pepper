@@ -50,33 +50,33 @@ class TransducerGRU(nn.Module):
         cell_state = cell_state.transpose(0, 1).contiguous()
 
         self.encoder.flatten_parameters()
-        x_out_lstm1, (hidden_out_lstm1, cell_state_lstm1) = self.encoder(x, (hidden, cell_state))
+        x, (hidden, cell_state) = self.encoder(x, (hidden, cell_state))
 
         self.decoder.flatten_parameters()
-        x_out_lstm2, (hidden_out_lstm2, cell_state_lstm2) = self.decoder(x_out_lstm1,  (hidden_out_lstm1, cell_state_lstm1))
+        x, (hidden, cell_state) = self.decoder(x, (hidden, cell_state))
 
-        x_dropout1 = self.dropout_1(x_out_lstm2)
-        x_linear1 = self.linear_1(x_dropout1)
+        x = self.dropout_1(x)
+        x = self.linear_1(x)
 
-        x_dropout2 = self.dropout_2(x_linear1)
-        x_linear2 = self.linear_2(x_dropout2)
+        x = self.dropout_2(x)
+        x = self.linear_2(x)
 
-        x_dropout3 = self.dropout_3(x_linear2)
-        x_linear3 = self.linear_3(x_dropout3)
+        x = self.dropout_3(x)
+        x = self.linear_3(x)
 
-        x_dropout4 = self.dropout_4(x_linear3)
-        x_linear4 = self.linear_4(x_dropout4)
+        x = self.dropout_4(x)
+        x = self.linear_4(x)
 
-        x_dropout5 = self.dropout_5(x_linear4)
-        x_linear5 = self.linear_5(x_dropout5)
+        x = self.dropout_5(x)
+        x = self.linear_5(x)
 
-        x_output = self.output_layer(x_linear5)
+        x = self.output_layer(x)
 
         if train_mode:
             log_softmax = nn.LogSoftmax(dim=1)
-            return log_softmax(x_output)
+            return log_softmax(x)
 
-        return x_output
+        return x
 
     def init_hidden(self, batch_size, num_layers, bidirectional=True):
         num_directions = 1

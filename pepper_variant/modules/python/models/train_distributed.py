@@ -128,7 +128,7 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
     class_weights = torch.Tensor(ImageSizeOptions.class_weights)
     # Loss
-    criterion = nn.NLLLoss()
+    criterion = nn.NLLLoss(class_weights)
 
     if gpu_mode is True:
         criterion = criterion.to(device_id)

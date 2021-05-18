@@ -34,7 +34,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     transducer_model.eval()
     class_weights = torch.Tensor(ImageSizeOptions.class_weights)
     # Loss
-    criterion = nn.NLLLoss()
+    criterion = nn.NLLLoss(class_weights)
 
     if gpu_mode is True:
         criterion = criterion.cuda()
