@@ -136,17 +136,17 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     sys.stderr.flush()
 
 
-    # sys.stderr.write("Type Confusion Matrix:" + "\n")
-    # sys.stderr.write("            ")
-    # for label in ImageSizeOptions.decoded_type_labels:
-    #     sys.stderr.write(str(label) + '         ')
-    # sys.stderr.write("\n")
-    #
-    # for i, row in enumerate(confusion_matrix_type.value()):
-    #     sys.stderr.write(str(ImageSizeOptions.decoded_type_labels[i]) + '   ')
-    #     for j, val in enumerate(row):
-    #         sys.stderr.write("{0:9d}".format(val) + '  ')
-    #     sys.stderr.write("\n")
-    # sys.stderr.flush()
+    sys.stderr.write("Type Confusion Matrix:" + "\n")
+    sys.stderr.write("            ")
+    for label in ImageSizeOptions.decoded_type_labels:
+        sys.stderr.write(str(label) + '         ')
+    sys.stderr.write("\n")
+
+    for i, row in enumerate(confusion_matrix_type.value()):
+        sys.stderr.write(str(ImageSizeOptions.decoded_type_labels[i]) + '   ')
+        for j, val in enumerate(row):
+            sys.stderr.write("{0:9d}".format(val) + '  ')
+        sys.stderr.write("\n")
+    sys.stderr.flush()
 
     return {'loss': avg_loss, 'accuracy': accuracy, 'confusion_matrix': str(confusion_matrix.conf)}
