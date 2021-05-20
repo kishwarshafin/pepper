@@ -197,12 +197,12 @@ void RegionalSummaryGenerator::encode_reference_bases(int **image_matrix) {
         // encode the C base
         int base_index = (int) (ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
         int feature_index = get_reference_feature_index(reference_sequence[ref_position - ref_start]);
-        image_matrix[base_index][feature_index] = 64;
+        image_matrix[base_index][feature_index] = 255;
 
         for(int i = 1; i <= max_observed_insert[ref_position - ref_start]; i++) {
             base_index = (int) (ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]) + i;
             feature_index = get_reference_feature_index('*');
-            image_matrix[base_index][feature_index] = 128;
+            image_matrix[base_index][feature_index] = 255;
         }
     }
 }
@@ -395,8 +395,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                 }
                 break;
             case CIGAR_OPERATIONS::IN:
-                if (ref_position - 1 >= ref_start &&
-                    ref_position - 1 <= ref_end && ImageOptionsRegion::GENERATE_INDELS) {
+                if (ref_position - 1 >= ref_start && ref_position - 1 <= ref_end) {
                     // process insert allele here
                     string alt;
                     int base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start]);
@@ -416,8 +415,8 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
             case CIGAR_OPERATIONS::PAD:
             case CIGAR_OPERATIONS::DEL:
                 // process delete allele here
-                if (ref_position >= ref_start && ref_position <= ref_end) {
-                    int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
+                if (ref_position -1 >= ref_start && ref_position - 1 <= ref_end) {
+                    int base_index = (int)(ref_position - 1 - ref_start + cumulative_observed_insert[ref_position - 1 - ref_start]);
                     int delete_count_index =  get_feature_index('D', read.flags.is_reverse);
                     image_matrix[base_index][delete_count_index] += 1.0;
                 }
@@ -478,21 +477,21 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     // once the image matrix is generated, scale the counted values.
     for(int i=0;i<region_size;i++){
         // normalize things
-//        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
-//            image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
-//        }
-        int fwd_feature_index = get_feature_index(ref_at_labels[i], false);
-        int rev_feature_index = get_feature_index(ref_at_labels[i], true);
-
-        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++) {
-            if(image_matrix[i][j] == 0) continue;
-
-            if (j == fwd_feature_index || j == rev_feature_index){
-                image_matrix[i][j] = min(ImageOptionsRegion::MAX_REF_COLOR_VALUE, image_matrix[i][j]);
-            } else {
-                image_matrix[i][j] = min(ImageOptionsRegion::MAX_COLOR_VALUE, ImageOptionsRegion::MISMATCH_COLOR_START + image_matrix[i][j]);
-            }
+        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
+            image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
         }
+//        int fwd_feature_index = get_feature_index(ref_at_labels[i], false);
+//        int rev_feature_index = get_feature_index(ref_at_labels[i], true);
+//
+//        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++) {
+//            if(image_matrix[i][j] == 0) continue;
+//
+//            if (j == fwd_feature_index || j == rev_feature_index){
+//                image_matrix[i][j] = min(ImageOptionsRegion::MAX_REF_COLOR_VALUE, image_matrix[i][j]);
+//            } else {
+//                image_matrix[i][j] = min(ImageOptionsRegion::MAX_COLOR_VALUE, ImageOptionsRegion::MISMATCH_COLOR_START + image_matrix[i][j]);
+//            }
+//        }
     }
 
     labels.resize(region_size + 1, 0);
@@ -574,7 +573,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
         current_chunk += 1;
     }
 
-//    debug_print_matrix(image_matrix, train_mode);
+    debug_print_matrix(image_matrix, train_mode);
     for (int i = 0; i < region_size + 1; i++)
         free(image_matrix[i]);
     free(image_matrix);
