@@ -573,7 +573,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
         current_chunk += 1;
     }
 
-    debug_print_matrix(image_matrix, train_mode);
+//    debug_print_matrix(image_matrix, train_mode);
     for (int i = 0; i < region_size + 1; i++)
         free(image_matrix[i]);
     free(image_matrix);
