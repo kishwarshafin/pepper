@@ -13,11 +13,12 @@
 namespace ImageOptionsRegion {
 
     static constexpr int MAX_COLOR_VALUE = 256;
-    static constexpr int BOOST_VALUE = 254;
+    static constexpr int MAX_REF_COLOR_VALUE = 100;
+    static constexpr int MISMATCH_COLOR_START = 128;
     static constexpr int REFERENCE_INDEX_START = 0;
     static constexpr int REFERENCE_INDEX_SIZE = 5;
     static constexpr int BASE_INDEX_START = 5;
-    static constexpr int BASE_INDEX_SIZE = 10;
+    static constexpr int BASE_INDEX_SIZE = 14;
     vector<string> column_values{"AREF:",
                                  "CREF:",
                                  "GREF:",
@@ -28,11 +29,15 @@ namespace ImageOptionsRegion {
                                  "GFRW:",
                                  "TFRW:",
                                  "*FRW:",
+                                 "IFRW:",
+                                 "DFRW:",
                                  "AREV:",
                                  "CREV:",
                                  "GREV:",
                                  "TREV:",
-                                 "*REV:"};
+                                 "*REV:",
+                                 "IREV:",
+                                 "DREV:"};
 
     static constexpr bool GENERATE_INDELS = true;
 };

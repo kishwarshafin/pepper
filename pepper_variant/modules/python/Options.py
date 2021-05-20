@@ -1,19 +1,19 @@
 class ImageSizeOptions(object):
-    IMAGE_HEIGHT = 15
-    IMAGE_CHANNEL_HEIGHT = 15
+    IMAGE_HEIGHT = 19
+    IMAGE_CHANNEL_HEIGHT = 19
     IMAGE_CHANNELS = 1
     SEQ_LENGTH = 1000
     SEQ_OVERLAP = 50
     LABEL_LENGTH = SEQ_LENGTH
 
     TOTAL_LABELS = 15
-    TOTAL_TYPE_LABELS = 10
+    TOTAL_TYPE_LABELS = 8
     MIN_SEQUENCE_LENGTH = 1000
     MIN_IMAGE_OVERLAP = 100
     decoded_labels = ['**', 'AA', 'AC', 'AT', 'AG', 'A*', 'CC', 'CT', 'CG', 'C*', 'TT', 'TG', 'T*', 'GG', 'G*']
     class_weights = [0.1,  0.1,  1.0,  1.0,  1.0,  1.0,  0.1,  1.0,  1.0,  1.0,  0.1,  1.0,  1.0,  0.1,  1.0]
-    class_weights_type = [0.1,  1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-    decoded_type_labels = ['RR', 'RS', 'RI', 'RD', 'SS', 'SI', 'SD', 'II', 'ID', 'DD']
+    class_weights_type = [0.1,  1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    decoded_type_labels = ['RR', 'RS', 'RI', 'RD', 'SS', 'SD', 'II', 'DD']
 
 
 class ImageSizeOptionsHP(object):
