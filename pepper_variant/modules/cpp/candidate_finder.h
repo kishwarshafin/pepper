@@ -17,7 +17,7 @@ namespace CandidateFinder_options {
     static constexpr int min_base_quality = 1;
     static constexpr int freq_threshold = 4;
     static constexpr int min_count_threshold = 2;
-    static constexpr bool report_indels = false;
+    static constexpr bool report_indels = true;
 };
 
 namespace AlleleType {
@@ -175,7 +175,8 @@ public:
     vector<PositionalCandidateRecord> find_candidates(vector<type_read>& reads,
                                                       vector<long long> positions,
                                                       vector<int>indices,
-                                                      vector< vector<int> > predictions,
+                                                      vector< vector<float> > predictions,
+                                                      vector< vector<float> > type_predictions,
                                                       bool freq_based,
                                                       double freq);
     static bool filter_candidate(const Candidate& candidate, bool freq_based, double freq);

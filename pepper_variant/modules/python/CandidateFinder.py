@@ -224,9 +224,11 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
             all_positions = []
             all_indicies = []
             all_predictions = []
+            all_type_predictions = []
             for i, chunk in enumerate(smaller_chunks):
                 with h5py.File(file_name, 'r') as hdf5_file:
                     bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
+                    types = hdf5_file['predictions'][contig][chunk_name][chunk]['type_predictions'][()]
                     positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
                     indices = hdf5_file['predictions'][contig][chunk_name][chunk]['index'][()]
 
@@ -234,10 +236,12 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                     all_positions = positions
                     all_indicies = indices
                     all_predictions = bases
+                    all_type_predictions = types
                 else:
                     all_positions = np.concatenate((all_positions, positions), axis=0)
                     all_indicies = np.concatenate((all_indicies, indices), axis=0)
                     all_predictions = np.concatenate((all_predictions, bases), axis=0)
+                    all_type_predictions = np.concatenate((all_type_predictions, types), axis=0)
 
             cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
 
@@ -250,6 +254,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                                                                  all_positions,
                                                                  all_indicies,
                                                                  all_predictions,
+                                                                 all_type_predictions,
                                                                  freq_based,
                                                                  freq)
 

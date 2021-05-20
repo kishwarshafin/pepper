@@ -13,7 +13,7 @@ class CandidateFinderCPP:
     def overlap_length_between_ranges(range_a, range_b):
         return max(0, (min(range_a[1], range_b[1]) - max(range_a[0], range_b[0])))
 
-    def find_candidates(self, bam_file_path, fasta_file_path, contig_name, region_start, region_end, positions, indices, predictions, freq_based, freq):
+    def find_candidates(self, bam_file_path, fasta_file_path, contig_name, region_start, region_end, positions, indices, predictions, type_predictions, freq_based, freq):
         bam_handler = PEPPER_VARIANT.BAM_handler(bam_file_path)
         fasta_handler = PEPPER_VARIANT.FASTA_handler(fasta_file_path)
         all_reads = bam_handler.get_reads(contig_name,
@@ -43,6 +43,7 @@ class CandidateFinderCPP:
                                                                      positions,
                                                                      indices,
                                                                      predictions,
+                                                                     type_predictions,
                                                                      freq_based,
                                                                      freq)
         positional_candidate_list = sorted(positional_candidate_list)

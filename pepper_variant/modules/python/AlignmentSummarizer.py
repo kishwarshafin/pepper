@@ -357,6 +357,7 @@ class AlignmentSummarizer:
 
             all_images.extend(regional_image_summary.chunked_image_matrix)
             all_labels.extend(regional_image_summary.chunked_labels)
+            all_type_labels.extend(regional_image_summary.chunked_type_labels)
             all_positions.extend(regional_image_summary.chunked_positions)
             all_index.extend(regional_image_summary.chunked_index)
             all_chunk_ids.extend(regional_image_summary.chunked_ids)
