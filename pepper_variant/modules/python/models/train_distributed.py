@@ -104,11 +104,11 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
 
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RETRAIN MODEL LOADED\n")
     else:
-        transducer_model = ModelHandler.get_new_gru_model(input_channels=ImageSizeOptions.IMAGE_CHANNELS,
-                                                          image_features=ImageSizeOptions.IMAGE_HEIGHT,
+        transducer_model = ModelHandler.get_new_gru_model(image_features=ImageSizeOptions.IMAGE_HEIGHT,
                                                           gru_layers=gru_layers,
                                                           hidden_size=hidden_size,
-                                                          num_classes=num_classes)
+                                                          num_classes=num_classes,
+                                                          num_classes_type=num_type_classes)
         prev_ite = 0
 
     param_count = sum(p.numel() for p in transducer_model.parameters() if p.requires_grad)

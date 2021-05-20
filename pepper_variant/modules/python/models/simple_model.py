@@ -3,13 +3,13 @@ import torch.nn as nn
 
 
 class TransducerGRU(nn.Module):
-    def __init__(self, image_channels, image_features, gru_layers, hidden_size, num_classes, bidirectional=True):
+    def __init__(self, image_features, gru_layers, hidden_size, num_classes, num_classes_type, bidirectional=True):
         super(TransducerGRU, self).__init__()
         self.hidden_size = hidden_size
         self.bidirectional = bidirectional
         self.num_layers = gru_layers
         self.num_classes = num_classes
-        self.num_classes_type = 10
+        self.num_classes_type = num_classes_type
 
         self.lstm_1_hidden_size = 128
         self.lstm_2_hidden_size = 256

@@ -8,9 +8,9 @@ class ModelHandler:
         torch.save(state, filename)
 
     @staticmethod
-    def get_new_gru_model(input_channels, image_features, gru_layers, hidden_size, num_classes=5):
+    def get_new_gru_model(image_features, gru_layers, hidden_size, num_classes, num_classes_type):
         # get a new model
-        transducer_model = TransducerGRU(input_channels, image_features, gru_layers, hidden_size, num_classes,
+        transducer_model = TransducerGRU(image_features, gru_layers, hidden_size, num_classes, num_classes_type,
                                          bidirectional=True)
         return transducer_model
 
