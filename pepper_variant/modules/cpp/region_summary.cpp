@@ -269,11 +269,15 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
 
                         if(hp_tag == 1) {
                             labels_hp1[base_index] = check_truth_base(base);
-                            variant_type_labels_hp1[base_index] = VariantTypes::INSERT;
+                            if (i < alt.length()) {
+                                variant_type_labels_hp1[base_index] = VariantTypes::INSERT;
+                            }
                         }
                         else {
                             labels_hp2[base_index] = check_truth_base(base);
-                            variant_type_labels_hp1[base_index] = VariantTypes::INSERT;
+                            if (i < alt.length()) {
+                                variant_type_labels_hp2[base_index] = VariantTypes::INSERT;
+                            }
                         }
                     }
                 }
