@@ -260,24 +260,25 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
                     string alt;
                     alt = read.sequence.substr(read_index, cigar.length);
 
+                    int base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start]);
+
+                    if(hp_tag == 1)
+                        variant_type_labels_hp1[base_index] = VariantTypes::INSERT;
+                    else
+                        variant_type_labels_hp2[base_index] = VariantTypes::INSERT;
+
                     for (int i = 0; i < max_observed_insert[(ref_position -1) - ref_start]; i++) {
                         char base = '*';
                         if (i < alt.length()) {
                             base = alt[i];
                         }
-                        int base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start] + (i + 1));
+                        base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start] + (i + 1));
 
                         if(hp_tag == 1) {
                             labels_hp1[base_index] = check_truth_base(base);
-                            if (i < alt.length()) {
-                                variant_type_labels_hp1[base_index] = VariantTypes::INSERT;
-                            }
                         }
                         else {
                             labels_hp2[base_index] = check_truth_base(base);
-                            if (i < alt.length()) {
-                                variant_type_labels_hp2[base_index] = VariantTypes::INSERT;
-                            }
                         }
                     }
                 }
@@ -290,22 +291,26 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
 
                 if (ref_position >= ref_start && ref_position <= ref_end) {
                     // process delete allele here
-                    for (int i = 0; i < cigar.length; i++) {
+                    int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
 
+                    if(hp_tag == 1)
+                        variant_type_labels_hp1[base_index] = VariantTypes::DELETE;
+                    else
+                        variant_type_labels_hp2[base_index] = VariantTypes::DELETE;
+
+                    for (int i = 0; i < cigar.length; i++) {
                         if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                             // DELETE
                             char base = '#';
-                            int base_index = (int)(ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i]);
+                            base_index = (int)(ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i]);
 
                             char reference_base = reference_sequence[ref_position - ref_start + i];
                             ref_at_labels[base_index] = reference_base;
                             if(hp_tag == 1) {
                                 labels_hp1[base_index] = base;
-                                variant_type_labels_hp1[base_index] = VariantTypes::DELETE;
                             }
                             else {
                                 labels_hp2[base_index] = base;
-                                variant_type_labels_hp2[base_index] = VariantTypes::DELETE;
                             }
                         }
                     }
