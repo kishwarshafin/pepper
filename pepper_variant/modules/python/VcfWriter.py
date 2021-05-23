@@ -36,12 +36,12 @@ class VCFWriter:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=qual,
                                                       filter='refCall', alleles=alleles, GT=genotype,
-                                                      AP=alt_qual, GQ=alt_qual, DP=dps, AD=ads, VAF=vafs)
+                                                      AP=alt_qual, GQ=alt_qual, DP=max(dps), AD=ads, VAF=vafs)
             else:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=qual,
                                                       filter='PASS', alleles=alleles, GT=genotype,
-                                                      AP=alt_qual, GQ=qual, DP=dps, AD=ads, VAF=vafs)
+                                                      AP=alt_qual, GQ=qual, DP=max(dps), AD=ads, VAF=vafs)
 
             self.vcf_file.write(vcf_record)
 
@@ -69,14 +69,14 @@ class VCFWriter:
                  ('Description', "Genotype")]
         header.add_meta(key='FORMAT', items=items)
         items = [('ID', "DP"),
-                 ('Number', "A"),
+                 ('Number', 1),
                  ('Type', 'Integer'),
                  ('Description', "Depth")]
         header.add_meta(key='FORMAT', items=items)
         items = [('ID', "AD"),
                  ('Number', "A"),
                  ('Type', 'Integer'),
-                 ('Description', "Depth")]
+                 ('Description', "Allele depth")]
         header.add_meta(key='FORMAT', items=items)
         items = [('ID', "VAF"),
                  ('Number', "A"),
