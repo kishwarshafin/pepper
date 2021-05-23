@@ -264,8 +264,7 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
                         variant_type_labels_hp2[base_index] = VariantTypes::INSERT;
                 }
 
-                if (ref_position - 1 >= ref_start &&
-                    ref_position - 1 <= ref_end && ImageOptionsRegion::GENERATE_INDELS) {
+                if (ref_position - 1 >= ref_start && ref_position - 1 <= ref_end && ImageOptionsRegion::GENERATE_INDELS == true) {
                     // process insert allele here
                     string alt;
                     alt = read.sequence.substr(read_index, cigar.length);
@@ -418,11 +417,13 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                     int insert_count_index =  get_feature_index('I', read.flags.is_reverse);
                     image_matrix[base_index][insert_count_index] += 1;
 
-                    alt = read.sequence.substr(read_index, cigar.length);
-                    for (int i = 0; i < cigar.length; i++) {
-                        base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start] + (i + 1));
-                        int feature_index = get_feature_index(alt[i], read.flags.is_reverse);
-                        image_matrix[base_index][feature_index] += 1;
+                    if(ImageOptionsRegion::GENERATE_INDELS == true) {
+                        alt = read.sequence.substr(read_index, cigar.length);
+                        for (int i = 0; i < cigar.length; i++) {
+                            base_index = (int) ((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start] + (i + 1));
+                            int feature_index = get_feature_index(alt[i], read.flags.is_reverse);
+                            image_matrix[base_index][feature_index] += 1;
+                        }
                     }
                 }
                 read_index += cigar.length;
@@ -436,16 +437,18 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                     int delete_count_index =  get_feature_index('D', read.flags.is_reverse);
                     image_matrix[base_index][delete_count_index] += 1.0;
                 }
+
                 for (int i = 0; i < cigar.length; i++) {
                     if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                         // update the summary of base
-                        int base_index = (int)(ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i]);
+                        int base_index = (int) (ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i]);
                         int feature_index = get_feature_index('*', read.flags.is_reverse);
 
                         image_matrix[base_index][feature_index] += 1;
                         coverage_vector[ref_position - ref_start] += 1;
                     }
                 }
+
                 ref_position += cigar.length;
                 break;
             case CIGAR_OPERATIONS::SOFT_CLIP:
