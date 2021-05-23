@@ -39,7 +39,7 @@ namespace ImageOptionsRegion {
                                  "IREV:",
                                  "DREV:"};
 
-    static constexpr bool GENERATE_INDELS = true;
+    static constexpr bool GENERATE_INDELS = false;
 };
 
 
