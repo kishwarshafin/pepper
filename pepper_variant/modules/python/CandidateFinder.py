@@ -7,6 +7,7 @@ import concurrent.futures
 import numpy as np
 from collections import defaultdict
 import operator
+from numpy import argmax
 from pepper_variant.modules.python.Options import PEPPERVariantCandidateFinderOptions, ImageSizeOptions
 from pepper_variant.modules.python.CandidateFinderCPP import CandidateFinderCPP
 
@@ -154,6 +155,59 @@ def candidates_to_variants(candidates, contig, freq_based, freq):
     return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, alt_probs, alt_prob_h1s, alt_prob_h2s, non_ref_probs, ads, overall_non_ref_prob
 
 
+def candidates_to_variants_snp(candidates, contig, freq_based, freq):
+    ref_sequence = ""
+
+    min_pos_start, max_pos_end, genotype = 0, 0, 0
+    reference_sequence = ""
+    alleles, dps, ads = [], [], []
+    genotype = 0
+    allele_probability, genotype_probability = 0, 0
+
+    for i, candidate in enumerate(candidates):
+        pos_start, pos_end, ref, alt, alt_type, depth, read_support, gt, allele_prob, genotype_prob = candidate
+        if i == 0:
+            min_pos_start = pos_start
+            max_pos_end = pos_end
+            reference_sequence = ref
+            alleles.append(alt)
+            dps.append(depth)
+            ads.append(read_support)
+            genotype = gt
+            allele_probability = allele_prob
+            genotype_probability = genotype_prob
+        else:
+            alleles.append(alt)
+            dps.append(depth)
+            ads.append(read_support)
+
+            if min_pos_start != pos_start:
+                print("MIN POS START DIDN'T MATCH: ", candidate)
+            if max_pos_end != pos_end:
+                print("MIN POS START DIDN'T MATCH: ", candidate)
+            if ref != reference_sequence:
+                print("REFERENCE DIDN'T MATCH: ", candidate)
+            if gt != genotype:
+                print("GENOTYPE DIDN'T MATCH: ", candidate)
+            if allele_probability != allele_prob:
+                print("ALLELE PROBABILITY DIDN'T MATCH", candidate)
+            if genotype_prob != genotype_prob:
+                print("GENOTYPE PROBABILITY DIDN'T MATCH", candidate)
+
+    final_genotype = [0, 0]
+    if genotype == 1:
+        if len(alleles) == 1:
+            final_genotype = [0, 1]
+        elif len(alleles) > 1:
+            final_genotype = [1, 2]
+    elif genotype == 2:
+        if len(alleles) == 1:
+            final_genotype = [1, 1]
+        elif len(alleles) > 1:
+            final_genotype = [1, 2]
+
+    return contig, min_pos_start, max_pos_end, reference_sequence, alleles, dps, ads, final_genotype, allele_probability, genotype_probability
+
 
 def get_file_paths_from_directory(directory_path):
     """
@@ -217,31 +271,45 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
             smaller_chunks = set(hdf5_file['predictions'][contig][chunk_name].keys()) - {'contig_start', 'contig_end'}
             contig_start = hdf5_file['predictions'][contig][chunk_name]['contig_start'][()]
             contig_end = hdf5_file['predictions'][contig][chunk_name]['contig_end'][()]
-
         smaller_chunks = sorted(smaller_chunks)
 
         if not use_hp_info:
             all_positions = []
             all_indicies = []
-            all_predictions = []
+            all_base_predictions = []
             all_type_predictions = []
+            all_base_prediction_labels = []
+            all_type_prediction_labels = []
             for i, chunk in enumerate(smaller_chunks):
                 with h5py.File(file_name, 'r') as hdf5_file:
                     bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
                     types = hdf5_file['predictions'][contig][chunk_name][chunk]['type_predictions'][()]
                     positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
                     indices = hdf5_file['predictions'][contig][chunk_name][chunk]['index'][()]
+                    base_label = argmax(bases, axis=1)
+                    type_label = argmax(types, axis=1)
+
+                    # for ii, base in enumerate(bases):
+                    #     print(positions[ii], indices[ii])
+                    #     print(list(bases[ii]))
+                    #     print(list(types[ii]))
+                    #     print(base_label[ii])
+                    #     print(type_label[ii])
 
                 if i == 0:
                     all_positions = positions
                     all_indicies = indices
-                    all_predictions = bases
+                    all_base_predictions = bases
                     all_type_predictions = types
+                    all_base_prediction_labels = base_label
+                    all_type_prediction_labels = type_label
                 else:
                     all_positions = np.concatenate((all_positions, positions), axis=0)
                     all_indicies = np.concatenate((all_indicies, indices), axis=0)
-                    all_predictions = np.concatenate((all_predictions, bases), axis=0)
+                    all_base_predictions = np.concatenate((all_base_predictions, bases), axis=0)
                     all_type_predictions = np.concatenate((all_type_predictions, types), axis=0)
+                    all_base_prediction_labels = np.concatenate((all_base_prediction_labels, base_label), axis=0)
+                    all_type_prediction_labels = np.concatenate((all_type_prediction_labels, type_label), axis=0)
 
             cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
 
@@ -253,8 +321,10 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                                                                  contig_end,
                                                                  all_positions,
                                                                  all_indicies,
-                                                                 all_predictions,
+                                                                 all_base_predictions,
                                                                  all_type_predictions,
+                                                                 all_base_prediction_labels,
+                                                                 all_type_prediction_labels,
                                                                  freq_based,
                                                                  freq)
 
@@ -262,15 +332,12 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                 selected_candidates = []
                 found_candidate = False
                 for candidate in candidate_map[pos]:
-                    # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                    #       "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
-                    #       "H0 supp", candidate.read_support_h0, "H1 supp",  candidate.read_support_h1, "H2 supp",  candidate.read_support_h2,
-                    #       "ALT prob h1:", candidate.alt_prob_h1, "ALT prob h2:", candidate.alt_prob_h2, "Non-ref prob:", candidate.non_ref_prob)
                     found_candidate = True
                     selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                                                candidate.depth, candidate.read_support, candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
+                                                candidate.depth, candidate.read_support, candidate.genotype, candidate.allele_probability, candidate.genotype_probability))
+
                 if found_candidate:
-                    variant = candidates_to_variants(list(selected_candidates), contig, freq_based, freq)
+                    variant = candidates_to_variants_snp(list(selected_candidates), contig, freq_based, freq)
                     if variant is not None:
                         selected_candidate_list.append(variant)
         else:

@@ -82,7 +82,7 @@ void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
                                 check_this_base = false;
                             }
                         }
-                        if(check_this_base == true) {
+                        if(check_this_base) {
                             // process the SNP allele here
                             string ref(1, reference_sequence[reference_index]);
                             string alt(1, read.sequence[read_index]);
@@ -206,68 +206,79 @@ int get_index_from_type(char base) {
     return  -1;
 }
 
+int get_genotype(string type_predicted) {
+    if(type_predicted[0] == 'R' || type_predicted[1] == 'R') {
+        if(type_predicted[0] == type_predicted[1]) return 0; // hom-var
+        if(type_predicted[0] != type_predicted[1]) return 1; // het
+    } else {
+        if(type_predicted[0] == type_predicted[1]) return 2; // hom-alt
+        if(type_predicted[0] != type_predicted[1]) return 1; // het
+    }
+}
+
 bool CandidateFinder::filter_candidate(const Candidate& candidate, bool freq_based, double freq) {
     double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
-
-
-    if(candidate.allele.alt_type == SNP_TYPE) {
-        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
-
-        if(freq_based) {
-            if(allele_frequency >= freq) return true;
-            return false;
-        }
-
-        double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + candidate.alt_prob_h1 * LinearRegression::SNP_ALT_PROB1_COEF + candidate.alt_prob_h2 * LinearRegression::SNP_ALT_PROB2_COEF + LinearRegression::SNP_BIAS_TERM;
-
-        if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
-            if(allele_weight >= 0.05) {
-                if(predicted_val >= 0.5) return true;
-                else return false;
-            }
-            return false;
-        }
-
-        if(predicted_val >= LinearRegression::SNP_THRESHOLD) return true;
-        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
-        return false;
-
-    } else if (candidate.allele.alt_type == INSERT_TYPE) {
-        return false; // Turn off reporting inserts
-
-        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
-
-        if(allele_frequency < LinearRegression::IN_LOWER_FREQ_THRESHOLD) {
-            if(allele_frequency >= 0.05 && candidate.non_ref_prob >= 0.6) return true;
-            return false;
-        }
-        double predicted_val = allele_frequency * LinearRegression::INSERT_ALT_FREQ_COEF + allele_weight * LinearRegression::INSERT_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::INSERT_NON_REF_PROB_COEF + LinearRegression::INSERT_BIAS_TERM;
-
-        if(predicted_val >= LinearRegression::INSERT_THRESHOLD) return true;
-        if(allele_frequency >= LinearRegression::IN_UPPER_FREQ && allele_weight >= 0.5) return true;
-        return false;
-    } else if (candidate.allele.alt_type == DELETE_TYPE) {
-        return false; // Turn off reporting deletes
-
-        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
-
-//        if(allele_frequency>=0.20)return true;
-//        else return false;
-        double predicted_val = allele_weight * LinearRegression::DELETE_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::DELETE_NON_REF_PROB_COEF + LinearRegression::DELETE_BIAS_TERM;
-
-        if(allele_frequency < LinearRegression::DEL_LOWER_FREQ_THRESHOLD) {
-            if(allele_frequency >= 0.10 && allele_weight >= 0.5) return true;
-            if(allele_frequency >= 0.05 && allele_weight >= 0.65) return true;
-
-            return false;
-        }
-
-        if(predicted_val >= LinearRegression::DELETE_THRESHOLD) return true;
-        if(allele_frequency >= LinearRegression::DEL_UPPER_FREQ_THRESHOLD && allele_weight >= 0.65) return true;
-
-        return false;
-    }
     return false;
+
+
+//    if(candidate.allele.alt_type == SNP_TYPE) {
+//        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+//
+//        if(freq_based) {
+//            if(allele_frequency >= freq) return true;
+//            return false;
+//        }
+//
+//        double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + candidate.alt_prob_h1 * LinearRegression::SNP_ALT_PROB1_COEF + candidate.alt_prob_h2 * LinearRegression::SNP_ALT_PROB2_COEF + LinearRegression::SNP_BIAS_TERM;
+//
+//        if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
+//            if(allele_weight >= 0.05) {
+//                if(predicted_val >= 0.5) return true;
+//                else return false;
+//            }
+//            return false;
+//        }
+//
+//        if(predicted_val >= LinearRegression::SNP_THRESHOLD) return true;
+//        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
+//        return false;
+//
+//    } else if (candidate.allele.alt_type == INSERT_TYPE) {
+//        return false; // Turn off reporting inserts
+//
+//        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+//
+//        if(allele_frequency < LinearRegression::IN_LOWER_FREQ_THRESHOLD) {
+//            if(allele_frequency >= 0.05 && candidate.non_ref_prob >= 0.6) return true;
+//            return false;
+//        }
+//        double predicted_val = allele_frequency * LinearRegression::INSERT_ALT_FREQ_COEF + allele_weight * LinearRegression::INSERT_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::INSERT_NON_REF_PROB_COEF + LinearRegression::INSERT_BIAS_TERM;
+//
+//        if(predicted_val >= LinearRegression::INSERT_THRESHOLD) return true;
+//        if(allele_frequency >= LinearRegression::IN_UPPER_FREQ && allele_weight >= 0.5) return true;
+//        return false;
+//    } else if (candidate.allele.alt_type == DELETE_TYPE) {
+//        return false; // Turn off reporting deletes
+//
+//        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
+//
+////        if(allele_frequency>=0.20)return true;
+////        else return false;
+//        double predicted_val = allele_weight * LinearRegression::DELETE_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::DELETE_NON_REF_PROB_COEF + LinearRegression::DELETE_BIAS_TERM;
+//
+//        if(allele_frequency < LinearRegression::DEL_LOWER_FREQ_THRESHOLD) {
+//            if(allele_frequency >= 0.10 && allele_weight >= 0.5) return true;
+//            if(allele_frequency >= 0.05 && allele_weight >= 0.65) return true;
+//
+//            return false;
+//        }
+//
+//        if(predicted_val >= LinearRegression::DELETE_THRESHOLD) return true;
+//        if(allele_frequency >= LinearRegression::DEL_UPPER_FREQ_THRESHOLD && allele_weight >= 0.65) return true;
+//
+//        return false;
+//    }
+//    return false;
 }
 
 
@@ -276,12 +287,14 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                                                                    vector<int>indices,
                                                                    vector< vector<float> > predictions,
                                                                    vector< vector<float> > type_predictions,
+                                                                   vector<int> base_labels,
+                                                                   vector<int> type_labels,
                                                                    bool freq_based,
                                                                    double freq) {
 
     // populate all the prediction maps
-    vector<string> lables {"**", "AA", "AC", "AT", "AG", "A*", "CC", "CT", "CG", "C*", "TT", "TG", "T*", "GG", "G*"};
-    vector<string> type_lables {"RR", "RS", "RI", "RD", "SS", "SI", "SD", "II", "ID", "DD" };
+    vector<string> decoded_base_lables {"**", "AA", "AC", "AT", "AG", "A*", "CC", "CT", "CG", "C*", "TT", "TG", "T*", "GG", "G*"};
+    vector<string> decoded_type_lables {"RR", "RS", "RI", "RD", "SS", "SI", "SD", "II", "ID", "DD" };
 
     // first go over and see how many base positions are there.
     // all of the positions will be relative to the positions vector so we need to count where it starts and ends
@@ -317,67 +330,97 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
     }
 
     // create a prediction map, this is for all positions and 5 base predictions
-    vector< vector<float> > prediction_map_h1;
-    vector< vector<float> > prediction_map_h2;
+    vector<int> prediction_base_map(local_region_size + total_observered_insert_bases + 1);
+    vector<int> prediction_type_map(local_region_size + total_observered_insert_bases + 1);
 
-    vector< vector<float> > prediction_map_type_h1;
-    vector< vector<float> > prediction_map_type_h2;
+    vector< vector<float> > prediction_base_values_map;
+    vector< vector<float> > prediction_type_values_map;
 
-    prediction_map_h1.resize(local_region_size + total_observered_insert_bases + 1, vector<float>(5, 0));
-    prediction_map_h2.resize(local_region_size + total_observered_insert_bases + 1, vector<float>(5, 0));
-
-    prediction_map_type_h1.resize(local_region_size + total_observered_insert_bases + 1, vector<float>(4, 0));
-    prediction_map_type_h2.resize(local_region_size + total_observered_insert_bases + 1, vector<float>(4, 0));
-
-    // first, softm
-
+    prediction_base_values_map.resize(local_region_size + total_observered_insert_bases + 1, vector<float>((int)decoded_base_lables.size(), 0));
+    prediction_type_values_map.resize(local_region_size + total_observered_insert_bases + 1, vector<float>((int)decoded_type_lables.size(), 0));
+//    prediction_base_h2.resize(local_region_size + total_observered_insert_bases + 1, vector<float>(5, 0));
+//
+//    prediction_type_h1.resize(local_region_size + total_observered_insert_bases + 1, vector<float>(4, 0));
+//    prediction_type_h2.resize(local_region_size + total_observered_insert_bases + 1, vector<float>(4, 0));
+//
+//    // create the prediction map by taking the maximum prediction values
+//    for(int i=0; i< positions.size(); i++) {
+//        long long position = positions[i];
+//        int index = indices[i];
+//        if(position < 0) continue;
+//        int predicted_base_label = base_labels[i];
+//        int predicted_type_label = type_labels[i];
+//        if(index == 0) {
+//            if(predicted_)
+//            cout << position << " " << index << " " << predicted_base_label << " " << predicted_type_label << " " << decoded_base_lables[predicted_base_label] << " " << predictions[i][predicted_base_label]<<" "<< decoded_type_lables[predicted_type_label]<<" "<<type_predictions[i][predicted_type_label] << endl;
+//        }
+//    }
+//    exit(0);
+//
     for(int i=0; i< positions.size(); i++) {
         long long position = positions[i];
         int index = indices[i];
         if(position < 0) continue;
-
-        vector<float> base_predictions_h1(5, 0);
-        vector<float> base_predictions_h2(5, 0);
-
-        vector<float> type_predictions_h1(4, 0);
-        vector<float> type_predictions_h2(4, 0);
-
-        for(int j=0; j<predictions[i].size(); j++) {
-            int base_1_index = get_index_from_base(lables[j][0]);
-            int base_2_index = get_index_from_base(lables[j][1]);
-
-//            base_predictions_h1[base_1_index] = max(base_predictions_h1[base_1_index], predictions[i][j]);
-//            base_predictions_h2[base_2_index] = max(base_predictions_h2[base_2_index], predictions[i][j]);
-
-            base_predictions_h1[base_1_index] += predictions[i][j];
-            base_predictions_h2[base_2_index] += predictions[i][j];
-        }
-
-        for(int j=0; j<type_predictions[i].size(); j++) {
-            int base_1_index = get_index_from_type(type_lables[j][0]);
-            int base_2_index = get_index_from_type(type_lables[j][1]);
-
-//            type_predictions_h1[base_1_index] = max(type_predictions_h1[base_1_index], type_predictions[i][j]);
-//            type_predictions_h2[base_2_index] = max(type_predictions_h2[base_2_index], type_predictions[i][j]);
-            type_predictions_h1[base_1_index] += type_predictions[i][j];
-            type_predictions_h2[base_2_index] += type_predictions[i][j];
-        }
         int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start] + index);
+        int predicted_base_label = base_labels[i];
+        int predicted_type_label = type_labels[i];
 
-        softmax(base_predictions_h1);
-        softmax(base_predictions_h2);
-        for(int j=0; j < base_predictions_h1.size(); j++) {
-            prediction_map_h1[position_index][j] = base_predictions_h1[j];
-            prediction_map_h2[position_index][j] = base_predictions_h2[j];
-        }
+        prediction_base_map[position_index] = predicted_base_label;
+        prediction_type_map[position_index] = predicted_type_label;
 
-        softmax(type_predictions_h1);
-        softmax(type_predictions_h2);
-        for(int j=0; j < type_predictions_h1.size(); j++) {
-            prediction_map_type_h1[position_index][j] = type_predictions_h1[j];
-            prediction_map_type_h2[position_index][j] = type_predictions_h2[j];
-        }
+        prediction_base_values_map[position_index] = predictions[i];
+        prediction_type_values_map[position_index] = type_predictions[i];
+//        cout<<position_index<<" "<<bases_predicted<<" "<<types_predicted<<endl;
     }
+//    exit(1);
+    // first, softm
+//    for(int i=0; i< positions.size(); i++) {
+//        long long position = positions[i];
+//        int index = indices[i];
+//        if(position < 0) continue;
+//
+//        vector<float> base_predictions_h1(5, 0);
+//        vector<float> base_predictions_h2(5, 0);
+//
+//        vector<float> type_predictions_h1(4, 0);
+//        vector<float> type_predictions_h2(4, 0);
+//
+//        for(int j=0; j<predictions[i].size(); j++) {
+//            int base_1_index = get_index_from_base(decoded_base_lables[j][0]);
+//            int base_2_index = get_index_from_base(decoded_base_lables[j][1]);
+//
+////            base_predictions_h1[base_1_index] = max(base_predictions_h1[base_1_index], predictions[i][j]);
+////            base_predictions_h2[base_2_index] = max(base_predictions_h2[base_2_index], predictions[i][j]);
+//
+//            base_predictions_h1[base_1_index] += predictions[i][j];
+//            base_predictions_h2[base_2_index] += predictions[i][j];
+//        }
+//
+//        for(int j=0; j<type_predictions[i].size(); j++) {
+//            int base_1_index = get_index_from_type(decoded_type_lables[j][0]);
+//            int base_2_index = get_index_from_type(decoded_type_lables[j][1]);
+//
+////            type_predictions_h1[base_1_index] = max(type_predictions_h1[base_1_index], type_predictions[i][j]);
+////            type_predictions_h2[base_2_index] = max(type_predictions_h2[base_2_index], type_predictions[i][j]);
+//            type_predictions_h1[base_1_index] += type_predictions[i][j];
+//            type_predictions_h2[base_2_index] += type_predictions[i][j];
+//        }
+//        int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start] + index);
+//
+//        softmax(base_predictions_h1);
+//        softmax(base_predictions_h2);
+//        for(int j=0; j < base_predictions_h1.size(); j++) {
+//            prediction_map_h1[position_index][j] = base_predictions_h1[j];
+//            prediction_map_h2[position_index][j] = base_predictions_h2[j];
+//        }
+//
+//        softmax(type_predictions_h1);
+//        softmax(type_predictions_h2);
+//        for(int j=0; j < type_predictions_h1.size(); j++) {
+//            prediction_map_type_h1[position_index][j] = type_predictions_h1[j];
+//            prediction_map_type_h2[position_index][j] = type_predictions_h2[j];
+//        }
+//    }
 
     // all prediction maps populated now do candidate finding
     set<long long> filtered_candidate_positions;
@@ -441,93 +484,47 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
             if(candidate.allele.alt_type == SNP_TYPE) {
                 long long position = candidate.pos;
                 long long index = 0;
+
                 int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start] + index);
                 int alt_allele_index = get_index_from_base((char)candidate.allele.alt[0]);
 
-                non_ref_prob = 0.0;
-                alt_prob_h1 = 0.0;
-                alt_prob_h2 = 0.0;
-                double sum_h1_probs = max(1.0, double(accumulate(prediction_map_h1[position_index].begin(), prediction_map_h1[position_index].end(), 0)));
-                double sum_h2_probs = max(1.0, double(accumulate(prediction_map_h2[position_index].begin(), prediction_map_h2[position_index].end(), 0)));
-                double prob_alt_h1 = prediction_map_h1[position_index][alt_allele_index] / sum_h1_probs;
-                double prob_alt_h2 = prediction_map_h2[position_index][alt_allele_index] / sum_h2_probs;
+                int base_prediction_index = prediction_base_map[position_index];
+                int type_prediction_index = prediction_type_map[position_index];
 
+                string bases_predicted = decoded_base_lables[base_prediction_index];
+                string types_predicted = decoded_type_lables[type_prediction_index];
 
-                int ref_allele_index = get_index_from_base(candidate.allele.ref[0]);
-                sum_h1_probs = max(1.0, double(accumulate(prediction_map_h1[position_index].begin(), prediction_map_h1[position_index].end(), 0)));
-                sum_h2_probs = max(1.0, double(accumulate(prediction_map_h2[position_index].begin(), prediction_map_h2[position_index].end(), 0)));
+                float base_prediction_value = prediction_base_values_map[position_index][base_prediction_index];
+                float type_prediction_value = prediction_type_values_map[position_index][type_prediction_index];
 
-                double non_ref_prob_h1 = (sum_h1_probs - prediction_map_h1[position_index][ref_allele_index]) / sum_h1_probs;
-                double non_ref_prob_h2 = (sum_h2_probs - prediction_map_h2[position_index][ref_allele_index]) / sum_h2_probs;
-                non_ref_prob = max(non_ref_prob, max(non_ref_prob_h1, non_ref_prob_h2));
+                int predicted_genotype = get_genotype(types_predicted);
 
-                alt_prob_h1 = max(0.0001, prob_alt_h1);
-                alt_prob_h2 = max(0.0001, prob_alt_h2);
-
-                candidate.alt_prob_h1 = alt_prob_h1;
-                candidate.alt_prob_h2 = alt_prob_h2;
-                candidate.non_ref_prob = non_ref_prob;
+                if(bases_predicted[0] == candidate.allele.alt[0] || bases_predicted[1] == candidate.allele.alt[0]) {
+                    candidate.allele_probability = base_prediction_value;
+                    candidate.genotype_probability = type_prediction_value;
+                    candidate.genotype = predicted_genotype;
+//                    cout<<"SNP: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" "<<bases_predicted<<" "<<base_prediction_value<<" "<<types_predicted<<" "<<type_prediction_value<<" "<<predicted_genotype<<endl;
+                    positional_record.candidates.push_back(candidate);
+                }
             }
             else if(candidate.allele.alt_type == INSERT_TYPE) {
-                string alt_allele = candidate.allele.alt;
-                long long pos = candidate.pos;
-                int length = 0;
-                alt_prob = 0.0;
-                non_ref_prob = 0.0;
-
-
-//                cout<<"###################"<<endl;
-                for(int index=1; index <= max_observed_insert[candidate.pos - local_region_start]; index++) {
-
-                    if(index < candidate.allele.alt.length()) {
-                        int alt_allele_index = 0;
-                        long long position = candidate.pos;
-                        int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start] + index);
-
-//                        cout << "INDEX: " << index << " " << candidate.allele.alt[index] << endl;
-                        alt_allele_index = get_index_from_base(candidate.allele.alt[index]);
-                        int alt_type_index = get_index_from_type('I');
-
-                        double sum_h1_probs = max(1.0, double(accumulate(prediction_map_h1[position_index].begin(), prediction_map_h1[position_index].end(), 0.0)));
-                        double sum_h2_probs = max(1.0, double(accumulate(prediction_map_h2[position_index].begin(), prediction_map_h2[position_index].end(), 0.0)));
-
-                        double prob_alt_h1 = prediction_map_h1[position_index][alt_allele_index] / max(1.0, sum_h1_probs);
-                        double prob_alt_h2 = prediction_map_h2[position_index][alt_allele_index] / max(1.0, sum_h2_probs);
-
-                        double sum_h1_type_probs = max(1.0, double(accumulate(prediction_map_type_h1[position_index].begin(), prediction_map_type_h1[position_index].end(), 0.0)));
-                        double sum_h2_type_probs = max(1.0, double(accumulate(prediction_map_type_h2[position_index].begin(), prediction_map_type_h2[position_index].end(), 0.0)));
-
-                        double prob_alt_type_h1 = prediction_map_type_h1[position_index][alt_type_index] / max(1.0, sum_h1_type_probs);
-                        double prob_alt_type_h2 = prediction_map_type_h2[position_index][alt_type_index] / max(1.0, sum_h2_type_probs);
-
-
-//                        cout << "BASE PREDICTION VECTORS: " << endl;
-//                        for (int j = 0; j < prediction_map_h1[position_index].size(); j++)cout << prediction_map_h1[position_index][j] << " ";
-//                        cout << endl;
-//                        for (int j = 0; j < prediction_map_h2[position_index].size(); j++)cout << prediction_map_h2[position_index][j] << " ";
-//                        cout << endl;
+//                string alt_allele = candidate.allele.alt;
+//                long long pos = candidate.pos;
+//                int length = 0;
+//                alt_prob = 0.0;
+//                non_ref_prob = 0.0;
 //
 //
-//                        cout << "TYPE PREDICTION VECTORS: " << endl;
-//                        for (int j = 0; j < prediction_map_type_h1[position_index].size(); j++)cout << prediction_map_type_h1[position_index][j] << " ";
-//                        cout << endl;
-//                        for (int j = 0; j < prediction_map_type_h2[position_index].size(); j++)cout << prediction_map_type_h2[position_index][j] << " ";
-//                        cout << endl;
-//                        cout<<sum_h1_type_probs<<" "<<sum_h2_type_probs<<endl;
-//                        cout<<sum_h1_probs<<" "<<sum_h2_probs<<endl;
-                        alt_prob += max(prob_alt_h1, prob_alt_h2);
-                        non_ref_prob += max(prob_alt_type_h1, prob_alt_type_h2);
-                        length += 1;
-//                        cout<<"ALT PROB CALCULATION (inside): "<<position<<" "<<alt_prob<<" ("<<prob_alt_h1<<","<<prob_alt_h2<<")"<<"\t\t";
-//                        cout<<"NRF PROB CALCULATION (inside): "<<position<<" "<<non_ref_prob<<" ("<<prob_alt_type_h1<<", "<<prob_alt_type_h2<<")"<<endl;
-                    }
-//                    else {
+////                cout<<"###################"<<endl;
+//                for(int index=1; index <= max_observed_insert[candidate.pos - local_region_start]; index++) {
+//
+//                    if(index < candidate.allele.alt.length()) {
 //                        int alt_allele_index = 0;
 //                        long long position = candidate.pos;
 //                        int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start] + index);
 //
-////                        cout << "INDEX: " << index << endl;
-//                        alt_allele_index = get_index_from_base('*');
+////                        cout << "INDEX: " << index << " " << candidate.allele.alt[index] << endl;
+//                        alt_allele_index = get_index_from_base(candidate.allele.alt[index]);
 //                        int alt_type_index = get_index_from_type('I');
 //
 //                        double sum_h1_probs = max(1.0, double(accumulate(prediction_map_h1[position_index].begin(), prediction_map_h1[position_index].end(), 0.0)));
@@ -558,22 +555,64 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
 ////                        cout<<sum_h1_type_probs<<" "<<sum_h2_type_probs<<endl;
 ////                        cout<<sum_h1_probs<<" "<<sum_h2_probs<<endl;
 //                        alt_prob += max(prob_alt_h1, prob_alt_h2);
-//                        // penalize the insertion based on the likelihood of observing an insertion outside the contained index
-//                        non_ref_prob -= max(prob_alt_type_h1, prob_alt_type_h2);
+//                        non_ref_prob += max(prob_alt_type_h1, prob_alt_type_h2);
 //                        length += 1;
-////                        cout<<"ALT PROB CALCULATION (outside): "<<position<<" "<<alt_prob<<" ("<<prob_alt_h1<<","<<prob_alt_h2<<")"<<"\t\t";
-////                        cout<<"NRF PROB CALCULATION (outside): "<<position<<" "<<non_ref_prob<<" ("<<prob_alt_type_h1<<", "<<prob_alt_type_h2<<")"<<endl;
-//
+////                        cout<<"ALT PROB CALCULATION (inside): "<<position<<" "<<alt_prob<<" ("<<prob_alt_h1<<","<<prob_alt_h2<<")"<<"\t\t";
+////                        cout<<"NRF PROB CALCULATION (inside): "<<position<<" "<<non_ref_prob<<" ("<<prob_alt_type_h1<<", "<<prob_alt_type_h2<<")"<<endl;
 //                    }
-
-                }
-//                cout<<"###################"<<endl;
-                alt_prob = alt_prob / max(1.0, (double)length);
-                non_ref_prob = non_ref_prob / max(1.0, (double)length);
-                candidate.alt_prob = alt_prob;
-                candidate.non_ref_prob = non_ref_prob;
-                cout<<"IN: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" "<<alt_prob<<" "<<non_ref_prob<<endl;
-                cout<<"-----------------------"<<endl;
+////                    else {
+////                        int alt_allele_index = 0;
+////                        long long position = candidate.pos;
+////                        int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start] + index);
+////
+//////                        cout << "INDEX: " << index << endl;
+////                        alt_allele_index = get_index_from_base('*');
+////                        int alt_type_index = get_index_from_type('I');
+////
+////                        double sum_h1_probs = max(1.0, double(accumulate(prediction_map_h1[position_index].begin(), prediction_map_h1[position_index].end(), 0.0)));
+////                        double sum_h2_probs = max(1.0, double(accumulate(prediction_map_h2[position_index].begin(), prediction_map_h2[position_index].end(), 0.0)));
+////
+////                        double prob_alt_h1 = prediction_map_h1[position_index][alt_allele_index] / max(1.0, sum_h1_probs);
+////                        double prob_alt_h2 = prediction_map_h2[position_index][alt_allele_index] / max(1.0, sum_h2_probs);
+////
+////                        double sum_h1_type_probs = max(1.0, double(accumulate(prediction_map_type_h1[position_index].begin(), prediction_map_type_h1[position_index].end(), 0.0)));
+////                        double sum_h2_type_probs = max(1.0, double(accumulate(prediction_map_type_h2[position_index].begin(), prediction_map_type_h2[position_index].end(), 0.0)));
+////
+////                        double prob_alt_type_h1 = prediction_map_type_h1[position_index][alt_type_index] / max(1.0, sum_h1_type_probs);
+////                        double prob_alt_type_h2 = prediction_map_type_h2[position_index][alt_type_index] / max(1.0, sum_h2_type_probs);
+////
+////
+//////                        cout << "BASE PREDICTION VECTORS: " << endl;
+//////                        for (int j = 0; j < prediction_map_h1[position_index].size(); j++)cout << prediction_map_h1[position_index][j] << " ";
+//////                        cout << endl;
+//////                        for (int j = 0; j < prediction_map_h2[position_index].size(); j++)cout << prediction_map_h2[position_index][j] << " ";
+//////                        cout << endl;
+//////
+//////
+//////                        cout << "TYPE PREDICTION VECTORS: " << endl;
+//////                        for (int j = 0; j < prediction_map_type_h1[position_index].size(); j++)cout << prediction_map_type_h1[position_index][j] << " ";
+//////                        cout << endl;
+//////                        for (int j = 0; j < prediction_map_type_h2[position_index].size(); j++)cout << prediction_map_type_h2[position_index][j] << " ";
+//////                        cout << endl;
+//////                        cout<<sum_h1_type_probs<<" "<<sum_h2_type_probs<<endl;
+//////                        cout<<sum_h1_probs<<" "<<sum_h2_probs<<endl;
+////                        alt_prob += max(prob_alt_h1, prob_alt_h2);
+////                        // penalize the insertion based on the likelihood of observing an insertion outside the contained index
+////                        non_ref_prob -= max(prob_alt_type_h1, prob_alt_type_h2);
+////                        length += 1;
+//////                        cout<<"ALT PROB CALCULATION (outside): "<<position<<" "<<alt_prob<<" ("<<prob_alt_h1<<","<<prob_alt_h2<<")"<<"\t\t";
+//////                        cout<<"NRF PROB CALCULATION (outside): "<<position<<" "<<non_ref_prob<<" ("<<prob_alt_type_h1<<", "<<prob_alt_type_h2<<")"<<endl;
+////
+////                    }
+//
+//                }
+////                cout<<"###################"<<endl;
+//                alt_prob = alt_prob / max(1.0, (double)length);
+//                non_ref_prob = non_ref_prob / max(1.0, (double)length);
+//                candidate.alt_prob = alt_prob;
+//                candidate.non_ref_prob = non_ref_prob;
+////                cout<<"IN: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" "<<alt_prob<<" "<<non_ref_prob<<endl;
+////                cout<<"-----------------------"<<endl;
             }
             else if(candidate.allele.alt_type == DELETE_TYPE) {
                 // The inference mode we are using for delete works like this:
@@ -583,54 +622,54 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                 // we do that until we hit the maximum length of the likelihood.
                 // Finally, normalize by length.
 
-                int length = 0;
-                alt_prob = 0.0;
-                alt_prob_h1 = 0.0;
-                alt_prob_h2 = 0.0;
-                non_ref_prob = 0.0;
+//                int length = 0;
+//                alt_prob = 0.0;
+//                alt_prob_h1 = 0.0;
+//                alt_prob_h2 = 0.0;
+//                non_ref_prob = 0.0;
 
 //                cout<<"##################"<<endl;
-                for(long long pos=candidate.pos; pos < candidate.pos + max_del_length; pos++) {
-                    if(candidate.pos < pos && pos < candidate.pos_end) {
-                        int del_allele_index = get_index_from_base('*');
-                        int del_type_index = get_index_from_type('D');
-
-                        long long position = pos;
-                        int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start]);
-
-                        double sum_h1_base_probs = 0.0;
-                        double sum_h2_base_probs = 0.0;
-
-                        for(int j=0; j<prediction_map_h1[position_index].size(); j++) {
-                            sum_h1_base_probs += prediction_map_h1[position_index][j];
-                            sum_h2_base_probs += prediction_map_h2[position_index][j];
-                        }
-
-                        double sum_h1_type_probs = 0.0;
-                        double sum_h2_type_probs = 0.0;
-
-                        for(int j=0; j<prediction_map_type_h1[position_index].size(); j++) {
-                            sum_h1_type_probs += prediction_map_type_h1[position_index][j];
-                            sum_h2_type_probs += prediction_map_type_h2[position_index][j];
-                        }
-
-                        double prob_del_h1 = (prediction_map_h1[position_index][del_allele_index]) / max(1.0, sum_h1_base_probs);
-                        double prob_del_h2 = (prediction_map_h2[position_index][del_allele_index]) / max(1.0, sum_h2_base_probs);
-
-                        double prob_del_type_h1 = (prediction_map_type_h1[position_index][del_type_index]) / max(1.0, sum_h1_type_probs);
-                        double prob_del_type_h2 = (prediction_map_type_h2[position_index][del_type_index]) / max(1.0, sum_h2_type_probs);
+//                for(long long pos=candidate.pos; pos < candidate.pos + max_del_length; pos++) {
+//                    if(candidate.pos < pos && pos < candidate.pos_end) {
+//                        int del_allele_index = get_index_from_base('*');
+//                        int del_type_index = get_index_from_type('D');
+//
+//                        long long position = pos;
+//                        int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start]);
+//
+//                        double sum_h1_base_probs = 0.0;
+//                        double sum_h2_base_probs = 0.0;
+//
+//                        for(int j=0; j<prediction_map_h1[position_index].size(); j++) {
+//                            sum_h1_base_probs += prediction_map_h1[position_index][j];
+//                            sum_h2_base_probs += prediction_map_h2[position_index][j];
+//                        }
+//
+//                        double sum_h1_type_probs = 0.0;
+//                        double sum_h2_type_probs = 0.0;
+//
+//                        for(int j=0; j<prediction_map_type_h1[position_index].size(); j++) {
+//                            sum_h1_type_probs += prediction_map_type_h1[position_index][j];
+//                            sum_h2_type_probs += prediction_map_type_h2[position_index][j];
+//                        }
+//
+//                        double prob_del_h1 = (prediction_map_h1[position_index][del_allele_index]) / max(1.0, sum_h1_base_probs);
+//                        double prob_del_h2 = (prediction_map_h2[position_index][del_allele_index]) / max(1.0, sum_h2_base_probs);
+//
+//                        double prob_del_type_h1 = (prediction_map_type_h1[position_index][del_type_index]) / max(1.0, sum_h1_type_probs);
+//                        double prob_del_type_h2 = (prediction_map_type_h2[position_index][del_type_index]) / max(1.0, sum_h2_type_probs);
 //                        cout<<del_type_index<<endl;
 //                        cout<<prediction_map_type_h1[position_index][del_type_index]<<" "<<max(1.0, sum_h1_type_probs)<<endl;
 //                        cout<<prediction_map_type_h2[position_index][del_type_index]<<" "<<max(1.0, sum_h2_type_probs)<<endl;
 
 
-                        alt_prob += max(prob_del_h1, prob_del_h2);
-                        non_ref_prob += max(prob_del_type_h1, prob_del_type_h2);
-//                        cout<<"ALT PROB CALCULATION ( inside): "<<position<<" "<<alt_prob<<" ("<<prob_del_h1<<","<<prob_del_h2<<")"<<"\t\t";
-//                        cout<<"NRF PROB CALCULATION ( inside): "<<position<<" "<<non_ref_prob<<" ("<<prob_del_type_h1<<", "<<prob_del_type_h2<<")"<<endl;
-
-                        length += 1;
-                    }
+//                        alt_prob += max(prob_del_h1, prob_del_h2);
+//                        non_ref_prob += max(prob_del_type_h1, prob_del_type_h2);
+////                        cout<<"ALT PROB CALCULATION ( inside): "<<position<<" "<<alt_prob<<" ("<<prob_del_h1<<","<<prob_del_h2<<")"<<"\t\t";
+////                        cout<<"NRF PROB CALCULATION ( inside): "<<position<<" "<<non_ref_prob<<" ("<<prob_del_type_h1<<", "<<prob_del_type_h2<<")"<<endl;
+//
+//                        length += 1;
+//                    }
 //                    else if(pos>=candidate.pos_end) {
 //                        // the the index for the Deleteion predictions from the base and the type prediction vectors
 //                        int del_allele_index = get_index_from_base('*');
@@ -693,26 +732,26 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
 //
 //                        length += 1;
 //                    }
-                }
+//                }
 //                cout<<"LENGTH: "<<length<<endl;
 //                cout<<"##################"<<endl;
 
-                alt_prob = alt_prob / max(1.0, (double)length);
-                non_ref_prob = non_ref_prob / max(1.0, (double)length);
+//                alt_prob = alt_prob / max(1.0, (double)length);
+//                non_ref_prob = non_ref_prob / max(1.0, (double)length);
 //                non_ref_prob_h1 = non_ref_prob_h1 / max(1.0, non_ref_length);
 //                non_ref_prob_h2 = non_ref_prob_h2 / max(1.0, non_ref_length);
 //                non_ref_prob = max(non_ref_prob_h1, non_ref_prob_h2);
 
-                cout<<"DEL: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" Alt-prob: "<<alt_prob<<" non-ref-prob: "<<non_ref_prob<<" Read support: "<<AlleleFrequencyMap[candidate]<<" Allele freq: "<<alt_freq<<endl;
-                cout<<"-----------------------"<<endl;
+//                cout<<"DEL: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" Alt-prob: "<<alt_prob<<" non-ref-prob: "<<non_ref_prob<<" Read support: "<<AlleleFrequencyMap[candidate]<<" Allele freq: "<<alt_freq<<endl;
+//                cout<<"-----------------------"<<endl;
 //                cout<<"DEL: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" "<<alt_prob_h1<<" "<<alt_prob_h2<<" "<<non_ref_prob<<endl;
-                candidate.alt_prob = alt_prob;
-                candidate.alt_prob_h1 = alt_prob_h1;
-                candidate.alt_prob_h2 = alt_prob_h2;
-                candidate.non_ref_prob = non_ref_prob;
+//                candidate.alt_prob = alt_prob;
+//                candidate.alt_prob_h1 = alt_prob_h1;
+//                candidate.alt_prob_h2 = alt_prob_h2;
+//                candidate.non_ref_prob = non_ref_prob;
             }
 
-            if(filter_candidate(candidate, freq_based, freq)) positional_record.candidates.push_back(candidate);
+//            if(filter_candidate(candidate, freq_based, freq)) positional_record.candidates.push_back(candidate);
         }
 
         if (!candidate_found) continue;

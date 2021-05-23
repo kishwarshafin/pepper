@@ -74,13 +74,17 @@ struct CandidateAllele{
     CandidateAllele() {}
 };
 
-struct Candidate{
+struct Candidate {
     long long pos;
     long long pos_end;
     CandidateAllele allele;
     int genotype;
     int depth;
     int read_support;
+    double allele_probability;
+    double genotype_probability;
+
+    // will be deprecated
     double alt_prob;
     double alt_prob_h1;
     double alt_prob_h2;
@@ -177,6 +181,8 @@ public:
                                                       vector<int>indices,
                                                       vector< vector<float> > predictions,
                                                       vector< vector<float> > type_predictions,
+                                                      vector<int> base_labels,
+                                                      vector<int> type_labels,
                                                       bool freq_based,
                                                       double freq);
     static bool filter_candidate(const Candidate& candidate, bool freq_based, double freq);

@@ -158,6 +158,8 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
             .def_readwrite("pos_start", &Candidate::pos)
             .def_readwrite("pos_end", &Candidate::pos_end)
             .def_readwrite("read_support", &Candidate::read_support)
+            .def_readwrite("allele_probability", &Candidate::allele_probability)
+            .def_readwrite("genotype_probability", &Candidate::genotype_probability)
             .def_readwrite("alt_prob", &Candidate::alt_prob)
             .def_readwrite("alt_prob_h1", &Candidate::alt_prob_h1)
             .def_readwrite("alt_prob_h2", &Candidate::alt_prob_h2)

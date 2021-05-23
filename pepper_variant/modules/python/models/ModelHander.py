@@ -15,17 +15,18 @@ class ModelHandler:
         return transducer_model
 
     @staticmethod
-    def load_simple_model_for_training(model_path, input_channels, image_features, seq_len, num_classes):
+    def load_simple_model_for_training(model_path, image_features, num_classes, num_type_classes):
         checkpoint = torch.load(model_path, map_location='cpu')
         hidden_size = checkpoint['hidden_size']
         gru_layers = checkpoint['gru_layers']
         epochs = checkpoint['epochs']
 
-        transducer_model = ModelHandler.get_new_gru_model(input_channels=input_channels,
-                                                          image_features=image_features,
+        transducer_model = ModelHandler.get_new_gru_model(image_features=image_features,
                                                           gru_layers=gru_layers,
                                                           hidden_size=hidden_size,
-                                                          num_classes=num_classes)
+                                                          num_classes=num_classes,
+                                                          num_classes_type=num_type_classes)
+
         model_state_dict = checkpoint['model_state_dict']
 
         from collections import OrderedDict

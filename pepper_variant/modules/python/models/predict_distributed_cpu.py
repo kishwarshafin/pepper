@@ -9,6 +9,7 @@ from datetime import datetime
 import concurrent.futures
 from torch.utils.data import DataLoader
 import numpy as np
+from numpy import argmax
 
 from pepper_variant.modules.python.models.dataloader_predict import SequenceDataset
 from pepper_variant.modules.python.models.ModelHander import ModelHandler
@@ -85,10 +86,9 @@ def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, ba
 
     transducer_model, hidden_size, gru_layers, prev_ite = \
         ModelHandler.load_simple_model_for_training(model_path,
-                                                    input_channels=ImageSizeOptions.IMAGE_CHANNELS,
                                                     image_features=ImageSizeOptions.IMAGE_HEIGHT,
-                                                    seq_len=ImageSizeOptions.SEQ_LENGTH,
-                                                    num_classes=ImageSizeOptions.TOTAL_LABELS)
+                                                    num_classes=ImageSizeOptions.TOTAL_LABELS,
+                                                    num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
     transducer_model.eval()
     # create output file
     output_filename = output_filepath + "pepper_prediction_" + ".hdf"
