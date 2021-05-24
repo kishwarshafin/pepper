@@ -17,9 +17,30 @@ class AlignmentSummarizer:
         self.region_start_position = region_start
         self.region_end_position = region_end
 
-    def get_truth_vcf_records(self, vcf_file):
+    @staticmethod
+    def range_intersection_bed(interval, bed_intervals):
+        left = interval[0]
+        right = interval[1]
+
+        intervals = []
+        for i in range(0, len(bed_intervals)):
+            bed_left = bed_intervals[i][0]
+            bed_right = bed_intervals[i][1]
+
+            if bed_right < left:
+                continue
+            elif bed_left > right:
+                continue
+            else:
+                left_bed = max(left, bed_left)
+                right_bed = min(right, bed_right)
+                intervals.append([left_bed, right_bed])
+
+        return intervals
+
+    def get_truth_vcf_records(self, vcf_file, region_start, region_end):
         truth_vcf_file = VariantFile(vcf_file)
-        all_records = truth_vcf_file.fetch(self.chromosome_name, self.region_start_position, self.region_end_position)
+        all_records = truth_vcf_file.fetch(self.chromosome_name, region_start, region_end)
         haplotype_1_records = []
         haplotype_2_records = []
         for record in all_records:
@@ -62,70 +83,88 @@ class AlignmentSummarizer:
         all_positions = []
         all_index = []
         all_chunk_ids = []
-        print("STARTING: ", self.region_start_position, self.region_end_position)
+
         if train_mode:
-            # get vcf records from truth
-            truth_hap1_records, truth_hap2_records = self.get_truth_vcf_records(truth_vcf)
+            truth_regions = []
+            # now intersect with bed file
+            if bed_list is not None:
+                intersected_truth_regions = []
+                if self.chromosome_name in bed_list.keys():
+                    reg = AlignmentSummarizer.range_intersection_bed([self.region_start_position, self.region_end_position], bed_list[self.chromosome_name])
+                    intersected_truth_regions.extend(reg)
+                truth_regions = intersected_truth_regions
 
-            # ref_seq should contain region_end_position base
-            ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
-                                                                self.region_start_position,
-                                                                self.region_end_position + 1)
-
-            all_reads = self.bam_handler.get_reads(self.chromosome_name,
-                                                   self.region_start_position,
-                                                   self.region_end_position + 1,
-                                                   ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
-                                                   ReadFilterOptions.MIN_MAPQ,
-                                                   ReadFilterOptions.MIN_BASEQ)
-
-            total_reads = len(all_reads)
-            total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, downsample_rate * total_reads))
-
-            if total_reads > total_allowed_reads:
-                # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
-                # reservoir_sample method utilized here
-                random = np.random.RandomState(AlingerOptions.RANDOM_SEED)
-                sample = []
-                for i, read in enumerate(all_reads):
-                    if len(sample) < total_allowed_reads:
-                        sample.append(read)
-                    else:
-                        j = random.randint(0, i + 1)
-                        if j < total_allowed_reads:
-                            sample[j] = read
-                all_reads = sample
-
-            total_reads = len(all_reads)
-
-            if total_reads == 0:
+            if not truth_regions:
+                # sys.stderr.write(TextColor.GREEN + "INFO: " + log_prefix + " NO TRAINING REGION FOUND.\n"
+                #                  + TextColor.END)
                 return None
 
             chunk_id_start = 0
 
-            regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.region_start_position, self.region_end_position, ref_seq)
+            for region in truth_regions:
+                region_start = region[0]
+                region_end = region[1]
 
-            regional_summary.generate_max_insert_summary(all_reads)
+                # get vcf records from truth
+                truth_hap1_records, truth_hap2_records = self.get_truth_vcf_records(truth_vcf, region_start, region_end)
 
-            regional_summary.generate_labels(truth_hap1_records, truth_hap2_records)
+                # ref_seq should contain region_end_position base
+                ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
+                                                                    region_start,
+                                                                    region_end + 1)
 
-            regional_image_summary = regional_summary.generate_summary(all_reads,
-                                                                       ImageSizeOptions.SMALL_CHUNK_OVERLAP,
-                                                                       ImageSizeOptions.SMALL_CHUNK_LENGTH,
-                                                                       ImageSizeOptions.IMAGE_HEIGHT,
-                                                                       chunk_id_start,
-                                                                       train_mode)
+                all_reads = self.bam_handler.get_reads(self.chromosome_name,
+                                                       region_start,
+                                                       region_end + 1,
+                                                       ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
+                                                       ReadFilterOptions.MIN_MAPQ,
+                                                       ReadFilterOptions.MIN_BASEQ)
 
-            #############################
-            all_images.extend(regional_image_summary.chunked_image_matrix)
-            all_labels.extend(regional_image_summary.chunked_labels)
-            all_type_labels.extend(regional_image_summary.chunked_type_labels)
-            all_positions.extend(regional_image_summary.chunked_positions)
-            all_index.extend(regional_image_summary.chunked_index)
-            all_chunk_ids.extend(regional_image_summary.chunked_ids)
+                total_reads = len(all_reads)
+                total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, downsample_rate * total_reads))
 
-            if len(regional_image_summary.chunked_ids) > 0:
-                chunk_id_start = max(regional_image_summary.chunked_ids) + 1
+                if total_reads > total_allowed_reads:
+                    # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
+                    # reservoir_sample method utilized here
+                    random = np.random.RandomState(AlingerOptions.RANDOM_SEED)
+                    sample = []
+                    for i, read in enumerate(all_reads):
+                        if len(sample) < total_allowed_reads:
+                            sample.append(read)
+                        else:
+                            j = random.randint(0, i + 1)
+                            if j < total_allowed_reads:
+                                sample[j] = read
+                    all_reads = sample
+
+                total_reads = len(all_reads)
+
+                if total_reads == 0:
+                    return None
+
+                regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(region_start, region_end, ref_seq)
+
+                regional_summary.generate_max_insert_summary(all_reads)
+
+                regional_summary.generate_labels(truth_hap1_records, truth_hap2_records)
+
+                regional_image_summary = regional_summary.generate_summary(all_reads,
+                                                                           ImageSizeOptions.SMALL_CHUNK_OVERLAP,
+                                                                           ImageSizeOptions.SMALL_CHUNK_LENGTH,
+                                                                           ImageSizeOptions.IMAGE_HEIGHT,
+                                                                           chunk_id_start,
+                                                                           train_mode)
+
+                #############################
+                all_images.extend(regional_image_summary.chunked_image_matrix)
+                all_labels.extend(regional_image_summary.chunked_labels)
+                all_type_labels.extend(regional_image_summary.chunked_type_labels)
+                all_positions.extend(regional_image_summary.chunked_positions)
+                all_index.extend(regional_image_summary.chunked_index)
+                all_chunk_ids.extend(regional_image_summary.chunked_ids)
+
+                if len(regional_image_summary.chunked_ids) > 0:
+                    chunk_id_start = max(regional_image_summary.chunked_ids) + 1
         else:
             read_start = max(0, self.region_start_position)
             read_end = self.region_end_position
