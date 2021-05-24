@@ -100,6 +100,7 @@ class AlignmentSummarizer:
                 return None
 
             chunk_id_start = 0
+            print("STARTING TRUTH REGIONS: ", truth_regions)
 
             for region in truth_regions:
                 region_start = region[0]
