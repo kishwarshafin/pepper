@@ -13,31 +13,26 @@
 namespace ImageOptionsRegion {
 
     static constexpr int MAX_COLOR_VALUE = 256;
-    static constexpr int MAX_REF_COLOR_VALUE = 100;
-    static constexpr int MISMATCH_COLOR_START = 128;
     static constexpr int REFERENCE_INDEX_START = 0;
-    static constexpr int REFERENCE_INDEX_SIZE = 5;
-    static constexpr int BASE_INDEX_START = 5;
-    static constexpr int BASE_INDEX_SIZE = 14;
-    vector<string> column_values{"AREF:",
-                                 "CREF:",
-                                 "GREF:",
-                                 "TREF:",
-                                 "*REF:",
-                                 "AFRW:",
-                                 "CFRW:",
-                                 "GFRW:",
-                                 "TFRW:",
-                                 "*FRW:",
-                                 "IFRW:",
-                                 "DFRW:",
+    static constexpr int REFERENCE_INDEX_SIZE = 0;
+    static constexpr int BASE_INDEX_START = 0;
+    static constexpr int BASE_INDEX_SIZE = 16;
+    vector<string> column_values{"RFWD:",
+                                 "RREV:",
+                                 "AFWD:",
                                  "AREV:",
+                                 "CFWD:",
                                  "CREV:",
+                                 "GFWD:",
                                  "GREV:",
+                                 "TFWD:",
                                  "TREV:",
-                                 "*REV:",
+                                 "IFWD:",
                                  "IREV:",
-                                 "DREV:"};
+                                 "DFWD:",
+                                 "DREV:",
+                                 "*FWD:",
+                                 "*REV:"};
 
     static constexpr bool GENERATE_INDELS = false;
 };
@@ -96,7 +91,7 @@ public:
                                  int *coverage_vector,
                                  type_read read);
 
-    static int get_feature_index(char base, bool is_reverse);
+    static int get_feature_index(char ref_base, char base, bool is_reverse);
 
     void debug_print_matrix(int** image_matrix, bool train_mode);
 

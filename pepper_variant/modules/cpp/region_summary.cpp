@@ -107,46 +107,66 @@ char check_truth_base(char base) {
 uint8_t get_label_index(char base_h1, char base_h2) {
     base_h1 = toupper(base_h1);
     base_h2 = toupper(base_h2);
+    // RR
+    if (base_h1 == 'R' && base_h2 == 'R') return 0;
+    // RA
+    if (base_h1 == 'R' && base_h2 == 'A') return 1;
+    if (base_h1 == 'A' && base_h2 == 'R') return 1;
+    // RC
+    if (base_h1 == 'R' && base_h2 == 'C') return 2;
+    if (base_h1 == 'C' && base_h2 == 'R') return 2;
+    // RT
+    if (base_h1 == 'R' && base_h2 == 'T') return 3;
+    if (base_h1 == 'T' && base_h2 == 'R') return 3;
+    // RG
+    if (base_h1 == 'R' && base_h2 == 'G') return 4;
+    if (base_h1 == 'G' && base_h2 == 'R') return 4;
+    // R*
+    if (base_h1 == 'R' && base_h2 == '*') return 5;
+    if (base_h1 == '*' && base_h2 == 'R') return 5;
+
     // AA
-    if (base_h1 == 'A' && base_h2 == 'A') return 1;
+    if (base_h1 == 'A' && base_h2 == 'A') return 6;
     // AC
-    if (base_h1 == 'A' && base_h2 == 'C') return 2;
-    if (base_h1 == 'C' && base_h2 == 'A') return 2;
+    if (base_h1 == 'A' && base_h2 == 'C') return 7;
+    if (base_h1 == 'C' && base_h2 == 'A') return 7;
     // AT
-    if (base_h1 == 'A' && base_h2 == 'T') return 3;
-    if (base_h1 == 'T' && base_h2 == 'A') return 3;
+    if (base_h1 == 'A' && base_h2 == 'T') return 8;
+    if (base_h1 == 'T' && base_h2 == 'A') return 8;
     // AG
-    if (base_h1 == 'A' && base_h2 == 'G') return 4;
-    if (base_h1 == 'G' && base_h2 == 'A') return 4;
+    if (base_h1 == 'A' && base_h2 == 'G') return 9;
+    if (base_h1 == 'G' && base_h2 == 'A') return 9;
     // A*
-    if (base_h1 == 'A' && base_h2 == '*') return 5;
-    if (base_h1 == '*' && base_h2 == 'A') return 5;
+    if (base_h1 == 'A' && base_h2 == '*') return 10;
+    if (base_h1 == '*' && base_h2 == 'A') return 10;
+
     // CC
-    if (base_h1 == 'C' && base_h2 == 'C') return 6;
+    if (base_h1 == 'C' && base_h2 == 'C') return 11;
     // CT
-    if (base_h1 == 'C' && base_h2 == 'T') return 7;
-    if (base_h1 == 'T' && base_h2 == 'C') return 7;
+    if (base_h1 == 'C' && base_h2 == 'T') return 12;
+    if (base_h1 == 'T' && base_h2 == 'C') return 12;
     // CG
-    if (base_h1 == 'C' && base_h2 == 'G') return 8;
-    if (base_h1 == 'G' && base_h2 == 'C') return 8;
+    if (base_h1 == 'C' && base_h2 == 'G') return 13;
+    if (base_h1 == 'G' && base_h2 == 'C') return 13;
     // C*
-    if (base_h1 == 'C' && base_h2 == '*') return 9;
-    if (base_h1 == '*' && base_h2 == 'C') return 9;
+    if (base_h1 == 'C' && base_h2 == '*') return 14;
+    if (base_h1 == '*' && base_h2 == 'C') return 14;
+
     // TT
-    if (base_h1 == 'T' && base_h2 == 'T') return 10;
+    if (base_h1 == 'T' && base_h2 == 'T') return 15;
     // TG
-    if (base_h1 == 'T' && base_h2 == 'G') return 11;
-    if (base_h1 == 'G' && base_h2 == 'T') return 11;
+    if (base_h1 == 'T' && base_h2 == 'G') return 16;
+    if (base_h1 == 'G' && base_h2 == 'T') return 16;
     // T*
-    if (base_h1 == 'T' && base_h2 == '*') return 12;
-    if (base_h1 == '*' && base_h2 == 'T') return 12;
+    if (base_h1 == 'T' && base_h2 == '*') return 17;
+    if (base_h1 == '*' && base_h2 == 'T') return 17;
     // GG
-    if (base_h1 == 'G' && base_h2 == 'G') return 13;
+    if (base_h1 == 'G' && base_h2 == 'G') return 18;
     // G*
-    if (base_h1 == 'G' && base_h2 == '*') return 14;
-    if (base_h1 == '*' && base_h2 == 'G') return 14;
+    if (base_h1 == 'G' && base_h2 == '*') return 19;
+    if (base_h1 == '*' && base_h2 == 'G') return 19;
     // **
-    if (base_h1 == '*' && base_h2 == '*') return 0;
+    if (base_h1 == '*' && base_h2 == '*') return 20;
     return 0;
 }
 
@@ -166,16 +186,18 @@ uint8_t get_variant_type_label_index(int type_h1, int type_h2) {
 
     if (type_h1 == VariantTypes::SNP && type_h2 == VariantTypes::SNP) return 4;
 
-    if (type_h1 == VariantTypes::SNP && type_h2 == VariantTypes::DELETE) return 5;
-    if (type_h1 == VariantTypes::DELETE && type_h2 == VariantTypes::SNP) return 5;
+    if (type_h1 == VariantTypes::SNP && type_h2 == VariantTypes::INSERT) return 5;
+    if (type_h1 == VariantTypes::INSERT && type_h2 == VariantTypes::SNP) return 5;
 
-    if (type_h1 == VariantTypes::SNP && type_h2 == VariantTypes::INSERT) return 6;
-    if (type_h1 == VariantTypes::INSERT && type_h2 == VariantTypes::SNP) return 6;
-    if (type_h1 == VariantTypes::INSERT && type_h2 == VariantTypes::INSERT) return 6;
+    if (type_h1 == VariantTypes::SNP && type_h2 == VariantTypes::DELETE) return 6;
+    if (type_h1 == VariantTypes::DELETE && type_h2 == VariantTypes::SNP) return 6;
 
-    if (type_h1 == VariantTypes::DELETE && type_h2 == VariantTypes::DELETE) return 7;
-    if (type_h1 == VariantTypes::INSERT && type_h2 == VariantTypes::DELETE) return 7;
-    if (type_h1 == VariantTypes::DELETE && type_h2 == VariantTypes::INSERT) return 7;
+    if (type_h1 == VariantTypes::INSERT && type_h2 == VariantTypes::INSERT) return 7;
+
+    if (type_h1 == VariantTypes::INSERT && type_h2 == VariantTypes::DELETE) return 8;
+    if (type_h1 == VariantTypes::DELETE && type_h2 == VariantTypes::INSERT) return 8;
+
+    if (type_h1 == VariantTypes::DELETE && type_h2 == VariantTypes::DELETE) return 9;
 
     cout<<"ERROR: VARIANT LABEL NOT DEFINED: "<<type_h1<<" "<<type_h2<<endl;
     exit(1);
@@ -236,15 +258,21 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
                         int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
                         ref_at_labels[base_index] = reference_base;
                         if(hp_tag == 1) {
-                            labels_hp1[base_index] = check_truth_base(base);
                             if(base != reference_base) {
+                                labels_hp1[base_index] = check_truth_base(base);
                                 variant_type_labels_hp1[base_index] = VariantTypes::SNP;
+                            } else {
+                                labels_hp1[base_index] = 'R';
+                                variant_type_labels_hp1[base_index] = VariantTypes::HOM_REF;
                             }
                         }
                         else {
-                            labels_hp2[base_index] = check_truth_base(base);
                             if(base != reference_base) {
+                                labels_hp2[base_index] = check_truth_base(base);
                                 variant_type_labels_hp2[base_index] = VariantTypes::SNP;
+                            } else {
+                                labels_hp2[base_index] = 'R';
+                                variant_type_labels_hp2[base_index] = VariantTypes::HOM_REF;
                             }
                         }
                     }
@@ -254,8 +282,7 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
                 break;
             case CIGAR_OPERATIONS::IN:
                 reference_index = ref_position - ref_start - 1;
-                if (ref_position - 1 >= ref_start &&
-                    ref_position - 1 <= ref_end) {
+                if (ref_position - 1 >= ref_start && ref_position - 1 <= ref_end) {
                     int base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start]);
 
                     if(hp_tag == 1)
@@ -291,8 +318,8 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
             case CIGAR_OPERATIONS::DEL:
                 reference_index = ref_position - ref_start - 1;
 
-                if (ref_position >= ref_start && ref_position <= ref_end) {
-                    int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
+                if (ref_position - 1 >= ref_start && ref_position - 1 <= ref_end) {
+                    int base_index = (int)(ref_position - 1 - ref_start + cumulative_observed_insert[ref_position - 1 - ref_start]);
 
                     if(hp_tag == 1)
                         variant_type_labels_hp1[base_index] = VariantTypes::DELETE;
@@ -347,25 +374,27 @@ void RegionalSummaryGenerator::generate_labels(const type_read& truth_read_hp1,
 }
 
 
-int RegionalSummaryGenerator::get_feature_index(char base, bool is_reverse) {
+int RegionalSummaryGenerator::get_feature_index(char ref_base, char base, bool is_reverse) {
     base = toupper(base);
     if (is_reverse) {
-        if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START;
-        if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 1;
-        if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 2;
-        if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 3;
-        if (base == 'I') return ImageOptionsRegion::BASE_INDEX_START + 5;
-        if (base == 'D') return ImageOptionsRegion::BASE_INDEX_START + 6;
-        return ImageOptionsRegion::BASE_INDEX_START + 4;
+        if (ref_base == base) return ImageOptionsRegion::BASE_INDEX_START;
+        if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 2;
+        if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 4;
+        if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 6;
+        if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 8;
+        if (base == 'I') return ImageOptionsRegion::BASE_INDEX_START + 10;
+        if (base == 'D') return ImageOptionsRegion::BASE_INDEX_START + 12;
+        return ImageOptionsRegion::BASE_INDEX_START + 14;
     } else {
         // tagged and forward
-        if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 7;
-        if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 8;
-        if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 9;
-        if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 10;
-        if (base == 'I') return ImageOptionsRegion::BASE_INDEX_START + 12;
+        if (ref_base == base) return ImageOptionsRegion::BASE_INDEX_START + 1;
+        if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 3;
+        if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 5;
+        if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 7;
+        if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 9;
+        if (base == 'I') return ImageOptionsRegion::BASE_INDEX_START + 11;
         if (base == 'D') return ImageOptionsRegion::BASE_INDEX_START + 13;
-        return ImageOptionsRegion::BASE_INDEX_START + 11;
+        return ImageOptionsRegion::BASE_INDEX_START + 15;
     }
 }
 
@@ -394,9 +423,10 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
 
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
+                        char ref_base = reference_sequence[ref_position - ref_start];
 
                         int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
-                        int feature_index = get_feature_index(base, read.flags.is_reverse);
+                        int feature_index = get_feature_index(ref_base, base, read.flags.is_reverse);
 
                         // update the summary of base
                         if(ref_position >= ref_start && ref_position <= ref_end) {
@@ -413,18 +443,19 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                 if (ref_position - 1 >= ref_start && ref_position - 1 <= ref_end) {
                     // process insert allele here
                     string alt;
+                    char ref_base = reference_sequence[ref_position - 1 - ref_start];
                     int base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start]);
-                    int insert_count_index =  get_feature_index('I', read.flags.is_reverse);
+                    int insert_count_index =  get_feature_index(ref_base, 'I', read.flags.is_reverse);
                     image_matrix[base_index][insert_count_index] += 1;
 
-                    if(ImageOptionsRegion::GENERATE_INDELS == true) {
-                        alt = read.sequence.substr(read_index, cigar.length);
-                        for (int i = 0; i < cigar.length; i++) {
-                            base_index = (int) ((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start] + (i + 1));
-                            int feature_index = get_feature_index(alt[i], read.flags.is_reverse);
-                            image_matrix[base_index][feature_index] += 1;
-                        }
-                    }
+//                    if(ImageOptionsRegion::GENERATE_INDELS == true) {
+//                        alt = read.sequence.substr(read_index, cigar.length);
+//                        for (int i = 0; i < cigar.length; i++) {
+//                            base_index = (int) ((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start] + (i + 1));
+//                            int feature_index = get_feature_index(alt[i], read.flags.is_reverse);
+//                            image_matrix[base_index][feature_index] += 1;
+//                        }
+//                    }
                 }
                 read_index += cigar.length;
                 break;
@@ -432,9 +463,11 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
             case CIGAR_OPERATIONS::PAD:
             case CIGAR_OPERATIONS::DEL:
                 // process delete allele here
+
                 if (ref_position -1 >= ref_start && ref_position - 1 <= ref_end) {
+                    char ref_base = reference_sequence[ref_position - 1 - ref_start];
                     int base_index = (int)(ref_position - 1 - ref_start + cumulative_observed_insert[ref_position - 1 - ref_start]);
-                    int delete_count_index =  get_feature_index('D', read.flags.is_reverse);
+                    int delete_count_index =  get_feature_index(ref_base, 'D', read.flags.is_reverse);
                     image_matrix[base_index][delete_count_index] += 1.0;
                 }
 
@@ -442,7 +475,8 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                     if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                         // update the summary of base
                         int base_index = (int) (ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i]);
-                        int feature_index = get_feature_index('*', read.flags.is_reverse);
+                        char ref_base = reference_sequence[ref_position - ref_start + i];
+                        int feature_index = get_feature_index(ref_base, '*', read.flags.is_reverse);
 
                         image_matrix[base_index][feature_index] += 1.0;
                         coverage_vector[ref_position - ref_start + i] += 1.0;
@@ -484,7 +518,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
 
     memset(coverage_vector, 0, sizeof(coverage_vector));
 
-    encode_reference_bases(image_matrix);
+//    encode_reference_bases(image_matrix);
 
     // now iterate over all of the reads and populate the image matrix and coverage matrix
     for (auto &read:reads) {
