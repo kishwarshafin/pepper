@@ -365,8 +365,6 @@ class ImageGenerationUtils:
                 all_intervals.append((chr_name, pos_start, pos_end))
                 total_bases += inv_size
 
-        print(all_intervals)
-        exit()
         # all intervals calculated now
         # contig update message
         sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] "
