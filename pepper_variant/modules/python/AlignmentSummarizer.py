@@ -238,8 +238,8 @@ class AlignmentSummarizer:
                                                  truth_reads_h2[0])
 
                 regional_image_summary = regional_summary.generate_summary(all_reads,
-                                                                           ImageSizeOptions.SEQ_OVERLAP,
-                                                                           ImageSizeOptions.SEQ_LENGTH,
+                                                                           ImageSizeOptions.SMALL_CHUNK_OVERLAP,
+                                                                           ImageSizeOptions.SMALL_CHUNK_LENGTH,
                                                                            ImageSizeOptions.IMAGE_HEIGHT,
                                                                            chunk_id_start,
                                                                            train_mode)
@@ -349,8 +349,8 @@ class AlignmentSummarizer:
             regional_summary.generate_max_insert_summary(all_reads)
 
             regional_image_summary = regional_summary.generate_summary(all_reads,
-                                                                       ImageSizeOptions.SEQ_OVERLAP,
-                                                                       ImageSizeOptions.SEQ_LENGTH,
+                                                                       ImageSizeOptions.SMALL_CHUNK_OVERLAP,
+                                                                       ImageSizeOptions.SMALL_CHUNK_LENGTH,
                                                                        ImageSizeOptions.IMAGE_HEIGHT,
                                                                        chunk_id_start,
                                                                        train_mode)
