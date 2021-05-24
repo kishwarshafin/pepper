@@ -62,7 +62,7 @@ class AlignmentSummarizer:
         all_positions = []
         all_index = []
         all_chunk_ids = []
-
+        print("STARTING: ", self.region_start_position, self.region_end_position)
         if train_mode:
             # get vcf records from truth
             truth_hap1_records, truth_hap2_records = self.get_truth_vcf_records(truth_vcf)
