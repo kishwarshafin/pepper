@@ -80,6 +80,16 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
                .def("generate_labels", &RegionalSummaryGeneratorHP::generate_labels)
                .def("generate_max_insert_summary", &RegionalSummaryGeneratorHP::generate_max_insert_summary);
 
+
+        // data structure for methylation record
+        py::class_<type_truth_record>(m, "type_truth_record")
+                .def(py::init<string &, long long &, long long &, string &, string &>())
+                .def_readwrite("contig", &type_truth_record::contig)
+                .def_readwrite("pos_start", &type_truth_record::pos_start)
+                .def_readwrite("pos_end", &type_truth_record::pos_end)
+                .def_readwrite("ref", &type_truth_record::ref)
+                .def_readwrite("alt", &type_truth_record::alt);
+
         // data structure for sequence name and their length
         py::class_<type_sequence>(m, "type_sequence")
             .def_readwrite("sequence_length", &type_sequence::sequence_length)

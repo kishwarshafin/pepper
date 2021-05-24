@@ -1,16 +1,16 @@
 class ImageSizeOptions(object):
-    IMAGE_HEIGHT = 16
+    IMAGE_HEIGHT = 19
     IMAGE_CHANNELS = 1
-    SMALL_CHUNK_LENGTH = 200
-    SMALL_CHUNK_OVERLAP = 10
+    SMALL_CHUNK_LENGTH = 1000
+    SMALL_CHUNK_OVERLAP = 100
     LABEL_LENGTH = SMALL_CHUNK_LENGTH
 
-    TOTAL_LABELS = 21
+    TOTAL_LABELS = 15
     TOTAL_TYPE_LABELS = 10
     MIN_SEQUENCE_LENGTH = 1000
     MIN_IMAGE_OVERLAP = 100
-    decoded_labels = ['RR', 'RA', 'RC', 'RT', 'RG', 'R*', 'AA', 'AC', 'AT', 'AG', 'A*', 'CC', 'CT', 'CG', 'C*', 'TT', 'TG', 'T*', 'GG', 'G*', '**']
-    class_weights = [0.01,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    decoded_labels = ['**', 'AA', 'AC', 'AT', 'AG', 'A*', 'CC', 'CT', 'CG', 'C*', 'TT', 'TG', 'T*', 'GG', 'G*']
+    class_weights = [1.0,  0.1,  1.0,  1.0,  1.0,  1.0,  0.1,  1.0,  1.0,  1.0,  0.1,  1.0,  1.0,  0.1,  1.0]
     class_weights_type = [0.1,  1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
     decoded_type_labels = ['RR', 'RS', 'RI', 'RD', 'SS', 'SI', 'SD', 'II', 'ID', 'DD']
 
@@ -26,8 +26,6 @@ class ImageSizeOptionsHP(object):
     TOTAL_LABELS = 5
     MIN_SEQUENCE_LENGTH = 1000
     MIN_IMAGE_OVERLAP = 100
-
-
 
 class ReadFilterOptions(object):
     MIN_MAPQ = 5

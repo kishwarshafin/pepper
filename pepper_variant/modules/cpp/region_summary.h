@@ -9,32 +9,52 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace ImageOptionsRegion {
-
     static constexpr int MAX_COLOR_VALUE = 256;
+    static constexpr int MISMATCH_COLOR_START = 128;
     static constexpr int REFERENCE_INDEX_START = 0;
-    static constexpr int REFERENCE_INDEX_SIZE = 0;
-    static constexpr int BASE_INDEX_START = 0;
-    static constexpr int BASE_INDEX_SIZE = 16;
-    vector<string> column_values{"RFWD:",
-                                 "RREV:",
-                                 "AFWD:",
+    static constexpr int REFERENCE_INDEX_SIZE = 5;
+    static constexpr int BASE_INDEX_START = 5;
+    static constexpr int BASE_INDEX_SIZE = 14;
+    vector<string> column_values{"AREF:",
+                                 "CREF:",
+                                 "GREF:",
+                                 "TREF:",
+                                 "*REF:",
+                                 "AFRW:",
+                                 "CFRW:",
+                                 "GFRW:",
+                                 "TFRW:",
+                                 "*FRW:",
+                                 "IFRW:",
+                                 "DFRW:",
                                  "AREV:",
-                                 "CFWD:",
                                  "CREV:",
-                                 "GFWD:",
                                  "GREV:",
-                                 "TFWD:",
                                  "TREV:",
-                                 "IFWD:",
+                                 "*REV:",
                                  "IREV:",
-                                 "DFWD:",
-                                 "DREV:",
-                                 "*FWD:",
-                                 "*REV:"};
+                                 "DREV:"};
 
     static constexpr bool GENERATE_INDELS = false;
+};
+
+struct type_truth_record{
+    string contig;
+    long long pos_start;
+    long long pos_end;
+    string ref;
+    string alt;
+
+    type_truth_record(string contig, long long pos, long long pos_end, string ref, string alt) {
+        this->contig = std::move(contig);
+        this->pos_start = pos;
+        this->pos_end = pos_end;
+        this->ref = std::move(ref);
+        this->alt = std::move(alt);
+    }
 };
 
 
@@ -79,19 +99,17 @@ public:
 
     void generate_max_insert_summary(vector <type_read> &reads);
 
-    void generate_labels_from_truth_read(type_read read, int hp_tag);
-
     static int get_reference_feature_index(char base);
 
     void encode_reference_bases(int **image_matrix);
 
-    void generate_labels(const type_read& truth_read_hp1, const type_read& truth_read_hp2);
+    void generate_labels(const vector<type_truth_record>& hap1_records, const vector<type_truth_record>& hap2_records);
 
     void populate_summary_matrix(int **image_matrix,
                                  int *coverage_vector,
                                  type_read read);
 
-    static int get_feature_index(char ref_base, char base, bool is_reverse);
+    static int get_feature_index(char base, bool is_reverse);
 
     void debug_print_matrix(int** image_matrix, bool train_mode);
 

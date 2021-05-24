@@ -40,20 +40,12 @@ def add_make_train_images_arguments(parser):
         help="FASTA file containing the draft assembly."
     )
     parser.add_argument(
-        "-tb1",
-        "--truth_bam_hp1",
+        "-tv",
+        "--truth_vcf",
         type=str,
         required=True,
         default=None,
-        help="BAM file containing mapping of true assembly to the draft assembly."
-    )
-    parser.add_argument(
-        "-tb2",
-        "--truth_bam_hp2",
-        type=str,
-        required=True,
-        default=None,
-        help="BAM file containing mapping of true assembly to the draft assembly."
+        help="VCF file containing the truth variants [Usually from GIAB]."
     )
     parser.add_argument(
         "-d",
@@ -66,6 +58,7 @@ def add_make_train_images_arguments(parser):
         "-r",
         "--region",
         type=str,
+        required=True,
         default=None,
         help="Region in [chr_name:start-end] format"
     )
@@ -74,7 +67,8 @@ def add_make_train_images_arguments(parser):
         "--region_bed",
         default=None,
         type=str,
-        help="Region in [chr_name:start-end] format"
+        required=True,
+        help="BED file containing high-confidence region [Usually from GIAB]."
     )
     parser.add_argument(
         "-o",
@@ -350,8 +344,7 @@ def main():
         make_images(FLAGS.bam,
                     FLAGS.fasta,
                     FLAGS.use_hp_info,
-                    FLAGS.truth_bam_hp1,
-                    FLAGS.truth_bam_hp2,
+                    FLAGS.truth_vcf,
                     FLAGS.region,
                     FLAGS.region_bed,
                     FLAGS.output_dir,

@@ -17,7 +17,7 @@ class ImageGenerator:
     """
     Process manager that runs sequence of processes to generate images and their labels.
     """
-    def __init__(self, chromosome_name, bam_file_path, draft_file_path, use_hp_info, truth_bam_h1, truth_bam_h2, train_mode):
+    def __init__(self, chromosome_name, bam_file_path, draft_file_path, use_hp_info, truth_vcf, train_mode):
         """
         Initialize a manager object
         :param chromosome_name: Name of the chromosome
@@ -35,12 +35,10 @@ class ImageGenerator:
         self.train_mode = train_mode
         self.downsample_rate = 1.0
         self.use_hp_info = use_hp_info
-        self.truth_bam_handler_h1 = None
-        self.truth_bam_handler_h2 = None
+        self.truth_vcf = None
 
         if self.train_mode:
-            self.truth_bam_handler_h1 = PEPPER_VARIANT.BAM_handler(truth_bam_h1)
-            self.truth_bam_handler_h2 = PEPPER_VARIANT.BAM_handler(truth_bam_h2)
+            self.truth_vcf = truth_vcf
 
         # --- initialize names ---
         # name of the chromosome
@@ -63,8 +61,7 @@ class ImageGenerator:
                                                        start_position,
                                                        end_position)
 
-            region_summary = alignment_summarizer.create_summary(self.truth_bam_handler_h1,
-                                                                 self.truth_bam_handler_h2,
+            region_summary = alignment_summarizer.create_summary(self.truth_vcf,
                                                                  self.train_mode,
                                                                  downsample_rate,
                                                                  bed_list)
@@ -82,8 +79,7 @@ class ImageGenerator:
                                                             start_position,
                                                             end_position)
 
-            region_summary = alignment_summarizer_hp.create_summary(self.truth_bam_handler_h1,
-                                                                    self.truth_bam_handler_h2,
+            region_summary = alignment_summarizer_hp.create_summary(self.truth_vcf,
                                                                     self.train_mode,
                                                                     downsample_rate,
                                                                     bed_list)
@@ -225,7 +221,7 @@ class ImageGenerationUtils:
         """
         thread_prefix = "[THREAD " + "{:02d}".format(process_id) + "]"
 
-        output_path, bam_file, draft_file, use_hp_info, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate, bed_list = args
+        output_path, bam_file, draft_file, use_hp_info, truth_vcf, train_mode, downsample_rate, bed_list = args
 
         timestr = time.strftime("%m%d%Y_%H%M%S")
         file_name = output_path + "pepper_variants_images_thread_" + str(process_id) + "_" + str(timestr)
@@ -253,8 +249,7 @@ class ImageGenerationUtils:
                                                  bam_file_path=bam_file,
                                                  draft_file_path=draft_file,
                                                  use_hp_info=use_hp_info,
-                                                 truth_bam_h1=truth_bam_h1,
-                                                 truth_bam_h2=truth_bam_h2,
+                                                 truth_vcf=truth_vcf,
                                                  train_mode=train_mode)
 
                 if not use_hp_info:
@@ -315,8 +310,7 @@ class ImageGenerationUtils:
                         bam_file,
                         draft_file,
                         use_hp_info,
-                        truth_bam_h1,
-                        truth_bam_h2,
+                        truth_vcf,
                         output_path,
                         total_processes,
                         train_mode,
@@ -328,8 +322,7 @@ class ImageGenerationUtils:
         :param bam_file:
         :param draft_file:
         :param use_hp_info:
-        :param truth_bam_h1:
-        :param truth_bam_h2:
+        :param truth_vcf:
         :param output_path:
         :param total_processes:
         :param train_mode:
@@ -380,7 +373,7 @@ class ImageGenerationUtils:
                          + " TOTAL BASES: " + str(total_bases) + "\n")
         sys.stderr.flush()
 
-        args = (output_path, bam_file, draft_file, use_hp_info, truth_bam_h1, truth_bam_h2, train_mode, downsample_rate, bed_list)
+        args = (output_path, bam_file, draft_file, use_hp_info, truth_vcf, train_mode, downsample_rate, bed_list)
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_processes) as executor:
             futures = [executor.submit(ImageGenerationUtils.generate_image_and_save_to_file, args, all_intervals, total_processes, process_id)
                        for process_id in range(0, total_processes)]
