@@ -43,14 +43,13 @@ class AlignmentSummarizer:
                     continue
                 if hap == 0:
                     truth_variant = PEPPER_VARIANT.type_truth_record(record.contig, record.start, record.stop, record.alleles[0], record.alleles[alt_location])
-                    if len(record.alleles[0]) > 1 and len(record.alleles[alt_location]):
-                        print(record, end='')
-
+                    # if len(record.alleles[0]) > 1 and len(record.alleles[alt_location]) > 1:
+                    #     print(record, end='')
                     haplotype_1_records.append(truth_variant)
                 else:
                     truth_variant = PEPPER_VARIANT.type_truth_record(record.contig, record.start, record.stop, record.alleles[0], record.alleles[alt_location])
-                    if len(record.alleles[0]) > 1 and len(record.alleles[alt_location]):
-                        print(record, end='')
+                    # if len(record.alleles[0]) > 1 and len(record.alleles[alt_location]) > 1:
+                    #     print(record, end='')
                     haplotype_2_records.append(truth_variant)
 
 
