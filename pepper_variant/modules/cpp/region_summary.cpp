@@ -307,7 +307,7 @@ void RegionalSummaryGenerator::generate_labels_from_truth_read(type_read read, i
                     for (int i = 0; i < cigar.length; i++) {
                         if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
                             // DELETE
-                            char base = '#';
+                            char base = '*';
                             base_index = (int)(ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i]);
 
                             char reference_base = reference_sequence[ref_position - ref_start + i];
@@ -444,8 +444,8 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                         int base_index = (int) (ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i]);
                         int feature_index = get_feature_index('*', read.flags.is_reverse);
 
-                        image_matrix[base_index][feature_index] += 1;
-                        coverage_vector[ref_position - ref_start] += 1;
+                        image_matrix[base_index][feature_index] += 1.0;
+                        coverage_vector[ref_position - ref_start + i] += 1.0;
                     }
                 }
 
@@ -597,7 +597,7 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
         free(image_matrix[i]);
     free(image_matrix);
 //    exit(0);
-
+//
     return summary;
 }
 
