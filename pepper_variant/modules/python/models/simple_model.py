@@ -29,20 +29,25 @@ class TransducerGRU(nn.Module):
                                num_layers=self.num_layers,
                                bidirectional=bidirectional,
                                batch_first=True)
-        self.dropout_1 = nn.Dropout(p=0.01)
+        self.dropout_1 = nn.Dropout(p=0.1)
         self.linear_1 = nn.Linear(self.hidden_size * 2, self.linear_1_size)
+        self.relu_1 = nn.ReLU()
 
         self.dropout_2 = nn.Dropout(p=0.2)
         self.linear_2 = nn.Linear(self.linear_1_size, self.linear_2_size)
+        self.relu_2 = nn.ReLU()
 
         self.dropout_3 = nn.Dropout(p=0.1)
         self.linear_3 = nn.Linear(self.linear_2_size, self.linear_3_size)
+        self.relu_3 = nn.ReLU()
 
         self.dropout_4 = nn.Dropout(p=0.2)
         self.linear_4 = nn.Linear(self.linear_3_size, self.linear_4_size)
+        self.relu_4 = nn.ReLU()
 
         self.dropout_5 = nn.Dropout(p=0.1)
         self.linear_5 = nn.Linear(self.linear_4_size, self.linear_5_size)
+        self.relu_5 = nn.ReLU()
 
         self.output_layer = nn.Linear(self.linear_5_size, self.num_classes)
         self.output_layer_type = nn.Linear(self.linear_5_size, self.num_classes_type)
@@ -59,18 +64,23 @@ class TransducerGRU(nn.Module):
 
         x = self.dropout_1(x)
         x = self.linear_1(x)
+        x = self.relu_1(x)
 
         x = self.dropout_2(x)
         x = self.linear_2(x)
+        x = self.relu_2(x)
 
         x = self.dropout_3(x)
         x = self.linear_3(x)
+        x = self.relu_3(x)
 
         x = self.dropout_4(x)
         x = self.linear_4(x)
+        x = self.relu_4(x)
 
         x = self.dropout_5(x)
         x = self.linear_5(x)
+        x = self.relu_5(x)
 
         x_base = self.output_layer(x)
         x_type = self.output_layer_type(x)
