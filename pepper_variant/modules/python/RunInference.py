@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from pepper_variant.modules.python.ImageGenerationUI import ImageGenerationUtils
 from pepper_variant.modules.python.models.predict_distributed_cpu import predict_distributed_cpu
+from pepper_variant.modules.python.models.predict_distributed_cpu_fake import predict_distributed_cpu_fake
 from pepper_variant.modules.python.models.predict_distributed_gpu import predict_distributed_gpu
 from pepper_variant.modules.python.models.predict_hp_distributed_cpu import predict_hp_distributed_cpu
 from pepper_variant.modules.python.models.predict_hp_distributed_gpu import predict_hp_distributed_gpu
@@ -133,10 +134,13 @@ def run_inference(image_dir,
                   device_ids,
                   callers_per_gpu,
                   gpu_mode,
-                  threads):
+                  threads,
+                  dry_mode=False):
     output_dir = ImageGenerationUtils.handle_output_directory(output_dir)
 
-    if gpu_mode:
+    if dry_mode:
+        predict_distributed_cpu_fake(image_dir, output_dir, batch_size, num_workers)
+    elif gpu_mode:
         distributed_gpu(image_dir,
                         model,
                         use_hp_info,

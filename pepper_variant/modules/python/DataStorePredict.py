@@ -70,6 +70,7 @@ class DataStore(object):
                                                       chunk_name_suffix, 'position')] = np.array(position, dtype=np.int32)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
                                                       chunk_name_suffix, 'index')] = np.array(index, dtype=np.int32)
+
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
                                                       chunk_name_suffix, 'base_predictions')] = np.array(base_predictions, dtype=np.float)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,

@@ -93,7 +93,8 @@ def main():
                       FLAGS.device_ids,
                       FLAGS.callers_per_gpu,
                       FLAGS.gpu,
-                      FLAGS.threads)
+                      FLAGS.threads,
+                      FLAGS.dry)
 
     elif FLAGS.sub_command == 'find_candidates':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FIND CANDIDATE MODULE SELECTED\n")

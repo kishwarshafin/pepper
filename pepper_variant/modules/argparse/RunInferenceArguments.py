@@ -82,4 +82,10 @@ def add_run_inference_arguments(parser):
         action='store_true',
         help="If set then haplotype-aware mode will be enabled."
     )
+    parser.add_argument(
+        "--dry",
+        default=False,
+        action='store_true',
+        help="If set then predictions will be imitated from the training set. [DEBUG MODE]"
+    )
     return parser
