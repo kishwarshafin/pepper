@@ -100,11 +100,14 @@ class AlignmentSummarizer:
                 return None
 
             chunk_id_start = 0
-            print("STARTING TRUTH REGIONS: ", truth_regions)
 
             for region in truth_regions:
                 region_start = region[0]
                 region_end = region[1]
+
+                region_length = region[1] - region[0]
+                if region_length < ImageSizeOptions.SMALL_CHUNK_LENGTH:
+                    continue
 
                 # get vcf records from truth
                 truth_hap1_records, truth_hap2_records = self.get_truth_vcf_records(truth_vcf, region_start, region_end)
