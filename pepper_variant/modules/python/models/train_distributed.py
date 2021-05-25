@@ -169,10 +169,6 @@ def train(train_file, test_file, batch_size, epoch_limit, gpu_mode, num_workers,
                 labels = labels.to(device_id)
                 type_labels = type_labels.to(device_id)
 
-            print(images.size())
-            print(labels.size())
-            print(type_labels.size())
-            exit(0)
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
             cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
