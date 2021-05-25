@@ -239,7 +239,7 @@ void RegionalSummaryGenerator::generate_labels(const vector<type_truth_record>& 
     variant_type_labels_hp1.resize(region_size + 1, VariantTypes::HOM_REF);
     variant_type_labels_hp2.resize(region_size + 1, VariantTypes::HOM_REF);
 
-    for(long long pos = ref_start; pos < ref_end; pos++) {
+    for(long long pos = ref_start; pos <= ref_end; pos++) {
         int base_index = (int)(pos - ref_start + cumulative_observed_insert[pos - ref_start]);
         labels_hp1[base_index] = reference_sequence[base_index];
         labels_hp2[base_index] = reference_sequence[base_index];
@@ -248,34 +248,46 @@ void RegionalSummaryGenerator::generate_labels(const vector<type_truth_record>& 
     for(const auto& truth_record : hap1_records) {
         if(truth_record.ref.length() > truth_record.alt.length()) {
             //it's a delete
-            int base_index = (int)(truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
-            variant_type_labels_hp1[base_index] = VariantTypes::DELETE;
+            if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
+                int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
+                variant_type_labels_hp1[base_index] = VariantTypes::DELETE;
+            }
 
             for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-                base_index = (int)(pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-                if(pos - truth_record.pos_start < truth_record.alt.length()) {
-                    labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
-                } else {
-                    labels_hp1[base_index] = '*';
+                if (pos >= ref_start && pos <= ref_end) {
+                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
+                    if (pos - truth_record.pos_start < truth_record.alt.length()) {
+                        labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                    } else {
+                        labels_hp1[base_index] = '*';
+                    }
                 }
             }
         } else if(truth_record.ref.length() < truth_record.alt.length()) {
             //it's an insert
-            int base_index = (int)(truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
-            variant_type_labels_hp1[base_index] = VariantTypes::INSERT;
+            if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
+                int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
+                variant_type_labels_hp1[base_index] = VariantTypes::INSERT;
+            }
 
             for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-                base_index = (int)(pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-                labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                if (pos >= ref_start && pos <= ref_end) {
+                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
+                    labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                }
             }
         } else if(truth_record.ref.length() == truth_record.alt.length()) {
             //it's a SNP
-            int base_index = (int)(truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
-            variant_type_labels_hp1[base_index] = VariantTypes::SNP;
+            if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
+                int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
+                variant_type_labels_hp1[base_index] = VariantTypes::SNP;
+            }
 
             for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-                base_index = (int)(pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-                labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                if (pos >= ref_start && pos <= ref_end) {
+                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
+                    labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                }
             }
         }
     }
@@ -283,34 +295,46 @@ void RegionalSummaryGenerator::generate_labels(const vector<type_truth_record>& 
     for(const auto& truth_record : hap2_records) {
         if(truth_record.ref.length() > truth_record.alt.length()) {
             //it's a delete
-            int base_index = (int)(truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
-            variant_type_labels_hp2[base_index] = VariantTypes::DELETE;
+            if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
+                int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
+                variant_type_labels_hp2[base_index] = VariantTypes::DELETE;
+            }
 
             for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-                base_index = (int)(pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-                if(pos - truth_record.pos_start < truth_record.alt.length()) {
-                    labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
-                } else {
-                    labels_hp2[base_index] = '*';
+                if (pos >= ref_start && pos <= ref_end) {
+                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
+                    if (pos - truth_record.pos_start < truth_record.alt.length()) {
+                        labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                    } else {
+                        labels_hp2[base_index] = '*';
+                    }
                 }
             }
         } else if(truth_record.ref.length() < truth_record.alt.length()) {
             //it's an insert
-            int base_index = (int)(truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
-            variant_type_labels_hp2[base_index] = VariantTypes::INSERT;
+            if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
+                int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
+                variant_type_labels_hp2[base_index] = VariantTypes::INSERT;
+            }
 
             for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-                base_index = (int)(pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-                labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                if (pos >= ref_start && pos <= ref_end) {
+                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
+                    labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                }
             }
         } else if(truth_record.ref.length() == truth_record.alt.length()) {
             //it's a SNP
-            int base_index = (int)(truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
-            variant_type_labels_hp2[base_index] = VariantTypes::SNP;
+            if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
+                int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
+                variant_type_labels_hp2[base_index] = VariantTypes::SNP;
+            }
 
             for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-                base_index = (int)(pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-                labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                if (pos >= ref_start && pos <= ref_end) {
+                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
+                    labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                }
             }
         }
     }
