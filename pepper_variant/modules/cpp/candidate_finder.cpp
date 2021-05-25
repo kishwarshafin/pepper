@@ -216,6 +216,17 @@ int get_genotype(string type_predicted) {
     }
 }
 
+int get_genotype_from_base(char ref_base, char base_prediction1, char base_prediction2) {
+    if(ref_base == base_prediction1 || ref_base == base_prediction2) {
+        if(base_prediction1 == base_prediction2) return 0; // hom-var
+        else return 1;
+    } else if(base_prediction1 == base_prediction2) {
+        return 2; // hom-alt
+    } else {
+        return 1; // het
+    }
+}
+
 bool CandidateFinder::filter_candidate(const Candidate& candidate, bool freq_based, double freq) {
     double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
     return false;
@@ -497,7 +508,8 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                 float base_prediction_value = prediction_base_values_map[position_index][base_prediction_index];
                 float type_prediction_value = prediction_type_values_map[position_index][type_prediction_index];
 
-                int predicted_genotype = get_genotype(types_predicted);
+//                int predicted_genotype = get_genotype(types_predicted);
+                int predicted_genotype = get_genotype_from_base(candidate.allele.ref[0], bases_predicted[0], bases_predicted[1]);
 
                 if(bases_predicted[0] == candidate.allele.alt[0] || bases_predicted[1] == candidate.allele.alt[0]) {
                     candidate.allele_probability = base_prediction_value;
