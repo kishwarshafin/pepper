@@ -304,7 +304,7 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                                                                    double freq) {
 
     // populate all the prediction maps
-    vector<string> decoded_base_lables {"**", "AA", "AC", "AT", "AG", "A*", "CC", "CT", "CG", "C*", "TT", "TG", "T*", "GG", "G*"};
+    vector<string> decoded_base_lables {"##", "AA", "AC", "AT", "AG", "A*", "A#", "CC", "CT", "CG", "C*", "C#", "TT", "TG", "T*", "T#", "GG", "G*", "G#", "**", "*#"};
     vector<string> decoded_type_lables {"RR", "RS", "RI", "RD", "SS", "SI", "SD", "II", "ID", "DD" };
 
     // first go over and see how many base positions are there.
