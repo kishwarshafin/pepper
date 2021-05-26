@@ -12,7 +12,7 @@
 #include <utility>
 
 namespace ImageOptionsRegion {
-    static constexpr int MAX_COLOR_VALUE = 256;
+    static constexpr int MAX_COLOR_VALUE = 254;
     static constexpr int MISMATCH_COLOR_START = 128;
     static constexpr int REFERENCE_INDEX_START = 0;
     static constexpr int REFERENCE_INDEX_SIZE = 5;
