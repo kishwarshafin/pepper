@@ -121,32 +121,49 @@ uint8_t get_label_index(char base_h1, char base_h2) {
     // A*
     if (base_h1 == 'A' && base_h2 == '*') return 5;
     if (base_h1 == '*' && base_h2 == 'A') return 5;
+    // A#
+    if (base_h1 == 'A' && base_h2 == '#') return 6;
+    if (base_h1 == '#' && base_h2 == 'A') return 6;
     // CC
-    if (base_h1 == 'C' && base_h2 == 'C') return 6;
+    if (base_h1 == 'C' && base_h2 == 'C') return 7;
     // CT
-    if (base_h1 == 'C' && base_h2 == 'T') return 7;
-    if (base_h1 == 'T' && base_h2 == 'C') return 7;
+    if (base_h1 == 'C' && base_h2 == 'T') return 8;
+    if (base_h1 == 'T' && base_h2 == 'C') return 8;
     // CG
-    if (base_h1 == 'C' && base_h2 == 'G') return 8;
-    if (base_h1 == 'G' && base_h2 == 'C') return 8;
+    if (base_h1 == 'C' && base_h2 == 'G') return 9;
+    if (base_h1 == 'G' && base_h2 == 'C') return 9;
     // C*
-    if (base_h1 == 'C' && base_h2 == '*') return 9;
-    if (base_h1 == '*' && base_h2 == 'C') return 9;
+    if (base_h1 == 'C' && base_h2 == '*') return 10;
+    if (base_h1 == '*' && base_h2 == 'C') return 10;
+    // C#
+    if (base_h1 == 'C' && base_h2 == '#') return 11;
+    if (base_h1 == '#' && base_h2 == 'C') return 11;
     // TT
-    if (base_h1 == 'T' && base_h2 == 'T') return 10;
+    if (base_h1 == 'T' && base_h2 == 'T') return 12;
     // TG
-    if (base_h1 == 'T' && base_h2 == 'G') return 11;
-    if (base_h1 == 'G' && base_h2 == 'T') return 11;
+    if (base_h1 == 'T' && base_h2 == 'G') return 13;
+    if (base_h1 == 'G' && base_h2 == 'T') return 13;
     // T*
-    if (base_h1 == 'T' && base_h2 == '*') return 12;
-    if (base_h1 == '*' && base_h2 == 'T') return 12;
+    if (base_h1 == 'T' && base_h2 == '*') return 14;
+    if (base_h1 == '*' && base_h2 == 'T') return 14;
+    // T#
+    if (base_h1 == 'T' && base_h2 == '#') return 15;
+    if (base_h1 == '#' && base_h2 == 'T') return 15;
     // GG
-    if (base_h1 == 'G' && base_h2 == 'G') return 13;
+    if (base_h1 == 'G' && base_h2 == 'G') return 16;
     // G*
-    if (base_h1 == 'G' && base_h2 == '*') return 14;
-    if (base_h1 == '*' && base_h2 == 'G') return 14;
+    if (base_h1 == 'G' && base_h2 == '*') return 17;
+    if (base_h1 == '*' && base_h2 == 'G') return 17;
+    // G#
+    if (base_h1 == 'G' && base_h2 == '#') return 18;
+    if (base_h1 == '#' && base_h2 == 'G') return 18;
     // **
-    if (base_h1 == '*' && base_h2 == '*') return 0;
+    if (base_h1 == '*' && base_h2 == '*') return 19;
+    // *#
+    if (base_h1 == '*' && base_h2 == '#') return 20;
+    if (base_h1 == '#' && base_h2 == '*') return 20;
+    // ##
+    if (base_h1 == '#' && base_h2 == '#') return 0;
     return 0;
 }
 
@@ -251,31 +268,34 @@ void RegionalSummaryGenerator::generate_labels(const vector<type_truth_record>& 
             if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
                 int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
                 variant_type_labels_hp1[base_index] = VariantTypes::DELETE;
+                labels_hp1[base_index] = '#';
             }
+            // dont expand to the rest of the bases
 
-            for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-                if (pos >= ref_start && pos <= ref_end) {
-                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-                    if (pos - truth_record.pos_start < truth_record.alt.length()) {
-                        labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
-                    } else {
-                        labels_hp1[base_index] = '*';
-                    }
-                }
-            }
+//            for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
+//                if (pos >= ref_start && pos <= ref_end) {
+//                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
+//                    if (pos - truth_record.pos_start < truth_record.alt.length()) {
+//                        labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
+//                    } else {
+//                        labels_hp1[base_index] = '*';
+//                    }
+//                }
+//            }
         } else if(truth_record.ref.length() < truth_record.alt.length()) {
             //it's an insert
             if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
                 int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
                 variant_type_labels_hp1[base_index] = VariantTypes::INSERT;
+                labels_hp1[base_index] = '*';
             }
 
-            for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-                if (pos >= ref_start && pos <= ref_end) {
-                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-                    labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
-                }
-            }
+//            for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
+//                if (pos >= ref_start && pos <= ref_end) {
+//                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
+//                    labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
+//                }
+//            }
         } else if(truth_record.ref.length() == truth_record.alt.length()) {
             //it's a SNP
             if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
@@ -298,31 +318,34 @@ void RegionalSummaryGenerator::generate_labels(const vector<type_truth_record>& 
             if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
                 int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
                 variant_type_labels_hp2[base_index] = VariantTypes::DELETE;
+                labels_hp2[base_index] = '#';
             }
+            // dont expand to the rest of the bases
 
-            for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-                if (pos >= ref_start && pos <= ref_end) {
-                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-                    if (pos - truth_record.pos_start < truth_record.alt.length()) {
-                        labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
-                    } else {
-                        labels_hp2[base_index] = '*';
-                    }
-                }
-            }
+//            for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
+//                if (pos >= ref_start && pos <= ref_end) {
+//                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
+//                    if (pos - truth_record.pos_start < truth_record.alt.length()) {
+//                        labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
+//                    } else {
+//                        labels_hp2[base_index] = '*';
+//                    }
+//                }
+//            }
         } else if(truth_record.ref.length() < truth_record.alt.length()) {
             //it's an insert
             if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
                 int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
                 variant_type_labels_hp2[base_index] = VariantTypes::INSERT;
+                labels_hp2[base_index] = '*';
             }
 
-            for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-                if (pos >= ref_start && pos <= ref_end) {
-                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-                    labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
-                }
-            }
+//            for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
+//                if (pos >= ref_start && pos <= ref_end) {
+//                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
+//                    labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
+//                }
+//            }
         } else if(truth_record.ref.length() == truth_record.alt.length()) {
             //it's a SNP
             if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
@@ -348,7 +371,8 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
     long long ref_position = read.pos;
     int cigar_index = 0;
     double base_quality = 1.0 - pow(10.0 , (-1.0 * read.base_qualities[read_index])/10);
-    for (auto &cigar: read.cigar_tuples) {
+    for (int cigar_i=0; cigar_i<read.cigar_tuples.size(); cigar_i++) {
+        CigarOp cigar = read.cigar_tuples[cigar_i];
         if (ref_position > ref_end) break;
         switch (cigar.operation) {
             case CIGAR_OPERATIONS::EQUAL:
@@ -371,10 +395,24 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                         int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
                         int feature_index = get_feature_index(base, read.flags.is_reverse);
 
-                        // update the summary of base
-                        if(ref_position >= ref_start && ref_position <= ref_end) {
-                            image_matrix[base_index][feature_index] += 1;
-                            coverage_vector[ref_position - ref_start] += 1;
+                        //look forward and make sure this is not an anchor base
+                        bool check_this_base = true;
+                        if(i == cigar.length - 1 && cigar_i + 1 < read.cigar_tuples.size()) {
+                            CigarOp next_cigar = read.cigar_tuples[cigar_i + 1];
+                            if(next_cigar.operation == CIGAR_OPERATIONS::IN ||
+                               next_cigar.operation == CIGAR_OPERATIONS::DEL) {
+                                // this is an anchor base of a delete or an insert, don't process this.
+                                coverage_vector[ref_position - ref_start] += 1;
+                                check_this_base = false;
+                            }
+                        }
+
+                        if(check_this_base) {
+                            // update the summary of base
+                            if (ref_position >= ref_start && ref_position <= ref_end) {
+                                image_matrix[base_index][feature_index] += 1;
+                                coverage_vector[ref_position - ref_start] += 1;
+                            }
                         }
 
                     }
@@ -412,7 +450,11 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                     int base_index = (int)(ref_position - 1 - ref_start + cumulative_observed_insert[ref_position - 1 - ref_start]);
                     int delete_count_index =  get_feature_index('D', read.flags.is_reverse);
                     image_matrix[base_index][delete_count_index] += 1.0;
+
+//                    int feature_index = get_feature_index('*', read.flags.is_reverse);
+//                    image_matrix[base_index][feature_index] += 1.0;
                 }
+                // dont' expand to the full delete length, rather just mount everything to the anchor
 
                 for (int i = 0; i < cigar.length; i++) {
                     if (ref_position + i >= ref_start && ref_position + i <= ref_end) {
@@ -422,7 +464,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                         int feature_index = get_feature_index('*', read.flags.is_reverse);
 
                         image_matrix[base_index][feature_index] += 1.0;
-                        coverage_vector[ref_position - ref_start + i] += 1.0;
+//                        coverage_vector[ref_position - ref_start + i] += 1.0;
                     }
                 }
 
@@ -473,9 +515,9 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
     // once the image matrix is generated, scale the counted values.
     for(int i=0;i<region_size;i++){
         // normalize things
-        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
-            image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
-        }
+//        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
+//            image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
+//        }
 //        int fwd_feature_index = get_feature_index(ref_at_labels[i], false);
 //        int rev_feature_index = get_feature_index(ref_at_labels[i], true);
 //
