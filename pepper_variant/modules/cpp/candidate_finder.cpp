@@ -349,8 +349,8 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
 
     // first go over and see how many base positions are there.
     // all of the positions will be relative to the positions vector so we need to count where it starts and ends
-    long long local_region_start = ref_start;
-    long long local_region_end = ref_end;
+    long long local_region_start = region_start;
+    long long local_region_end = region_end;
 
     int local_region_size = (int) (local_region_end - local_region_start + 1);
 
@@ -361,17 +361,17 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
     max_observed_insert.resize(local_region_size + 1, 0);
     cumulative_observed_insert.resize(local_region_size + 1, 0);
 
-    for(int i=0; i < (int) positions.size(); i++) {
-        if(positions[i] < 0) continue;
-        long long pos = positions[i];
-//        max_observed_insert[pos-local_region_start] = max(max_observed_insert[pos-local_region_start]);
-    }
+//    for(int i=0; i < (int) positions.size(); i++) {
+//        if(positions[i] < 0) continue;
+//        long long pos = positions[i];
+////        max_observed_insert[pos-local_region_start] = max(max_observed_insert[pos-local_region_start]);
+//    }
 
-    total_observered_insert_bases = max_observed_insert[0];
-    for(int i=1;i < max_observed_insert.size(); i++) {
-        cumulative_observed_insert[i] = cumulative_observed_insert[i-1] + max_observed_insert[i-1];
-        total_observered_insert_bases += max_observed_insert[i];
-    }
+//    total_observered_insert_bases = max_observed_insert[0];
+//    for(int i=1;i < max_observed_insert.size(); i++) {
+//        cumulative_observed_insert[i] = cumulative_observed_insert[i-1] + max_observed_insert[i-1];
+//        total_observered_insert_bases += max_observed_insert[i];
+//    }
 
     // create a prediction map, this is for all positions and 5 base predictions
     vector<int> prediction_base_map(local_region_size + total_observered_insert_bases + 1);

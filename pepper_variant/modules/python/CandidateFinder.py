@@ -271,8 +271,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
             smaller_chunks = set(hdf5_file['predictions'][contig][chunk_name].keys()) - {'contig_start', 'contig_end'}
             contig_start = hdf5_file['predictions'][contig][chunk_name]['contig_start'][()]
             contig_end = hdf5_file['predictions'][contig][chunk_name]['contig_end'][()]
-            if contig_start >= 10000000 and contig_end <= 20000000:
-                print(contig_start, contig_end)
+
         smaller_chunks = sorted(smaller_chunks)
 
         if not use_hp_info:
