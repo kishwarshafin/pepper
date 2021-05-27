@@ -62,13 +62,24 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
 
     // Generate regional summary
        py::class_<RegionalSummaryGenerator>(m, "RegionalSummaryGenerator")
-            .def(py::init<long long &, long long &, string &>())
+            .def(py::init<string &, long long &, long long &, string &>())
             .def_readwrite("max_observed_insert", &RegionalSummaryGenerator::max_observed_insert)
             .def_readwrite("cumulative_observed_insert", &RegionalSummaryGenerator::cumulative_observed_insert)
             .def_readwrite("total_observered_insert_bases", &RegionalSummaryGenerator::total_observered_insert_bases)
             .def("generate_summary", &RegionalSummaryGenerator::generate_summary)
             .def("generate_labels", &RegionalSummaryGenerator::generate_labels)
             .def("generate_max_insert_summary", &RegionalSummaryGenerator::generate_max_insert_summary);
+
+        py::class_<CandidateImageSummary>(m, "CandidateImageSummary")
+            .def_readwrite("contig", &CandidateImageSummary::contig)
+            .def_readwrite("position", &CandidateImageSummary::position)
+            .def_readwrite("region_start", &CandidateImageSummary::region_start)
+            .def_readwrite("region_stop", &CandidateImageSummary::region_stop)
+            .def_readwrite("image_matrix", &CandidateImageSummary::image_matrix)
+            .def_readwrite("base_label", &CandidateImageSummary::base_label)
+            .def_readwrite("type_label", &CandidateImageSummary::type_label);
+
+
 
        // Generate regional summary
        py::class_<RegionalSummaryGeneratorHP>(m, "RegionalSummaryGeneratorHP")
@@ -148,7 +159,8 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
 
         // Candidate finder
         py::class_<CandidateFinder>(m, "CandidateFinder")
-            .def(py::init<const string &, const string &, long long &, long long&, long long&, long long&>())
+            .def(py::init<const string &, const string &, long long &, long long&, long long &, long long &>())
+            .def("find_candidates_consensus", &CandidateFinder::find_candidates_consensus)
             .def("find_candidates", &CandidateFinder::find_candidates);
 
         py::class_<CandidateFinderHP>(m, "CandidateFinderHP")

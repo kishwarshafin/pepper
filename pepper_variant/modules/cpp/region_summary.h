@@ -75,7 +75,19 @@ struct RegionalImageSummary {
     vector<int> chunked_ids;
 };
 
+
+struct CandidateImageSummary {
+    string contig;
+    int64_t position;
+    int64_t region_start;
+    int64_t region_stop;
+    vector< vector<uint8_t> > image_matrix;
+    uint8_t base_label;
+    uint8_t type_label;
+};
+
 class RegionalSummaryGenerator {
+    string contig;
     long long ref_start;
     long long ref_end;
     string reference_sequence;
@@ -93,7 +105,7 @@ public:
     vector<uint64_t> cumulative_observed_insert;
     uint64_t total_observered_insert_bases;
 
-    RegionalSummaryGenerator(long long region_start, long long region_end, string reference_sequence);
+    RegionalSummaryGenerator(string contig, long long region_start, long long region_end, string reference_sequence);
 
     void generate_max_insert_observed(const type_read& read);
 
@@ -113,12 +125,15 @@ public:
 
     void debug_print_matrix(int** image_matrix, bool train_mode);
 
-    RegionalImageSummary generate_summary(vector <type_read> &reads,
-                                          int chunk_overlap,
-                                          int smaller_chunk_size,
-                                          int feature_size,
-                                          int chunk_id_start,
-                                          bool train_mode);
+    void debug_candidate_summary(CandidateImageSummary candidate, int small_chunk_size, bool train_mode);
+
+    vector<CandidateImageSummary> generate_summary(vector <type_read> &reads,
+                                                   vector<long long> candidate_positions,
+                                                   int chunk_overlap,
+                                                   int smaller_chunk_size,
+                                                   int feature_size,
+                                                   int chunk_id_start,
+                                                   bool train_mode);
 };
 
 #endif //PEPPER_PRIVATE_REGION_SUMMARY_H

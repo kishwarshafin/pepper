@@ -1,6 +1,11 @@
+class ConsensCandidateFinder(object):
+    REGION_SAFE_BASES = 100
+    CANDIDATE_FREQUENCY = 0.08
+
 class ImageSizeOptions(object):
     IMAGE_HEIGHT = 19
     IMAGE_CHANNELS = 1
+    IMAGE_WINDOW_SIZE = 20
     SMALL_CHUNK_LENGTH = 200
     SMALL_CHUNK_OVERLAP = 10
     LABEL_LENGTH = SMALL_CHUNK_LENGTH

@@ -3,7 +3,7 @@ import itertools
 import numpy as np
 from operator import itemgetter
 from pysam import VariantFile
-from pepper_variant.modules.python.Options import ImageSizeOptions, AlingerOptions, ReadFilterOptions, TruthFilterOptions
+from pepper_variant.modules.python.Options import ImageSizeOptions, AlingerOptions, ReadFilterOptions, TruthFilterOptions, ConsensCandidateFinder
 
 
 class AlignmentSummarizer:
@@ -77,12 +77,7 @@ class AlignmentSummarizer:
         return haplotype_1_records, haplotype_2_records
 
     def create_summary(self, truth_vcf, train_mode, downsample_rate, bed_list):
-        all_images = []
-        all_labels = []
-        all_type_labels = []
-        all_positions = []
-        all_index = []
-        all_chunk_ids = []
+        all_candidate_images = []
 
         if train_mode:
             truth_regions = []
@@ -102,20 +97,11 @@ class AlignmentSummarizer:
             chunk_id_start = 0
 
             for region in truth_regions:
-                region_start = region[0]
-                region_end = region[1]
+                sub_region_start = region[0]
+                sub_region_end = region[1]
 
-                region_length = region[1] - region[0]
-                if region_length < ImageSizeOptions.SMALL_CHUNK_LENGTH:
-                    continue
-
-                # get vcf records from truth
-                truth_hap1_records, truth_hap2_records = self.get_truth_vcf_records(truth_vcf, region_start, region_end)
-
-                # ref_seq should contain region_end_position base
-                ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
-                                                                    region_start,
-                                                                    region_end + 1)
+                region_start = max(0, region[0] - ConsensCandidateFinder.REGION_SAFE_BASES)
+                region_end = region[1] + ConsensCandidateFinder.REGION_SAFE_BASES
 
                 all_reads = self.bam_handler.get_reads(self.chromosome_name,
                                                        region_start,
@@ -146,29 +132,43 @@ class AlignmentSummarizer:
                 if total_reads == 0:
                     return None
 
-                regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(region_start, region_end, ref_seq)
+                # get vcf records from truth
+                truth_hap1_records, truth_hap2_records = self.get_truth_vcf_records(truth_vcf, region_start, region_end)
+
+                # ref_seq should contain region_end_position base
+                ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
+                                                                    region_start,
+                                                                    region_end + 1)
+
+                # Find positions that has allele frequency >= threshold
+                # candidate finder objects
+                candidate_finder = PEPPER_VARIANT.CandidateFinder(ref_seq,
+                                                                  self.chromosome_name,
+                                                                  region_start,
+                                                                  region_end,
+                                                                  region_start,
+                                                                  region_end)
+
+                # find candidates
+                candidate_positions = candidate_finder.find_candidates_consensus(all_reads, ConsensCandidateFinder.CANDIDATE_FREQUENCY)
+                # filter the candidates to the sub regions only
+                candidate_positions = [pos for pos in candidate_positions if sub_region_start <= pos <= sub_region_end]
+
+                regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.chromosome_name, region_start, region_end, ref_seq)
 
                 regional_summary.generate_max_insert_summary(all_reads)
 
                 regional_summary.generate_labels(truth_hap1_records, truth_hap2_records)
 
-                regional_image_summary = regional_summary.generate_summary(all_reads,
-                                                                           ImageSizeOptions.SMALL_CHUNK_OVERLAP,
-                                                                           ImageSizeOptions.SMALL_CHUNK_LENGTH,
-                                                                           ImageSizeOptions.IMAGE_HEIGHT,
-                                                                           chunk_id_start,
-                                                                           train_mode)
-
+                candidate_image_summary = regional_summary.generate_summary(all_reads,
+                                                                            candidate_positions,
+                                                                            ImageSizeOptions.SMALL_CHUNK_OVERLAP,
+                                                                            ImageSizeOptions.IMAGE_WINDOW_SIZE,
+                                                                            ImageSizeOptions.IMAGE_HEIGHT,
+                                                                            chunk_id_start,
+                                                                            train_mode)
                 #############################
-                all_images.extend(regional_image_summary.chunked_image_matrix)
-                all_labels.extend(regional_image_summary.chunked_labels)
-                all_type_labels.extend(regional_image_summary.chunked_type_labels)
-                all_positions.extend(regional_image_summary.chunked_positions)
-                all_index.extend(regional_image_summary.chunked_index)
-                all_chunk_ids.extend(regional_image_summary.chunked_ids)
-
-                if len(regional_image_summary.chunked_ids) > 0:
-                    chunk_id_start = max(regional_image_summary.chunked_ids) + 1
+                all_candidate_images.extend(candidate_image_summary)
         else:
             read_start = max(0, self.region_start_position)
             read_end = self.region_end_position
@@ -221,11 +221,4 @@ class AlignmentSummarizer:
                                                                        chunk_id_start,
                                                                        train_mode)
 
-            all_images.extend(regional_image_summary.chunked_image_matrix)
-            all_labels.extend(regional_image_summary.chunked_labels)
-            all_type_labels.extend(regional_image_summary.chunked_type_labels)
-            all_positions.extend(regional_image_summary.chunked_positions)
-            all_index.extend(regional_image_summary.chunked_index)
-            all_chunk_ids.extend(regional_image_summary.chunked_ids)
-
-        return all_images, all_labels, all_type_labels, all_positions, all_index, all_chunk_ids
+        return all_candidate_images

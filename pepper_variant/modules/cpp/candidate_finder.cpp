@@ -16,33 +16,10 @@ CandidateFinder::CandidateFinder(string reference_sequence,
     this->reference_sequence = std::move(reference_sequence);
     this->region_start = region_start;
     this->region_end = region_end;
-    this->chromosome_name = std::move(chromosome_name);
     this->ref_start = ref_start;
     this->ref_end = ref_end;
+    this->chromosome_name = std::move(chromosome_name);
     AlleleMap.resize(region_end - region_start + 1);
-}
-
-
-void softmax(vector<float>& input) {
-    int i;
-    double m, sum, constant;
-
-    m = -INFINITY;
-    for (i = 0; i < input.size(); ++i) {
-        if (m < input[i]) {
-            m = input[i];
-        }
-    }
-
-    sum = 0.0;
-    for (i = 0; i < input.size(); ++i) {
-        sum += exp(input[i] - m);
-    }
-
-    constant = m + log(sum);
-    for (i = 0; i < input.size(); ++i) {
-        input[i] = exp(input[i] - constant);
-    }
 }
 
 void CandidateFinder::add_read_alleles(type_read &read, vector<int> &coverage) {
@@ -214,6 +191,7 @@ int get_genotype(string type_predicted) {
         if(type_predicted[0] == type_predicted[1]) return 2; // hom-alt
         if(type_predicted[0] != type_predicted[1]) return 1; // het
     }
+    return 0;
 }
 
 int get_genotype_from_base(char ref_base, char base_prediction1, char base_prediction2) {
@@ -230,72 +208,134 @@ int get_genotype_from_base(char ref_base, char base_prediction1, char base_predi
 bool CandidateFinder::filter_candidate(const Candidate& candidate, bool freq_based, double freq) {
     double allele_frequency = candidate.read_support / max(1.0, double(candidate.depth));
     return false;
-
-
-//    if(candidate.allele.alt_type == SNP_TYPE) {
-//        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
-//
-//        if(freq_based) {
-//            if(allele_frequency >= freq) return true;
-//            return false;
-//        }
-//
-//        double predicted_val = allele_weight * LinearRegression::SNP_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::SNP_NON_REF_PROB_COEF + candidate.alt_prob_h1 * LinearRegression::SNP_ALT_PROB1_COEF + candidate.alt_prob_h2 * LinearRegression::SNP_ALT_PROB2_COEF + LinearRegression::SNP_BIAS_TERM;
-//
-//        if(allele_frequency < LinearRegression::SNP_LOWER_FREQ_THRESHOLD) {
-//            if(allele_weight >= 0.05) {
-//                if(predicted_val >= 0.5) return true;
-//                else return false;
-//            }
-//            return false;
-//        }
-//
-//        if(predicted_val >= LinearRegression::SNP_THRESHOLD) return true;
-//        if(allele_frequency >= LinearRegression::SNP_UPPER_FREQ && allele_weight >= 0.01) return true;
-//        return false;
-//
-//    } else if (candidate.allele.alt_type == INSERT_TYPE) {
-//        return false; // Turn off reporting inserts
-//
-//        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
-//
-//        if(allele_frequency < LinearRegression::IN_LOWER_FREQ_THRESHOLD) {
-//            if(allele_frequency >= 0.05 && candidate.non_ref_prob >= 0.6) return true;
-//            return false;
-//        }
-//        double predicted_val = allele_frequency * LinearRegression::INSERT_ALT_FREQ_COEF + allele_weight * LinearRegression::INSERT_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::INSERT_NON_REF_PROB_COEF + LinearRegression::INSERT_BIAS_TERM;
-//
-//        if(predicted_val >= LinearRegression::INSERT_THRESHOLD) return true;
-//        if(allele_frequency >= LinearRegression::IN_UPPER_FREQ && allele_weight >= 0.5) return true;
-//        return false;
-//    } else if (candidate.allele.alt_type == DELETE_TYPE) {
-//        return false; // Turn off reporting deletes
-//
-//        double allele_weight = max(candidate.alt_prob_h1, candidate.alt_prob_h2);
-//
-////        if(allele_frequency>=0.20)return true;
-////        else return false;
-//        double predicted_val = allele_weight * LinearRegression::DELETE_ALLELE_WEIGHT_COEF + candidate.non_ref_prob * LinearRegression::DELETE_NON_REF_PROB_COEF + LinearRegression::DELETE_BIAS_TERM;
-//
-//        if(allele_frequency < LinearRegression::DEL_LOWER_FREQ_THRESHOLD) {
-//            if(allele_frequency >= 0.10 && allele_weight >= 0.5) return true;
-//            if(allele_frequency >= 0.05 && allele_weight >= 0.65) return true;
-//
-//            return false;
-//        }
-//
-//        if(predicted_val >= LinearRegression::DELETE_THRESHOLD) return true;
-//        if(allele_frequency >= LinearRegression::DEL_UPPER_FREQ_THRESHOLD && allele_weight >= 0.65) return true;
-//
-//        return false;
-//    }
-//    return false;
 }
 
 
+void CandidateFinder::add_read_alleles_consensus(type_read &read, vector<int> &coverage, vector<int> &insert_count, vector<int> &delete_count, vector<int> &snp_count) {
+    int read_index = 0;
+    long long ref_position = read.pos;
+    int cigar_index = 0;
+    int base_quality = 0;
+    long long reference_index, region_index;
+
+    for (int cigar_i=0; cigar_i<read.cigar_tuples.size(); cigar_i++) {
+        CigarOp cigar = read.cigar_tuples[cigar_i];
+        switch (cigar.operation) {
+            case CIGAR_OPERATIONS::EQUAL:
+            case CIGAR_OPERATIONS::DIFF:
+            case CIGAR_OPERATIONS::MATCH:
+                cigar_index = 0;
+                if (ref_position < region_start) {
+                    cigar_index = min(region_start - ref_position, (long long) cigar.length);
+                    read_index += cigar_index;
+                    ref_position += cigar_index;
+                }
+                for (int i = cigar_index; i < cigar.length; i++) {
+                    reference_index = ref_position - ref_start;
+                    region_index = ref_position - region_start;
+
+                    if (ref_position >= region_start && ref_position <= region_end &&
+                        reference_sequence[reference_index] != read.sequence[read_index] &&
+                        read.base_qualities[read_index] >= CandidateFinder_options::min_base_quality) {
+                        //look forward and make sure this is not an anchor base
+                        bool check_this_base = true;
+                        if(i == cigar.length - 1 && cigar_i + 1 < read.cigar_tuples.size()) {
+                            CigarOp next_cigar = read.cigar_tuples[cigar_i + 1];
+                            if(next_cigar.operation == CIGAR_OPERATIONS::IN ||
+                               next_cigar.operation == CIGAR_OPERATIONS::DEL) {
+                                // this is an anchor base of a delete or an insert, don't process this.
+                                coverage[region_index] += 1;
+                                check_this_base = false;
+                            }
+                        }
+                        if(check_this_base) {
+                            // process the SNP allele here
+                            snp_count[region_index] += 1;
+                            coverage[region_index] += 1;
+                        }
+                    } else if (ref_position <= region_end && read.base_qualities[read_index] >= CandidateFinder_options::min_base_quality) {
+                        coverage[region_index] += 1;
+                    }
+                    read_index += 1;
+                    ref_position += 1;
+                }
+                break;
+            case CIGAR_OPERATIONS::IN:
+                base_quality = *std::min_element(read.base_qualities.begin() + read_index,
+                                                 read.base_qualities.begin() + (read_index + cigar.length));
+                reference_index = ref_position - ref_start - 1;
+                region_index = ref_position - region_start - 1;
+                insert_count[region_index] += 1;
+
+                if (ref_position - 1 >= region_start &&
+                    ref_position - 1 <= region_end) {
+                    // process insert allele here
+                    string ref = reference_sequence.substr(reference_index, 1);
+                    string alt;
+                    if (read_index - 1 >= 0) alt = read.sequence.substr(read_index - 1, cigar.length + 1);
+                    else alt = ref + read.sequence.substr(read_index, cigar.length);
+
+
+//                    cout<<"INSERT: "<<ref_position-1<<" "<<ref<<" "<<alt<<" "<<AlleleFrequencyMap[candidate_alt]<<" "<<base_quality<<endl;
+                }
+                read_index += cigar.length;
+                break;
+
+            case CIGAR_OPERATIONS::DEL:
+                reference_index = ref_position - ref_start - 1;
+                region_index = ref_position - region_start - 1;
+                if(ref_position - 1 >= region_start && ref_position - 1 <= region_end) insert_count[region_index] += 1;
+
+                ref_position += cigar.length;
+                break;
+            case CIGAR_OPERATIONS::SOFT_CLIP:
+                read_index += cigar.length;
+                break;
+            case CIGAR_OPERATIONS::REF_SKIP:
+            case CIGAR_OPERATIONS::PAD:
+                ref_position += cigar.length;
+                break;
+            case CIGAR_OPERATIONS::HARD_CLIP:
+                break;
+
+        }
+    }
+}
+
+vector<long long> CandidateFinder::find_candidates_consensus(vector <type_read>& reads, double freq) {
+
+    // populate all the prediction maps
+    vector<int> coverage(region_end - region_start + 1, 0);
+    vector<int> allele_ends(region_end - region_start + 1, 0);
+    vector<int> insert_count(region_end - region_start + 1, 0);
+    vector<int> snp_count(region_end - region_start + 1, 0);
+    vector<int> delete_count(region_end - region_start + 1, 0);
+    vector<PositionalCandidateRecord> all_records;
+    int read_index = 0;
+
+    for (auto &read:reads) {
+        add_read_alleles_consensus(read, coverage, insert_count, delete_count, snp_count);
+        read_index += 1;
+    }
+
+    vector<long long> positions;
+    int local_region_size = (int)(region_end - region_start);
+
+    for(int pos_index = 0; pos_index < local_region_size; pos_index++) {
+        if(coverage[pos_index] == 0)continue;
+//        cout<<region_start+pos_index<<" SNP: "<<snp_count[pos_index]<<" IN: "<<insert_count[pos_index]<<" DEL: "<<delete_count[pos_index]<<" "<<coverage[pos_index]<<endl;
+        double insert_frequency = (double) insert_count[pos_index] / (double) coverage[pos_index];
+        double delete_frequency = (double) delete_count[pos_index] / (double) coverage[pos_index];
+        double snp_frequency = (double) snp_count[pos_index] / (double) coverage[pos_index];
+        if(insert_frequency >= freq || delete_frequency >= freq || snp_frequency >= freq) {
+            positions.push_back(region_start+pos_index);
+        }
+    }
+    return positions;
+}
+
 vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_read>& reads,
                                                                    vector<long long> positions,
-                                                                   vector<int>indices,
                                                                    vector< vector<float> > predictions,
                                                                    vector< vector<float> > type_predictions,
                                                                    vector<int> base_labels,
@@ -309,14 +349,8 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
 
     // first go over and see how many base positions are there.
     // all of the positions will be relative to the positions vector so we need to count where it starts and ends
-    long long local_region_start = positions[0];
-    long long local_region_end = positions[0];
-
-    for(long long & position : positions) {
-        if(position < 0) continue;
-        local_region_start = min(local_region_start, position);
-        local_region_end = max(local_region_end, position);
-    }
+    long long local_region_start = ref_start;
+    long long local_region_end = ref_end;
 
     int local_region_size = (int) (local_region_end - local_region_start + 1);
 
@@ -330,8 +364,7 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
     for(int i=0; i < (int) positions.size(); i++) {
         if(positions[i] < 0) continue;
         long long pos = positions[i];
-        int index = indices[i];
-        max_observed_insert[pos-local_region_start] = max(max_observed_insert[pos-local_region_start], index);
+//        max_observed_insert[pos-local_region_start] = max(max_observed_insert[pos-local_region_start]);
     }
 
     total_observered_insert_bases = max_observed_insert[0];
@@ -349,30 +382,12 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
 
     prediction_base_values_map.resize(local_region_size + total_observered_insert_bases + 1, vector<float>((int)decoded_base_lables.size(), 0));
     prediction_type_values_map.resize(local_region_size + total_observered_insert_bases + 1, vector<float>((int)decoded_type_lables.size(), 0));
-//    prediction_base_h2.resize(local_region_size + total_observered_insert_bases + 1, vector<float>(5, 0));
-//
-//    prediction_type_h1.resize(local_region_size + total_observered_insert_bases + 1, vector<float>(4, 0));
-//    prediction_type_h2.resize(local_region_size + total_observered_insert_bases + 1, vector<float>(4, 0));
-//
-//    // create the prediction map by taking the maximum prediction values
-//    for(int i=0; i< positions.size(); i++) {
-//        long long position = positions[i];
-//        int index = indices[i];
-//        if(position < 0) continue;
-//        int predicted_base_label = base_labels[i];
-//        int predicted_type_label = type_labels[i];
-//        if(index == 0) {
-//            if(predicted_)
-//            cout << position << " " << index << " " << predicted_base_label << " " << predicted_type_label << " " << decoded_base_lables[predicted_base_label] << " " << predictions[i][predicted_base_label]<<" "<< decoded_type_lables[predicted_type_label]<<" "<<type_predictions[i][predicted_type_label] << endl;
-//        }
-//    }
-//    exit(0);
-//
+
+
     for(int i=0; i< positions.size(); i++) {
         long long position = positions[i];
-        int index = indices[i];
         if(position < 0) continue;
-        int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start] + index);
+        int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start]);
         int predicted_base_label = base_labels[i];
         int predicted_type_label = type_labels[i];
 
@@ -381,57 +396,8 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
 
         prediction_base_values_map[position_index] = predictions[i];
         prediction_type_values_map[position_index] = type_predictions[i];
-//        cout<<position_index<<" "<<bases_predicted<<" "<<types_predicted<<endl;
+//        cout<<position<<" "<<predicted_type_label<<" "<<decoded_type_lables[predicted_type_label]<<" "<<position_index<<" "<<predicted_base_label<<" "<<predicted_type_label<<endl;
     }
-//    exit(1);
-    // first, softm
-//    for(int i=0; i< positions.size(); i++) {
-//        long long position = positions[i];
-//        int index = indices[i];
-//        if(position < 0) continue;
-//
-//        vector<float> base_predictions_h1(5, 0);
-//        vector<float> base_predictions_h2(5, 0);
-//
-//        vector<float> type_predictions_h1(4, 0);
-//        vector<float> type_predictions_h2(4, 0);
-//
-//        for(int j=0; j<predictions[i].size(); j++) {
-//            int base_1_index = get_index_from_base(decoded_base_lables[j][0]);
-//            int base_2_index = get_index_from_base(decoded_base_lables[j][1]);
-//
-////            base_predictions_h1[base_1_index] = max(base_predictions_h1[base_1_index], predictions[i][j]);
-////            base_predictions_h2[base_2_index] = max(base_predictions_h2[base_2_index], predictions[i][j]);
-//
-//            base_predictions_h1[base_1_index] += predictions[i][j];
-//            base_predictions_h2[base_2_index] += predictions[i][j];
-//        }
-//
-//        for(int j=0; j<type_predictions[i].size(); j++) {
-//            int base_1_index = get_index_from_type(decoded_type_lables[j][0]);
-//            int base_2_index = get_index_from_type(decoded_type_lables[j][1]);
-//
-////            type_predictions_h1[base_1_index] = max(type_predictions_h1[base_1_index], type_predictions[i][j]);
-////            type_predictions_h2[base_2_index] = max(type_predictions_h2[base_2_index], type_predictions[i][j]);
-//            type_predictions_h1[base_1_index] += type_predictions[i][j];
-//            type_predictions_h2[base_2_index] += type_predictions[i][j];
-//        }
-//        int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start] + index);
-//
-//        softmax(base_predictions_h1);
-//        softmax(base_predictions_h2);
-//        for(int j=0; j < base_predictions_h1.size(); j++) {
-//            prediction_map_h1[position_index][j] = base_predictions_h1[j];
-//            prediction_map_h2[position_index][j] = base_predictions_h2[j];
-//        }
-//
-//        softmax(type_predictions_h1);
-//        softmax(type_predictions_h2);
-//        for(int j=0; j < type_predictions_h1.size(); j++) {
-//            prediction_map_type_h1[position_index][j] = type_predictions_h1[j];
-//            prediction_map_type_h2[position_index][j] = type_predictions_h2[j];
-//        }
-//    }
 
     // all prediction maps populated now do candidate finding
     set<long long> filtered_candidate_positions;

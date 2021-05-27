@@ -284,28 +284,18 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                 with h5py.File(file_name, 'r') as hdf5_file:
                     bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
                     types = hdf5_file['predictions'][contig][chunk_name][chunk]['type_predictions'][()]
-                    positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
-                    indices = hdf5_file['predictions'][contig][chunk_name][chunk]['index'][()]
+                    positions = [hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]]
                     base_label = argmax(bases, axis=1)
                     type_label = argmax(types, axis=1)
 
-                    # for ii, base in enumerate(bases):
-                    #     print(positions[ii], indices[ii])
-                    #     print(list(bases[ii]))
-                    #     print(list(types[ii]))
-                    #     print(base_label[ii])
-                    #     print(type_label[ii])
-
                 if i == 0:
                     all_positions = positions
-                    all_indicies = indices
                     all_base_predictions = bases
                     all_type_predictions = types
                     all_base_prediction_labels = base_label
                     all_type_prediction_labels = type_label
                 else:
                     all_positions = np.concatenate((all_positions, positions), axis=0)
-                    all_indicies = np.concatenate((all_indicies, indices), axis=0)
                     all_base_predictions = np.concatenate((all_base_predictions, bases), axis=0)
                     all_type_predictions = np.concatenate((all_type_predictions, types), axis=0)
                     all_base_prediction_labels = np.concatenate((all_base_prediction_labels, base_label), axis=0)
@@ -320,7 +310,6 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                                                                  contig_start,
                                                                  contig_end,
                                                                  all_positions,
-                                                                 all_indicies,
                                                                  all_base_predictions,
                                                                  all_type_predictions,
                                                                  all_base_prediction_labels,

@@ -6,7 +6,8 @@
 
 #include <utility>
 
-RegionalSummaryGenerator::RegionalSummaryGenerator(long long region_start, long long region_end, string reference_sequence) {
+RegionalSummaryGenerator::RegionalSummaryGenerator(string contig, long long region_start, long long region_end, string reference_sequence) {
+    this->contig = contig;
     this->ref_start = region_start;
     this->ref_end = region_end;
     this->reference_sequence = std::move(reference_sequence);
@@ -479,13 +480,14 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
     }
 }
 
-RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_read> &reads,
-                                                                int chunk_overlap,
-                                                                int smaller_chunk_size,
-                                                                int feature_size,
-                                                                int chunk_id_start,
-                                                                bool train_mode) {
-    RegionalImageSummary summary{};
+vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector <type_read> &reads,
+                                                                         vector<long long> candidate_positions,
+                                                                         int chunk_overlap,
+                                                                         int smaller_chunk_size,
+                                                                         int feature_size,
+                                                                         int chunk_id_start,
+                                                                         bool train_mode) {
+
 
     int region_size = (int) (ref_end - ref_start + total_observered_insert_bases + 1);
 
@@ -546,82 +548,45 @@ RegionalImageSummary RegionalSummaryGenerator::generate_summary(vector <type_rea
         }
     }
 
-    // Now chunk the image into 1kb smaller matrices. Making them 10 * 1000 * feature_size
-    int64_t chunk_start = 0;
-    int64_t chunk_end = smaller_chunk_size;
-    int total_chunks = 0;
+    vector<CandidateImageSummary> all_candidate_images;
+    // at this point all of the images are generated. So we can create the images for each candidate position.
+    for(long long candidate_position : candidate_positions) {
+//        cout<<candidate_position<<endl;
+        int base_index = (int)(candidate_position - ref_start + cumulative_observed_insert[candidate_position - ref_start]);
 
-    // first count how many chunks will there be
-    while(true) {
-        total_chunks += 1;
-        if (chunk_end == (int) region_size) {
-            break;
+        CandidateImageSummary candidate_summary;
+        candidate_summary.contig = contig;
+        candidate_summary.position = candidate_position;
+        candidate_summary.base_label = labels[base_index];
+        candidate_summary.type_label = labels_variant_type[base_index];
+        candidate_summary.region_start = ref_start;
+        candidate_summary.region_stop = ref_end;
+
+        int base_left = base_index - smaller_chunk_size / 2;
+        int base_right = base_index + smaller_chunk_size / 2;
+
+//        cout<<base_left<<" "<<base_right<<endl;
+        candidate_summary.image_matrix.resize(smaller_chunk_size + 1, vector<uint8_t>(feature_size));
+        // now copy the entire feature matrix
+
+        for(int i=base_left; i<=base_right;i++) {
+            for (int j = 0; j < feature_size; j++) {
+                candidate_summary.image_matrix[i-base_left][j] = image_matrix[i][j];
+            }
         }
-        chunk_start = chunk_end - chunk_overlap;
-        chunk_end = min((int64_t) region_size, chunk_start + smaller_chunk_size);
+        all_candidate_images.push_back(candidate_summary);
+//        debug_candidate_summary(candidate_summary, smaller_chunk_size, train_mode);
 
     }
-    // once we know how many chunks there will be, we can generate a pre-defined vector and do the chunking
-    summary.chunked_image_matrix.resize(total_chunks, vector<vector<uint8_t> >(smaller_chunk_size,vector<uint8_t>(feature_size)));
-    summary.chunked_labels.resize(total_chunks, vector<uint8_t>(smaller_chunk_size));
-    summary.chunked_type_labels.resize(total_chunks, vector<uint8_t>(smaller_chunk_size));
-    summary.chunked_positions.resize(total_chunks, vector<int64_t>(smaller_chunk_size));
-    summary.chunked_index.resize(total_chunks, vector<int32_t>(smaller_chunk_size));
-    summary.chunked_ids.resize(total_chunks);
 
-    chunk_start = 0;
-    chunk_end = smaller_chunk_size;
-    int current_chunk = 0;
-
-    while(true) {
-        summary.chunked_ids[current_chunk] = chunk_id_start + current_chunk;
-        for(int64_t i = chunk_start; i < chunk_end; i++) {
-
-            if(i<region_size) {
-                summary.chunked_positions[current_chunk][i - chunk_start] = positions[i];
-                summary.chunked_index[current_chunk][i - chunk_start] = index[i];
-                summary.chunked_labels[current_chunk][i - chunk_start] = labels[i];
-                summary.chunked_type_labels[current_chunk][i - chunk_start] = labels_variant_type[i];
-            } else {
-                summary.chunked_positions[current_chunk][i - chunk_start] = -1;
-                summary.chunked_index[current_chunk][i - chunk_start] = -1;
-                summary.chunked_labels[current_chunk][i - chunk_start] = 0;
-                summary.chunked_type_labels[current_chunk][i - chunk_start] = 0;
-            }
-            for(int j=0; j < feature_size; j++) {
-                if(i<=region_size) {
-                    summary.chunked_image_matrix[current_chunk][i - chunk_start][j] = image_matrix[i][j];
-                } else {
-                    summary.chunked_image_matrix[current_chunk][i - chunk_start][j] = 0;
-                }
-            }
-        }
-        if (chunk_end >= region_size) {
-            break;
-        }
-
-        chunk_start = chunk_end - chunk_overlap;
-        chunk_end = chunk_start + smaller_chunk_size;
-
-        // in train mode, we don't go outside the window
-        if(train_mode) {
-            if(chunk_end > region_size) {
-                int padding_required = (int)(chunk_end - region_size);
-                chunk_start -= padding_required;
-                chunk_end = chunk_start + smaller_chunk_size;
-                if(chunk_start < 0) break;
-            }
-        }
-        current_chunk += 1;
-    }
 
 //    debug_print_matrix(image_matrix, train_mode);
     for (int i = 0; i < region_size + 1; i++)
         free(image_matrix[i]);
     free(image_matrix);
 //    exit(0);
-//
-    return summary;
+
+    return all_candidate_images;
 }
 
 
@@ -676,6 +641,87 @@ void RegionalSummaryGenerator::debug_print_matrix(int** image_matrix, bool train
 
         for (int j = 0; j < region_size; j++) {
             printf("%3d\t", image_matrix[j][i]);
+        }
+        cout << endl;
+    }
+
+}
+
+
+void RegionalSummaryGenerator::debug_candidate_summary(CandidateImageSummary candidate, int small_chunk_size, bool train_mode) {
+    vector<string> decoded_base_lables {"##", "AA", "AC", "AT", "AG", "A*", "A#", "CC", "CT", "CG", "C*", "C#", "TT", "TG", "T*", "T#", "GG", "G*", "G#", "**", "*#"};
+    vector<string> decoded_type_lables {"RR", "RS", "RI", "RD", "SS", "SI", "SD", "II", "ID", "DD" };
+    cout << "------------- CANDIDATE PILEUP" << endl;
+    cout<<"Contig: "<<candidate.contig<<endl;
+    cout<<"Position: "<<candidate.position<<endl;
+    cout<<"Type label: "<<(int)candidate.type_label<<" "<<decoded_type_lables[candidate.type_label]<<endl;
+    cout<<"Base label: :"<<(int)candidate.base_label<<" "<<decoded_base_lables[candidate.base_label]<<endl;
+
+    long long candidate_ref_start = candidate.position - small_chunk_size / 2;
+    long long candidate_ref_end = candidate.position + small_chunk_size / 2;
+    cout << setprecision(3);
+    for (long long i = candidate_ref_start; i <= candidate_ref_end; i++) {
+        if (i == candidate_ref_start) cout << "POS:\t";
+        printf("%3lld\t", (i - candidate_ref_start) % 100);
+    }
+    cout << endl;
+
+    for (long long i = candidate_ref_start; i <= candidate_ref_end; i++) {
+        if(i==candidate_ref_start) cout<<"REF:\t";
+        cout << "  " << reference_sequence[i - ref_start] << "\t";
+        if (max_observed_insert[i - ref_start] > 0) {
+            for (uint64_t ii = 0; ii < max_observed_insert[i - ref_start]; ii++)cout << "  *" << "\t";
+        }
+    }
+    cout << endl;
+
+
+    if(train_mode) {
+
+        for (long long i = candidate_ref_start; i <= candidate_ref_end; i++) {
+            if(i==candidate_ref_start) cout<<"TRH1:\t";
+            cout << "  " << labels_hp1[i - ref_start] << "\t";
+            if (max_observed_insert[i - ref_start] > 0) {
+                for (uint64_t ii = 0; ii < max_observed_insert[i - ref_start]; ii++)cout << "  *" << "\t";
+            }
+        }
+        cout << endl;
+
+        for (long long i = candidate_ref_start; i <= candidate_ref_end; i++) {
+            if(i==candidate_ref_start) cout<<"TRH2:\t";
+            cout << "  " << labels_hp2[i - ref_start] << "\t";
+            if (max_observed_insert[i - ref_start] > 0) {
+                for (uint64_t ii = 0; ii < max_observed_insert[i - ref_start]; ii++)cout << "  *" << "\t";
+            }
+        }
+        cout << endl;
+
+        for (long long i = candidate_ref_start; i <= candidate_ref_end; i++) {
+            if(i==candidate_ref_start) cout<<"TRT1:\t";
+            cout << "  " << variant_type_labels_hp1[i - ref_start] << "\t";
+            if (max_observed_insert[i - ref_start] > 0) {
+                for (uint64_t ii = 0; ii < max_observed_insert[i - ref_start]; ii++)cout << "  *" << "\t";
+            }
+        }
+        cout << endl;
+
+        for (long long i = candidate_ref_start; i <= candidate_ref_end; i++) {
+            if(i==candidate_ref_start) cout<<"TRT2:\t";
+            cout << "  " << variant_type_labels_hp2[i - ref_start] << "\t";
+            if (max_observed_insert[i - ref_start] > 0) {
+                for (uint64_t ii = 0; ii < max_observed_insert[i - ref_start]; ii++)cout << "  *" << "\t";
+            }
+        }
+        cout << endl;
+    }
+
+    int image_size = candidate.image_matrix[0].size();
+    for (int i = 0; i < image_size; i++) {
+        cout<< ImageOptionsRegion::column_values[i] <<"\t";
+        int region_size = candidate.image_matrix.size();
+
+        for (int j = 0; j < region_size; j++) {
+            printf("%3d\t", candidate.image_matrix[j][i]);
         }
         cout << endl;
     }

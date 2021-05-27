@@ -85,21 +85,19 @@ class SequenceDatasetFake(Dataset):
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
             image = hdf5_file['summaries'][image_name]['image'][()]
             position = hdf5_file['summaries'][image_name]['position'][()]
-            index = hdf5_file['summaries'][image_name]['index'][()]
             contig = hdf5_file['summaries'][image_name]['contig'][()]
-            chunk_id = hdf5_file['summaries'][image_name]['chunk_id'][()]
-            contig_start = hdf5_file['summaries'][image_name]['region_start'][()]
-            contig_end = hdf5_file['summaries'][image_name]['region_end'][()]
-            label = hdf5_file['summaries'][image_name]['label'][()]
+            base_label = hdf5_file['summaries'][image_name]['base_label'][()]
+            region_start = hdf5_file['summaries'][image_name]['region_start'][()]
+            region_stop = hdf5_file['summaries'][image_name]['region_stop'][()]
             type_label = hdf5_file['summaries'][image_name]['type_label'][()]
 
-            base_predictions = np.zeros((label.size, ImageSizeOptions.TOTAL_LABELS))
-            base_predictions[np.arange(label.size), label] = 1
+            base_predictions = np.zeros((base_label.size, ImageSizeOptions.TOTAL_LABELS))
+            base_predictions[np.arange(base_label.size), base_label] = 1
 
             type_predictions = np.zeros((type_label.size, ImageSizeOptions.TOTAL_TYPE_LABELS))
             type_predictions[np.arange(type_label.size), type_label] = 1
 
-        return contig, contig_start, contig_end, chunk_id, image, position, index, base_predictions, type_predictions
+        return contig, region_start, region_stop, image, position, base_predictions, type_predictions
 
     def __len__(self):
         return len(self.all_images)

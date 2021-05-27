@@ -27,16 +27,15 @@ def predict_pytorch_fake(input_filepath, output_filepath, batch_size, num_worker
     total_batches = len(data_loader)
 
     with torch.no_grad():
-        for contig, contig_start, contig_end, chunk_id, images, position, index, output_base, output_type in data_loader:
+
+        for contig, region_start, region_stop, images, position, output_base, output_type in data_loader:
             sys.stderr.flush()
 
             for i in range(images.size(0)):
                 prediction_data_file.write_prediction(contig[i],
-                                                      contig_start[i],
-                                                      contig_end[i],
-                                                      chunk_id[i],
+                                                      region_start[i],
+                                                      region_stop[i],
                                                       position[i],
-                                                      index[i],
                                                       output_base[i],
                                                       output_type[i])
             batch_completed += 1
