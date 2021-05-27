@@ -154,6 +154,9 @@ class AlignmentSummarizer:
                 # filter the candidates to the sub regions only
                 candidate_positions = [pos for pos in candidate_positions if sub_region_start <= pos <= sub_region_end]
 
+                if len(candidate_positions) == 0:
+                    return None
+
                 regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.chromosome_name, region_start, region_end, ref_seq)
 
                 regional_summary.generate_max_insert_summary(all_reads)
