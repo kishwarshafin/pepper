@@ -88,7 +88,7 @@ class SequenceDatasetFake(Dataset):
             contig = hdf5_file['summaries'][image_name]['contig'][()]
             base_label = hdf5_file['summaries'][image_name]['base_label'][()]
             region_start = hdf5_file['summaries'][image_name]['region_start'][()]
-            region_stop = hdf5_file['summaries'][image_name]['region_stop'][()]
+            region_stop = hdf5_file['summaries'][image_name]['region_end'][()]
             type_label = hdf5_file['summaries'][image_name]['type_label'][()]
 
             base_predictions = np.zeros((base_label.size, ImageSizeOptions.TOTAL_LABELS))

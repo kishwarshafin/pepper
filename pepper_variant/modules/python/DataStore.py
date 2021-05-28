@@ -50,7 +50,7 @@ class DataStore(object):
         self._meta = self.meta
         self._meta.update(meta)
 
-    def write_summary(self, summary_name, candidate):
+    def write_summary(self, summary_name, candidate, region_start, region_end):
         if 'summaries' not in self.meta:
             self.meta['summaries'] = set()
 
@@ -60,8 +60,8 @@ class DataStore(object):
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'base_label')] = np.array(candidate.base_label, dtype=np.uint8)
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'type_label')] = np.array(candidate.type_label, dtype=np.uint8)
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'position')] = np.array(candidate.position, dtype=np.int32)
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_start')] = np.array(candidate.region_start, dtype=np.int32)
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_stop')] = np.array(candidate.region_stop, dtype=np.int32)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_start')] = region_start
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'region_end')] = region_end
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, 'contig')] = candidate.contig
 
     def write_summary_hp(self, region, image_hp1, image_hp2, label_hp1, label_hp2, position, index, chunk_id, summary_name):

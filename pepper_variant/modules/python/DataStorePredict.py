@@ -67,8 +67,7 @@ class DataStore(object):
         if name not in self.meta['predictions']:
             self.meta['predictions'].add(name)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                      chunk_name_suffix, 'position')] = np.array(position, dtype=np.int32)
-
+                                                      chunk_name_suffix, 'position')] = position
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
                                                       chunk_name_suffix, 'base_predictions')] = np.array(base_predictions, dtype=np.float)
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,

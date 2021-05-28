@@ -252,8 +252,8 @@ class ImageGenerationUtils:
 
                     if candidate_images is not None:
                         for i, candidate in enumerate(candidate_images):
-                            summary_name = str(candidate.contig) + "_" + str(candidate.position)
-                            output_hdf_file.write_summary(summary_name, candidate)
+                            summary_name = str(chr_name) + "_" + str(_start) + "_" + str(_end) + "_" + str(candidate.position)
+                            output_hdf_file.write_summary(summary_name, candidate, _start, _end)
 
                     if counter > 0 and counter % 10 == 0 and process_id == 0:
                         percent_complete = int((100 * counter) / len(intervals))
