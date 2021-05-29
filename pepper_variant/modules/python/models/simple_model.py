@@ -64,7 +64,7 @@ class TransducerGRU(nn.Module):
         x, (hidden, cell_state) = self.decoder(x, (hidden, cell_state))
 
         print(x.size())
-        x = torch.flatten(x)
+        x = torch.flatten(x, start_dim=1, end_dim=2)
         print(x.size())
         exit()
         x = self.dropout_1(x)
