@@ -302,7 +302,7 @@ void CandidateFinder::add_read_alleles_consensus(type_read &read, vector<int> &c
     }
 }
 
-vector<long long> CandidateFinder::find_candidates_consensus(vector <type_read>& reads, double freq) {
+vector<long long> CandidateFinder::find_candidates_consensus(vector <type_read>& reads, double snp_freq_threshold, double insert_freq_threshold, double delete_freq_threshold) {
 
     // populate all the prediction maps
     vector<int> coverage(region_end - region_start + 1, 0);
@@ -327,7 +327,7 @@ vector<long long> CandidateFinder::find_candidates_consensus(vector <type_read>&
         double insert_frequency = (double) insert_count[pos_index] / (double) coverage[pos_index];
         double delete_frequency = (double) delete_count[pos_index] / (double) coverage[pos_index];
         double snp_frequency = (double) snp_count[pos_index] / (double) coverage[pos_index];
-        if(insert_frequency >= freq || delete_frequency >= freq || snp_frequency >= freq) {
+        if(snp_frequency >= snp_freq_threshold || insert_frequency >= insert_freq_threshold || delete_frequency >= delete_freq_threshold) {
             positions.push_back(region_start+pos_index);
         }
     }

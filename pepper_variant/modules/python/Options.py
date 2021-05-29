@@ -1,6 +1,8 @@
 class ConsensCandidateFinder(object):
     REGION_SAFE_BASES = 100
-    CANDIDATE_FREQUENCY = 0.08
+    SNP_FREQUENCY = 0.10
+    INSERT_FREQUENCY = 0.15
+    DELETE_FREQUENCY = 0.20
 
 class ImageSizeOptions(object):
     IMAGE_HEIGHT = 19

@@ -185,7 +185,7 @@ public:
                                                       vector<int> type_labels,
                                                       bool freq_based,
                                                       double freq);
-    vector<long long> find_candidates_consensus(vector <type_read>& reads, double freq);
+    vector<long long> find_candidates_consensus(vector <type_read>& reads, double snp_freq_threshold, double insert_freq_threshold, double delete_freq_threshold);
     static bool filter_candidate(const Candidate& candidate, bool freq_based, double freq);
 };
 

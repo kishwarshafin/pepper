@@ -151,15 +151,18 @@ class AlignmentSummarizer:
                                                                   region_end)
 
                 # find candidates
-                candidate_positions = candidate_finder.find_candidates_consensus(all_reads, ConsensCandidateFinder.CANDIDATE_FREQUENCY)
+                candidate_positions = candidate_finder.find_candidates_consensus(all_reads,
+                                                                                 ConsensCandidateFinder.SNP_FREQUENCY,
+                                                                                 ConsensCandidateFinder.INSERT_FREQUENCY,
+                                                                                 ConsensCandidateFinder.DELETE_FREQUENCY)
                 # filter the candidates to the sub regions only
                 candidate_positions = [pos for pos in candidate_positions if sub_region_start <= pos <= sub_region_end]
 
                 if len(candidate_positions) == 0:
                     continue
 
-                if thread_id == 0:
-                    sys.stderr.write("INFO: " + "TOTAL CANDIDATES FOUND: " + str(len(candidate_positions)) + " IN REGION: " + str(region_start) + "   " + str(region_end) + ".\n")
+                # if thread_id == 0:
+                #     sys.stderr.write("INFO: " + "TOTAL CANDIDATES FOUND: " + str(len(candidate_positions)) + " IN REGION: " + str(region_start) + "   " + str(region_end) + ".\n")
 
                 regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.chromosome_name, region_start, region_end, ref_seq)
 
