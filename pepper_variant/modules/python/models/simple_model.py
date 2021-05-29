@@ -89,10 +89,10 @@ class TransducerGRU(nn.Module):
         x_type = self.output_layer_type(x)
 
         if train_mode:
-            log_softmax = nn.LogSoftmax(dim=2)
+            log_softmax = nn.LogSoftmax(dim=1)
             return log_softmax(x_base), log_softmax(x_type)
 
-        softmax = nn.Softmax(dim=2)
+        softmax = nn.Softmax(dim=1)
         return softmax(x_base), softmax(x_type)
 
     def init_hidden(self, batch_size, num_layers, bidirectional=True):
