@@ -249,7 +249,7 @@ class ImageGenerationUtils:
                                                  train_mode=train_mode)
 
                 if not use_hp_info:
-                    candidate_images = image_generator.generate_summary(_start, _end, downsample_rate, bed_list)
+                    candidate_images = image_generator.generate_summary(_start, _end, downsample_rate, bed_list, thread_id)
 
                     if candidate_images is not None:
                         for i, candidate in enumerate(candidate_images):
