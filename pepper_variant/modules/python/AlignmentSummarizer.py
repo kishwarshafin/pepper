@@ -1,5 +1,6 @@
 from pepper_variant.build import PEPPER_VARIANT
 import itertools
+import sys
 import numpy as np
 from operator import itemgetter
 from pysam import VariantFile
@@ -76,7 +77,7 @@ class AlignmentSummarizer:
 
         return haplotype_1_records, haplotype_2_records
 
-    def create_summary(self, truth_vcf, train_mode, downsample_rate, bed_list):
+    def create_summary(self, truth_vcf, train_mode, downsample_rate, bed_list, thread_id):
         all_candidate_images = []
 
         if train_mode:
@@ -156,6 +157,9 @@ class AlignmentSummarizer:
 
                 if len(candidate_positions) == 0:
                     continue
+
+                if thread_id == 0:
+                    sys.stderr.write("INFO: " + "TOTAL CANDIDATES FOUND: " + str(candidate_positions) + " IN REGION: " + str(region_start) + "   " + str(region_end) + ".\n")
 
                 regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.chromosome_name, region_start, region_end, ref_seq)
 

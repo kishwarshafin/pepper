@@ -44,7 +44,7 @@ class ImageGenerator:
         # name of the chromosome
         self.chromosome_name = chromosome_name
 
-    def generate_summary(self, start_position, end_position, downsample_rate, bed_list):
+    def generate_summary(self, start_position, end_position, downsample_rate, bed_list, thread_id):
         """
         Generate labeled images of a given region of the genome
         :param start_position: Start position of the region
@@ -64,7 +64,8 @@ class ImageGenerator:
             candidate_images = alignment_summarizer.create_summary(self.truth_vcf,
                                                                    self.train_mode,
                                                                    downsample_rate,
-                                                                   bed_list)
+                                                                   bed_list,
+                                                                   thread_id)
 
             return candidate_images
         else:
@@ -267,7 +268,7 @@ class ImageGenerationUtils:
                                          + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                         sys.stderr.flush()
                 else:
-                    images_hp1, images_hp2, labels_hp1, labels_hp2, positions, indexes, chunk_ids = image_generator.generate_summary(_start, _end, downsample_rate, bed_list)
+                    images_hp1, images_hp2, labels_hp1, labels_hp2, positions, indexes, chunk_ids = image_generator.generate_summary(_start, _end, downsample_rate, bed_list, process_id)
                     region = (chr_name, _start, _end)
 
                     for i, image_hp1 in enumerate(images_hp1):
