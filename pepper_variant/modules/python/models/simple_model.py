@@ -30,6 +30,7 @@ class TransducerGRU(nn.Module):
                                bidirectional=bidirectional,
                                batch_first=True)
         self.dropout_1 = nn.Dropout(p=0.1)
+
         self.linear_1 = nn.Linear(self.hidden_size * 2, self.linear_1_size)
         self.relu_1 = nn.ReLU()
 
@@ -62,6 +63,10 @@ class TransducerGRU(nn.Module):
         self.decoder.flatten_parameters()
         x, (hidden, cell_state) = self.decoder(x, (hidden, cell_state))
 
+        print(x.size())
+        x = torch.flatten(x)
+        print(x.size())
+        exit()
         x = self.dropout_1(x)
         x = self.linear_1(x)
         x = self.relu_1(x)

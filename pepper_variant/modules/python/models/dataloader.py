@@ -47,10 +47,10 @@ class SequenceDataset(Dataset):
 
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
             image = hdf5_file['summaries'][image_name]['image'][()]
-            label = hdf5_file['summaries'][image_name]['label'][()]
+            base_label = hdf5_file['summaries'][image_name]['base_label'][()]
             type_label = hdf5_file['summaries'][image_name]['type_label'][()]
 
-        return image, label, type_label
+        return image, base_label, type_label
 
     def __len__(self):
         return len(self.all_images)
