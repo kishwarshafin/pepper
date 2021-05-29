@@ -130,7 +130,7 @@ class AlignmentSummarizer:
                 total_reads = len(all_reads)
 
                 if total_reads == 0:
-                    return None
+                    continue
 
                 # get vcf records from truth
                 truth_hap1_records, truth_hap2_records = self.get_truth_vcf_records(truth_vcf, region_start, region_end)
@@ -155,7 +155,7 @@ class AlignmentSummarizer:
                 candidate_positions = [pos for pos in candidate_positions if sub_region_start <= pos <= sub_region_end]
 
                 if len(candidate_positions) == 0:
-                    return None
+                    continue
 
                 regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.chromosome_name, region_start, region_end, ref_seq)
 
