@@ -33,22 +33,22 @@ class SequenceDataset(Dataset):
         for hdf5_file_path in hdf_files:
             with h5py.File(hdf5_file_path, 'r') as hdf5_file:
                 if 'summaries' in hdf5_file:
-                    image_names = list(hdf5_file['summaries'].keys())
-                    for image_name in image_names:
-                        file_image_pair.append((hdf5_file_path, image_name))
-                else:
-                    sys.stderr.write("WARN: NO IMAGES FOUND IN FILE: " + hdf5_file_path + "\n")
+                    region_names = list(hdf5_file['summaries'].keys())
+                    for region_name in region_names:
+                        image_names = list(hdf5_file['summaries'][region_name].keys())
+                        for image_name in image_names:
+                            file_image_pair.append((hdf5_file_path, region_name, image_name))
 
         self.all_images = file_image_pair
 
     def __getitem__(self, index):
         # load the image
-        hdf5_filepath, image_name = self.all_images[index]
+        hdf5_filepath, region_name, image_name = self.all_images[index]
 
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
-            image = hdf5_file['summaries'][image_name]['image'][()]
-            base_label = hdf5_file['summaries'][image_name]['base_label'][()]
-            type_label = hdf5_file['summaries'][image_name]['type_label'][()]
+            image = hdf5_file['summaries'][region_name][image_name]['image'][()]
+            base_label = hdf5_file['summaries'][region_name][image_name]['base_label'][()]
+            type_label = hdf5_file['summaries'][region_name][image_name]['type_label'][()]
 
         return image, base_label, type_label
 
@@ -70,9 +70,11 @@ class SequenceDatasetFake(Dataset):
         for hdf5_file_path in hdf_files:
             with h5py.File(hdf5_file_path, 'r') as hdf5_file:
                 if 'summaries' in hdf5_file:
-                    image_names = list(hdf5_file['summaries'].keys())
-                    for image_name in image_names:
-                        file_image_pair.append((hdf5_file_path, image_name))
+                    region_names = list(hdf5_file['summaries'].keys())
+                    for region_name in region_names:
+                        image_names = list(hdf5_file['summaries'][region_name].keys())
+                        for image_name in image_names:
+                            file_image_pair.append((hdf5_file_path, region_name, image_name))
                 else:
                     sys.stderr.write("WARN: NO IMAGES FOUND IN FILE: " + hdf5_file_path + "\n")
 
@@ -80,16 +82,16 @@ class SequenceDatasetFake(Dataset):
 
     def __getitem__(self, index):
         # load the image
-        hdf5_filepath, image_name = self.all_images[index]
+        hdf5_filepath, region_name, image_name = self.all_images[index]
 
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
-            image = hdf5_file['summaries'][image_name]['image'][()]
-            position = hdf5_file['summaries'][image_name]['position'][()]
-            contig = hdf5_file['summaries'][image_name]['contig'][()]
-            base_label = hdf5_file['summaries'][image_name]['base_label'][()]
-            region_start = hdf5_file['summaries'][image_name]['region_start'][()]
-            region_stop = hdf5_file['summaries'][image_name]['region_end'][()]
-            type_label = hdf5_file['summaries'][image_name]['type_label'][()]
+            image = hdf5_file['summaries'][region_name][image_name]['image'][()]
+            position = hdf5_file['summaries'][region_name][image_name]['position'][()]
+            contig = hdf5_file['summaries'][region_name][image_name]['contig'][()]
+            base_label = hdf5_file['summaries'][region_name][image_name]['base_label'][()]
+            region_start = hdf5_file['summaries'][region_name][image_name]['region_start'][()]
+            region_stop = hdf5_file['summaries'][region_name][image_name]['region_end'][()]
+            type_label = hdf5_file['summaries'][region_name][image_name]['type_label'][()]
 
             base_predictions = np.zeros((base_label.size, ImageSizeOptions.TOTAL_LABELS))
             base_predictions[np.arange(base_label.size), base_label] = 1
