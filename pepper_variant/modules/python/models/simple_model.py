@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-
+from pepper_variant.modules.python.Options import ImageSizeOptions
 
 class TransducerGRU(nn.Module):
     def __init__(self, image_features, gru_layers, hidden_size, num_classes, num_classes_type, bidirectional=True):
@@ -31,7 +31,7 @@ class TransducerGRU(nn.Module):
                                batch_first=True)
         self.dropout_1 = nn.Dropout(p=0.1)
 
-        self.linear_1 = nn.Linear(self.hidden_size * 2, self.linear_1_size)
+        self.linear_1 = nn.Linear((self.hidden_size * 2) * (ImageSizeOptions.IMAGE_WINDOW_SIZE + 1), self.linear_1_size)
         self.relu_1 = nn.ReLU()
 
         self.dropout_2 = nn.Dropout(p=0.2)
@@ -63,10 +63,8 @@ class TransducerGRU(nn.Module):
         self.decoder.flatten_parameters()
         x, (hidden, cell_state) = self.decoder(x, (hidden, cell_state))
 
-        print(x.size())
         x = torch.flatten(x, start_dim=1, end_dim=2)
-        print(x.size())
-        exit()
+
         x = self.dropout_1(x)
         x = self.linear_1(x)
         x = self.relu_1(x)
