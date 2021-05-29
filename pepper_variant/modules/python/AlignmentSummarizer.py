@@ -159,7 +159,7 @@ class AlignmentSummarizer:
                     continue
 
                 if thread_id == 0:
-                    sys.stderr.write("INFO: " + "TOTAL CANDIDATES FOUND: " + str(candidate_positions) + " IN REGION: " + str(region_start) + "   " + str(region_end) + ".\n")
+                    sys.stderr.write("INFO: " + "TOTAL CANDIDATES FOUND: " + str(len(candidate_positions)) + " IN REGION: " + str(region_start) + "   " + str(region_end) + ".\n")
 
                 regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.chromosome_name, region_start, region_end, ref_seq)
 
