@@ -107,7 +107,7 @@ def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, ba
     total_batches = len(data_loader)
 
     with torch.no_grad():
-        for contig, contig_start, contig_end, chunk_id, images, position, index in data_loader:
+        for contig, region_start, region_stop, images, position in data_loader:
             sys.stderr.flush()
             images = images.type(torch.FloatTensor)
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
@@ -121,14 +121,13 @@ def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, ba
 
             for i in range(images.size(0)):
                 prediction_data_file.write_prediction(contig[i],
-                                                      contig_start[i],
-                                                      contig_end[i],
-                                                      chunk_id[i],
+                                                      region_start[i],
+                                                      region_stop[i],
                                                       position[i],
-                                                      index[i],
                                                       output_base[i],
                                                       output_type[i])
             batch_completed += 1
+
             sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
             sys.stderr.flush()
 

@@ -284,27 +284,19 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                 with h5py.File(file_name, 'r') as hdf5_file:
                     bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
                     types = hdf5_file['predictions'][contig][chunk_name][chunk]['type_predictions'][()]
-                    positions = [hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]]
-                    base_label = np.asarray([argmax(bases, axis=0)])
-                    type_label = np.asarray([argmax(types, axis=0)])
+                    positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
 
-                if i == 0:
-                    all_positions = positions
-                    all_base_predictions = bases
-                    all_type_predictions = types
-                    all_base_prediction_labels = base_label
-                    all_type_prediction_labels = type_label
-                else:
-                    all_positions = np.concatenate((all_positions, positions), axis=0)
-                    all_base_predictions = np.concatenate((all_base_predictions, bases), axis=0)
-                    all_type_predictions = np.concatenate((all_type_predictions, types), axis=0)
-                    all_base_prediction_labels = np.concatenate((all_base_prediction_labels, base_label), axis=0)
-                    all_type_prediction_labels = np.concatenate((all_type_prediction_labels, type_label), axis=0)
+                    base_label = argmax(bases, axis=0)
+                    type_label = argmax(types, axis=0)
+
+
+                all_positions.append(positions)
+                all_base_predictions.append(bases.tolist())
+                all_type_predictions.append(types.tolist())
+                all_base_prediction_labels.append(base_label)
+                all_type_prediction_labels.append(type_label)
 
             cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
-            print(all_base_prediction_labels)
-            print(all_type_prediction_labels)
-            exit()
 
             # find candidates
             candidate_map = cpp_candidate_finder.find_candidates(bam_file_path,
