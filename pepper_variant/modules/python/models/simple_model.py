@@ -13,25 +13,25 @@ class TransducerGRU(nn.Module):
 
         self.lstm_1_hidden_size = 128
         self.lstm_2_hidden_size = 256
-        self.linear_1_size = 256
-        self.linear_2_size = 256
+        self.linear_1_size = 1024
+        self.linear_2_size = 512
         self.linear_3_size = 256
         self.linear_4_size = 128
         self.linear_5_size = 128
 
         self.encoder = nn.LSTM(image_features,
-                               hidden_size,
+                               self.lstm_1_hidden_size,
                                num_layers=self.num_layers,
                                bidirectional=bidirectional,
                                batch_first=True)
         self.decoder = nn.LSTM(2 * hidden_size,
-                               hidden_size,
+                               self.lstm_2_hidden_size,
                                num_layers=self.num_layers,
                                bidirectional=bidirectional,
                                batch_first=True)
         self.dropout_1 = nn.Dropout(p=0.1)
 
-        self.linear_1 = nn.Linear((self.hidden_size * 2) * (ImageSizeOptions.IMAGE_WINDOW_SIZE + 1), self.linear_1_size)
+        self.linear_1 = nn.Linear((self.lstm_2_hidden_size * 2) * (ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1), self.linear_1_size)
         self.relu_1 = nn.ReLU()
 
         self.dropout_2 = nn.Dropout(p=0.2)
