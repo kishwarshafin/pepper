@@ -218,17 +218,42 @@ class AlignmentSummarizer:
                                                                 self.region_start_position,
                                                                 self.region_end_position + 1)
 
-            chunk_id_start = 0
+            # Find positions that has allele frequency >= threshold
+            # candidate finder objects
+            candidate_finder = PEPPER_VARIANT.CandidateFinder(ref_seq,
+                                                              self.chromosome_name,
+                                                              self.region_start_position,
+                                                              self.region_end_position,
+                                                              self.region_start_position,
+                                                              self.region_end_position)
 
-            regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.region_start_position, self.region_end_position, ref_seq)
+            # find candidates
+            candidate_positions = candidate_finder.find_candidates_consensus(all_reads,
+                                                                             ConsensCandidateFinder.SNP_FREQUENCY,
+                                                                             ConsensCandidateFinder.INSERT_FREQUENCY,
+                                                                             ConsensCandidateFinder.DELETE_FREQUENCY)
 
+            # filter the candidates to the sub regions only
+            candidate_positions = [pos for pos in candidate_positions if self.region_start_position <= pos <= self.region_end_position]
+
+            if len(candidate_positions) == 0:
+                return None
+
+            # if thread_id == 0:
+            #     sys.stderr.write("INFO: " + "TOTAL CANDIDATES FOUND: " + str(len(candidate_positions)) + " IN REGION: " + str(region_start) + "   " + str(region_end) + ".\n")
+            regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.chromosome_name, region_start, region_end, ref_seq)
             regional_summary.generate_max_insert_summary(all_reads)
 
-            regional_image_summary = regional_summary.generate_summary(all_reads,
-                                                                       ImageSizeOptions.SMALL_CHUNK_OVERLAP,
-                                                                       ImageSizeOptions.SMALL_CHUNK_LENGTH,
-                                                                       ImageSizeOptions.IMAGE_HEIGHT,
-                                                                       chunk_id_start,
-                                                                       train_mode)
+            chunk_id_start = 0
+
+            candidate_image_summary = regional_summary.generate_summary(all_reads,
+                                                                        candidate_positions,
+                                                                        ImageSizeOptions.SMALL_CHUNK_OVERLAP,
+                                                                        ImageSizeOptions.IMAGE_WINDOW_SIZE,
+                                                                        ImageSizeOptions.IMAGE_HEIGHT,
+                                                                        chunk_id_start,
+                                                                        train_mode)
+            #############################
+            all_candidate_images.extend(candidate_image_summary)
 
         return all_candidate_images
