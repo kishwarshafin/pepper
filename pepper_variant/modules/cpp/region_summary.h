@@ -113,26 +113,32 @@ public:
 
     static int get_reference_feature_index(char base);
 
-    void encode_reference_bases(int **image_matrix);
+    void encode_reference_bases(vector< vector<int> >& image_matrix);
 
     void generate_labels(const vector<type_truth_record>& hap1_records, const vector<type_truth_record>& hap2_records);
 
-    void populate_summary_matrix(int **image_matrix,
+    void populate_summary_matrix(vector< vector<int> >& image_matrix,
                                  int *coverage_vector,
+                                 int *snp_count,
+                                 int *insert_count,
+                                 int *delete_count,
                                  type_read read);
 
     static int get_feature_index(char base, bool is_reverse);
 
-    void debug_print_matrix(int** image_matrix, bool train_mode);
+    void debug_print_matrix(vector<vector<int> > image_matrix, bool train_mode);
 
     void debug_candidate_summary(CandidateImageSummary candidate, int small_chunk_size, bool train_mode);
 
     vector<CandidateImageSummary> generate_summary(vector <type_read> &reads,
-                                                   vector<long long> candidate_positions,
-                                                   int chunk_overlap,
-                                                   int smaller_chunk_size,
+                                                   double snp_freq_threshold,
+                                                   double insert_freq_threshold,
+                                                   double delete_freq_threshold,
+                                                   double min_coverage_threshold,
+                                                   long long candidate_region_start,
+                                                   long long candidate_region_end,
+                                                   int candidate_window_size,
                                                    int feature_size,
-                                                   int chunk_id_start,
                                                    bool train_mode);
 };
 

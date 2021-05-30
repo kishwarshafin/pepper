@@ -143,23 +143,23 @@ class AlignmentSummarizer:
 
                 # Find positions that has allele frequency >= threshold
                 # candidate finder objects
-                candidate_finder = PEPPER_VARIANT.CandidateFinder(ref_seq,
-                                                                  self.chromosome_name,
-                                                                  region_start,
-                                                                  region_end,
-                                                                  region_start,
-                                                                  region_end)
+                # candidate_finder = PEPPER_VARIANT.CandidateFinder(ref_seq,
+                #                                                   self.chromosome_name,
+                #                                                   region_start,
+                #                                                   region_end,
+                #                                                   region_start,
+                #                                                   region_end)
 
                 # find candidates
-                candidate_positions = candidate_finder.find_candidates_consensus(all_reads,
-                                                                                 ConsensCandidateFinder.SNP_FREQUENCY,
-                                                                                 ConsensCandidateFinder.INSERT_FREQUENCY,
-                                                                                 ConsensCandidateFinder.DELETE_FREQUENCY)
+                # candidate_positions = candidate_finder.find_candidates_consensus(all_reads,
+                #                                                                  ConsensCandidateFinder.SNP_FREQUENCY,
+                #                                                                  ConsensCandidateFinder.INSERT_FREQUENCY,
+                #                                                                  ConsensCandidateFinder.DELETE_FREQUENCY)
                 # filter the candidates to the sub regions only
-                candidate_positions = [pos for pos in candidate_positions if sub_region_start <= pos <= sub_region_end]
+                # candidate_positions = [pos for pos in candidate_positions if sub_region_start <= pos <= sub_region_end]
 
-                if len(candidate_positions) == 0:
-                    continue
+                # if len(candidate_positions) == 0:
+                #     continue
 
                 # if thread_id == 0:
                 #     sys.stderr.write("INFO: " + "TOTAL CANDIDATES FOUND: " + str(len(candidate_positions)) + " IN REGION: " + str(region_start) + "   " + str(region_end) + ".\n")
@@ -171,11 +171,14 @@ class AlignmentSummarizer:
                 regional_summary.generate_labels(truth_hap1_records, truth_hap2_records)
 
                 candidate_image_summary = regional_summary.generate_summary(all_reads,
-                                                                            candidate_positions,
-                                                                            ImageSizeOptions.SMALL_CHUNK_OVERLAP,
-                                                                            ImageSizeOptions.IMAGE_WINDOW_SIZE,
+                                                                            ConsensCandidateFinder.SNP_FREQUENCY,
+                                                                            ConsensCandidateFinder.INSERT_FREQUENCY,
+                                                                            ConsensCandidateFinder.DELETE_FREQUENCY,
+                                                                            ConsensCandidateFinder.MIN_COVERAGE_THRESHOLD,
+                                                                            sub_region_start,
+                                                                            sub_region_end,
+                                                                            ImageSizeOptions.CANDIDATE_WINDOW_SIZE,
                                                                             ImageSizeOptions.IMAGE_HEIGHT,
-                                                                            chunk_id_start,
                                                                             train_mode)
                 #############################
                 all_candidate_images.extend(candidate_image_summary)
@@ -220,38 +223,40 @@ class AlignmentSummarizer:
 
             # Find positions that has allele frequency >= threshold
             # candidate finder objects
-            candidate_finder = PEPPER_VARIANT.CandidateFinder(ref_seq,
-                                                              self.chromosome_name,
-                                                              region_start,
-                                                              region_end,
-                                                              region_start,
-                                                              region_end)
+            # candidate_finder = PEPPER_VARIANT.CandidateFinder(ref_seq,
+            #                                                   self.chromosome_name,
+            #                                                   region_start,
+            #                                                   region_end,
+            #                                                   region_start,
+            #                                                   region_end)
 
             # find candidates
-            candidate_positions = candidate_finder.find_candidates_consensus(all_reads,
-                                                                             ConsensCandidateFinder.SNP_FREQUENCY,
-                                                                             ConsensCandidateFinder.INSERT_FREQUENCY,
-                                                                             ConsensCandidateFinder.DELETE_FREQUENCY)
+            # candidate_positions = candidate_finder.find_candidates_consensus(all_reads,
+            #                                                                  ConsensCandidateFinder.SNP_FREQUENCY,
+            #                                                                  ConsensCandidateFinder.INSERT_FREQUENCY,
+            #                                                                  ConsensCandidateFinder.DELETE_FREQUENCY)
 
             # filter the candidates to the sub regions only
-            candidate_positions = [pos for pos in candidate_positions if self.region_start_position <= pos <= self.region_end_position]
+            # candidate_positions = [pos for pos in candidate_positions if self.region_start_position <= pos <= self.region_end_position]
 
-            if len(candidate_positions) == 0:
-                return None
+            # if len(candidate_positions) == 0:
+            #     return None
+
 
             # if thread_id == 0:
             #     sys.stderr.write("INFO: " + "TOTAL CANDIDATES FOUND: " + str(len(candidate_positions)) + " IN REGION: " + str(region_start) + "   " + str(region_end) + ".\n")
             regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.chromosome_name, region_start, region_end, ref_seq)
             regional_summary.generate_max_insert_summary(all_reads)
 
-            chunk_id_start = 0
-
             candidate_image_summary = regional_summary.generate_summary(all_reads,
-                                                                        candidate_positions,
-                                                                        ImageSizeOptions.SMALL_CHUNK_OVERLAP,
-                                                                        ImageSizeOptions.IMAGE_WINDOW_SIZE,
+                                                                        ConsensCandidateFinder.SNP_FREQUENCY,
+                                                                        ConsensCandidateFinder.INSERT_FREQUENCY,
+                                                                        ConsensCandidateFinder.DELETE_FREQUENCY,
+                                                                        ConsensCandidateFinder.MIN_COVERAGE_THRESHOLD,
+                                                                        self.region_start_position,
+                                                                        self.region_end_position,
+                                                                        ImageSizeOptions.CANDIDATE_WINDOW_SIZE,
                                                                         ImageSizeOptions.IMAGE_HEIGHT,
-                                                                        chunk_id_start,
                                                                         train_mode)
             #############################
             all_candidate_images.extend(candidate_image_summary)

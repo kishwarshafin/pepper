@@ -284,7 +284,7 @@ void CandidateFinder::add_read_alleles_consensus(type_read &read, vector<int> &c
             case CIGAR_OPERATIONS::DEL:
                 reference_index = ref_position - ref_start - 1;
                 region_index = ref_position - region_start - 1;
-                if(ref_position - 1 >= region_start && ref_position - 1 <= region_end) insert_count[region_index] += 1;
+                if(ref_position - 1 >= region_start && ref_position - 1 <= region_end) delete_count[region_index] += 1;
 
                 ref_position += cigar.length;
                 break;
@@ -323,11 +323,12 @@ vector<long long> CandidateFinder::find_candidates_consensus(vector <type_read>&
 
     for(int pos_index = 0; pos_index < local_region_size; pos_index++) {
         if(coverage[pos_index] == 0)continue;
-//        cout<<region_start+pos_index<<" SNP: "<<snp_count[pos_index]<<" IN: "<<insert_count[pos_index]<<" DEL: "<<delete_count[pos_index]<<" "<<coverage[pos_index]<<endl;
+
         double insert_frequency = (double) insert_count[pos_index] / (double) coverage[pos_index];
         double delete_frequency = (double) delete_count[pos_index] / (double) coverage[pos_index];
         double snp_frequency = (double) snp_count[pos_index] / (double) coverage[pos_index];
         if(snp_frequency >= snp_freq_threshold || insert_frequency >= insert_freq_threshold || delete_frequency >= delete_freq_threshold) {
+//            cout<<region_start+pos_index<<" SNP: "<<snp_count[pos_index]<<" IN: "<<insert_count[pos_index]<<" DEL: "<<delete_count[pos_index]<<" "<<coverage[pos_index]<<endl;
             positions.push_back(region_start+pos_index);
         }
     }

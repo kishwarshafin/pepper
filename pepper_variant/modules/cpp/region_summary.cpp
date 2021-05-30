@@ -211,7 +211,7 @@ int RegionalSummaryGenerator::get_reference_feature_index(char base) {
     return ImageOptionsRegion::REFERENCE_INDEX_START + 4;
 }
 
-void RegionalSummaryGenerator::encode_reference_bases(int **image_matrix) {
+void RegionalSummaryGenerator::encode_reference_bases(vector< vector<int> >& image_matrix) {
     for (long long ref_position = ref_start; ref_position <= ref_end; ref_position++) {
         // encode the C base
         int base_index = (int) (ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
@@ -365,8 +365,11 @@ void RegionalSummaryGenerator::generate_labels(const vector<type_truth_record>& 
 }
 
 
-void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
+void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& image_matrix,
                                                        int *coverage_vector,
+                                                       int *snp_count,
+                                                       int *insert_count,
+                                                       int *delete_count,
                                                        type_read read) {
     int read_index = 0;
     long long ref_position = read.pos;
@@ -414,6 +417,9 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                                 image_matrix[base_index][feature_index] += 1;
                                 coverage_vector[ref_position - ref_start] += 1;
                             }
+                            if(ref_base != base) {
+                                snp_count[ref_position - ref_start] += 1;
+                            }
                         }
 
                     }
@@ -429,6 +435,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                     int base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start]);
                     int insert_count_index =  get_feature_index('I', read.flags.is_reverse);
                     image_matrix[base_index][insert_count_index] += 1;
+                    insert_count[ref_position - 1 - ref_start] += 1;
 
 //                    if(ImageOptionsRegion::GENERATE_INDELS == true) {
 //                        alt = read.sequence.substr(read_index, cigar.length);
@@ -451,6 +458,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
                     int base_index = (int)(ref_position - 1 - ref_start + cumulative_observed_insert[ref_position - 1 - ref_start]);
                     int delete_count_index =  get_feature_index('D', read.flags.is_reverse);
                     image_matrix[base_index][delete_count_index] += 1.0;
+                    delete_count[ref_position - 1 - ref_start] += 1;
 
 //                    int feature_index = get_feature_index('*', read.flags.is_reverse);
 //                    image_matrix[base_index][feature_index] += 1.0;
@@ -481,11 +489,14 @@ void RegionalSummaryGenerator::populate_summary_matrix(int **image_matrix,
 }
 
 vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector <type_read> &reads,
-                                                                         vector<long long> candidate_positions,
-                                                                         int chunk_overlap,
-                                                                         int smaller_chunk_size,
+                                                                         double snp_freq_threshold,
+                                                                         double insert_freq_threshold,
+                                                                         double delete_freq_threshold,
+                                                                         double min_coverage_threshold,
+                                                                         long long candidate_region_start,
+                                                                         long long candidate_region_end,
+                                                                         int candidate_window_size,
                                                                          int feature_size,
-                                                                         int chunk_id_start,
                                                                          bool train_mode) {
 
 
@@ -493,17 +504,24 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
 
     // Generate a cover vector of chunk size. Chunk size = 10kb defining the region
     int coverage_vector[ref_end - ref_start + 1];
+    int snp_count[ref_end - ref_start + 1];
+    int insert_count[ref_end - ref_start + 1];
+    int delete_count[ref_end - ref_start + 1];
 
     // generate the image matrix of chunk_size (10kb) * feature_size (10)
-    int** image_matrix = new int*[region_size + 1];
+    vector< vector<int> > image_matrix;
+
+    image_matrix.resize(region_size + 1, vector<int>(feature_size));
 
     for (int i = 0; i < region_size + 1; i++) {
-        image_matrix[i] = new int[feature_size];
         for (int j = 0; j < feature_size; j++)
             image_matrix[i][j] = 0;
     }
 
     memset(coverage_vector, 0, sizeof(coverage_vector));
+    memset(snp_count, 0, sizeof(snp_count));
+    memset(insert_count, 0, sizeof(insert_count));
+    memset(delete_count, 0, sizeof(delete_count));
 
     encode_reference_bases(image_matrix);
 
@@ -511,19 +529,30 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
         if(read.mapping_quality > 0) {
-            populate_summary_matrix(image_matrix, coverage_vector, read);
+            populate_summary_matrix(image_matrix, coverage_vector, snp_count, insert_count, delete_count, read);
         }
     }
+
+    vector<long long> filtered_candidate_positions;
     // once the image matrix is generated, scale the counted values.
     for(int i=0;i<region_size;i++){
-        // normalize things
-//        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
-//            image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
-//        }
+        double snp_fraction = snp_count[positions[i]-ref_start] / max(1.0, (double) coverage_vector[positions[i]-ref_start]);
+        double insert_fraction = insert_count[positions[i]-ref_start] / max(1.0, (double) coverage_vector[positions[i]-ref_start]);
+        double delete_fraction = delete_count[positions[i]-ref_start] / max(1.0, (double) coverage_vector[positions[i]-ref_start]);
 
-        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
-            image_matrix[i][j] = (int) min(image_matrix[i][j], ImageOptionsRegion::MAX_COLOR_VALUE);
+        if(snp_fraction >= snp_freq_threshold || insert_fraction >= insert_freq_threshold || delete_fraction >= delete_freq_threshold) {
+            if(positions[i] >= candidate_region_start && positions[i] <= candidate_region_end && coverage_vector[positions[i]-ref_start] >= min_coverage_threshold) {
+                filtered_candidate_positions.push_back(positions[i]);
+            }
         }
+        // normalize things
+        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
+            image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
+        }
+
+//        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
+//            image_matrix[i][j] = (int) min(image_matrix[i][j], ImageOptionsRegion::MAX_COLOR_VALUE);
+//        }
 //        int fwd_feature_index = get_feature_index(ref_at_labels[i], false);
 //        int rev_feature_index = get_feature_index(ref_at_labels[i], true);
 //
@@ -550,7 +579,7 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
 
     vector<CandidateImageSummary> all_candidate_images;
     // at this point all of the images are generated. So we can create the images for each candidate position.
-    for(long long candidate_position : candidate_positions) {
+    for(long long candidate_position : filtered_candidate_positions) {
 //        cout<<candidate_position<<endl;
         int base_index = (int)(candidate_position - ref_start + cumulative_observed_insert[candidate_position - ref_start]);
 
@@ -567,11 +596,11 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
         candidate_summary.region_start = ref_start;
         candidate_summary.region_stop = ref_end;
 
-        int base_left = base_index - smaller_chunk_size / 2;
-        int base_right = base_index + smaller_chunk_size / 2;
+        int base_left = base_index - candidate_window_size / 2;
+        int base_right = base_index + candidate_window_size / 2;
 
 //        cout<<base_left<<" "<<base_right<<endl;
-        candidate_summary.image_matrix.resize(smaller_chunk_size + 1, vector<uint8_t>(feature_size));
+        candidate_summary.image_matrix.resize(candidate_window_size + 1, vector<uint8_t>(feature_size));
         // now copy the entire feature matrix
 
         for(int i=base_left; i<=base_right;i++) {
@@ -580,22 +609,22 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
             }
         }
         all_candidate_images.push_back(candidate_summary);
-//        debug_candidate_summary(candidate_summary, smaller_chunk_size, train_mode);
-
+//        debug_candidate_summary(candidate_summary, candidate_window_size, train_mode);
     }
 
 
 //    debug_print_matrix(image_matrix, train_mode);
-    for (int i = 0; i < region_size + 1; i++)
-        free(image_matrix[i]);
-    free(image_matrix);
+//    for (int i = 0; i < region_size + 1; i++)
+//        free(image_matrix[i]);
+//    free(image_matrix);
 //    exit(0);
+
 
     return all_candidate_images;
 }
 
 
-void RegionalSummaryGenerator::debug_print_matrix(int** image_matrix, bool train_mode) {
+void RegionalSummaryGenerator::debug_print_matrix(vector<vector<int> > image_matrix, bool train_mode) {
     cout << "------------- IMAGE MATRIX" << endl;
 
     cout << setprecision(3);
