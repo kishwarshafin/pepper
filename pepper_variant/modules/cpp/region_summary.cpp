@@ -557,8 +557,13 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
         CandidateImageSummary candidate_summary;
         candidate_summary.contig = contig;
         candidate_summary.position = candidate_position;
-        candidate_summary.base_label = labels[base_index];
-        candidate_summary.type_label = labels_variant_type[base_index];
+        if(train_mode) {
+            candidate_summary.base_label = labels[base_index];
+            candidate_summary.type_label = labels_variant_type[base_index];
+        } else {
+            candidate_summary.base_label = 0;
+            candidate_summary.type_label = 0;
+        }
         candidate_summary.region_start = ref_start;
         candidate_summary.region_stop = ref_end;
 

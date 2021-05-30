@@ -180,12 +180,12 @@ class AlignmentSummarizer:
                 #############################
                 all_candidate_images.extend(candidate_image_summary)
         else:
-            read_start = max(0, self.region_start_position)
-            read_end = self.region_end_position
+            region_start = max(0, self.region_start_position - ConsensCandidateFinder.REGION_SAFE_BASES)
+            region_end = self.region_end_position + ConsensCandidateFinder.REGION_SAFE_BASES
 
             all_reads = self.bam_handler.get_reads(self.chromosome_name,
-                                                   read_start,
-                                                   read_end,
+                                                   region_start,
+                                                   region_end,
                                                    ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
                                                    ReadFilterOptions.MIN_MAPQ,
                                                    ReadFilterOptions.MIN_BASEQ)
@@ -215,17 +215,17 @@ class AlignmentSummarizer:
 
             # ref_seq should contain region_end_position base
             ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
-                                                                self.region_start_position,
-                                                                self.region_end_position + 1)
+                                                                region_start,
+                                                                region_end + 1)
 
             # Find positions that has allele frequency >= threshold
             # candidate finder objects
             candidate_finder = PEPPER_VARIANT.CandidateFinder(ref_seq,
                                                               self.chromosome_name,
-                                                              self.region_start_position,
-                                                              self.region_end_position,
-                                                              self.region_start_position,
-                                                              self.region_end_position)
+                                                              region_start,
+                                                              region_end,
+                                                              region_start,
+                                                              region_end)
 
             # find candidates
             candidate_positions = candidate_finder.find_candidates_consensus(all_reads,
@@ -241,7 +241,7 @@ class AlignmentSummarizer:
 
             # if thread_id == 0:
             #     sys.stderr.write("INFO: " + "TOTAL CANDIDATES FOUND: " + str(len(candidate_positions)) + " IN REGION: " + str(region_start) + "   " + str(region_end) + ".\n")
-            regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.chromosome_name, self.region_start_position, self.region_end_position, ref_seq)
+            regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.chromosome_name, region_start, region_end, ref_seq)
             regional_summary.generate_max_insert_summary(all_reads)
 
             chunk_id_start = 0
