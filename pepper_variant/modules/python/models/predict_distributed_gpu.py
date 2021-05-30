@@ -45,7 +45,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     total_batches = len(data_loader)
 
     with torch.no_grad():
-        for contig, region_start, region_stop, image, position in data_loader:
+        for contig, region_start, region_stop, images, position in data_loader:
             sys.stderr.flush()
             images = images.type(torch.FloatTensor)
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
