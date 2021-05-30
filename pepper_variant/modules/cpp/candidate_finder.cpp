@@ -474,8 +474,8 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                 float base_prediction_value = prediction_base_values_map[position_index][base_prediction_index];
                 float type_prediction_value = prediction_type_values_map[position_index][type_prediction_index];
 
-//                int predicted_genotype = get_genotype(types_predicted);
-                int predicted_genotype = get_genotype_from_base(candidate.allele.ref[0], bases_predicted[0], bases_predicted[1]);
+                int predicted_genotype = get_genotype(types_predicted);
+//                int predicted_genotype = get_genotype_from_base(candidate.allele.ref[0], bases_predicted[0], bases_predicted[1]);
 
                 if(bases_predicted[0] == candidate.allele.alt[0] || bases_predicted[1] == candidate.allele.alt[0]) {
                     candidate.allele_probability = base_prediction_value;
