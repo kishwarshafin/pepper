@@ -285,6 +285,8 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                     bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
                     types = hdf5_file['predictions'][contig][chunk_name][chunk]['type_predictions'][()]
                     positions = [hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]]
+                    print(bases)
+                    exit()
                     base_label = argmax(bases, axis=1)
                     type_label = argmax(types, axis=1)
 
