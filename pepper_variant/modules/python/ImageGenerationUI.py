@@ -251,10 +251,22 @@ class ImageGenerationUtils:
                 if not use_hp_info:
                     candidate_images = image_generator.generate_summary(_start, _end, downsample_rate, bed_list, process_id)
 
-                    if candidate_images is not None:
-                        for i, candidate in enumerate(candidate_images):
-                            summary_name = str(chr_name) + "_" + str(_start) + "_" + str(_end)
-                            output_hdf_file.write_summary(summary_name, candidate, _start, _end)
+                    all_images = []
+                    all_base_labels = []
+                    all_type_labels = []
+                    all_positions = []
+                    for candidate in candidate_images:
+                        all_images.append(candidate.image_matrix)
+                        all_positions.append(candidate.position)
+                        all_base_labels.append(candidate.base_label)
+                        all_type_labels.append(candidate.type_label)
+
+                    summary_name = str(chr_name) + "_" + str(_start) + "_" + str(_end)
+                    output_hdf_file.write_summary(summary_name, all_images, all_positions, all_base_labels, all_type_labels, chr_name, _start, _end)
+                    # if candidate_images is not None:
+                    #     for i, candidate in enumerate(candidate_images):
+                    #         summary_name = str(chr_name) + "_" + str(_start) + "_" + str(_end)
+                    #         output_hdf_file.write_summary(summary_name, candidate, _start, _end)
 
                     if counter > 0 and counter % 10 == 0 and process_id == 0:
                         percent_complete = int((100 * counter) / len(intervals))
