@@ -354,9 +354,9 @@ def get_file_paths_from_directory(directory_path):
 def generate_csv_file(image_directory, output_directory, output_filename):
     hdf_files = get_file_paths_from_directory(image_directory)
 
-    all_hdf_file_paths = []
-    all_region_names = []
-    all_indices = []
+    total_records = 0
+    output_csv_file = open(output_directory + '/' + output_filename, 'w')
+
     for hdf5_file_path in hdf_files:
         with h5py.File(hdf5_file_path, 'r') as hdf5_file:
             if 'summaries' in hdf5_file:
@@ -366,13 +366,10 @@ def generate_csv_file(image_directory, output_directory, output_filename):
                     image_shape = hdf5_file['summaries'][region_name]['images'].shape[0]
 
                     for index in range(0, image_shape):
-                        all_hdf_file_paths.append(hdf5_file_path)
-                        all_region_names.append(region_name)
-                        all_indices.append(index)
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL RECORDS FOUND: " + str(len(all_hdf_file_paths)) + "\n")
+                        total_records += 1
+                        output_csv_file.write(str(hdf5_file_path) + "," + str(region_name) + "," + str(index)+"\n")
 
-    image_dataset = pd.DataFrame([all_hdf_file_paths, all_region_names, all_indices], columns=['hdf_filepath', 'region_name', 'index'])
-    image_dataset.to_csv(output_directory + '/' + output_filename)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL RECORDS FOUND: " + str(total_records) + "\n")
 
     return output_directory + "/" + output_filename
 
