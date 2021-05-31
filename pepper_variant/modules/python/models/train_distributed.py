@@ -283,8 +283,9 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                     confusion_matrix_logger.flush()
 
                     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST COMPLETED.\n")
-                    start_time = time.time()
-                    epoch += 1
+
+                start_time = time.time()
+                epoch += 1
 
                 dist.barrier()
 
@@ -292,13 +293,18 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             step_no += 1
 
             if epoch == epoch_limit:
+                dist.barrier()
                 break
 
         if rank == 0:
             time_now = time.time()
             mins = int((time_now - start_time) / 60)
             secs = int((time_now - start_time)) % 60
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME FOR ONE EPOCH: " + str(mins) + " Min " + str(secs) + " Sec\n")
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME FOR ONE ITERATION: " + str(mins) + " Min " + str(secs) + " Sec\n")
+
+        if epoch == epoch_limit:
+            dist.barrier()
+            break
 
     if rank == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED TRAINING\n")
