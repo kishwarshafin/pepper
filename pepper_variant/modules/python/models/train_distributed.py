@@ -145,9 +145,8 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: START: " + str(start_epoch + 1) + " END: " + str(epoch_limit) + "\n")
         sys.stderr.flush()
 
-    stats = dict()
-    stats['loss_epoch'] = []
-    stats['accuracy_epoch'] = []
+    # Creates a GradScaler once at the beginning of training.
+    scaler = torch.cuda.amp.GradScaler()
 
     step_no = 0
     for epoch in range(start_epoch, epoch_limit, 1):
@@ -161,7 +160,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             sys.stderr.flush()
 
         for images, labels, type_labels in train_loader:
-            # make sure the model is in train mode. BN is different in train and eval.
+            # make sure the model is in train mode.
             transducer_model.train()
 
             # image and label handling
@@ -181,17 +180,28 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 hidden = hidden.to(device_id)
                 cell_state = cell_state.to(device_id)
 
+            # set the optimizer to zero grad
             model_optimizer.zero_grad()
 
-            # output_base = transducer_model(images, hidden, cell_state, train_mode)
-            output_base, output_type = transducer_model(images, hidden, cell_state, train_mode)
+            # Runs the forward pass with autocasting.
+            with torch.cuda.amp.autocast():
+                # output_base = transducer_model(images, hidden, cell_state, train_mode)
+                output_base, output_type = transducer_model(images, hidden, cell_state, train_mode)
 
-            loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
-            loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
-            loss = loss_base + loss_type
-            loss.backward()
+                loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
+                loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
+                loss = loss_base + loss_type
 
-            model_optimizer.step()
+            # Scales loss.
+            scaler.scale(loss).backward()
+            # loss.backward()
+
+            # scaler.step() first unscales the gradients of the optimizer's assigned params.
+            scaler.step(model_optimizer)
+            # model_optimizer.step()
+
+            # Updates the scale for next iteration.
+            scaler.update()
 
             # done calculating the loss
             total_base_loss += loss_base.item()
@@ -271,13 +281,6 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST COMPLETED.\n")
                 dist.barrier()
 
-        # early stopping for hyperband
-        if train_mode is False:
-            # this setup is for hyperband
-            if epoch + 1 >= 10 and stats['accuracy'] < 98:
-                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: EARLY STOPPING AS THE MODEL NOT DOING WELL\n")
-                return transducer_model, model_optimizer, stats
-
         if rank == 0:
             time_now = time.time()
             mins = int((time_now - start_time) / 60)
@@ -286,8 +289,6 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
 
     if rank == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED TRAINING\n")
-
-    return transducer_model, model_optimizer, stats
 
 
 def cleanup():
