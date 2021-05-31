@@ -76,10 +76,11 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         rank=rank
     )
 
+    # shuffle is off because we are using distributed sampler, which has shuffle on
     train_loader = torch.utils.data.DataLoader(
         dataset=train_data_set,
         batch_size=batch_size,
-        shuffle=True,
+        shuffle=False,
         num_workers=0,
         pin_memory=True,
         sampler=train_sampler)
