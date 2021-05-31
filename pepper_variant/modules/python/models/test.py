@@ -174,4 +174,4 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
         total_accurate_type = total_accurate_type + cm_value_type[i][i]
     type_accuracy = (100.0 * total_accurate_type) / denom_type
 
-    return {'loss': avg_loss, 'base_loss': avg_base_loss, 'type_loss': avg_type_loss, 'base_accuracy': base_accuracy, 'type_accuracy': type_accuracy, 'base_confusion_matrix': str(confusion_matrix), 'type_confusion_matrix': str(confusion_matrix_type)}
+    return {'loss': avg_loss, 'base_loss': avg_base_loss, 'type_loss': avg_type_loss, 'base_accuracy': base_accuracy, 'type_accuracy': type_accuracy, 'base_confusion_matrix': confusion_matrix, 'type_confusion_matrix': confusion_matrix_type}
