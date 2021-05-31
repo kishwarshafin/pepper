@@ -1,11 +1,15 @@
 import sys
 import torch
 import os
+import h5py
+from os.path import isfile, join
+from os import listdir
 import time
 import torch.distributed as dist
 import torch.nn as nn
 import torch.multiprocessing as mp
 from datetime import datetime
+import pandas as pd
 # Custom generator for our dataset
 from torch.utils.data import DataLoader
 from pepper_variant.modules.python.models.dataloader import SequenceDataset
@@ -336,11 +340,60 @@ def setup(rank, device_ids, args):
           total_callers, rank, device_ids[rank])
     cleanup()
 
+def get_file_paths_from_directory(directory_path):
+    """
+    Returns all paths of files given a directory path
+    :param directory_path: Path to the directory
+    :return: A list of paths of files
+    """
+    file_paths = [join(directory_path, file) for file in listdir(directory_path) if isfile(join(directory_path, file))
+                  and file[-3:] == 'hdf']
+    return file_paths
+
+
+def generate_csv_file(image_directory, output_directory, output_filename):
+    hdf_files = get_file_paths_from_directory(image_directory)
+
+    all_hdf_file_paths = []
+    all_region_names = []
+    all_indices = []
+    for hdf5_file_path in hdf_files:
+        with h5py.File(hdf5_file_path, 'r') as hdf5_file:
+            if 'summaries' in hdf5_file:
+                region_names = list(hdf5_file['summaries'].keys())
+
+                for region_name in region_names:
+                    image_shape = hdf5_file['summaries'][region_name]['images'].shape[0]
+
+                    for index in range(0, image_shape):
+                        all_hdf_file_paths.append(hdf5_file_path)
+                        all_region_names.append(region_name)
+                        all_indices.append(index)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL RECORDS FOUND: " + str(len(all_hdf_file_paths)) + "\n")
+
+    image_dataset = pd.DataFrame([all_hdf_file_paths, all_region_names, all_indices], columns=['hdf_filepath', 'region_name', 'index'])
+    image_dataset.to_csv(output_directory + '/' + output_filename)
+
+    return output_directory + "/" + output_filename
+
 
 def train_distributed(train_file, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model,
                       retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
                       stats_dir, device_ids, total_callers, train_mode):
 
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: COLLATING TRAIN IMAGES" + "\n")
+    sys.stderr.flush()
+    train_dataset_csv = generate_csv_file(train_file, stats_dir, 'train_dataset.csv')
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: COLLATING TEST IMAGES" + "\n")
+    sys.stderr.flush()
+    test_dataset_csv = generate_csv_file(test_file, stats_dir, 'test_dataset.csv')
+
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DONE GENERATING CSV FILES." + "\n")
+    sys.stderr.flush()
+
+    print(train_dataset_csv)
+    print(test_dataset_csv)
+    exit()
     args = (train_file, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model,
             retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
             stats_dir, total_callers, train_mode)
