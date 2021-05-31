@@ -236,6 +236,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
 
             if step_no % step_size == 0:
                 dist.barrier()
+                epoch += 1
 
                 if rank == 0:
                     transducer_model.eval()
@@ -283,6 +284,9 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
 
                     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST COMPLETED.\n")
                 dist.barrier()
+
+            if epoch == epoch_limit:
+                break
 
         if rank == 0:
             time_now = time.time()
