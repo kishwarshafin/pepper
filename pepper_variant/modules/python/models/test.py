@@ -121,6 +121,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                                  + " COMPLETE (" + str(percent_complete) + "%)"
                                  + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                 sys.stderr.flush()
+                break
 
     avg_loss = total_loss / total_images if total_images else 0
     avg_base_loss = total_base_loss / total_images if total_images else 0
