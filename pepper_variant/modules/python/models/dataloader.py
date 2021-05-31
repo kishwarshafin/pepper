@@ -55,6 +55,8 @@ class SequenceDataset(Dataset):
                         for index in range(0, image_shape):
                             file_image_pair.append((self.hdf_filenames[hdf5_file_path], self.region_names[region_name], index))
 
+                    print("LENGTH OF DATA INDEX: ", len(file_image_pair))
+
         self.all_images = file_image_pair
 
     def __getitem__(self, index):
