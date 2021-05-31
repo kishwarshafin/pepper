@@ -25,7 +25,7 @@ class SequenceDataset(Dataset):
     Arguments:
         A HDF5 file path
     """
-    def __init__(self, image_directory):
+    def __init__(self, image_directory, rank):
         self.transform = transforms.Compose([transforms.ToTensor()])
         self.hdf_filenames = defaultdict()
         self.region_names = defaultdict()
@@ -55,7 +55,7 @@ class SequenceDataset(Dataset):
                         for index in range(0, image_shape):
                             file_image_pair.append((self.hdf_filenames[hdf5_file_path], self.region_names[region_name], index))
 
-                    print("LENGTH OF DATA INDEX: ", len(file_image_pair))
+                    print("LENGTH OF DATA INDEX: ", rank, len(file_image_pair))
 
         self.all_images = file_image_pair
 
