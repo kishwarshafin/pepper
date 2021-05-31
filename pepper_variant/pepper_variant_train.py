@@ -139,7 +139,7 @@ def add_train_model_arguments(parser):
         type=int,
         required=False,
         default=100,
-        help="Step size for train/test."
+        help="Step size that counts toward each epoch."
     )
     parser.add_argument(
         "-e",

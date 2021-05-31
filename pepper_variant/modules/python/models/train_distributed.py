@@ -147,17 +147,18 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
 
     # Creates a GradScaler once at the beginning of training.
     scaler = torch.cuda.amp.GradScaler()
-
+    start_iteration = 0
+    iteration_limit = int((step_size * epoch_limit) / len(train_loader)) + 1
     step_no = 0
-    for epoch in range(start_epoch, epoch_limit, 1):
+    epoch = 0
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ITERATION LIMIT: " + str(iteration_limit) + "\n")
+
+    for iteration in range(start_iteration, iteration_limit, 1):
         start_time = time.time()
         total_loss = 0
         total_base_loss = 0
         total_type_loss = 0
         total_images = 0
-        if rank == 0:
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN EPOCH: " + str(epoch + 1) + "\n")
-            sys.stderr.flush()
 
         for images, labels, type_labels in train_loader:
             # make sure the model is in train mode.
@@ -221,14 +222,16 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 secs = int((time_now - start_time)) % 60
 
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
-                                 + "ITERATION: " + str(epoch + 1)
-                                 + " STEP: " + str(step_no) + "/" + str((epoch + 1) * len(train_loader))
+                                 + " EPOCH: " + str(epoch + 1)
+                                 + " STEP: " + str(step_no % step_size) + "/" + str(step_size)
                                  + " LOSS: " + str(avg_loss)
                                  + " BASE LOSS: " + str(avg_base_loss)
                                  + " TYPE LOSS: " + str(avg_type_loss)
                                  + " COMPLETE (" + str(percent_complete) + "%)"
                                  + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                 sys.stderr.flush()
+                start_time = time.time()
+
             step_no += 1
 
             if step_no % step_size == 0:
