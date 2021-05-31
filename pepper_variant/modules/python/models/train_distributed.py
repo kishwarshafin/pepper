@@ -227,10 +227,10 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
                                  + " ITERATION: " + str(iteration + 1)
                                  + " EPOCH: " + str(epoch + 1)
-                                 + " STEP: " + str(step_no % step_size) + "/" + str(step_size)
-                                 + " LOSS: " + "{:.6f}".format(avg_loss)
-                                 + " BASE LOSS: " + "{:.6f}".format(avg_base_loss)
-                                 + " TYPE LOSS: " + "{:.6f}".format(avg_type_loss)
+                                 + " STEP: " + str(step_no) + "/" + str((epoch + 1) * step_size) + "/" + str(len(train_loader))
+                                 + " LOSS: " + "{:.9f}".format(avg_loss)
+                                 + " BASE LOSS: " + "{:.9f}".format(avg_base_loss)
+                                 + " TYPE LOSS: " + "{:.9f}".format(avg_type_loss)
                                  + " COMPLETE (" + str(percent_complete) + "%)"
                                  + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                 sys.stderr.flush()
