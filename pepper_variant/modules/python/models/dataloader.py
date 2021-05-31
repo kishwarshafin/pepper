@@ -31,7 +31,6 @@ class SequenceDataset(Dataset):
         self.region_names = defaultdict()
         file_image_pair = []
 
-        datapoint_index = 1
         hdf_files = get_file_paths_from_directory(image_directory)
         hdf5_index = 1
         region_index = 1
@@ -54,12 +53,7 @@ class SequenceDataset(Dataset):
                         image_shape = hdf5_file['summaries'][region_name]['images'].shape[0]
 
                         for index in range(0, image_shape):
-
-                            if datapoint_index % (rank + 1) == 0:
-                                file_image_pair.append((self.hdf_filenames[hdf5_file_path], self.region_names[region_name], index))
-                            datapoint_index += 1
-
-                    print("LENGTH OF DATA INDEX: ", rank, len(file_image_pair))
+                            file_image_pair.append((self.hdf_filenames[hdf5_file_path], self.region_names[region_name], index))
 
         self.all_images = file_image_pair
 
