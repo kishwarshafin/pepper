@@ -255,16 +255,16 @@ class ImageGenerationUtils:
                     all_base_labels = []
                     all_type_labels = []
                     all_positions = []
+                    if candidate_images is not None:
+                        for candidate in candidate_images:
+                            all_images.append(candidate.image_matrix)
+                            all_positions.append(candidate.position)
+                            all_base_labels.append(candidate.base_label)
+                            all_type_labels.append(candidate.type_label)
 
-                    for candidate in candidate_images:
-                        all_images.append(candidate.image_matrix)
-                        all_positions.append(candidate.position)
-                        all_base_labels.append(candidate.base_label)
-                        all_type_labels.append(candidate.type_label)
-
-                    if len(all_images) > 0:
-                        summary_name = str(chr_name) + "_" + str(_start) + "_" + str(_end)
-                        output_hdf_file.write_summary(summary_name, all_images, all_positions, all_base_labels, all_type_labels, chr_name, _start, _end)
+                        if len(all_images) > 0:
+                            summary_name = str(chr_name) + "_" + str(_start) + "_" + str(_end)
+                            output_hdf_file.write_summary(summary_name, all_images, all_positions, all_base_labels, all_type_labels, chr_name, _start, _end)
                     # if candidate_images is not None:
                     #     for i, candidate in enumerate(candidate_images):
                     #         summary_name = str(chr_name) + "_" + str(_start) + "_" + str(_end)
