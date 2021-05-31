@@ -234,7 +234,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                                             gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS, num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
 
                     train_loss_logger.write(str(step_no) + "," + str(avg_loss) + "," + str(avg_base_loss) + "," + str(avg_type_loss) + "\n")
-                    test_loss_logger.write(str(step_no) + "," + str(stats['loss']) + "," + str(stats['base_loss']) + "," + str(stats['type_loss']) + "," + str(stats['base_accuracy']) + "," + str(stats['type_accuracy']) + "\n")
+                    test_loss_logger.write(str(step_no) + "," + str(stats_dictioanry['loss']) + "," + str(stats_dictioanry['base_loss']) + "," + str(stats['type_loss']) + "," + str(stats_dictioanry['base_accuracy']) + "," + str(stats_dictioanry['type_accuracy']) + "\n")
                     confusion_matrix_logger.write(str(step_no) + "\n")
 
                     # print confusion matrix to file
