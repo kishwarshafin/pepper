@@ -13,7 +13,7 @@ class TrainModule:
     """
     Train module
     """
-    def __init__(self, train_file, test_file, use_hp_info, gpu_mode, max_epochs, batch_size, num_workers,
+    def __init__(self, train_file, test_file, use_hp_info, gpu_mode, max_epochs, batch_size, test_batch_size, step_size, num_workers,
                  retrain_model, retrain_model_path, model_dir, stats_dir):
         self.train_file = train_file
         self.test_file = test_file
@@ -23,6 +23,8 @@ class TrainModule:
         self.model_dir = model_dir
         self.epochs = max_epochs
         self.batch_size = batch_size
+        self.test_batch_size = test_batch_size
+        self.step_size = step_size
         self.num_workers = num_workers
         self.retrain_model = retrain_model
         self.retrain_model_path = retrain_model_path
@@ -30,7 +32,7 @@ class TrainModule:
         self.hidden_size = TrainOptions.HIDDEN_SIZE
         self.gru_layers = TrainOptions.GRU_LAYERS
         # {'l2': 1.4946789574136535e-05, 'lr': 0.000541365592065579}
-        self.learning_rate = 0.0001
+        self.learning_rate = 0.001
         self.weight_decay = 0.000001
 
     def train_model_distributed(self, device_ids, callers_per_gpu):
@@ -113,6 +115,8 @@ class TrainModule:
             train_distributed(self.train_file,
                               self.test_file,
                               self.batch_size,
+                              self.test_batch_size,
+                              self.step_size,
                               self.epochs,
                               self.gpu_mode,
                               self.num_workers,
@@ -155,7 +159,7 @@ def handle_output_directory(output_dir):
     return model_save_dir, stats_directory
 
 
-def train_pepper_model(train_file, test_file, use_hp_info, output_dir, gpu_mode, epoch_size, batch_size, num_workers,
+def train_pepper_model(train_file, test_file, use_hp_info, output_dir, gpu_mode, epoch_size, batch_size, test_batch_size, step_size, num_workers,
                           retrain_model, retrain_model_path, distributed, device_ids, per_gpu_callers):
     model_out_dir, log_dir = handle_output_directory(output_dir)
     tm = TrainModule(train_file,
@@ -164,6 +168,8 @@ def train_pepper_model(train_file, test_file, use_hp_info, output_dir, gpu_mode,
                      gpu_mode,
                      epoch_size,
                      batch_size,
+                     test_batch_size,
+                     step_size,
                      num_workers,
                      retrain_model,
                      retrain_model_path,

@@ -125,6 +125,22 @@ def add_train_model_arguments(parser):
         default=64,
         help="Batch size for training, default is 64."
     )
+
+    parser.add_argument(
+        "--test_batch_size",
+        type=int,
+        required=False,
+        default=64,
+        help="Batch size for test, default is 64."
+    )
+    parser.add_argument(
+        "-s",
+        "--step_size",
+        type=int,
+        required=False,
+        default=100,
+        help="Step size for train/test."
+    )
     parser.add_argument(
         "-e",
         "--epoch_size",
@@ -362,6 +378,8 @@ def main():
                            FLAGS.gpu,
                            FLAGS.epoch_size,
                            FLAGS.batch_size,
+                           FLAGS.test_batch_size,
+                           FLAGS.step_size,
                            FLAGS.num_workers,
                            FLAGS.retrain_model,
                            FLAGS.retrain_model_path,

@@ -48,6 +48,8 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     confusion_matrix_type = meter.ConfusionMeter(num_type_classes)
 
     total_loss = 0
+    total_base_loss = 0
+    total_type_loss = 0
     total_images = 0
     accuracy = 0
 
@@ -82,6 +84,8 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                                       type_labels.data.contiguous().view(-1))
 
             total_loss += loss.item()
+            total_base_loss += loss_base.item()
+            total_type_loss += loss_type.item()
             total_images += images.size(0)
 
             if (ii + 1) % 10 == 0:
@@ -93,7 +97,6 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                     total_accurate = total_accurate + cm_value[i][i]
 
                 accuracy = (100.0 * total_accurate) / denom
-
 
                 cm_value_type = confusion_matrix_type.value()
                 denom_type = cm_value_type.sum() if cm_value_type.sum() > 0 else 1.0
@@ -113,13 +116,15 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO:"
                                  + " BATCH: " + str(ii+1) + "/" + str(len(test_loader))
-                                 + " ACCURACY: " + str(round(accuracy, 5))
+                                 + " ACCURACY BASE: " + str(round(accuracy, 5))
                                  + " ACCURACY TYPE: " + str(round(accuracy_type, 5))
                                  + " COMPLETE (" + str(percent_complete) + "%)"
                                  + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                 sys.stderr.flush()
 
     avg_loss = total_loss / total_images if total_images else 0
+    avg_base_loss = total_base_loss / total_images if total_images else 0
+    avg_type_loss = total_type_loss / total_images if total_images else 0
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST LOSS: " + str(avg_loss) + "\n")
     sys.stderr.write("Confusion Matrix:" + "\n")
@@ -135,7 +140,6 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
         sys.stderr.write("\n")
     sys.stderr.flush()
 
-
     sys.stderr.write("Type Confusion Matrix:" + "\n")
     sys.stderr.write("            ")
     for label in ImageSizeOptions.decoded_type_labels:
@@ -149,4 +153,24 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
         sys.stderr.write("\n")
     sys.stderr.flush()
 
-    return {'loss': avg_loss, 'accuracy': accuracy, 'confusion_matrix': str(confusion_matrix.conf)}
+    cm_value = confusion_matrix.value()
+    denom = cm_value.sum() if cm_value.sum() > 0 else 1.0
+
+    total_base_accurate = 0
+    for i in range(0, ImageSizeOptions.TOTAL_LABELS):
+        total_base_accurate = total_base_accurate + cm_value[i][i]
+
+    base_accuracy = (100.0 * total_base_accurate) / denom
+
+    cm_value_type = confusion_matrix_type.value()
+    denom_type = cm_value_type.sum() if cm_value_type.sum() > 0 else 1.0
+
+    for i in range(0, ImageSizeOptions.TOTAL_TYPE_LABELS):
+        denom_type = denom_type - cm_value_type[0][i]
+
+    total_accurate_type = 0
+    for i in range(1, ImageSizeOptions.TOTAL_TYPE_LABELS):
+        total_accurate_type = total_accurate_type + cm_value_type[i][i]
+    type_accuracy = (100.0 * total_accurate_type) / denom_type
+
+    return {'loss': avg_loss, 'base_loss': avg_base_loss, 'type_loss': avg_type_loss, 'base_accuracy': base_accuracy, 'type_accuracy': type_accuracy, 'base_confusion_matrix': str(confusion_matrix), 'type_confusion_matrix': str(confusion_matrix_type)}
