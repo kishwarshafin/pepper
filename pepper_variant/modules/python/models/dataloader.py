@@ -32,17 +32,10 @@ class SequenceDataset(Dataset):
         file_image_pair = []
 
         hdf_files = get_file_paths_from_directory(image_directory)
-        hdf5_index = 1
-        region_index = 1
         for hdf5_file_path in hdf_files:
-            # index hdf5_file_path
-            self.hdf_filenames[hdf5_file_path] = hdf5_index
-
             with h5py.File(hdf5_file_path, 'r') as hdf5_file:
                 if 'summaries' in hdf5_file:
                     region_names = list(hdf5_file['summaries'].keys())
-                    if region_names not in self.hdf_filenames.keys():
-                        self.region_names[region_names] = region_index
 
                     for region_name in region_names:
                         image_shape = hdf5_file['summaries'][region_name]['images'].shape[0]
