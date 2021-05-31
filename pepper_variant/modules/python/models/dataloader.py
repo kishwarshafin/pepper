@@ -4,6 +4,7 @@ from torch.utils.data import Dataset
 from pepper_variant.modules.python.Options import ImageSizeOptions
 import torchvision.transforms as transforms
 from collections import defaultdict
+import pandas as pd
 import h5py
 import sys
 import numpy as np
@@ -25,25 +26,15 @@ class SequenceDataset(Dataset):
     Arguments:
         A HDF5 file path
     """
-    def __init__(self, image_directory):
+    def __init__(self, csv_file):
         self.transform = transforms.Compose([transforms.ToTensor()])
         self.hdf_filenames = defaultdict()
         self.region_names = defaultdict()
-        file_image_pair = []
 
-        hdf_files = get_file_paths_from_directory(image_directory)
-        for hdf5_file_path in hdf_files:
-            with h5py.File(hdf5_file_path, 'r') as hdf5_file:
-                if 'summaries' in hdf5_file:
-                    region_names = list(hdf5_file['summaries'].keys())
+        print(csv_file)
+        csv_file = pd.read_csv(csv_file, header=None)
 
-                    for region_name in region_names:
-                        image_shape = hdf5_file['summaries'][region_name]['images'].shape[0]
-
-                        for index in range(0, image_shape):
-                            file_image_pair.append((hdf5_file_path, region_name, index))
-
-        self.all_images = file_image_pair
+        self.all_images = csv_file
 
     def __getitem__(self, index):
         # load the image
@@ -57,7 +48,7 @@ class SequenceDataset(Dataset):
         return image, base_label, type_label
 
     def __len__(self):
-        return len(self.all_images)
+        return len(self.all_images.axes[0])
 
 
 class SequenceDatasetFake(Dataset):
