@@ -68,7 +68,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     if rank == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOADING DATA\n")
 
-    train_data_set = SequenceDataset(train_file, rank)
+    train_data_set = SequenceDataset(train_file)
 
     train_sampler = torch.utils.data.distributed.DistributedSampler(
         train_data_set,
