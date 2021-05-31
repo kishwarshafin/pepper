@@ -151,7 +151,10 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     iteration_limit = int((step_size * epoch_limit) / len(train_loader)) + 1
     step_no = 0
     epoch = 0
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ITERATION LIMIT: " + str(iteration_limit) + "\n")
+
+    if rank == 0:
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ITERATION LIMIT: " + str(iteration_limit) + "\n")
+        sys.stderr.flush()
 
     for iteration in range(start_iteration, iteration_limit, 1):
         start_time = time.time()
@@ -215,7 +218,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             avg_base_loss = (total_base_loss / total_images) if total_images else 0
             avg_type_loss = (total_type_loss / total_images) if total_images else 0
 
-            if rank == 0 and step_no % 10 == 0 and step_no > 1:
+            if rank == 0 and step_no % 10 == 0 and step_no > 0:
                 percent_complete = int((100 * step_no) / ((epoch + 1) * len(train_loader)))
                 time_now = time.time()
                 mins = int((time_now - start_time) / 60)
@@ -232,7 +235,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                                  + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                 sys.stderr.flush()
 
-            if step_no % step_size == 0:
+            if step_no % step_size == 0 and step_no > 0:
                 dist.barrier()
 
                 if rank == 0:
@@ -280,10 +283,10 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                     confusion_matrix_logger.flush()
 
                     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST COMPLETED.\n")
+                    start_time = time.time()
+                    epoch += 1
 
                 dist.barrier()
-                start_time = time.time()
-                epoch += 1
 
             # increase step size
             step_no += 1
