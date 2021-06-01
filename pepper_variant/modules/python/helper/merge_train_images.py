@@ -21,11 +21,11 @@ def get_file_paths_from_directory(directory_path):
 
 
 def merge_hdf5_files(input_directory, output_directory):
-    all_images = []
-    all_type_labels = []
-    all_base_labels = []
     hdf_files = get_file_paths_from_directory(input_directory)
     record_index = 0
+    output_hdf5_filename = output_directory + "/" + "Merged_file.hdf"
+    output_hdf5_file = h5py.File(output_hdf5_filename, 'w')
+
     print("HDF5 FILES: ", hdf_files)
     for i, hdf5_file_path in enumerate(hdf_files):
         print("PROCESSING: ", i + 1, "/", len(hdf_files))
@@ -34,28 +34,16 @@ def merge_hdf5_files(input_directory, output_directory):
                 region_names = list(hdf5_file['summaries'].keys())
 
                 for region_name in region_names:
-                    if record_index == 0:
-                        all_images = hdf5_file['summaries'][region_name]['images'][()]
-                        all_type_labels = hdf5_file['summaries'][region_name]['type_labels'][()]
-                        all_base_label = hdf5_file['summaries'][region_name]['base_labels'][()]
-                    else:
-                        all_images = np.append(all_images, hdf5_file['summaries'][region_name]['images'][()], axis=0)
-                        all_type_labels = np.append(all_type_labels, hdf5_file['summaries'][region_name]['type_labels'][()], axis=0)
-                        all_base_label = np.append(all_base_label, hdf5_file['summaries'][region_name]['base_labels'][()], axis=0)
-                    record_index += 1
+                    image_shape = hdf5_file['summaries'][region_name]['images'].shape[0]
 
-        print("IMAGE SHAPE:", all_images.shape)
-        print("BASE SHAPE:", all_base_label.shape)
-        print("TYPE SHAPE:", all_type_labels.shape)
+                    for image_index in range(0, image_shape):
+                        output_hdf5_file[str(record_index)] = hdf5_file_path + "," + region_name + "," + str(image_index)
 
-    output_hdf5_filename = output_directory + "/" + "Merged_file.hdf"
-    with h5py.File(output_hdf5_filename, 'w') as output_hdf5_file:
-        output_hdf5_file.create_dataset("images", all_images.shape, dtype=np.uint8, compression="gzip", data=all_images)
-        output_hdf5_file.create_dataset("base_labels", all_base_label.shape, dtype=np.uint8, data=all_base_label)
-        output_hdf5_file.create_dataset("type_labels", all_type_labels.shape, dtype=np.uint8, data=all_type_labels)
+                        record_index += 1
+
+        print("TOTAL RECORDS:", record_index)
 
     print("FILES SAVED.")
-
 
 
 if __name__ == '__main__':
