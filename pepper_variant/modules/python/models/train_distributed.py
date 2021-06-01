@@ -149,7 +149,8 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         sys.stderr.flush()
 
     # Creates a GradScaler once at the beginning of training.
-    scaler = torch.cuda.amp.GradScaler()
+    # scaler = torch.cuda.amp.GradScaler()
+
     start_iteration = 0
     iteration_limit = int((step_size * epoch_limit) / len(train_loader)) + 1
     step_no = 0
@@ -168,7 +169,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
 
         for images, labels, type_labels in train_loader:
             # make sure the model is in train mode.
-            transducer_model.train()
+            transducer_model = transducer_model.train()
 
             # image and label handling
             labels = labels.type(torch.LongTensor)
@@ -191,24 +192,25 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             model_optimizer.zero_grad()
 
             # Runs the forward pass with autocasting.
-            with torch.cuda.amp.autocast():
-                # output_base = transducer_model(images, hidden, cell_state, train_mode)
-                output_base, output_type = transducer_model(images, hidden, cell_state, train_mode)
+            # with torch.cuda.amp.autocast():
+            # turned of mixed precision training
 
-                loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
-                loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
-                loss = loss_base + loss_type
+            output_base, output_type = transducer_model(images, hidden, cell_state, train_mode)
+
+            loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
+            loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
+            loss = loss_base + loss_type
 
             # Scales loss.
-            scaler.scale(loss).backward()
-            # loss.backward()
+            # scaler.scale(loss).backward()
+            loss.backward()
 
             # scaler.step() first unscales the gradients of the optimizer's assigned params.
-            scaler.step(model_optimizer)
-            # model_optimizer.step()
+            # scaler.step(model_optimizer)
+            model_optimizer.step()
 
             # Updates the scale for next iteration.
-            scaler.update()
+            # scaler.update()
 
             # done calculating the loss
             total_base_loss += loss_base.item()
@@ -242,7 +244,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 dist.barrier()
 
                 if rank == 0:
-                    transducer_model.eval()
+                    transducer_model = transducer_model.eval()
                     torch.cuda.empty_cache()
 
                     save_best_model(transducer_model, model_optimizer, hidden_size, gru_layers, epoch, model_dir + "PEPPER_VARIANT_STEP_" + str(step_no) + '_checkpoint.pkl')
@@ -286,6 +288,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                     confusion_matrix_logger.flush()
 
                     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST COMPLETED.\n")
+                    transducer_model = transducer_model.train()
 
                 start_time = time.time()
                 epoch += 1
