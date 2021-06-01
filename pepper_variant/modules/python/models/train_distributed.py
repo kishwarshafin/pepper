@@ -365,8 +365,8 @@ def generate_csv_file(image_directory, output_directory, output_filename):
                     image_shape = hdf5_file['summaries'][region_name]['images'].shape[0]
 
                     for index in range(0, image_shape):
+                        output_csv_file.write(str(total_records) + "," + str(hdf5_file_path) + "," + str(region_name) + "," + str(index)+"\n")
                         total_records += 1
-                        output_csv_file.write(str(hdf5_file_path) + "," + str(region_name) + "," + str(index)+"\n")
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL RECORDS FOUND: " + str(total_records) + "\n")
 

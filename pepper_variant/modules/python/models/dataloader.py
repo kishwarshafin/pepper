@@ -35,6 +35,7 @@ class SequenceDataset(Dataset):
         csv_file = pd.read_csv(csv_file, header=None)
 
         self.all_images = csv_file
+        print(type(self.all_images))
 
     def __getitem__(self, index):
         # load the image
@@ -48,7 +49,9 @@ class SequenceDataset(Dataset):
         return image, base_label, type_label
 
     def __len__(self):
-        return len(self.all_images.axes[0])
+        index = self.all_images.index
+        number_of_rows = len(index)
+        return len(number_of_rows)
 
 
 class SequenceDatasetFake(Dataset):
