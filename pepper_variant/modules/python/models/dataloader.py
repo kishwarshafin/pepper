@@ -33,7 +33,7 @@ class SequenceDataset(Dataset):
 
         self.all_images = pd.read_csv(csv_file, index_col=0, header=None)
         print(type(self.all_images))
-        print("Number of rows ", len(csv_file.index))
+        print("Number of rows ", self.all_images.shape)
 
     def __getitem__(self, index):
         # load the image
