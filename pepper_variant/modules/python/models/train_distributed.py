@@ -9,7 +9,6 @@ import torch.distributed as dist
 import torch.nn as nn
 import torch.multiprocessing as mp
 from datetime import datetime
-import pandas as pd
 # Custom generator for our dataset
 from torch.utils.data import DataLoader
 from pepper_variant.modules.python.models.dataloader import SequenceDataset

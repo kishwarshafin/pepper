@@ -3,8 +3,6 @@ from os import listdir
 from torch.utils.data import Dataset
 from pepper_variant.modules.python.Options import ImageSizeOptions
 import torchvision.transforms as transforms
-from collections import defaultdict
-import pandas as pd
 import h5py
 import sys
 import numpy as np
@@ -32,6 +30,7 @@ class SequenceDataset(Dataset):
         all_records = []
         hdf_files = get_file_paths_from_directory(image_directory)
 
+        self.total_records = 0
         for hdf5_file_path in hdf_files:
             with h5py.File(hdf5_file_path, 'r') as hdf5_file:
                 if 'summaries' in hdf5_file:
@@ -40,24 +39,36 @@ class SequenceDataset(Dataset):
                     for region_name in region_names:
                         image_shape = hdf5_file['summaries'][region_name]['images'].shape[0]
 
-                        for index in range(0, image_shape):
-                            all_records.append((hdf5_file_path, region_name, index))
+                        all_records.append((hdf5_file_path, region_name, image_shape))
+                        self.total_records += image_shape
 
-        self.all_images = all_records
+        self.all_records = all_records
 
     def __getitem__(self, index):
         # load the image
-        hdf5_filepath, region_name, indx = self.all_images[index]
+        file_index = 0
+        image_index = 0
+        search_index = index
+        for i in range(0, len(self.all_records)):
+            hdf5_file_path, region_name, image_shape = self.all_records[i]
+            if image_shape <= search_index:
+                image_index = search_index
+                file_index = i
+                break
+            else:
+                search_index = search_index - image_shape
+
+        hdf5_filepath, region_name, image_shape = self.all_records[file_index]
 
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
-            image = hdf5_file['summaries'][region_name]['images'][indx][()]
-            type_label = hdf5_file['summaries'][region_name]['type_labels'][indx][()]
-            base_label = hdf5_file['summaries'][region_name]['base_labels'][indx][()]
+            image = hdf5_file['summaries'][region_name]['images'][image_index][()]
+            type_label = hdf5_file['summaries'][region_name]['type_labels'][image_index][()]
+            base_label = hdf5_file['summaries'][region_name]['base_labels'][image_index][()]
 
         return image, base_label, type_label
 
     def __len__(self):
-        return len(self.all_images)
+        return self.total_records
 
 
 class SequenceDatasetFake(Dataset):
