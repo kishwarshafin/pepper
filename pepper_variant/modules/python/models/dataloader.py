@@ -38,8 +38,8 @@ class SequenceDataset(Dataset):
     def __getitem__(self, index):
         # load the image
         print(self.all_images.head(4))
-        print(self.all_images.iloc([index]))
-        hdf5_filepath, region_name, indx = self.all_images.iloc([index])
+        print(self.all_images.iloc(index))
+        hdf5_filepath, region_name, indx = self.all_images.iloc(index)
 
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
             image = hdf5_file['summaries'][region_name]['images'][indx][()]
