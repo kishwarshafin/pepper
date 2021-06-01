@@ -32,10 +32,11 @@ class SequenceDataset(Dataset):
         self.region_names = defaultdict()
 
         print(csv_file)
-        csv_file = pd.read_csv(csv_file, header=None)
+        csv_file = pd.read_csv(csv_file, index_col=0, header=None)
 
         self.all_images = csv_file
         print(type(self.all_images))
+        exit()
 
     def __getitem__(self, index):
         # load the image
