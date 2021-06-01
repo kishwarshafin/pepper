@@ -53,7 +53,7 @@ def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoc
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL" + file_name + " SAVED SUCCESSFULLY.\n")
 
 
-def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_limit, gpu_mode, num_workers, retrain_model,
+def train(train_data_set, test_file, batch_size, test_batch_size, step_size, epoch_limit, gpu_mode, num_workers, retrain_model,
           retrain_model_path, gru_layers, hidden_size, lr, decay, model_dir, stats_dir, train_mode,
           world_size, rank, device_id):
 
@@ -71,7 +71,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     if rank == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOADING DATA\n")
 
-    train_data_set = SequenceDataset(train_file)
+    # train_data_set = SequenceDataset(train_file)
 
     train_sampler = torch.utils.data.distributed.DistributedSampler(
         train_data_set,
@@ -354,7 +354,9 @@ def train_distributed(train_file, test_file, batch_size, test_batch_size, step_s
                       retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
                       stats_dir, device_ids, total_callers, train_mode):
 
-    args = (train_file, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model,
+    train_data_set = SequenceDataset(train_file)
+
+    args = (train_data_set, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model,
             retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
             stats_dir, total_callers, train_mode)
 
