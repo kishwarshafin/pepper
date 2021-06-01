@@ -30,7 +30,8 @@ Return:
 """
 
 
-def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoch, file_name):
+def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoch,
+                    file_name):
     """
     Save the best model
     :param transducer_model: A trained model
@@ -350,44 +351,11 @@ def get_file_paths_from_directory(directory_path):
     return file_paths
 
 
-def generate_csv_file(image_directory, output_directory, output_filename):
-    hdf_files = get_file_paths_from_directory(image_directory)
-
-    total_records = 0
-    output_csv_file = open(output_directory + output_filename, 'w')
-
-    for hdf5_file_path in hdf_files:
-        with h5py.File(hdf5_file_path, 'r') as hdf5_file:
-            if 'summaries' in hdf5_file:
-                region_names = list(hdf5_file['summaries'].keys())
-
-                for region_name in region_names:
-                    image_shape = hdf5_file['summaries'][region_name]['images'].shape[0]
-
-                    for index in range(0, image_shape):
-                        output_csv_file.write(str(total_records) + "," + str(hdf5_file_path) + "," + str(region_name) + "," + str(index)+"\n")
-                        total_records += 1
-
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL RECORDS FOUND: " + str(total_records) + "\n")
-
-    return output_directory + output_filename
-
-
 def train_distributed(train_file, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model,
                       retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
                       stats_dir, device_ids, total_callers, train_mode):
 
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: COLLATING TRAIN IMAGES" + "\n")
-    sys.stderr.flush()
-    train_dataset_csv = generate_csv_file(train_file, stats_dir, 'train_dataset.csv')
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: COLLATING TEST IMAGES" + "\n")
-    sys.stderr.flush()
-    test_dataset_csv = generate_csv_file(test_file, stats_dir, 'test_dataset.csv')
-
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DONE GENERATING CSV FILES." + "\n")
-    sys.stderr.flush()
-
-    args = (train_dataset_csv, test_dataset_csv, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model,
+    args = (train_file, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model,
             retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
             stats_dir, total_callers, train_mode)
 

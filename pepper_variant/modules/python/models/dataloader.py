@@ -26,17 +26,28 @@ class SequenceDataset(Dataset):
     Arguments:
         A HDF5 file path
     """
-    def __init__(self, csv_file):
+    def __init__(self, image_directory):
         self.transform = transforms.Compose([transforms.ToTensor()])
-        self.hdf_filenames = defaultdict()
-        self.region_names = defaultdict()
 
-        self.all_images = pd.read_csv(csv_file, header=None)
-        self.all_images.set_index([0], inplace=True)
+        all_records = []
+        hdf_files = get_file_paths_from_directory(image_directory)
+
+        for hdf5_file_path in hdf_files:
+            with h5py.File(hdf5_file_path, 'r') as hdf5_file:
+                if 'summaries' in hdf5_file:
+                    region_names = list(hdf5_file['summaries'].keys())
+
+                    for region_name in region_names:
+                        image_shape = hdf5_file['summaries'][region_name]['images'].shape[0]
+
+                        for index in range(0, image_shape):
+                            all_records.append((hdf5_file_path, region_name, index))
+
+        self.all_images = all_records
 
     def __getitem__(self, index):
         # load the image
-        hdf5_filepath, region_name, indx = self.all_images.iloc[index]
+        hdf5_filepath, region_name, indx = self.all_images[index]
 
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
             image = hdf5_file['summaries'][region_name]['images'][indx][()]
@@ -46,8 +57,7 @@ class SequenceDataset(Dataset):
         return image, base_label, type_label
 
     def __len__(self):
-        number_of_rows = len(self.all_images.index)
-        return number_of_rows
+        return len(self.all_images)
 
 
 class SequenceDatasetFake(Dataset):
