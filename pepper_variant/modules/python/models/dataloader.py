@@ -42,6 +42,8 @@ class SequenceDataset(Dataset):
                         all_records.append((hdf5_file_path, region_name, image_shape))
                         self.total_records += image_shape
 
+        print("TOTAL LENGTH: ", self.total_records)
+        print("ALL RECORDS: ", all_records)
         self.all_records = all_records
 
     def __getitem__(self, index):
