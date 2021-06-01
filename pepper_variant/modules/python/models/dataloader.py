@@ -40,7 +40,7 @@ class SequenceDataset(Dataset):
                         image_shape = hdf5_file['summaries'][region_name]['images'].shape[0]
 
                         for image_index in range(0, image_shape):
-                            all_records.append((hdf5_file_path, region_name, image_shape))
+                            all_records.append((hdf5_file_path, region_name, image_index))
 
                         self.total_records += image_shape
 
