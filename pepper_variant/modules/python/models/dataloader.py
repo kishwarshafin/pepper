@@ -31,8 +31,8 @@ class SequenceDataset(Dataset):
         self.hdf_filenames = defaultdict()
         self.region_names = defaultdict()
 
-        self.all_images = pd.read_csv(csv_file, header=0)
-        self.all_images.set_index(['0'], inplace=True)
+        self.all_images = pd.read_csv(csv_file, header=None)
+        self.all_images.set_index([0], inplace=True)
 
 
     def __getitem__(self, index):
