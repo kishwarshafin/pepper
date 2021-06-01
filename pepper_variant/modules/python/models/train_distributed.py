@@ -354,6 +354,7 @@ def train_distributed(train_file, test_file, batch_size, test_batch_size, step_s
                       retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
                       stats_dir, device_ids, total_callers, train_mode):
 
+    # it's important to do the dataloading before so it's not forked per process which increases the memory usage.
     train_data_set = SequenceDataset(train_file)
 
     args = (train_data_set, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model,
