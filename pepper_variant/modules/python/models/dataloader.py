@@ -49,17 +49,15 @@ class SequenceDataset(Dataset):
         file_index = 0
         image_index = 0
         search_index = index
-        print("SEARCH INDEX: ", search_index)
+
         for i in range(0, len(self.all_records)):
             hdf5_file_path, region_name, image_shape = self.all_records[i]
-            print("INDEX BEFORE: ", i, " IMAGE SHAPE: ", image_shape)
-            if search_index <= image_shape:
+            if search_index < image_shape:
                 image_index = search_index
                 file_index = i
                 break
             else:
                 search_index = search_index - image_shape
-            print("INDEX AFTER: ", i, " IMAGE SHAPE: ", image_shape)
 
         hdf5_filepath, region_name, image_shape = self.all_records[file_index]
 
