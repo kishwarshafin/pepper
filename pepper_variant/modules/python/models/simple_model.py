@@ -13,8 +13,8 @@ class TransducerGRU(nn.Module):
 
         self.lstm_1_hidden_size = 256
         self.lstm_2_hidden_size = 256
-        self.linear_1_size = 1024
-        self.linear_2_size = 512
+        self.linear_1_size = 256
+        self.linear_2_size = 256
         self.linear_3_size = 256
         self.linear_4_size = 128
         self.linear_5_size = 128
