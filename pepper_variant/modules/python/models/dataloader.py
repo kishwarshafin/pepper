@@ -106,7 +106,7 @@ class SequenceDatasetFake(Dataset):
             type_predictions = np.zeros((type_label.size, ImageSizeOptions.TOTAL_TYPE_LABELS))
             type_predictions[np.arange(type_label.size), type_label] = 1
 
-        return contig, region_start, region_stop, image, position, base_predictions, type_predictions
+        return contig, region_start, region_stop, image, position, base_predictions.flatten(), type_predictions.flatten()
 
     def __len__(self):
         return len(self.all_images)
