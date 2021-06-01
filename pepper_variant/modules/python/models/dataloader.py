@@ -43,7 +43,6 @@ class SequenceDataset(Dataset):
                         self.total_records += image_shape
 
         print("TOTAL LENGTH: ", self.total_records)
-        print("ALL RECORDS: ", all_records)
         self.all_records = all_records
 
     def __getitem__(self, index):
