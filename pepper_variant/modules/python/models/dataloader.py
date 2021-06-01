@@ -31,12 +31,9 @@ class SequenceDataset(Dataset):
         self.hdf_filenames = defaultdict()
         self.region_names = defaultdict()
 
-        print(csv_file)
-        csv_file = pd.read_csv(csv_file, index_col=0, header=None)
-
-        self.all_images = csv_file
+        self.all_images = pd.read_csv(csv_file, index_col=0, header=None)
         print(type(self.all_images))
-        exit()
+        print("Number of rows ", len(csv_file.index))
 
     def __getitem__(self, index):
         # load the image
@@ -50,9 +47,8 @@ class SequenceDataset(Dataset):
         return image, base_label, type_label
 
     def __len__(self):
-        index = self.all_images.index
-        number_of_rows = len(index)
-        return len(number_of_rows)
+        number_of_rows = len(self.all_images.index)
+        return number_of_rows
 
 
 class SequenceDatasetFake(Dataset):
