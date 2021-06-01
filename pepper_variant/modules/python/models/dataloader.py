@@ -33,11 +33,10 @@ class SequenceDataset(Dataset):
 
         self.all_images = pd.read_csv(csv_file, header=0)
         self.all_images.set_index(['0'], inplace=True)
-        print(type(self.all_images))
-        print("Number of rows ", self.all_images.shape)
 
     def __getitem__(self, index):
         # load the image
+        print(self.all_images[index])
         hdf5_filepath, region_name, indx = self.all_images[index]
 
         with h5py.File(hdf5_filepath, 'r') as hdf5_file:
@@ -49,6 +48,7 @@ class SequenceDataset(Dataset):
 
     def __len__(self):
         number_of_rows = len(self.all_images.index)
+        print("NUMBER OF ROWS: ", number_of_rows)
         return number_of_rows
 
 
