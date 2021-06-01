@@ -34,8 +34,10 @@ class SequenceDataset(Dataset):
         self.all_images = pd.read_csv(csv_file, header=0)
         self.all_images.set_index(['0'], inplace=True)
 
+
     def __getitem__(self, index):
         # load the image
+        print(self.all_images.head(4))
         print(self.all_images.loc([index]))
         hdf5_filepath, region_name, indx = self.all_images.loc([index])
 
