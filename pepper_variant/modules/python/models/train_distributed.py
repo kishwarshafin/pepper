@@ -130,11 +130,11 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         transducer_model = transducer_model.to(device_id)
         transducer_model = nn.parallel.DistributedDataParallel(transducer_model, device_ids=[device_id])
 
-    class_weights = torch.Tensor(ImageSizeOptions.class_weights)
-    class_weights_type = torch.Tensor(ImageSizeOptions.class_weights_type)
+    class_weights = torch.tensor(ImageSizeOptions.class_weights).to(device_id)
+    class_weights_type = torch.tensor(ImageSizeOptions.class_weights_type).to(device_id)
     # Loss
-    criterion_base = nn.NLLLoss(class_weights)
-    criterion_type = nn.NLLLoss(class_weights_type)
+    criterion_base = nn.NLLLoss(weight=class_weights)
+    criterion_type = nn.NLLLoss(weight=class_weights_type)
 
     if gpu_mode is True:
         criterion_base = criterion_base.to(device_id)
@@ -161,6 +161,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         sys.stderr.flush()
 
     for iteration in range(start_iteration, iteration_limit, 1):
+        train_sampler.set_epoch(iteration)
         start_time = time.time()
         total_loss = 0
         total_base_loss = 0
