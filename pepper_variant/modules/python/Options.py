@@ -11,14 +11,14 @@ class ImageSizeOptions(object):
     IMAGE_CHANNELS = 1
     CANDIDATE_WINDOW_SIZE = 20
 
-    TOTAL_LABELS = 21
+    TOTAL_LABELS = 28
     TOTAL_TYPE_LABELS = 10
     MIN_SEQUENCE_LENGTH = 1000
     MIN_IMAGE_OVERLAP = 100
-    decoded_labels = ['##', 'AA', 'AC', 'AT', 'AG', 'A*', 'A#', 'CC', 'CT', 'CG', 'C*', 'C#', 'TT', 'TG', 'T*', 'T#', 'GG', 'G*', 'G#', '**', '*#']
+    decoded_labels = ["RR", "RA", "RC", "RT", "RG", "R*", "R#", "AA", "AC", "AT", "AG", "A*", "A#", "CC", "CT", "CG", "C*", "C#", "TT", "TG", "T*", "T#", "GG", "G*", "G#", "**", "*#", "##"]
     class_weights = [1.0] * TOTAL_LABELS
-    class_weights_type = [1.0] * TOTAL_TYPE_LABELS
-    decoded_type_labels = ['RR', 'RS', 'RI', 'RD', 'SS', 'SI', 'SD', 'II', 'ID', 'DD']
+    # class_weights_type = [1.0] * TOTAL_TYPE_LABELS
+    # decoded_type_labels = ['RR', 'RS', 'RI', 'RD', 'SS', 'SI', 'SD', 'II', 'ID', 'DD']
 
 
 class ImageSizeOptionsHP(object):
