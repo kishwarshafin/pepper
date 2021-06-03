@@ -55,6 +55,13 @@ def add_make_train_images_arguments(parser):
         help="Downsample rate of reads while generating images."
     )
     parser.add_argument(
+        "-p",
+        "--random_draw_p",
+        required=True,
+        type=float,
+        help="Random draw probabilty will set the percentage of ref examples to keep in the training set. (Recommended: 0.33)"
+    )
+    parser.add_argument(
         "-r",
         "--region",
         type=str,
@@ -366,7 +373,8 @@ def main():
                     FLAGS.output_dir,
                     FLAGS.threads,
                     FLAGS.downsample_rate,
-                    train_mode=True)
+                    train_mode=True,
+                    random_draw_probability=FLAGS.random_draw_p)
     elif FLAGS.sub_command == 'train_model':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN MODEL MODULE SELECTED\n")
         distributed = not FLAGS.distributed_off

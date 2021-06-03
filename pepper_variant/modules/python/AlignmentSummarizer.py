@@ -77,7 +77,7 @@ class AlignmentSummarizer:
 
         return haplotype_1_records, haplotype_2_records
 
-    def create_summary(self, truth_vcf, train_mode, downsample_rate, bed_list, thread_id):
+    def create_summary(self, truth_vcf, train_mode, downsample_rate, bed_list, thread_id, random_draw_prob):
         all_candidate_images = []
 
         if train_mode:
@@ -193,7 +193,7 @@ class AlignmentSummarizer:
                     if candidate.type_label == 0:
                         random_draw = random_sampling[random_sampling_index]
                         random_sampling_index += 1
-                        if random_draw <= 0.40:
+                        if random_draw <= random_draw_prob:
                             all_candidate_images.append(candidate)
                             picked_refs += 1
                     else:

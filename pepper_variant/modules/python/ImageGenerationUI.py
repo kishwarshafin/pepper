@@ -17,7 +17,7 @@ class ImageGenerator:
     """
     Process manager that runs sequence of processes to generate images and their labels.
     """
-    def __init__(self, chromosome_name, bam_file_path, draft_file_path, use_hp_info, truth_vcf, train_mode):
+    def __init__(self, chromosome_name, bam_file_path, draft_file_path, use_hp_info, truth_vcf, train_mode, random_draw_probability):
         """
         Initialize a manager object
         :param chromosome_name: Name of the chromosome
@@ -36,6 +36,7 @@ class ImageGenerator:
         self.downsample_rate = 1.0
         self.use_hp_info = use_hp_info
         self.truth_vcf = None
+        self.random_draw_probability = random_draw_probability
 
         if self.train_mode:
             self.truth_vcf = truth_vcf
@@ -78,7 +79,8 @@ class ImageGenerator:
             region_summary = alignment_summarizer_hp.create_summary(self.truth_vcf,
                                                                     self.train_mode,
                                                                     downsample_rate,
-                                                                    bed_list)
+                                                                    bed_list,
+                                                                    self.random_draw_probability)
 
             if region_summary is not None:
                 images_hp1, images_hp2, labels_hp1, labels_hp2, positions, index, image_chunk_ids = region_summary
@@ -217,7 +219,7 @@ class ImageGenerationUtils:
         """
         thread_prefix = "[THREAD " + "{:02d}".format(process_id) + "]"
 
-        output_path, bam_file, draft_file, use_hp_info, truth_vcf, train_mode, downsample_rate, bed_list = args
+        output_path, bam_file, draft_file, use_hp_info, truth_vcf, train_mode, downsample_rate, bed_list, random_draw_probability = args
 
         timestr = time.strftime("%m%d%Y_%H%M%S")
         file_name = output_path + "pepper_variants_images_thread_" + str(process_id) + "_" + str(timestr)
@@ -246,7 +248,8 @@ class ImageGenerationUtils:
                                                  draft_file_path=draft_file,
                                                  use_hp_info=use_hp_info,
                                                  truth_vcf=truth_vcf,
-                                                 train_mode=train_mode)
+                                                 train_mode=train_mode,
+                                                 random_draw_probability=random_draw_probability)
 
                 if not use_hp_info:
                     candidate_images = image_generator.generate_summary(_start, _end, downsample_rate, bed_list, process_id)
@@ -319,7 +322,8 @@ class ImageGenerationUtils:
                         total_processes,
                         train_mode,
                         downsample_rate,
-                        bed_list):
+                        bed_list,
+                        random_draw_probability):
         """
         Description of this method
         :param chr_list:
@@ -377,7 +381,7 @@ class ImageGenerationUtils:
                          + " TOTAL BASES: " + str(total_bases) + "\n")
         sys.stderr.flush()
 
-        args = (output_path, bam_file, draft_file, use_hp_info, truth_vcf, train_mode, downsample_rate, bed_list)
+        args = (output_path, bam_file, draft_file, use_hp_info, truth_vcf, train_mode, downsample_rate, bed_list, random_draw_probability)
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_processes) as executor:
             futures = [executor.submit(ImageGenerationUtils.generate_image_and_save_to_file, args, all_intervals, total_processes, process_id)
                        for process_id in range(0, total_processes)]
