@@ -194,10 +194,10 @@ class AlignmentSummarizer:
                         random_draw = random_sampling[random_sampling_index]
                         random_sampling_index += 1
                         if random_draw <= 0.40:
-                            all_candidate_images.extend(candidate_image_summary)
+                            all_candidate_images.append(candidate)
                             picked_refs += 1
                     else:
-                        all_candidate_images.extend(candidate_image_summary)
+                        all_candidate_images.append(candidate)
         else:
             region_start = max(0, self.region_start_position - ConsensCandidateFinder.REGION_SAFE_BASES)
             region_end = self.region_end_position + ConsensCandidateFinder.REGION_SAFE_BASES
