@@ -399,28 +399,17 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                         int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
                         int feature_index = get_feature_index(base, read.flags.is_reverse);
 
-                        //look forward and make sure this is not an anchor base
-                        bool check_this_base = true;
-                        if(i == cigar.length - 1 && cigar_i + 1 < read.cigar_tuples.size()) {
-                            CigarOp next_cigar = read.cigar_tuples[cigar_i + 1];
-                            if(next_cigar.operation == CIGAR_OPERATIONS::IN ||
-                               next_cigar.operation == CIGAR_OPERATIONS::DEL) {
-                                // this is an anchor base of a delete or an insert, don't process this.
-                                coverage_vector[ref_position - ref_start] += 1;
-                                check_this_base = false;
-                            }
-                        }
+                        // update the summary of base
+                        if (ref_position >= ref_start && ref_position <= ref_end) {
+                            image_matrix[base_index][feature_index] += 1;
+                            coverage_vector[ref_position - ref_start] += 1;
 
-                        if(check_this_base) {
-                            // update the summary of base
-                            if (ref_position >= ref_start && ref_position <= ref_end) {
-                                image_matrix[base_index][feature_index] += 1;
-                                coverage_vector[ref_position - ref_start] += 1;
-                            }
                             if(ref_base != base) {
                                 snp_count[ref_position - ref_start] += 1;
                             }
                         }
+
+
 
                     }
                     read_index += 1;
@@ -611,6 +600,7 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
         all_candidate_images.push_back(candidate_summary);
 //        debug_candidate_summary(candidate_summary, candidate_window_size, train_mode);
     }
+
 
 
 //    debug_print_matrix(image_matrix, train_mode);

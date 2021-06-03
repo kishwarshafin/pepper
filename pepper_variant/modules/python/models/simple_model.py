@@ -46,9 +46,17 @@ class TransducerGRU(nn.Module):
         self.linear_4 = nn.Linear(self.linear_3_size, self.linear_4_size)
         self.relu_4 = nn.ReLU()
 
+        self.dropout_4_type = nn.Dropout(p=0.2)
+        self.linear_4_type = nn.Linear(self.linear_3_size, self.linear_4_size)
+        self.relu_4_type = nn.ReLU()
+
         self.dropout_5 = nn.Dropout(p=0.1)
         self.linear_5 = nn.Linear(self.linear_4_size, self.linear_5_size)
         self.relu_5 = nn.ReLU()
+
+        self.dropout_5_type = nn.Dropout(p=0.1)
+        self.linear_5_type = nn.Linear(self.linear_4_size, self.linear_5_size)
+        self.relu_5_type = nn.ReLU()
 
         self.output_layer = nn.Linear(self.linear_5_size, self.num_classes)
         self.output_layer_type = nn.Linear(self.linear_5_size, self.num_classes_type)
@@ -62,31 +70,36 @@ class TransducerGRU(nn.Module):
 
         self.decoder.flatten_parameters()
         x, (hidden, cell_state) = self.decoder(x, (hidden, cell_state))
-
+        x = self.dropout_1(x)
         x = torch.flatten(x, start_dim=1, end_dim=2)
 
-        x = self.dropout_1(x)
         x = self.linear_1(x)
         x = self.relu_1(x)
-
         x = self.dropout_2(x)
+
         x = self.linear_2(x)
         x = self.relu_2(x)
-
         x = self.dropout_3(x)
+
         x = self.linear_3(x)
         x = self.relu_3(x)
-
         x = self.dropout_4(x)
-        x = self.linear_4(x)
-        x = self.relu_4(x)
 
-        x = self.dropout_5(x)
-        x = self.linear_5(x)
-        x = self.relu_5(x)
+        x_base = self.linear_4(x)
+        x_base = self.relu_4(x_base)
+        x_base = self.dropout_5(x_base)
 
-        x_base = self.output_layer(x)
-        x_type = self.output_layer_type(x)
+        x_base = self.linear_5(x_base)
+        x_base = self.relu_5(x_base)
+        x_base = self.output_layer(x_base)
+
+        x_type = self.linear_4_type(x)
+        x_type = self.relu_4_type(x_type)
+        x_type = self.dropout_5_type(x_type)
+
+        x_type = self.linear_5_type(x_type)
+        x_type = self.relu_5_type(x_type)
+        x_type = self.output_layer_type(x_type)
 
         if train_mode:
             log_softmax = nn.LogSoftmax(dim=1)

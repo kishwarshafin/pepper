@@ -2,7 +2,7 @@ class ConsensCandidateFinder(object):
     REGION_SAFE_BASES = 100
     SNP_FREQUENCY = 0.10
     INSERT_FREQUENCY = 0.15
-    DELETE_FREQUENCY = 0.20
+    DELETE_FREQUENCY = 0.15
     MIN_COVERAGE_THRESHOLD = 5
 
 
@@ -16,8 +16,8 @@ class ImageSizeOptions(object):
     MIN_SEQUENCE_LENGTH = 1000
     MIN_IMAGE_OVERLAP = 100
     decoded_labels = ['##', 'AA', 'AC', 'AT', 'AG', 'A*', 'A#', 'CC', 'CT', 'CG', 'C*', 'C#', 'TT', 'TG', 'T*', 'T#', 'GG', 'G*', 'G#', '**', '*#']
-    class_weights = [22.86, 0.21, 15.13, 19.24, 3.18, 71.73, 64.47, 0.19, 3.25, 13.18, 52.14, 46.03, 0.20, 14.45, 72.85, 68.91, 0.21, 80.18, 82.39, 21.90, 214.27]
-    class_weights_type = [0.11, 2.37, 35.64, 32.96, 4.07, 5354.68, 11899.28, 45.98, 449.97, 48.00]
+    class_weights = [1.0] * TOTAL_LABELS
+    class_weights_type = [1.0] * TOTAL_TYPE_LABELS
     decoded_type_labels = ['RR', 'RS', 'RI', 'RD', 'SS', 'SI', 'SD', 'II', 'ID', 'DD']
 
 

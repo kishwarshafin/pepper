@@ -225,7 +225,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             avg_type_loss = (total_type_loss / total_images) if total_images else 0
 
             if rank == 0 and step_no % 10 == 0 and step_no > 0:
-                percent_complete = int((100 * step_no) / ((epoch + 1) * len(train_loader)))
+                percent_complete = int((float(step_no) / float((iteration + 1) * len(train_loader))) * 100)
                 time_now = time.time()
                 mins = int((time_now - start_time) / 60)
                 secs = int((time_now - start_time)) % 60
@@ -233,7 +233,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
                                  + " ITERATION: " + str(iteration + 1)
                                  + " EPOCH: " + str(epoch + 1)
-                                 + " STEP: " + str(step_no) + "/" + str((epoch + 1) * step_size) + "/" + str(len(train_loader))
+                                 + " STEP: " + str(step_no) + "/" + str((epoch + 1) * step_size) + "/" + str((iteration + 1) * len(train_loader))
                                  + " LOSS: " + "{:.9f}".format(avg_loss)
                                  + " BASE LOSS: " + "{:.9f}".format(avg_base_loss)
                                  + " TYPE LOSS: " + "{:.9f}".format(avg_type_loss)
@@ -291,7 +291,6 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST COMPLETED.\n")
                     transducer_model = transducer_model.train()
 
-                start_time = time.time()
                 epoch += 1
 
                 dist.barrier()
