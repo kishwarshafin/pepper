@@ -181,7 +181,23 @@ class AlignmentSummarizer:
                                                                             ImageSizeOptions.IMAGE_HEIGHT,
                                                                             train_mode)
                 #############################
-                all_candidate_images.extend(candidate_image_summary)
+                total_ref_examples = 0
+                for candidate in candidate_image_summary:
+                    if candidate.type_label == 0:
+                        total_ref_examples += 1
+
+                picked_refs = 0
+                random_sampling = np.random.uniform(0.0, 1.0, total_ref_examples)
+                random_sampling_index = 0
+                for candidate in candidate_image_summary:
+                    if candidate.type_label == 0:
+                        random_draw = random_sampling[random_sampling_index]
+                        random_sampling_index += 1
+                        if random_draw <= 0.40:
+                            all_candidate_images.extend(candidate_image_summary)
+                            picked_refs += 1
+                    else:
+                        all_candidate_images.extend(candidate_image_summary)
         else:
             region_start = max(0, self.region_start_position - ConsensCandidateFinder.REGION_SAFE_BASES)
             region_end = self.region_end_position + ConsensCandidateFinder.REGION_SAFE_BASES
