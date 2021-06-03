@@ -66,7 +66,8 @@ class ImageGenerator:
                                                                    self.train_mode,
                                                                    downsample_rate,
                                                                    bed_list,
-                                                                   thread_id)
+                                                                   thread_id,
+                                                                   self.random_draw_probability)
 
             return candidate_images
         else:
