@@ -68,7 +68,7 @@ class DataStore(object):
         base_size = (len(base_labels), 1)
         type_size = (len(type_labels), 1)
 
-        self.file_handler['{}/{}'.format(self._summary_path_, summary_name)].create_dataset("images", image_size, dtype=np.uint8, compression="gzip", data=images)
+        self.file_handler['{}/{}'.format(self._summary_path_, summary_name)].create_dataset("images", image_size, dtype=np.int, compression="gzip", data=images)
         self.file_handler['{}/{}'.format(self._summary_path_, summary_name)].create_dataset("positions", position_size, dtype=np.int32, data=positions)
         self.file_handler['{}/{}'.format(self._summary_path_, summary_name)].create_dataset("base_labels", base_size, dtype=np.uint8, data=base_labels)
         self.file_handler['{}/{}'.format(self._summary_path_, summary_name)].create_dataset("type_labels", type_size, dtype=np.uint8, data=type_labels)

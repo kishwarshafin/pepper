@@ -15,28 +15,31 @@ namespace ImageOptionsRegion {
     static constexpr int MAX_COLOR_VALUE = 254;
     static constexpr int MISMATCH_COLOR_START = 128;
     static constexpr int REFERENCE_INDEX_START = 0;
-    static constexpr int REFERENCE_INDEX_SIZE = 5;
-    static constexpr int BASE_INDEX_START = 5;
-    static constexpr int BASE_INDEX_SIZE = 14;
-    vector<string> column_values{"AREF:",
-                                 "CREF:",
-                                 "GREF:",
-                                 "TREF:",
-                                 "*REF:",
+    static constexpr int REFERENCE_INDEX_SIZE = 0;
+    static constexpr int BASE_INDEX_START = 0;
+    static constexpr int BASE_INDEX_SIZE = 22;
+    vector<string> column_values{"ARFW:",
+                                 "CRFW:",
+                                 "GRFW:",
+                                 "TRFW:",
+                                 "ARRE:",
+                                 "CRRE:",
+                                 "GRRE:",
+                                 "TRRE:",
                                  "AFRW:",
                                  "CFRW:",
                                  "GFRW:",
                                  "TFRW:",
-                                 "*FRW:",
                                  "IFRW:",
                                  "DFRW:",
+                                 "*FRW:",
                                  "AREV:",
                                  "CREV:",
                                  "GREV:",
                                  "TREV:",
-                                 "*REV:",
                                  "IREV:",
-                                 "DREV:"};
+                                 "DREV:",
+                                 "*REV:"};
 
     static constexpr bool GENERATE_INDELS = false;
 };
@@ -81,7 +84,7 @@ struct CandidateImageSummary {
     int64_t position;
     int64_t region_start;
     int64_t region_stop;
-    vector< vector<uint8_t> > image_matrix;
+    vector< vector<int> > image_matrix;
     uint8_t base_label;
     uint8_t type_label;
 };
@@ -124,7 +127,7 @@ public:
                                  int *delete_count,
                                  type_read read);
 
-    static int get_feature_index(char base, bool is_reverse);
+    static int get_feature_index(char ref_base, char base, bool is_reverse);
 
     void debug_print_matrix(vector<vector<int> > image_matrix, bool train_mode);
 

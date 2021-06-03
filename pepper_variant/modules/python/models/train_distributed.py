@@ -131,14 +131,14 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         transducer_model = nn.parallel.DistributedDataParallel(transducer_model, device_ids=[device_id])
 
     class_weights = torch.tensor(ImageSizeOptions.class_weights).to(device_id)
-    class_weights_type = torch.tensor(ImageSizeOptions.class_weights_type).to(device_id)
+    # class_weights_type = torch.tensor(ImageSizeOptions.class_weights_type).to(device_id)
     # Loss
     criterion_base = nn.NLLLoss(weight=class_weights)
-    criterion_type = nn.NLLLoss(weight=class_weights_type)
+    # criterion_type = nn.NLLLoss(weight=class_weights_type)
 
     if gpu_mode is True:
         criterion_base = criterion_base.to(device_id)
-        criterion_type = criterion_type.to(device_id)
+        # criterion_type = criterion_type.to(device_id)
 
     start_epoch = prev_ite
 
@@ -152,6 +152,9 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     # scaler = torch.cuda.amp.GradScaler()
 
     start_iteration = 0
+    if step_size == 0:
+        step_size = len(train_loader)
+
     iteration_limit = int((step_size * epoch_limit) / len(train_loader)) + 1
     step_no = 0
     epoch = 0
@@ -174,12 +177,12 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
 
             # image and label handling
             labels = labels.type(torch.LongTensor)
-            type_labels = type_labels.type(torch.LongTensor)
+            # type_labels = type_labels.type(torch.LongTensor)
             images = images.type(torch.FloatTensor)
             if gpu_mode:
                 images = images.to(device_id)
                 labels = labels.to(device_id)
-                type_labels = type_labels.to(device_id)
+                # type_labels = type_labels.to(device_id)
 
             # generate hidden and cell state
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
@@ -196,11 +199,12 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             # with torch.cuda.amp.autocast():
             # turned of mixed precision training
 
-            output_base, output_type = transducer_model(images, hidden, cell_state, train_mode)
+            output_base = transducer_model(images, hidden, cell_state, train_mode)
+            # output_base, output_type = transducer_model(images, hidden, cell_state, train_mode)
 
-            loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
-            loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
-            loss = loss_base + loss_type
+            loss = criterion_base(output_base.contiguous().view(-1, num_classes), labels.contiguous().view(-1))
+            # loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
+            # loss = loss_base + loss_type
 
             # Scales loss.
             # scaler.scale(loss).backward()
@@ -214,15 +218,15 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             # scaler.update()
 
             # done calculating the loss
-            total_base_loss += loss_base.item()
-            total_type_loss += loss_type.item()
+            total_loss += loss.item()
+            # total_type_loss += loss_type.item()
             total_loss += loss.item()
             total_images += images.size(0)
 
             # update the progress bar
             avg_loss = (total_loss / total_images) if total_images else 0
-            avg_base_loss = (total_base_loss / total_images) if total_images else 0
-            avg_type_loss = (total_type_loss / total_images) if total_images else 0
+            # avg_base_loss = (total_base_loss / total_images) if total_images else 0
+            # avg_type_loss = (total_type_loss / total_images) if total_images else 0
 
             if rank == 0 and step_no % 10 == 0 and step_no > 0:
                 percent_complete = int((float(step_no) / float((iteration + 1) * len(train_loader))) * 100)
@@ -235,8 +239,8 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                                  + " EPOCH: " + str(epoch + 1)
                                  + " STEP: " + str(step_no) + "/" + str((epoch + 1) * step_size) + "/" + str((iteration + 1) * len(train_loader))
                                  + " LOSS: " + "{:.9f}".format(avg_loss)
-                                 + " BASE LOSS: " + "{:.9f}".format(avg_base_loss)
-                                 + " TYPE LOSS: " + "{:.9f}".format(avg_type_loss)
+                                 # + " BASE LOSS: " + "{:.9f}".format(avg_base_loss)
+                                 # + " TYPE LOSS: " + "{:.9f}".format(avg_type_loss)
                                  + " COMPLETE (" + str(percent_complete) + "%)"
                                  + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                 sys.stderr.flush()
@@ -253,8 +257,9 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                     stats_dictioanry = test(test_file, test_batch_size, gpu_mode, transducer_model, num_workers,
                                             gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS, num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
 
-                    train_loss_logger.write(str(step_no) + "," + str(avg_loss) + "," + str(avg_base_loss) + "," + str(avg_type_loss) + "\n")
-                    test_loss_logger.write(str(step_no) + "," + str(stats_dictioanry['loss']) + "," + str(stats_dictioanry['base_loss']) + "," + str(stats_dictioanry['type_loss']) + "," + str(stats_dictioanry['base_accuracy']) + "," + str(stats_dictioanry['type_accuracy']) + "\n")
+                    train_loss_logger.write(str(step_no) + "," + str(avg_loss) + "\n")
+                    # test_loss_logger.write(str(step_no) + "," + str(stats_dictioanry['loss']) + "," + str(stats_dictioanry['base_loss']) + "," + str(stats_dictioanry['type_loss']) + "," + str(stats_dictioanry['base_accuracy']) + "," + str(stats_dictioanry['type_accuracy']) + "\n")
+                    test_loss_logger.write(str(step_no) + "," + str(stats_dictioanry['loss']) + "," + str(stats_dictioanry['base_accuracy']) + "\n")
                     confusion_matrix_logger.write(str(step_no) + "\n")
 
                     # print confusion matrix to file
@@ -271,18 +276,18 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                         confusion_matrix_logger.write("\n")
                     confusion_matrix_logger.flush()
 
-                    confusion_matrix_logger.write("Type Confusion Matrix:" + "\n")
-                    confusion_matrix_logger.write("            ")
-                    for label in ImageSizeOptions.decoded_type_labels:
-                        confusion_matrix_logger.write(str(label) + '         ')
-                    confusion_matrix_logger.write("\n")
-
-                    for i, row in enumerate(stats_dictioanry['type_confusion_matrix'].value()):
-                        confusion_matrix_logger.write(str(ImageSizeOptions.decoded_type_labels[i]) + '   ')
-                        for j, val in enumerate(row):
-                            confusion_matrix_logger.write("{0:9d}".format(val) + '  ')
-                        confusion_matrix_logger.write("\n")
-                    confusion_matrix_logger.flush()
+                    # confusion_matrix_logger.write("Type Confusion Matrix:" + "\n")
+                    # confusion_matrix_logger.write("            ")
+                    # for label in ImageSizeOptions.decoded_type_labels:
+                    #     confusion_matrix_logger.write(str(label) + '         ')
+                    # confusion_matrix_logger.write("\n")
+                    #
+                    # for i, row in enumerate(stats_dictioanry['type_confusion_matrix'].value()):
+                    #     confusion_matrix_logger.write(str(ImageSizeOptions.decoded_type_labels[i]) + '   ')
+                    #     for j, val in enumerate(row):
+                    #         confusion_matrix_logger.write("{0:9d}".format(val) + '  ')
+                    #     confusion_matrix_logger.write("\n")
+                    # confusion_matrix_logger.flush()
 
                     train_loss_logger.flush()
                     test_loss_logger.flush()

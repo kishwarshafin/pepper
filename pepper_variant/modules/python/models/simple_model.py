@@ -46,20 +46,20 @@ class TransducerGRU(nn.Module):
         self.linear_4 = nn.Linear(self.linear_3_size, self.linear_4_size)
         self.relu_4 = nn.ReLU()
 
-        self.dropout_4_type = nn.Dropout(p=0.2)
-        self.linear_4_type = nn.Linear(self.linear_3_size, self.linear_4_size)
-        self.relu_4_type = nn.ReLU()
+        # self.dropout_4_type = nn.Dropout(p=0.2)
+        # self.linear_4_type = nn.Linear(self.linear_3_size, self.linear_4_size)
+        # self.relu_4_type = nn.ReLU()
 
         self.dropout_5 = nn.Dropout(p=0.1)
         self.linear_5 = nn.Linear(self.linear_4_size, self.linear_5_size)
         self.relu_5 = nn.ReLU()
 
-        self.dropout_5_type = nn.Dropout(p=0.1)
-        self.linear_5_type = nn.Linear(self.linear_4_size, self.linear_5_size)
-        self.relu_5_type = nn.ReLU()
+        # self.dropout_5_type = nn.Dropout(p=0.1)
+        # self.linear_5_type = nn.Linear(self.linear_4_size, self.linear_5_size)
+        # self.relu_5_type = nn.ReLU()
 
         self.output_layer = nn.Linear(self.linear_5_size, self.num_classes)
-        self.output_layer_type = nn.Linear(self.linear_5_size, self.num_classes_type)
+        # self.output_layer_type = nn.Linear(self.linear_5_size, self.num_classes_type)
 
     def forward(self, x, hidden, cell_state, train_mode):
         hidden = hidden.transpose(0, 1).contiguous()
@@ -93,20 +93,27 @@ class TransducerGRU(nn.Module):
         x_base = self.relu_5(x_base)
         x_base = self.output_layer(x_base)
 
-        x_type = self.linear_4_type(x)
-        x_type = self.relu_4_type(x_type)
-        x_type = self.dropout_5_type(x_type)
-
-        x_type = self.linear_5_type(x_type)
-        x_type = self.relu_5_type(x_type)
-        x_type = self.output_layer_type(x_type)
-
         if train_mode:
             log_softmax = nn.LogSoftmax(dim=1)
-            return log_softmax(x_base), log_softmax(x_type)
+            return log_softmax(x_base)
 
         softmax = nn.Softmax(dim=1)
-        return softmax(x_base), softmax(x_type)
+        return softmax(x_base)
+
+        # x_type = self.linear_4_type(x)
+        # x_type = self.relu_4_type(x_type)
+        # x_type = self.dropout_5_type(x_type)
+        #
+        # x_type = self.linear_5_type(x_type)
+        # x_type = self.relu_5_type(x_type)
+        # x_type = self.output_layer_type(x_type)
+
+        # if train_mode:
+        #     log_softmax = nn.LogSoftmax(dim=1)
+        #     return log_softmax(x_base), log_softmax(x_type)
+        #
+        # softmax = nn.Softmax(dim=1)
+        # return softmax(x_base), softmax(x_type)
 
     def init_hidden(self, batch_size, num_layers, bidirectional=True):
         num_directions = 1

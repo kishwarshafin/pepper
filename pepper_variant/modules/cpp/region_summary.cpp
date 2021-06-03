@@ -108,63 +108,14 @@ char check_truth_base(char base) {
 uint8_t get_label_index(char base_h1, char base_h2) {
     base_h1 = toupper(base_h1);
     base_h2 = toupper(base_h2);
-    // AA
-    if (base_h1 == 'A' && base_h2 == 'A') return 1;
-    // AC
-    if (base_h1 == 'A' && base_h2 == 'C') return 2;
-    if (base_h1 == 'C' && base_h2 == 'A') return 2;
-    // AT
-    if (base_h1 == 'A' && base_h2 == 'T') return 3;
-    if (base_h1 == 'T' && base_h2 == 'A') return 3;
-    // AG
-    if (base_h1 == 'A' && base_h2 == 'G') return 4;
-    if (base_h1 == 'G' && base_h2 == 'A') return 4;
-    // A*
-    if (base_h1 == 'A' && base_h2 == '*') return 5;
-    if (base_h1 == '*' && base_h2 == 'A') return 5;
-    // A#
-    if (base_h1 == 'A' && base_h2 == '#') return 6;
-    if (base_h1 == '#' && base_h2 == 'A') return 6;
-    // CC
-    if (base_h1 == 'C' && base_h2 == 'C') return 7;
-    // CT
-    if (base_h1 == 'C' && base_h2 == 'T') return 8;
-    if (base_h1 == 'T' && base_h2 == 'C') return 8;
-    // CG
-    if (base_h1 == 'C' && base_h2 == 'G') return 9;
-    if (base_h1 == 'G' && base_h2 == 'C') return 9;
-    // C*
-    if (base_h1 == 'C' && base_h2 == '*') return 10;
-    if (base_h1 == '*' && base_h2 == 'C') return 10;
-    // C#
-    if (base_h1 == 'C' && base_h2 == '#') return 11;
-    if (base_h1 == '#' && base_h2 == 'C') return 11;
-    // TT
-    if (base_h1 == 'T' && base_h2 == 'T') return 12;
-    // TG
-    if (base_h1 == 'T' && base_h2 == 'G') return 13;
-    if (base_h1 == 'G' && base_h2 == 'T') return 13;
-    // T*
-    if (base_h1 == 'T' && base_h2 == '*') return 14;
-    if (base_h1 == '*' && base_h2 == 'T') return 14;
-    // T#
-    if (base_h1 == 'T' && base_h2 == '#') return 15;
-    if (base_h1 == '#' && base_h2 == 'T') return 15;
-    // GG
-    if (base_h1 == 'G' && base_h2 == 'G') return 16;
-    // G*
-    if (base_h1 == 'G' && base_h2 == '*') return 17;
-    if (base_h1 == '*' && base_h2 == 'G') return 17;
-    // G#
-    if (base_h1 == 'G' && base_h2 == '#') return 18;
-    if (base_h1 == '#' && base_h2 == 'G') return 18;
-    // **
-    if (base_h1 == '*' && base_h2 == '*') return 19;
-    // *#
-    if (base_h1 == '*' && base_h2 == '#') return 20;
-    if (base_h1 == '#' && base_h2 == '*') return 20;
-    // ##
-    if (base_h1 == '#' && base_h2 == '#') return 0;
+    vector<string> base_labels {"RR", "RA", "RC", "RT", "RG", "R*", "R#", "AA", "AC", "AT", "AG", "A*", "A#", "CC", "CT", "CG", "C*", "C#", "TT", "TG", "T*", "T#", "GG", "G*", "G#", "**", "*#", "##"};
+
+
+    for(int i=0; i<base_labels.size(); i++) {
+        if(base_h1 == base_labels[i][0] && base_h2 == base_labels[i][1]) return i;
+        if(base_h2 == base_labels[i][0] && base_h1 == base_labels[i][1]) return i;
+    }
+    cout<<"TYPE NOT FOUND FOR: "<<base_h1<<" "<<base_h2<<endl;
     return 0;
 }
 
@@ -226,25 +177,55 @@ void RegionalSummaryGenerator::encode_reference_bases(vector< vector<int> >& ima
     }
 }
 
-int RegionalSummaryGenerator::get_feature_index(char base, bool is_reverse) {
+bool check_ref_base(char base) {
+    if(base=='A' || base=='a' ||
+       base=='C' || base=='c' ||
+       base=='T' || base=='t' ||
+       base =='G' || base=='g') return true;
+    return false;
+}
+
+int RegionalSummaryGenerator::get_feature_index(char ref_base, char base, bool is_reverse) {
     base = toupper(base);
-    if (is_reverse) {
-        if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START;
-        if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 1;
-        if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 2;
-        if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 3;
-        if (base == 'I') return ImageOptionsRegion::BASE_INDEX_START + 5;
-        if (base == 'D') return ImageOptionsRegion::BASE_INDEX_START + 6;
-        return ImageOptionsRegion::BASE_INDEX_START + 4;
+    ref_base = toupper(ref_base);
+    bool valid_ref = check_ref_base(ref_base);
+
+    if(valid_ref && ref_base == base) {
+        // this is a match situation
+        if (!is_reverse) {
+            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START;
+            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 1;
+            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 2;
+            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 3;
+            return ImageOptionsRegion::BASE_INDEX_START;
+        } else {
+            // tagged and forward
+            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 4;
+            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 5;
+            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 6;
+            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 7;
+            return ImageOptionsRegion::BASE_INDEX_START;
+        }
     } else {
-        // tagged and forward
-        if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 7;
-        if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 8;
-        if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 9;
-        if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 10;
-        if (base == 'I') return ImageOptionsRegion::BASE_INDEX_START + 12;
-        if (base == 'D') return ImageOptionsRegion::BASE_INDEX_START + 13;
-        return ImageOptionsRegion::BASE_INDEX_START + 11;
+        // this is a mismatch situation
+        if (!is_reverse) {
+            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 8;
+            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 9;
+            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 10;
+            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 11;
+            if (base == 'I') return ImageOptionsRegion::BASE_INDEX_START + 12;
+            if (base == 'D') return ImageOptionsRegion::BASE_INDEX_START + 13;
+            return ImageOptionsRegion::BASE_INDEX_START + 14;
+        } else {
+            // tagged and forward
+            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 15;
+            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 16;
+            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 17;
+            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 18;
+            if (base == 'I') return ImageOptionsRegion::BASE_INDEX_START + 19;
+            if (base == 'D') return ImageOptionsRegion::BASE_INDEX_START + 20;
+            return ImageOptionsRegion::BASE_INDEX_START + 21;
+        }
     }
 }
 
@@ -259,8 +240,8 @@ void RegionalSummaryGenerator::generate_labels(const vector<type_truth_record>& 
 
     for(long long pos = ref_start; pos <= ref_end; pos++) {
         int base_index = (int)(pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-        labels_hp1[base_index] = reference_sequence[base_index];
-        labels_hp2[base_index] = reference_sequence[base_index];
+        labels_hp1[base_index] = 'R';
+        labels_hp2[base_index] = 'R';
     }
 
     for(const auto& truth_record : hap1_records) {
@@ -307,7 +288,13 @@ void RegionalSummaryGenerator::generate_labels(const vector<type_truth_record>& 
             for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
                 if (pos >= ref_start && pos <= ref_end) {
                     int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-                    labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                    char ref_base = reference_sequence[pos - ref_start];
+                    char alt_base = truth_record.alt[pos - truth_record.pos_start];
+                    if(ref_base == alt_base) {
+                        labels_hp1[base_index] = 'R';
+                    } else {
+                        labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                    }
                 }
             }
         }
@@ -357,7 +344,14 @@ void RegionalSummaryGenerator::generate_labels(const vector<type_truth_record>& 
             for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
                 if (pos >= ref_start && pos <= ref_end) {
                     int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-                    labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
+
+                    char ref_base = reference_sequence[pos - ref_start];
+                    char alt_base = truth_record.alt[pos - truth_record.pos_start];
+                    if(ref_base == alt_base) {
+                        labels_hp2[base_index] = 'R';
+                    } else {
+                        labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
+                    }
                 }
             }
         }
@@ -397,15 +391,18 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                         char ref_base = reference_sequence[ref_position - ref_start];
 
                         int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
-                        int feature_index = get_feature_index(base, read.flags.is_reverse);
+                        int feature_index = get_feature_index(ref_base, base, read.flags.is_reverse);
 
                         // update the summary of base
                         if (ref_position >= ref_start && ref_position <= ref_end) {
-                            image_matrix[base_index][feature_index] += 1;
+
                             coverage_vector[ref_position - ref_start] += 1;
 
                             if(ref_base != base) {
                                 snp_count[ref_position - ref_start] += 1;
+                                image_matrix[base_index][feature_index] += 1;
+                            } else {
+                                image_matrix[base_index][feature_index] -= 1;
                             }
                         }
 
@@ -422,7 +419,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     string alt;
                     char ref_base = reference_sequence[ref_position - 1 - ref_start];
                     int base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start]);
-                    int insert_count_index =  get_feature_index('I', read.flags.is_reverse);
+                    int insert_count_index =  get_feature_index(ref_base, 'I', read.flags.is_reverse);
                     image_matrix[base_index][insert_count_index] += 1;
                     insert_count[ref_position - 1 - ref_start] += 1;
 
@@ -445,7 +442,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                 if (ref_position -1 >= ref_start && ref_position - 1 <= ref_end) {
                     char ref_base = reference_sequence[ref_position - 1 - ref_start];
                     int base_index = (int)(ref_position - 1 - ref_start + cumulative_observed_insert[ref_position - 1 - ref_start]);
-                    int delete_count_index =  get_feature_index('D', read.flags.is_reverse);
+                    int delete_count_index =  get_feature_index(ref_base, 'D', read.flags.is_reverse);
                     image_matrix[base_index][delete_count_index] += 1.0;
                     delete_count[ref_position - 1 - ref_start] += 1;
 
@@ -459,9 +456,9 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                         // update the summary of base
                         int base_index = (int) (ref_position - ref_start + i + cumulative_observed_insert[ref_position - ref_start + i]);
                         char ref_base = reference_sequence[ref_position - ref_start + i];
-                        int feature_index = get_feature_index('*', read.flags.is_reverse);
+                        int feature_index = get_feature_index(ref_base, '*', read.flags.is_reverse);
 
-                        image_matrix[base_index][feature_index] += 1.0;
+                        image_matrix[base_index][feature_index] += 1;
 //                        coverage_vector[ref_position - ref_start + i] += 1.0;
                     }
                 }
@@ -512,7 +509,7 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
     memset(insert_count, 0, sizeof(insert_count));
     memset(delete_count, 0, sizeof(delete_count));
 
-    encode_reference_bases(image_matrix);
+//    encode_reference_bases(image_matrix);
 
     // now iterate over all of the reads and populate the image matrix and coverage matrix
     for (auto &read:reads) {
@@ -589,7 +586,7 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
         int base_right = base_index + candidate_window_size / 2;
 
 //        cout<<base_left<<" "<<base_right<<endl;
-        candidate_summary.image_matrix.resize(candidate_window_size + 1, vector<uint8_t>(feature_size));
+        candidate_summary.image_matrix.resize(candidate_window_size + 1, vector<int>(feature_size));
         // now copy the entire feature matrix
 
         for(int i=base_left; i<=base_right;i++) {
@@ -599,7 +596,9 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
         }
         all_candidate_images.push_back(candidate_summary);
 //        debug_candidate_summary(candidate_summary, candidate_window_size, train_mode);
+
     }
+//    exit(0);
 
 
 
@@ -673,7 +672,7 @@ void RegionalSummaryGenerator::debug_print_matrix(vector<vector<int> > image_mat
 
 
 void RegionalSummaryGenerator::debug_candidate_summary(CandidateImageSummary candidate, int small_chunk_size, bool train_mode) {
-    vector<string> decoded_base_lables {"##", "AA", "AC", "AT", "AG", "A*", "A#", "CC", "CT", "CG", "C*", "C#", "TT", "TG", "T*", "T#", "GG", "G*", "G#", "**", "*#"};
+    vector<string> decoded_base_lables {"RR", "RA", "RC", "RT", "RG", "R*", "R#", "AA", "AC", "AT", "AG", "A*", "A#", "CC", "CT", "CG", "C*", "C#", "TT", "TG", "T*", "T#", "GG", "G*", "G#", "**", "*#", "##"};
     vector<string> decoded_type_lables {"RR", "RS", "RI", "RD", "SS", "SI", "SD", "II", "ID", "DD" };
     cout << "------------- CANDIDATE PILEUP" << endl;
     cout<<"Contig: "<<candidate.contig<<endl;
