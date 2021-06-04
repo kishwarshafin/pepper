@@ -57,7 +57,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
 
             # run inference
             # output_base, output_type = transducer_model(images, hidden, cell_state, False)
-            output_base, output_type = transducer_model(images, hidden, cell_state, False)
+            output_base = transducer_model(images, hidden, cell_state, False)
 
             output_base = output_base.detach().cpu().numpy()
             # output_type = output_type.detach().cpu().numpy()
