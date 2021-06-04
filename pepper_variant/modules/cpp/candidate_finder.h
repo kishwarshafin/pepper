@@ -177,12 +177,18 @@ public:
                     long long ref_end);
     void add_read_alleles(type_read &read, vector<int> &coverage);
     void add_read_alleles_consensus(type_read &read, vector<int> &coverage, vector<int> &insert_count, vector<int> &delete_count, vector<int> &snp_count);
+//    vector<PositionalCandidateRecord> find_candidates(vector<type_read>& reads,
+//                                                      vector<long long> positions,
+//                                                      vector< vector<float> > predictions,
+//                                                      vector< vector<float> > type_predictions,
+//                                                      vector<int> base_labels,
+//                                                      vector<int> type_labels,
+//                                                      bool freq_based,
+//                                                      double freq);
     vector<PositionalCandidateRecord> find_candidates(vector<type_read>& reads,
                                                       vector<long long> positions,
                                                       vector< vector<float> > predictions,
-                                                      vector< vector<float> > type_predictions,
                                                       vector<int> base_labels,
-                                                      vector<int> type_labels,
                                                       bool freq_based,
                                                       double freq);
     vector<long long> find_candidates_consensus(vector <type_read>& reads, double snp_freq_threshold, double insert_freq_threshold, double delete_freq_threshold);

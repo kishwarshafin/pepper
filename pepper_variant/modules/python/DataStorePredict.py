@@ -46,7 +46,7 @@ class DataStore(object):
         self._meta = self.meta
         self._meta.update(meta)
 
-    def write_prediction(self, contig, contig_start, contig_end, position, base_predictions, type_predictions):
+    def write_prediction(self, contig, contig_start, contig_end, position, base_predictions):
         chunk_name_prefix = str(contig) + "-" + str(contig_start.item()) + "-" + str(contig_end.item())
         chunk_name_suffix = str(position.item())
 
@@ -70,8 +70,8 @@ class DataStore(object):
                                                       chunk_name_suffix, 'position')] = position
             self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
                                                       chunk_name_suffix, 'base_predictions')] = np.array(base_predictions, dtype=np.float)
-            self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
-                                                      chunk_name_suffix, 'type_predictions')] = np.array(type_predictions, dtype=np.float)
+            # self.file_handler['{}/{}/{}/{}/{}'.format(self._prediction_path_, contig, chunk_name_prefix,
+            #                                           chunk_name_suffix, 'type_predictions')] = np.array(type_predictions, dtype=np.float)
 
     def write_prediction_hp(self, contig, contig_start, contig_end, chunk_id, position, index, base_predictions_hp1, base_predictions_hp2):
         chunk_name_prefix = str(contig) + "-" + str(contig_start.item()) + "-" + str(contig_end.item())

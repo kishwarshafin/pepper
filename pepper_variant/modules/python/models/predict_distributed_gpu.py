@@ -56,18 +56,18 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
             cell_state = cell_state.to(device_id)
 
             # run inference
+            # output_base, output_type = transducer_model(images, hidden, cell_state, False)
             output_base, output_type = transducer_model(images, hidden, cell_state, False)
 
             output_base = output_base.detach().cpu().numpy()
-            output_type = output_type.detach().cpu().numpy()
+            # output_type = output_type.detach().cpu().numpy()
 
             for i in range(images.size(0)):
                 prediction_data_file.write_prediction(contig[i],
                                                       region_start[i],
                                                       region_stop[i],
                                                       position[i],
-                                                      output_base[i],
-                                                      output_type[i])
+                                                      output_base[i])
             batch_completed += 1
 
             if rank == 0 and batch_completed % 5 == 0:

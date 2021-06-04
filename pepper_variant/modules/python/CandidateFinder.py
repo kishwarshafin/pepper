@@ -283,18 +283,18 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
             for i, chunk in enumerate(smaller_chunks):
                 with h5py.File(file_name, 'r') as hdf5_file:
                     bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
-                    types = hdf5_file['predictions'][contig][chunk_name][chunk]['type_predictions'][()]
+                    # types = hdf5_file['predictions'][contig][chunk_name][chunk]['type_predictions'][()]
                     positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
 
                     base_label = argmax(bases, axis=0)
-                    type_label = argmax(types, axis=0)
+                    # type_label = argmax(types, axis=0)
 
 
                 all_positions.append(positions)
                 all_base_predictions.append(bases.tolist())
-                all_type_predictions.append(types.tolist())
+                # all_type_predictions.append(types.tolist())
                 all_base_prediction_labels.append(base_label)
-                all_type_prediction_labels.append(type_label)
+                # all_type_prediction_labels.append(type_label)
 
             cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
 
@@ -306,9 +306,9 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, 
                                                                  contig_end,
                                                                  all_positions,
                                                                  all_base_predictions,
-                                                                 all_type_predictions,
+                                                                 # all_type_predictions,
                                                                  all_base_prediction_labels,
-                                                                 all_type_prediction_labels,
+                                                                 # all_type_prediction_labels,
                                                                  freq_based,
                                                                  freq)
 

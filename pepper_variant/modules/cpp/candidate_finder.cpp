@@ -195,6 +195,13 @@ int get_genotype(string type_predicted) {
 }
 
 int get_genotype_from_base(char ref_base, char base_prediction1, char base_prediction2) {
+    if(base_prediction1 == 'R') {
+        base_prediction1 = ref_base;
+    }
+    if(base_prediction2 == 'R') {
+        base_prediction2 = ref_base;
+    }
+
     if(ref_base == base_prediction1 || ref_base == base_prediction2) {
         if(base_prediction1 == base_prediction2) return 0; // hom-var
         else return 1;
@@ -334,19 +341,25 @@ vector<long long> CandidateFinder::find_candidates_consensus(vector <type_read>&
     }
     return positions;
 }
-
+//
+//vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_read>& reads,
+//                                                                   vector<long long> positions,
+//                                                                   vector< vector<float> > predictions,
+//                                                                   vector< vector<float> > type_predictions,
+//                                                                   vector<int> base_labels,
+//                                                                   vector<int> type_labels,
+//                                                                   bool freq_based,
+//                                                                   double freq) {
 vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_read>& reads,
                                                                    vector<long long> positions,
                                                                    vector< vector<float> > predictions,
-                                                                   vector< vector<float> > type_predictions,
                                                                    vector<int> base_labels,
-                                                                   vector<int> type_labels,
                                                                    bool freq_based,
                                                                    double freq) {
 
     // populate all the prediction maps
-    vector<string> decoded_base_lables {"##", "AA", "AC", "AT", "AG", "A*", "A#", "CC", "CT", "CG", "C*", "C#", "TT", "TG", "T*", "T#", "GG", "G*", "G#", "**", "*#"};
-    vector<string> decoded_type_lables {"RR", "RS", "RI", "RD", "SS", "SI", "SD", "II", "ID", "DD" };
+    vector<string> decoded_base_lables {"RR", "RA", "RC", "RT", "RG", "R*", "R#", "AA", "AC", "AT", "AG", "A*", "A#", "CC", "CT", "CG", "C*", "C#", "TT", "TG", "T*", "T#", "GG", "G*", "G#", "**", "*#", "##"};
+//    vector<string> decoded_type_lables {"RR", "RS", "RI", "RD", "SS", "SI", "SD", "II", "ID", "DD" };
 
     // first go over and see how many base positions are there.
     // all of the positions will be relative to the positions vector so we need to count where it starts and ends
@@ -379,10 +392,10 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
     vector<int> prediction_type_map(local_region_size + total_observered_insert_bases + 1);
 
     vector< vector<float> > prediction_base_values_map;
-    vector< vector<float> > prediction_type_values_map;
+//    vector< vector<float> > prediction_type_values_map;
 
     prediction_base_values_map.resize(local_region_size + total_observered_insert_bases + 1, vector<float>((int)decoded_base_lables.size(), 0));
-    prediction_type_values_map.resize(local_region_size + total_observered_insert_bases + 1, vector<float>((int)decoded_type_lables.size(), 0));
+//    prediction_type_values_map.resize(local_region_size + total_observered_insert_bases + 1, vector<float>((int)decoded_type_lables.size(), 0));
 
 
     for(int i=0; i< positions.size(); i++) {
@@ -390,13 +403,13 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
         if(position < 0) continue;
         int position_index = (int) (position - local_region_start + cumulative_observed_insert[position - local_region_start]);
         int predicted_base_label = base_labels[i];
-        int predicted_type_label = type_labels[i];
+//        int predicted_type_label = type_labels[i];
 
         prediction_base_map[position_index] = predicted_base_label;
-        prediction_type_map[position_index] = predicted_type_label;
+//        prediction_type_map[position_index] = predicted_type_label;
 
         prediction_base_values_map[position_index] = predictions[i];
-        prediction_type_values_map[position_index] = type_predictions[i];
+//        prediction_type_values_map[position_index] = type_predictions[i];
 //        cout<<position<<" "<<predicted_type_label<<" "<<decoded_type_lables[predicted_type_label]<<" "<<position_index<<" "<<predicted_base_label<<" "<<predicted_type_label<<endl;
     }
 
@@ -470,17 +483,18 @@ vector<PositionalCandidateRecord> CandidateFinder::find_candidates(vector <type_
                 int type_prediction_index = prediction_type_map[position_index];
 
                 string bases_predicted = decoded_base_lables[base_prediction_index];
-                string types_predicted = decoded_type_lables[type_prediction_index];
+//                string types_predicted = decoded_type_lables[type_prediction_index];
 
                 float base_prediction_value = prediction_base_values_map[position_index][base_prediction_index];
-                float type_prediction_value = prediction_type_values_map[position_index][type_prediction_index];
+//                float type_prediction_value = prediction_type_values_map[position_index][type_prediction_index];
 
-                int predicted_genotype = get_genotype(types_predicted);
-//                int predicted_genotype = get_genotype_from_base(candidate.allele.ref[0], bases_predicted[0], bases_predicted[1]);
+//                int predicted_genotype = get_genotype(types_predicted);
+                int predicted_genotype = get_genotype_from_base(candidate.allele.ref[0], bases_predicted[0], bases_predicted[1]);
 
                 if(bases_predicted[0] == candidate.allele.alt[0] || bases_predicted[1] == candidate.allele.alt[0]) {
                     candidate.allele_probability = base_prediction_value;
-                    candidate.genotype_probability = type_prediction_value;
+//                    candidate.genotype_probability = type_prediction_value;
+                    candidate.genotype_probability = base_prediction_value;
                     candidate.genotype = predicted_genotype;
 //                    cout<<"SNP: "<<candidate.pos<<" "<<candidate.allele.ref<<" "<<candidate.allele.alt<<" "<<bases_predicted<<" "<<base_prediction_value<<" "<<types_predicted<<" "<<type_prediction_value<<" "<<predicted_genotype<<endl;
                     positional_record.candidates.push_back(candidate);
