@@ -180,6 +180,16 @@ class AlignmentSummarizer:
                                                                             ImageSizeOptions.CANDIDATE_WINDOW_SIZE,
                                                                             ImageSizeOptions.IMAGE_HEIGHT,
                                                                             train_mode)
+
+                # for candidate in candidate_image_summary:
+                #     print("CONTIG: ", candidate.contig)
+                #     print("POSITION: ", candidate.position)
+                #     print("DEPTH: ", candidate.depth)
+                #     print("CANDIDATES: ", candidate.candidates)
+                #     print("FREQUENCY: ", candidate.candidate_frequency)
+                #     print("BASE LABEL: ", candidate.base_label)
+                #     print("TYPE LABEL: ", candidate.type_label)
+                # exit()
                 #############################
                 total_ref_examples = 0
                 for candidate in candidate_image_summary:

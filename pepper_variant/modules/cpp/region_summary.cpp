@@ -364,6 +364,8 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                                                        int *snp_count,
                                                        int *insert_count,
                                                        int *delete_count,
+                                                       vector< map<string, int> > &AlleleFrequencyMap,
+                                                       vector< set<string> > &AlleleMap,
                                                        type_read read) {
     int read_index = 0;
     long long ref_position = read.pos;
@@ -389,6 +391,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
                         char ref_base = reference_sequence[ref_position - ref_start];
+                        string alt(1, read.sequence[read_index]);
 
                         int base_index = (int)(ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
                         int feature_index = get_feature_index(ref_base, base, read.flags.is_reverse);
@@ -401,6 +404,21 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                             if(ref_base != base) {
                                 snp_count[ref_position - ref_start] += 1;
                                 image_matrix[base_index][feature_index] += 1;
+
+                                // save the candidate
+                                string candidate_string = char(AlleleType::SNP_ALLELE + '0') + alt;
+
+                                int region_index = (int) (ref_position - ref_start);
+
+                                if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
+                                    AlleleFrequencyMap[region_index][candidate_string] += 1;
+                                } else {
+                                    AlleleFrequencyMap[region_index][candidate_string] = 1;
+                                }
+
+                                if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
+                                    AlleleMap[region_index].insert(candidate_string);
+
                             } else {
                                 image_matrix[base_index][feature_index] -= 1;
                             }
@@ -423,6 +441,24 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     image_matrix[base_index][insert_count_index] += 1;
                     insert_count[ref_position - 1 - ref_start] += 1;
 
+
+                    if (read_index - 1 >= 0) alt = read.sequence.substr(read_index - 1, cigar.length + 1);
+                    else alt = ref_base + read.sequence.substr(read_index, cigar.length);
+
+                    // save the candidate
+                    string candidate_string = char(AlleleType::INSERT_ALLELE + '0') + alt;
+
+                    int region_index = (int) (ref_position - 1 - ref_start);
+
+                    if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
+                        AlleleFrequencyMap[region_index][candidate_string] += 1;
+                    } else {
+                        AlleleFrequencyMap[region_index][candidate_string] = 1;
+                    }
+
+                    if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
+                        AlleleMap[region_index].insert(candidate_string);
+
 //                    if(ImageOptionsRegion::GENERATE_INDELS == true) {
 //                        alt = read.sequence.substr(read_index, cigar.length);
 //                        for (int i = 0; i < cigar.length; i++) {
@@ -438,7 +474,6 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
             case CIGAR_OPERATIONS::PAD:
             case CIGAR_OPERATIONS::DEL:
                 // process delete allele here
-
                 if (ref_position -1 >= ref_start && ref_position - 1 <= ref_end) {
                     char ref_base = reference_sequence[ref_position - 1 - ref_start];
                     int base_index = (int)(ref_position - 1 - ref_start + cumulative_observed_insert[ref_position - 1 - ref_start]);
@@ -446,8 +481,28 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     image_matrix[base_index][delete_count_index] += 1.0;
                     delete_count[ref_position - 1 - ref_start] += 1;
 
-//                    int feature_index = get_feature_index('*', read.flags.is_reverse);
-//                    image_matrix[base_index][feature_index] += 1.0;
+                    // process delete allele here
+                    string ref = reference_sequence.substr(ref_position - ref_start - 1, cigar.length + 1);
+                    string alt;
+
+                    if (read_index - 1 >= 0) alt = read.sequence.substr(read_index - 1, 1);
+                    else alt = reference_sequence.substr(ref_position - ref_start - 1, 1);
+
+                    string candidate_string = char(AlleleType::DELETE_ALLELE + '0') + ref;
+
+                    int region_index = (int) (ref_position - 1 - ref_start);
+
+                    if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
+                        AlleleFrequencyMap[region_index][candidate_string] += 1;
+                    } else {
+                        AlleleFrequencyMap[region_index][candidate_string] = 1;
+                    }
+
+                    if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
+                        AlleleMap[region_index].insert(candidate_string);
+
+                    // cout<<"DEL: "<<ref_position<<" "<<ref<<" "<<alt<<" "<<AlleleFrequencyMap[candidate_alt]<<endl;
+
                 }
                 // dont' expand to the full delete length, rather just mount everything to the anchor
 
@@ -493,11 +548,15 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
     int snp_count[ref_end - ref_start + 1];
     int insert_count[ref_end - ref_start + 1];
     int delete_count[ref_end - ref_start + 1];
+    vector< map<string, int> > AlleleFrequencyMap;
+    vector< set<string> > AlleleMap;
 
     // generate the image matrix of chunk_size (10kb) * feature_size (10)
     vector< vector<int> > image_matrix;
 
     image_matrix.resize(region_size + 1, vector<int>(feature_size));
+    AlleleFrequencyMap.resize(region_size + 1);
+    AlleleMap.resize(region_size + 1);
 
     for (int i = 0; i < region_size + 1; i++) {
         for (int j = 0; j < feature_size; j++)
@@ -515,11 +574,18 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
         if(read.mapping_quality > 0) {
-            populate_summary_matrix(image_matrix, coverage_vector, snp_count, insert_count, delete_count, read);
+            populate_summary_matrix(image_matrix, coverage_vector, snp_count, insert_count, delete_count, AlleleFrequencyMap, AlleleMap, read);
         }
     }
 
     vector<long long> filtered_candidate_positions;
+    bool snp_threshold_pass[ref_end - ref_start + 1];
+    bool insert_threshold_pass[ref_end - ref_start + 1];
+    bool delete_threshold_pass[ref_end - ref_start + 1];
+    memset(snp_threshold_pass, 0, sizeof(snp_threshold_pass));
+    memset(insert_threshold_pass, 0, sizeof(insert_threshold_pass));
+    memset(delete_threshold_pass, 0, sizeof(delete_threshold_pass));
+
     // once the image matrix is generated, scale the counted values.
     for(int i=0;i<region_size;i++){
         double snp_fraction = snp_count[positions[i]-ref_start] / max(1.0, (double) coverage_vector[positions[i]-ref_start]);
@@ -529,6 +595,9 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
         if(snp_fraction >= snp_freq_threshold || insert_fraction >= insert_freq_threshold || delete_fraction >= delete_freq_threshold) {
             if(positions[i] >= candidate_region_start && positions[i] <= candidate_region_end && coverage_vector[positions[i]-ref_start] >= min_coverage_threshold) {
                 filtered_candidate_positions.push_back(positions[i]);
+                if(snp_fraction >= snp_freq_threshold) snp_threshold_pass[positions[i] - ref_start] = true;
+                if(insert_fraction >= insert_freq_threshold) insert_threshold_pass[positions[i] - ref_start] = true;
+                if(delete_fraction >= delete_freq_threshold) delete_threshold_pass[positions[i] - ref_start] = true;
             }
         }
         // normalize things
@@ -566,12 +635,40 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
     vector<CandidateImageSummary> all_candidate_images;
     // at this point all of the images are generated. So we can create the images for each candidate position.
     for(long long candidate_position : filtered_candidate_positions) {
-//        cout<<candidate_position<<endl;
-        int base_index = (int)(candidate_position - ref_start + cumulative_observed_insert[candidate_position - ref_start]);
-
         CandidateImageSummary candidate_summary;
         candidate_summary.contig = contig;
         candidate_summary.position = candidate_position;
+
+        // cout<<"Candidate position: "<< candidate_position<<endl;
+        // cout<<"Coverage: "<<coverage_vector[candidate_position-ref_start]<<endl;
+        // cout<<"Candidates: "<<endl;
+
+        candidate_summary.depth = coverage_vector[candidate_position-ref_start];
+
+        for (auto it=AlleleMap[candidate_position - ref_start].begin(); it!=AlleleMap[candidate_position - ref_start].end(); ++it) {
+            string candidate_string = *it;
+
+            if(snp_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '1') {
+                // cout << candidate_string << ",";
+                // cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
+                candidate_summary.candidates.push_back(candidate_string);
+                candidate_summary.candidate_frequency.push_back(AlleleFrequencyMap[candidate_position - ref_start][candidate_string]);
+            } else if (insert_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '2') {
+                // cout << candidate_string << ",";
+                // cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
+                candidate_summary.candidates.push_back(candidate_string);
+                candidate_summary.candidate_frequency.push_back(AlleleFrequencyMap[candidate_position - ref_start][candidate_string]);
+            } else if (delete_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '3') {
+                // cout << candidate_string << ",";
+                // cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
+                candidate_summary.candidates.push_back(candidate_string);
+                candidate_summary.candidate_frequency.push_back(AlleleFrequencyMap[candidate_position - ref_start][candidate_string]);
+            }
+
+        }
+        int base_index = (int)(candidate_position - ref_start + cumulative_observed_insert[candidate_position - ref_start]);
+
+
         if(train_mode) {
             candidate_summary.base_label = labels[base_index];
             candidate_summary.type_label = labels_variant_type[base_index];
@@ -579,8 +676,6 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
             candidate_summary.base_label = 0;
             candidate_summary.type_label = 0;
         }
-        candidate_summary.region_start = ref_start;
-        candidate_summary.region_stop = ref_end;
 
         int base_left = base_index - candidate_window_size / 2;
         int base_right = base_index + candidate_window_size / 2;
@@ -598,7 +693,6 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
 //        debug_candidate_summary(candidate_summary, candidate_window_size, train_mode);
 
     }
-//    exit(0);
 
 
 

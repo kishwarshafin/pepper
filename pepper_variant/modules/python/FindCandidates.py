@@ -5,6 +5,9 @@ from os.path import isfile, join
 from os import listdir
 import re
 import time
+import gzip
+import pickle
+from pepper_variant.build import PEPPER_VARIANT
 from pepper_variant.modules.python.CandidateFinder import find_candidates
 from pepper_variant.modules.python.VcfWriter import VCFWriter
 from pepper_variant.modules.python.ImageGenerationUI import ImageGenerationUtils
@@ -148,7 +151,7 @@ def get_file_paths_from_directory(directory_path):
     :return: A list of paths of files
     """
     file_paths = [join(directory_path, file) for file in listdir(directory_path) if isfile(join(directory_path, file))
-                  and file[-3:] == 'hdf']
+                  and file[-6:] == 'pkl.gz']
     return file_paths
 
 
@@ -156,43 +159,36 @@ def candidate_finder(input_dir, reference_file, bam_file, use_hp_info, sample_na
     all_prediction_files = get_file_paths_from_directory(input_dir)
 
     all_contigs = set()
-    for prediction_file in all_prediction_files:
-        with h5py.File(prediction_file, 'r') as hdf5_file:
-            if 'predictions' in hdf5_file.keys():
-                contigs = list(hdf5_file['predictions'].keys())
-                all_contigs.update(contigs)
-    all_contigs = sorted(all_contigs, key=natural_key)
+    all_prediction_pair = []
+    for prediction_file_name in all_prediction_files:
+        with gzip.open(prediction_file_name, "rb") as prediction_file:
+            sub_index = 0
+            while True:
+                try:
+                    predictions = pickle.load(prediction_file)
+                    # as it is a 0-based
+                    all_prediction_pair.append([prediction_file_name, sub_index])
+                    sub_index += 1
+                except EOFError:
+                    break
 
-    vcf_file_name = "PEPPER_VARIANT_SNP_OUTPUT"
-    if use_hp_info:
-        vcf_file_name = "PEPPER_VARIANT_HP_OUTPUT"
+    vcf_file_name = "PEPPER_VARIANT_OUTPUT"
 
-    vcf_file = VCFWriter(reference_file, all_contigs, sample_name, output_path, vcf_file_name)
+    vcf_file = VCFWriter(reference_file, sample_name, output_path, vcf_file_name)
 
-    for contig in sorted(all_contigs, key=natural_key):
-        local_start_time = time.time()
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PROCESSING CONTIG: " + contig + "\n")
+    local_start_time = time.time()
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING CANDIDATE FINDING." + "\n")
 
-        all_chunk_keys = list()
-        for prediction_file in all_prediction_files:
-            with h5py.File(prediction_file, 'r') as hdf5_file:
-                if 'predictions' in hdf5_file.keys():
-                    if contig in hdf5_file['predictions'].keys():
-                        chunk_keys = sorted(hdf5_file['predictions'][contig].keys())
-                        for chunk_key in chunk_keys:
-                            all_chunk_keys.append((prediction_file, chunk_key))
+    selected_candidates = find_candidates(input_dir, reference_file, bam_file, use_hp_info, all_prediction_pair, threads, freq_based, freq)
+    end_time = time.time()
 
-        selected_candidates = find_candidates(input_dir, reference_file, bam_file, use_hp_info, contig, all_chunk_keys, threads, freq_based, freq)
-        end_time = time.time()
-        mins = int((end_time - local_start_time) / 60)
-        secs = int((end_time - local_start_time)) % 60
+    mins = int((end_time - local_start_time) / 60)
+    secs = int((end_time - local_start_time)) % 60
 
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING " + contig + ", TOTAL CANDIDATES FOUND: "
-                         + str(len(selected_candidates)) + " TOTAL TIME SPENT: " + str(mins) + " Min " + str(secs) + " Sec\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL CANDIDATES FOUND: "
+                     + str(len(selected_candidates)) + " TOTAL TIME SPENT: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
-        vcf_file.write_vcf_records(selected_candidates)
-
-    hdf5_file.close()
+    vcf_file.write_vcf_records(selected_candidates)
 
 
 def process_candidates(input_dir, reference, bam_file, use_hp_info, sample_name, output_dir, threads, freq_based, freq):

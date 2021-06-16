@@ -1,9 +1,11 @@
 import sys
 import torch
 import torch.onnx
+import gzip
+import pickle
 from datetime import datetime
 from torch.utils.data import DataLoader
-
+from pepper_variant.build import PEPPER_VARIANT
 from pepper_variant.modules.python.models.dataloader import SequenceDatasetFake
 from pepper_variant.modules.python.DataStorePredict import DataStore
 
@@ -13,34 +15,43 @@ def predict_pytorch_fake(input_filepath, output_filepath, batch_size, num_worker
     sys.stderr.flush()
 
     # create output file
-    output_filename = output_filepath + "pepper_prediction_fake" + ".hdf"
-    prediction_data_file = DataStore(output_filename, mode='w')
+    output_filename = output_filepath + "pepper_prediction_fake" + ".pkl.gz"
+    prediction_data_file = gzip.open(output_filename, 'wb')
 
     # data loader
     input_data = SequenceDatasetFake(input_filepath)
     data_loader = DataLoader(input_data,
                              batch_size=batch_size,
                              shuffle=False,
-                             num_workers=num_workers)
+                             num_workers=num_workers,
+                             collate_fn=SequenceDatasetFake.my_collate)
 
     batch_completed = 0
     total_batches = len(data_loader)
 
     with torch.no_grad():
 
-        for contig, region_start, region_stop, images, position, output_base, output_type in data_loader:
+        # for contig, depth, candidates, candidate_frequency, images, position, output_base, output_type in data_loader:
+        for candidates, images, output_base, output_type in data_loader:
             sys.stderr.flush()
+            all_candidate_predictions = []
 
             for i in range(images.size(0)):
-                prediction_data_file.write_prediction(contig[i],
-                                                      region_start[i],
-                                                      region_stop[i],
-                                                      position[i],
-                                                      output_base[i],
-                                                      output_type[i])
+                predicted_candidate = PEPPER_VARIANT.CandidateImagePrediction(candidates[i].contig,
+                                                                              candidates[i].position,
+                                                                              candidates[i].depth,
+                                                                              candidates[i].candidates,
+                                                                              candidates[i].candidate_frequency,
+                                                                              output_base[i],
+                                                                              output_type[i])
+                all_candidate_predictions.append(predicted_candidate)
+
+            pickle.dump(all_candidate_predictions, prediction_data_file, pickle.HIGHEST_PROTOCOL)
+
             batch_completed += 1
             sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
             sys.stderr.flush()
+        prediction_data_file.close()
 
 
 def predict_distributed_cpu_fake(filepath, output_filepath, batch_size, num_workers):

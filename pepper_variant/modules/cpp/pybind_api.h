@@ -71,13 +71,62 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
             .def("generate_max_insert_summary", &RegionalSummaryGenerator::generate_max_insert_summary);
 
         py::class_<CandidateImageSummary>(m, "CandidateImageSummary")
+            .def(py::init<>())
+            .def(py::init<string &, long long &, int &, vector<string> &, vector<int> &, vector<vector<int> > &, int &, int & >())
             .def_readwrite("contig", &CandidateImageSummary::contig)
             .def_readwrite("position", &CandidateImageSummary::position)
-            .def_readwrite("region_start", &CandidateImageSummary::region_start)
-            .def_readwrite("region_stop", &CandidateImageSummary::region_stop)
+            .def_readwrite("depth", &CandidateImageSummary::depth)
+            .def_readwrite("candidates", &CandidateImageSummary::candidates)
+            .def_readwrite("candidate_frequency", &CandidateImageSummary::candidate_frequency)
             .def_readwrite("image_matrix", &CandidateImageSummary::image_matrix)
             .def_readwrite("base_label", &CandidateImageSummary::base_label)
-            .def_readwrite("type_label", &CandidateImageSummary::type_label);
+            .def_readwrite("type_label", &CandidateImageSummary::type_label)
+            .def(py::pickle(
+                    [](const CandidateImageSummary &p) { // __getstate__
+                        /* Return a tuple that fully encodes the state of the object */
+                        return py::make_tuple(p.contig, p.position, p.depth, p.candidates, p.candidate_frequency, p.image_matrix, p.base_label, p.type_label);
+                        },
+                        [](py::tuple t) { // __setstate__
+                            if (t.size() != 8)
+                                throw std::runtime_error("Invalid state!");
+
+                            /* Create a new C++ instance */
+                            CandidateImageSummary p(t[0].cast<string>(), t[1].cast<long long>(), t[2].cast<int>(), t[3].cast< vector<string> >(), t[4].cast< vector<int> >(), t[5].cast<vector<vector<int> > >(), t[6].cast<int>(), t[7].cast<int>() );
+
+                            /* Assign any additional state */
+                            //dp.setExtra(t[1].cast<int>());
+
+                            return p;
+                        }
+                ));
+        py::class_<CandidateImagePrediction>(m, "CandidateImagePrediction")
+            .def(py::init<>())
+            .def(py::init<string &, long long &, int &, vector<string> &, vector<int> &, vector<float> &, vector<float> &>())
+            .def_readwrite("contig", &CandidateImagePrediction::contig)
+            .def_readwrite("position", &CandidateImagePrediction::position)
+            .def_readwrite("depth", &CandidateImagePrediction::depth)
+            .def_readwrite("candidates", &CandidateImagePrediction::candidates)
+            .def_readwrite("candidate_frequency", &CandidateImagePrediction::candidate_frequency)
+            .def_readwrite("prediction_base", &CandidateImagePrediction::prediction_base)
+            .def_readwrite("prediction_type", &CandidateImagePrediction::prediction_type)
+            .def(py::pickle(
+                    [](const CandidateImagePrediction &p) { // __getstate__
+                        /* Return a tuple that fully encodes the state of the object */
+                        return py::make_tuple(p.contig, p.position, p.depth, p.candidates, p.candidate_frequency, p.prediction_base, p.prediction_type);
+                    },
+                    [](py::tuple t) { // __setstate__
+                        if (t.size() != 7)
+                            throw std::runtime_error("Invalid state CandidateImagePrediction!");
+
+                        /* Create a new C++ instance */
+                        CandidateImagePrediction p(t[0].cast<string>(), t[1].cast<long long>(), t[2].cast<int>(), t[3].cast<vector<string> >(), t[4].cast<vector<int> >(), t[5].cast<vector<float> >(), t[6].cast< vector<float> >());
+
+                        /* Assign any additional state */
+                        //dp.setExtra(t[1].cast<int>());
+
+                        return p;
+                    }
+            ));
 
 
 

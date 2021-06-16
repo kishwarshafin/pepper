@@ -10,6 +10,9 @@ import operator
 from numpy import argmax
 from pepper_variant.modules.python.Options import PEPPERVariantCandidateFinderOptions, ImageSizeOptions
 from pepper_variant.modules.python.CandidateFinderCPP import CandidateFinderCPP
+import gzip
+import pickle
+from pepper_variant.build import PEPPER_VARIANT
 
 
 BASE_ERROR_RATE = 0.0
@@ -260,137 +263,71 @@ def check_alleles(allele):
     return True
 
 
-def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, contig, small_chunk_keys, freq_based, freq):
+def get_genotype_from_base(ref_base, base_prediction1, base_prediction2):
+    if base_prediction1 == 'R':
+        base_prediction1 = ref_base
 
-    # for chunk_key in small_chunk_keys:
-    selected_candidate_list = []
+    if base_prediction2 == 'R':
+        base_prediction2 = ref_base
 
-    # Find candidates per chunk
-    for file_name, chunk_name in small_chunk_keys:
-        with h5py.File(file_name, 'r') as hdf5_file:
-            smaller_chunks = set(hdf5_file['predictions'][contig][chunk_name].keys()) - {'contig_start', 'contig_end'}
-            contig_start = hdf5_file['predictions'][contig][chunk_name]['contig_start'][()]
-            contig_end = hdf5_file['predictions'][contig][chunk_name]['contig_end'][()]
-
-        smaller_chunks = sorted(smaller_chunks)
-
-        if not use_hp_info:
-            all_positions = []
-            all_base_predictions = []
-            all_type_predictions = []
-            all_base_prediction_labels = []
-            all_type_prediction_labels = []
-            for i, chunk in enumerate(smaller_chunks):
-                with h5py.File(file_name, 'r') as hdf5_file:
-                    bases = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions'][()]
-                    # types = hdf5_file['predictions'][contig][chunk_name][chunk]['type_predictions'][()]
-                    positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
-
-                    base_label = argmax(bases, axis=0)
-                    # type_label = argmax(types, axis=0)
-
-
-                all_positions.append(positions)
-                all_base_predictions.append(bases.tolist())
-                # all_type_predictions.append(types.tolist())
-                all_base_prediction_labels.append(base_label)
-                # all_type_prediction_labels.append(type_label)
-
-            cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
-
-            # find candidates
-            candidate_map = cpp_candidate_finder.find_candidates(bam_file_path,
-                                                                 reference_file_path,
-                                                                 contig,
-                                                                 contig_start,
-                                                                 contig_end,
-                                                                 all_positions,
-                                                                 all_base_predictions,
-                                                                 # all_type_predictions,
-                                                                 all_base_prediction_labels,
-                                                                 # all_type_prediction_labels,
-                                                                 freq_based,
-                                                                 freq)
-
-            for pos in candidate_map.keys():
-                selected_candidates = []
-                found_candidate = False
-                for candidate in candidate_map[pos]:
-                    found_candidate = True
-                    selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                                                candidate.depth, candidate.read_support, candidate.genotype, candidate.allele_probability, candidate.genotype_probability))
-
-                if found_candidate:
-                    variant = candidates_to_variants_snp(list(selected_candidates), contig, freq_based, freq)
-                    if variant is not None:
-                        selected_candidate_list.append(variant)
+    if ref_base == base_prediction1 or ref_base == base_prediction2:
+        if base_prediction1 == base_prediction2:
+            return [0, 0]
         else:
-            # for haplotype mode
-            all_positions = []
-            all_indicies = []
-            all_predictions_hp1 = []
-            all_predictions_hp2 = []
+            return [0, 1]
+    elif base_prediction1 == base_prediction2:
+        return [1, 1]
+    else:
+        return [0, 1]
 
-            for i, chunk in enumerate(smaller_chunks):
-                with h5py.File(file_name, 'r') as hdf5_file:
-                    bases_hp1 = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions_hp1'][()]
-                    bases_hp2 = hdf5_file['predictions'][contig][chunk_name][chunk]['base_predictions_hp2'][()]
-                    positions = hdf5_file['predictions'][contig][chunk_name][chunk]['position'][()]
-                    indices = hdf5_file['predictions'][contig][chunk_name][chunk]['index'][()]
 
-                if i == 0:
-                    all_positions = positions
-                    all_indicies = indices
-                    all_predictions_hp1 = bases_hp1
-                    all_predictions_hp2 = bases_hp2
-                else:
-                    all_positions = np.concatenate((all_positions, positions), axis=0)
-                    all_indicies = np.concatenate((all_indicies, indices), axis=0)
-                    all_predictions_hp1 = np.concatenate((all_predictions_hp1, bases_hp1), axis=0)
-                    all_predictions_hp2 = np.concatenate((all_predictions_hp2, bases_hp2), axis=0)
+def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chunks, freq_based, freq):
+    fasta_handler = PEPPER_VARIANT.FASTA_handler(reference_file_path)
+    selected_candidate_list = []
+    for file_chunk in file_chunks:
+        file_name, sub_index = file_chunk
+        image_file = gzip.open(file_name, "rb")
+        candidates = []
 
-            cpp_candidate_finder = CandidateFinderCPP(contig, contig_start, contig_end)
+        for i in range(0, sub_index + 1):
+            candidates = pickle.load(image_file)
 
-            # find candidates
-            candidate_map = cpp_candidate_finder.find_candidates_hp(bam_file_path,
-                                                                    reference_file_path,
-                                                                    contig,
-                                                                    contig_start,
-                                                                    contig_end,
-                                                                    all_positions,
-                                                                    all_indicies,
-                                                                    all_predictions_hp1,
-                                                                    all_predictions_hp2,
-                                                                    freq_based,
-                                                                    freq)
-            for pos in candidate_map.keys():
-                selected_candidates = []
-                found_candidate = False
-                for candidate in candidate_map[pos]:
-                    # print(candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                    #       "(DP", candidate.depth, ", SP: ", candidate.read_support, ", FQ: ", candidate.read_support/candidate.depth, ")",
-                    #       "H0 supp", candidate.read_support_h0, "H1 supp",  candidate.read_support_h1, "H2 supp",  candidate.read_support_h2,
-                    #       "ALT prob h1:", candidate.alt_prob_h1, "ALT prob h2:", candidate.alt_prob_h2, "Non-ref prob:", candidate.non_ref_prob)
-                    found_candidate = True
-                    selected_candidates.append((candidate.pos_start, candidate.pos_end, candidate.allele.ref, candidate.allele.alt, candidate.allele.alt_type,
-                                                candidate.depth, candidate.read_support, candidate.alt_prob_h1, candidate.alt_prob_h2, candidate.non_ref_prob))
-                if found_candidate:
-                    variant = candidates_to_variants(list(selected_candidates), contig, freq_based, freq)
-                    if variant is not None:
-                        selected_candidate_list.append(variant)
+        for candidate in candidates:
+            reference_base = fasta_handler.get_reference_sequence(candidate.contig, candidate.position, candidate.position+1).upper()
+
+            if reference_base not in ['A', 'C', 'G', 'T']:
+                continue
+
+            predicted_bases = ImageSizeOptions.decoded_labels[np.argmax(candidate.prediction_base)]
+            genotype = get_genotype_from_base(reference_base, predicted_bases[0], predicted_bases[1])
+            prediction_value = candidate.prediction_base[np.argmax(candidate.prediction_base)]
+
+            alt_alleles = []
+            variant_allele_support = []
+            for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
+                alt_type = alt_allele[0]
+                allele = alt_allele[1:]
+                # only process SNPs for now
+                if alt_type == '1':
+                    if allele == predicted_bases[0] or allele == predicted_bases[1]:
+                        alt_alleles.append(allele)
+                        variant_allele_support.append(allele_frequency)
+
+            if len(alt_alleles) > 0:
+                # print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support)
+                selected_candidate_list.append((candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value))
 
     return selected_candidate_list
 
 
-def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, contig, sequence_chunk_keys, threads, freq_based, freq):
-    sequence_chunk_keys = sorted(sequence_chunk_keys)
+def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_prediction_pair, threads, freq_based, freq):
+
     all_selected_candidates = list()
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
-        file_chunks = chunks(sequence_chunk_keys, max(2, int(len(sequence_chunk_keys) / threads) + 1))
+        file_chunks = chunks(all_prediction_pair, max(2, int(len(all_prediction_pair) / threads) + 1))
 
-        futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, use_hp_info, contig, file_chunk, freq_based, freq)
-                   for file_chunk in file_chunks]
+        futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, use_hp_info, file_chunk, freq_based, freq) for file_chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
                 positional_candidates = fut.result()

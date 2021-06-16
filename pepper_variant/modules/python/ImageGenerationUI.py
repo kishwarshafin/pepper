@@ -2,6 +2,8 @@ import time
 import os
 import re
 import sys
+import gzip
+import pickle
 import concurrent.futures
 from datetime import datetime
 from collections import defaultdict
@@ -228,7 +230,7 @@ class ImageGenerationUtils:
         if use_hp_info:
             file_name = file_name + "_" + "hp"
 
-        file_name = file_name + ".hdf"
+        file_name = file_name + ".pkl.gz"
 
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == process_id]
 
@@ -240,76 +242,45 @@ class ImageGenerationUtils:
         sys.stderr.flush()
 
         start_time = time.time()
-        with DataStore(file_name, 'w') as output_hdf_file:
-            for counter, interval in enumerate(intervals):
-                chr_name, _start, _end = interval
 
-                image_generator = ImageGenerator(chromosome_name=chr_name,
-                                                 bam_file_path=bam_file,
-                                                 draft_file_path=draft_file,
-                                                 use_hp_info=use_hp_info,
-                                                 truth_vcf=truth_vcf,
-                                                 train_mode=train_mode,
-                                                 random_draw_probability=random_draw_probability)
+        for counter, interval in enumerate(intervals):
+            chr_name, _start, _end = interval
 
-                if not use_hp_info:
-                    candidate_images = image_generator.generate_summary(_start, _end, downsample_rate, bed_list, process_id)
+            image_generator = ImageGenerator(chromosome_name=chr_name,
+                                             bam_file_path=bam_file,
+                                             draft_file_path=draft_file,
+                                             use_hp_info=use_hp_info,
+                                             truth_vcf=truth_vcf,
+                                             train_mode=train_mode,
+                                             random_draw_probability=random_draw_probability)
 
-                    all_images = []
-                    all_base_labels = []
-                    all_type_labels = []
-                    all_positions = []
-                    if candidate_images is not None:
-                        for candidate in candidate_images:
-                            all_images.append(candidate.image_matrix)
-                            all_positions.append(candidate.position)
-                            all_base_labels.append(candidate.base_label)
-                            all_type_labels.append(candidate.type_label)
+            if not use_hp_info:
+                candidates = image_generator.generate_summary(_start, _end, downsample_rate, bed_list, process_id)
 
-                        if len(all_images) > 0:
-                            summary_name = str(chr_name) + "_" + str(_start) + "_" + str(_end)
-                            output_hdf_file.write_summary(summary_name, all_images, all_positions, all_base_labels, all_type_labels, chr_name, _start, _end)
-                    # if candidate_images is not None:
-                    #     for i, candidate in enumerate(candidate_images):
-                    #         summary_name = str(chr_name) + "_" + str(_start) + "_" + str(_end)
-                    #         output_hdf_file.write_summary(summary_name, candidate, _start, _end)
+                if candidates is not None:
+                    # load the previously written objects
+                    # if os.path.exists(file_name):
+                    #     with gzip.open(file_name, 'rb') as rfp:
+                    #         previous_candidates = pickle.load(rfp)
+                    #         candidates.extend(previous_candidates)
 
-                    if counter > 0 and counter % 10 == 0 and process_id == 0:
-                        percent_complete = int((100 * counter) / len(intervals))
-                        time_now = time.time()
-                        mins = int((time_now - start_time) / 60)
-                        secs = int((time_now - start_time)) % 60
+                    pickle_output = gzip.open(file_name, 'ab')
+                    pickle.dump(candidates, pickle_output, pickle.HIGHEST_PROTOCOL)
+                    pickle_output.close()
 
-                        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "]"
-                                         + " INFO: " + thread_prefix + " " + str(counter) + "/" + str(len(intervals))
-                                         + " COMPLETE (" + str(percent_complete) + "%)"
-                                         + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
-                        sys.stderr.flush()
-                else:
-                    images_hp1, images_hp2, labels_hp1, labels_hp2, positions, indexes, chunk_ids = image_generator.generate_summary(_start, _end, downsample_rate, bed_list, process_id)
-                    region = (chr_name, _start, _end)
+                if counter > 0 and counter % 10 == 0 and process_id == 0:
+                    percent_complete = int((100 * counter) / len(intervals))
+                    time_now = time.time()
+                    mins = int((time_now - start_time) / 60)
+                    secs = int((time_now - start_time)) % 60
 
-                    for i, image_hp1 in enumerate(images_hp1):
-                        image_hp2 = images_hp2[i]
-                        position = positions[i]
-                        index = indexes[i]
-                        label_hp1 = labels_hp1[i]
-                        label_hp2 = labels_hp2[i]
-                        chunk_id = chunk_ids[i]
-                        summary_name = str(region[0]) + "_" + str(region[1]) + "_" + str(region[2]) + "_" + str(chunk_id)
+                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]"
+                                     + " INFO: " + str(thread_prefix) + " " + str(counter) + "/" + str(len(intervals))
+                                     + " COMPLETE (" + str(percent_complete) + "%)"
+                                     + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
+                    sys.stderr.flush()
 
-                        output_hdf_file.write_summary_hp(region, image_hp1, image_hp2, label_hp1, label_hp2, position, index, chunk_id, summary_name)
 
-                    if counter > 0 and counter % 10 == 0 and process_id == 0:
-                        percent_complete = int((100 * counter) / len(intervals))
-                        time_now = time.time()
-                        mins = int((time_now - start_time) / 60)
-                        secs = int((time_now - start_time)) % 60
-
-                        sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "]"
-                                         + " INFO: " + thread_prefix + " " + str(counter) + "/" + str(len(intervals))
-                                         + " COMPLETE (" + str(percent_complete) + "%)"
-                                         + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
 
         return process_id
 

@@ -81,12 +81,52 @@ struct RegionalImageSummary {
 
 struct CandidateImageSummary {
     string contig;
-    int64_t position;
-    int64_t region_start;
-    int64_t region_stop;
+    long long position;
     vector< vector<int> > image_matrix;
+    vector <string> candidates;
+    vector <int> candidate_frequency;
+    int depth;
     uint8_t base_label;
     uint8_t type_label;
+    CandidateImageSummary() {
+    }
+
+    // string &, long long &, int &, vector<string> &, vector<int> &, vector<vector<int> > &, int &, int &
+    CandidateImageSummary(string contig, long long position, int depth, vector<string> candidates, vector<int> candidate_frequency, vector< vector<int> > image, int base_label, int type_label) {
+        this->contig = std::move(contig);
+        this->position = position;
+        this->image_matrix = std::move(image);
+        this->candidates = std::move(candidates);
+        this->candidate_frequency = std::move(candidate_frequency);
+        this->depth = depth;
+        this->base_label = base_label;
+        this->type_label = type_label;
+    }
+};
+
+
+struct CandidateImagePrediction {
+    string contig;
+    long long position;
+    int depth;
+    vector <string> candidates;
+    vector <int> candidate_frequency;
+    vector<float> prediction_base;
+    vector <float> prediction_type;
+
+    CandidateImagePrediction() {
+    }
+
+    // string &, long long &, int &, vector<string> &, vector<int> &, vector<vector<int> > &, int &, int &
+    CandidateImagePrediction(string contig, long long position, int depth, vector<string> candidates, vector<int> candidate_frequency, const vector<float>& prediction_base, const vector <float>& prediction_type) {
+        this->contig = std::move(contig);
+        this->position = position;
+        this->depth = depth;
+        this->candidates = std::move(candidates);
+        this->candidate_frequency = std::move(candidate_frequency);
+        this->prediction_base = prediction_base;
+        this->prediction_type = prediction_type;
+    }
 };
 
 class RegionalSummaryGenerator {
@@ -125,6 +165,8 @@ public:
                                  int *snp_count,
                                  int *insert_count,
                                  int *delete_count,
+                                 vector< map<string, int> > &AlleleFrequencyMap,
+                                 vector< set<string> > &AlleleMap,
                                  type_read read);
 
     static int get_feature_index(char ref_base, char base, bool is_reverse);

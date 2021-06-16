@@ -8,8 +8,9 @@ Candidate = collections.namedtuple('Candidate', 'chromosome_name pos_start pos_e
 
 
 class VCFWriter:
-    def __init__(self, reference_file_path, contigs, sample_name, output_dir, filename):
+    def __init__(self, reference_file_path, sample_name, output_dir, filename):
         self.fasta_handler = PEPPER_VARIANT.FASTA_handler(reference_file_path)
+        contigs = self.fasta_handler.get_chromosome_names()
         self.contigs = contigs
         self.vcf_header = self.get_vcf_header(sample_name, contigs)
         self.output_dir = output_dir
@@ -19,7 +20,8 @@ class VCFWriter:
     def write_vcf_records(self, variants_list):
         last_position = -1
         for called_variant in variants_list:
-            contig, ref_start, ref_end, ref_seq, alleles, dps, ads, genotype, allele_probability, genotype_probability = called_variant
+            contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability = called_variant
+            print(contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability)
 
             if len(alleles) <= 0:
                 continue
@@ -29,19 +31,19 @@ class VCFWriter:
             last_position = ref_start
             alleles = tuple([ref_seq]) + tuple(alleles)
             qual = max(1, int(-10 * math.log10(max(0.000001, 1.0 - max(0.0001, genotype_probability)))))
-            alt_qual = max(1, int(-10 * math.log10(max(0.000001, 1.0 - max(0.0001, allele_probability)))))
+            alt_qual = max(1, int(-10 * math.log10(max(0.000001, 1.0 - max(0.0001, genotype_probability)))))
 
-            vafs = [round(ad/max(1, max(dps)), 3) for ad in ads]
+            vafs = [round(ad/max(1, depth), 3) for ad in variant_allele_support]
             if genotype == [0, 0]:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=qual,
                                                       filter='refCall', alleles=alleles, GT=genotype,
-                                                      AP=alt_qual, GQ=alt_qual, DP=max(dps), AD=ads, VAF=vafs)
+                                                      AP=alt_qual, GQ=alt_qual, DP=depth, AD=variant_allele_support, VAF=vafs)
             else:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=qual,
                                                       filter='PASS', alleles=alleles, GT=genotype,
-                                                      AP=alt_qual, GQ=qual, DP=max(dps), AD=ads, VAF=vafs)
+                                                      AP=alt_qual, GQ=qual, DP=depth, AD=variant_allele_support, VAF=vafs)
 
             self.vcf_file.write(vcf_record)
 
