@@ -25,49 +25,40 @@ def get_file_paths_from_directory(directory_path):
 class SequenceDataset(Dataset):
     """
     Arguments:
-        A HDF5 file path
+        A pkl directory
     """
     def __init__(self, image_directory):
-        self.transform = transforms.Compose([transforms.ToTensor()])
+        # self.transform = transforms.Compose([transforms.ToTensor()])
+        # self.transform = transforms.Compose([])
+        pickle_files = get_file_paths_from_directory(image_directory)
+        self.all_candidates = []
 
-        all_records = []
-        hdf_files = get_file_paths_from_directory(image_directory)
-
-        self.total_records = 0
-        for hdf5_file_path in hdf_files:
-            with h5py.File(hdf5_file_path, 'r') as hdf5_file:
-                if 'summaries' in hdf5_file:
-                    region_names = list(hdf5_file['summaries'].keys())
-
-                    for region_name in region_names:
-                        image_shape = hdf5_file['summaries'][region_name]['images'].shape[0]
-
-                        for image_index in range(0, image_shape):
-                            all_records.append((hdf5_file_path, region_name, image_index))
-
-                        self.total_records += image_shape
-
-        self.all_images = all_records
+        for pickle_file in pickle_files:
+            with gzip.open(pickle_file, "rb") as image_file:
+                while True:
+                    try:
+                        candidates = pickle.load(image_file)
+                        self.all_candidates.extend(candidates)
+                    except EOFError:
+                        break
 
     def __getitem__(self, index):
         # load the image
-        hdf5_filepath, region_name, indx = self.all_images[index]
-
-        with h5py.File(hdf5_filepath, 'r') as hdf5_file:
-            image = hdf5_file['summaries'][region_name]['images'][indx][()]
-            type_label = hdf5_file['summaries'][region_name]['type_labels'][indx][()]
-            base_label = hdf5_file['summaries'][region_name]['base_labels'][indx][()]
+        candidate = self.all_candidates[index]
+        image = np.array(candidate.image_matrix)
+        type_label = candidate.type_label
+        base_label = candidate.base_label
 
         return image, base_label, type_label
 
     def __len__(self):
-        return len(self.all_images)
+        return len(self.all_candidates)
 
 
 class SequenceDatasetFake(Dataset):
     """
     Arguments:
-        A HDF5 file path
+        A pkl directory
     """
     def __init__(self, image_directory):
         # self.transform = transforms.Compose([transforms.ToTensor()])
