@@ -242,7 +242,7 @@ class ImageGenerationUtils:
         sys.stderr.flush()
 
         start_time = time.time()
-
+        all_candidates = []
         for counter, interval in enumerate(intervals):
             chr_name, _start, _end = interval
 
@@ -263,10 +263,7 @@ class ImageGenerationUtils:
                     #     with gzip.open(file_name, 'rb') as rfp:
                     #         previous_candidates = pickle.load(rfp)
                     #         candidates.extend(previous_candidates)
-
-                    pickle_output = gzip.open(file_name, 'ab')
-                    pickle.dump(candidates, pickle_output, pickle.HIGHEST_PROTOCOL)
-                    pickle_output.close()
+                    all_candidates.extend(candidates)
 
                 if counter > 0 and counter % 10 == 0 and process_id == 0:
                     percent_complete = int((100 * counter) / len(intervals))
@@ -279,6 +276,10 @@ class ImageGenerationUtils:
                                      + " COMPLETE (" + str(percent_complete) + "%)"
                                      + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                     sys.stderr.flush()
+
+        pickle_output = gzip.open(file_name, 'wb')
+        pickle.dump(all_candidates, pickle_output, pickle.HIGHEST_PROTOCOL)
+        pickle_output.close()
 
 
 

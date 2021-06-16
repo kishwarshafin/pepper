@@ -73,27 +73,16 @@ class SequenceDatasetFake(Dataset):
         # self.transform = transforms.Compose([transforms.ToTensor()])
         # self.transform = transforms.Compose([])
         pickle_files = get_file_paths_from_directory(image_directory)
-        self.file_lengths = []
-        total_images = 0
+        self.all_candidates = []
 
         for pickle_file in pickle_files:
-
-            file_sub_image_lengths = []
             with gzip.open(pickle_file, "rb") as image_file:
                 while True:
                     try:
-                        images = pickle.load(image_file)
-                        image_length = len(images)
-                        # as it is a 0-based
-                        file_sub_image_lengths.append(image_length - 1)
-                        total_images += image_length
+                        candidates = pickle.load(image_file)
+                        self.all_candidates.extend(candidates)
                     except EOFError:
                         break
-
-                self.file_lengths.append(file_sub_image_lengths)
-
-        self.total_images = total_images
-        self.pickle_files = pickle_files
 
     @staticmethod
     def my_collate(batch):
@@ -105,35 +94,9 @@ class SequenceDatasetFake(Dataset):
 
         return [candidate, images, base_predictions, type_predictions]
 
-
     def __getitem__(self, index):
         # load the image
-        file_index = 0
-        sub_file_index = 0
-        image_index = index
-
-        found_index = False
-        for i, sub_file_lengths in enumerate(self.file_lengths):
-            file_index = i
-            for j, sub_file_length in enumerate(sub_file_lengths):
-                sub_file_index = j
-                if image_index > sub_file_lengths[sub_file_index]:
-                    image_index -= sub_file_lengths[sub_file_index]
-                else:
-                    found_index = True
-                    break
-
-            if found_index:
-                break
-
-        image_file = gzip.open(self.pickle_files[file_index], "rb")
-        candidates = []
-
-        for i in range(0, sub_file_index + 1):
-            candidates = pickle.load(image_file)
-
-        candidate = candidates[image_index]
-        image_file.close()
+        candidate = self.all_candidates[index]
         contig = candidate.contig
         image = np.array(candidate.image_matrix)
 
@@ -166,7 +129,7 @@ class SequenceDatasetFake(Dataset):
         # return contig, depth, candidates, candidate_frequency, image, position, base_predictions, type_predictions
 
     def __len__(self):
-        return self.total_images
+        return len(self.all_candidates)
 
 
 class SequenceDatasetHP(Dataset):
