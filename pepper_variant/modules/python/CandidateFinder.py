@@ -10,7 +10,6 @@ import operator
 from numpy import argmax
 from pepper_variant.modules.python.Options import PEPPERVariantCandidateFinderOptions, ImageSizeOptions
 from pepper_variant.modules.python.CandidateFinderCPP import CandidateFinderCPP
-import gzip
 import pickle
 from pepper_variant.build import PEPPER_VARIANT
 
@@ -286,7 +285,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
     selected_candidate_list = []
     for file_chunk in file_chunks:
         file_name, sub_index = file_chunk
-        image_file = gzip.open(file_name, "rb")
+        image_file = open(file_name, "rb")
         candidates = []
 
         for i in range(0, sub_index + 1):

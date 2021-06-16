@@ -1,7 +1,6 @@
 import sys
 import torch
 import torch.onnx
-import gzip
 import pickle
 from datetime import datetime
 from torch.utils.data import DataLoader
@@ -15,8 +14,8 @@ def predict_pytorch_fake(input_filepath, output_filepath, batch_size, num_worker
     sys.stderr.flush()
 
     # create output file
-    output_filename = output_filepath + "pepper_prediction_fake" + ".pkl.gz"
-    prediction_data_file = gzip.open(output_filename, 'wb')
+    output_filename = output_filepath + "pepper_prediction_fake" + ".pkl"
+    prediction_data_file = open(output_filename, 'wb')
 
     # data loader
     input_data = SequenceDatasetFake(input_filepath)
@@ -46,7 +45,7 @@ def predict_pytorch_fake(input_filepath, output_filepath, batch_size, num_worker
                                                                               output_type[i])
                 all_candidate_predictions.append(predicted_candidate)
 
-            pickle.dump(all_candidate_predictions, prediction_data_file, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(all_candidate_predictions, prediction_data_file)
 
             batch_completed += 1
             sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")

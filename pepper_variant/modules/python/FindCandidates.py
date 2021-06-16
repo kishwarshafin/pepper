@@ -5,7 +5,6 @@ from os.path import isfile, join
 from os import listdir
 import re
 import time
-import gzip
 import pickle
 from pepper_variant.build import PEPPER_VARIANT
 from pepper_variant.modules.python.CandidateFinder import find_candidates
@@ -151,7 +150,7 @@ def get_file_paths_from_directory(directory_path):
     :return: A list of paths of files
     """
     file_paths = [join(directory_path, file) for file in listdir(directory_path) if isfile(join(directory_path, file))
-                  and file[-6:] == 'pkl.gz']
+                  and file[-3:] == 'pkl']
     return file_paths
 
 
@@ -161,7 +160,7 @@ def candidate_finder(input_dir, reference_file, bam_file, use_hp_info, sample_na
     all_contigs = set()
     all_prediction_pair = []
     for prediction_file_name in all_prediction_files:
-        with gzip.open(prediction_file_name, "rb") as prediction_file:
+        with open(prediction_file_name, "rb") as prediction_file:
             sub_index = 0
             while True:
                 try:

@@ -2,7 +2,6 @@ import time
 import os
 import re
 import sys
-import gzip
 import pickle
 import concurrent.futures
 from datetime import datetime
@@ -230,7 +229,7 @@ class ImageGenerationUtils:
         if use_hp_info:
             file_name = file_name + "_" + "hp"
 
-        file_name = file_name + ".pkl.gz"
+        file_name = file_name + ".pkl"
 
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == process_id]
 
@@ -277,11 +276,9 @@ class ImageGenerationUtils:
                                      + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                     sys.stderr.flush()
 
-        pickle_output = gzip.open(file_name, 'wb')
-        pickle.dump(all_candidates, pickle_output, pickle.HIGHEST_PROTOCOL)
+        pickle_output = open(file_name, 'wb')
+        pickle.dump(all_candidates, pickle_output)
         pickle_output.close()
-
-
 
         return process_id
 

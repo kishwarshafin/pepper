@@ -5,7 +5,6 @@ from pepper_variant.modules.python.Options import ImageSizeOptions
 import torch
 import torchvision.transforms as transforms
 import h5py
-import gzip
 import pickle
 import sys
 import numpy as np
@@ -18,7 +17,7 @@ def get_file_paths_from_directory(directory_path):
     :return: A list of paths of files
     """
     file_paths = [join(directory_path, file) for file in listdir(directory_path) if isfile(join(directory_path, file))
-                  and file[-6:] == 'pkl.gz']
+                  and file[-3:] == 'pkl']
     return file_paths
 
 
@@ -34,7 +33,7 @@ class SequenceDataset(Dataset):
         self.all_candidates = []
 
         for pickle_file in pickle_files:
-            with gzip.open(pickle_file, "rb") as image_file:
+            with open(pickle_file, "rb") as image_file:
                 while True:
                     try:
                         candidates = pickle.load(image_file)
@@ -67,7 +66,7 @@ class SequenceDatasetFake(Dataset):
         self.all_candidates = []
 
         for pickle_file in pickle_files:
-            with gzip.open(pickle_file, "rb") as image_file:
+            with open(pickle_file, "rb") as image_file:
                 while True:
                     try:
                         candidates = pickle.load(image_file)
