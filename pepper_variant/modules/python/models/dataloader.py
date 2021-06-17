@@ -35,7 +35,7 @@ def load_single_file(pickle_files, file_id):
             except EOFError:
                 break
 
-    return all_candidates
+    return all_candidates, file_id
 
 
 def load_all_file(pickle_files):
@@ -48,9 +48,9 @@ def load_all_file(pickle_files):
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
                 # get the results
-                candidates = fut.result()
+                candidates, file_id = fut.result()
                 all_candidates.extend(candidates)
-                sys.stderr.write("ERROR: TOTAL CANDIDATES: " + str(len(candidates)) + "\n")
+                sys.stderr.write("ERROR: TOTAL CANDIDATES: " + str(len(candidates)) + "\t" + str(file_id) + "\n")
                 del candidates
             else:
                 sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
