@@ -50,6 +50,8 @@ def load_all_file(pickle_files):
                 # get the results
                 candidates = fut.result()
                 all_candidates.extend(candidates)
+                sys.stderr.write("ERROR: TOTAL CANDIDATES: " + str(len(candidates)) + "\n")
+                del candidates
             else:
                 sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
             fut._result = None  # python issue 27144
