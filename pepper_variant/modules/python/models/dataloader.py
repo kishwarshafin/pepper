@@ -47,23 +47,22 @@ class SequenceDataset(Dataset):
 
             gc.disable()
             with gzip.open(pickle_file, "rb") as image_file:
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING\n")
+                sys.stderr.flush()
                 while True:
                     try:
-                        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING\n")
-                        sys.stderr.flush()
-                        candidates = pickle.load(image_file)
-                        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: EXTENDING\n")
-                        sys.stderr.flush()
-                        self.all_candidates.extend(candidates)
-                        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: DONE\n")
-                        sys.stderr.flush()
+                        candidate = pickle.load(image_file)
+                        self.all_candidates.append(candidate)
                     except EOFError:
                         break
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: DONE\n")
+                sys.stderr.flush()
             gc.enable()
 
         time_now = time.time()
         mins = int((time_now - start_time) / 60)
         secs = int((time_now - start_time)) % 60
+        print(len(self.all_candidates))
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
         sys.stderr.flush()
         exit()
