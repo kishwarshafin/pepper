@@ -40,6 +40,8 @@ class SequenceDataset(Dataset):
         sys.stderr.flush()
 
         for pickle_file in pickle_files:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING: " + str(pickle_file) + "\n")
+            sys.stderr.flush()
             with open(pickle_file, "rb") as image_file:
                 while True:
                     try:
