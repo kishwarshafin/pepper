@@ -25,42 +25,6 @@ def get_file_paths_from_directory(directory_path):
     return file_paths
 
 
-def load_single_file(pickle_files, file_id):
-    all_candidates = []
-    with open(pickle_files[file_id], "rb") as image_file:
-        while True:
-            try:
-                candidates = pickle.load(image_file)
-                all_candidates.extend(candidates)
-            except EOFError:
-                break
-
-    return all_candidates, file_id
-
-
-def load_all_file(pickle_files):
-    all_candidates = []
-    total_processes = len(pickle_files)
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=total_processes) as executor:
-        futures = [executor.submit(load_single_file, pickle_files, process_id) for process_id in range(0, total_processes)]
-
-        for fut in concurrent.futures.as_completed(futures):
-            if fut.exception() is None:
-                # get the results
-                candidates, file_id = fut.result()
-                all_candidates.extend(candidates)
-                sys.stderr.write("ERROR: TOTAL CANDIDATES: " + str(len(candidates)) + "\t" + str(file_id) + "\n")
-                del candidates
-            else:
-                sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
-            fut._result = None  # python issue 27144
-
-    return all_candidates
-
-
-
-
 class SequenceDataset(Dataset):
     """
     Arguments:
@@ -73,10 +37,25 @@ class SequenceDataset(Dataset):
         self.all_candidates = []
 
         start_time = time.time()
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: STARTING LOADING PKL.")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: STARTING LOADING PKL.\n")
         sys.stderr.flush()
 
-        self.all_candidates = load_all_file(pickle_files)
+        for pickle_file in pickle_files:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING: " + str(pickle_file) + "\n")
+            sys.stderr.flush()
+            with open(pickle_file, "rb") as image_file:
+                while True:
+                    try:
+                        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING\n")
+                        sys.stderr.flush()
+                        candidates = pickle.load(image_file)
+                        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: EXTENDING\n")
+                        sys.stderr.flush()
+                        self.all_candidates.extend(candidates)
+                        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: DONE\n")
+                        sys.stderr.flush()
+                    except EOFError:
+                        break
 
         time_now = time.time()
         mins = int((time_now - start_time) / 60)
@@ -110,17 +89,25 @@ class SequenceDatasetFake(Dataset):
         self.all_candidates = []
 
         start_time = time.time()
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: STARTING LOADING PKL.\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: STARTING LOADING PKL.")
         sys.stderr.flush()
 
-        self.all_candidates = load_all_file(pickle_files)
+        for pickle_file in pickle_files:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING: " + str(pickle_file) + "\n")
+            sys.stderr.flush()
+            with gzip.open(pickle_file, "rb") as image_file:
+                while True:
+                    try:
+                        candidates = pickle.load(image_file)
+                        self.all_candidates.extend(candidates)
+                    except EOFError:
+                        break
 
         time_now = time.time()
         mins = int((time_now - start_time) / 60)
         secs = int((time_now - start_time)) % 60
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
         sys.stderr.flush()
-        exit()
 
     @staticmethod
     def my_collate(batch):
