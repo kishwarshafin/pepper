@@ -242,6 +242,7 @@ class ImageGenerationUtils:
         sys.stderr.flush()
 
         start_time = time.time()
+        pickle_output = gzip.open(file_name, 'wb')
         all_candidates = []
         for counter, interval in enumerate(intervals):
             chr_name, _start, _end = interval
@@ -256,14 +257,15 @@ class ImageGenerationUtils:
 
             if not use_hp_info:
                 candidates = image_generator.generate_summary(_start, _end, downsample_rate, bed_list, process_id)
-
                 if candidates is not None:
                     # load the previously written objects
                     # if os.path.exists(file_name):
                     #     with gzip.open(file_name, 'rb') as rfp:
                     #         previous_candidates = pickle.load(rfp)
                     #         candidates.extend(previous_candidates)
-                    all_candidates.extend(candidates)
+                    for candidate in candidates:
+                        pickle.dump(candidate, pickle_output, pickle.HIGHEST_PROTOCOL)
+                    # all_candidates.extend(candidates)
 
                 if counter > 0 and counter % 10 == 0 and process_id == 0:
                     percent_complete = int((100 * counter) / len(intervals))
@@ -277,21 +279,6 @@ class ImageGenerationUtils:
                                      + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                     sys.stderr.flush()
 
-        start_time = time.time()
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]"
-                         + " INFO: STARTING SAVING PKL FILE.")
-        sys.stderr.flush()
-        pickle_output = gzip.open(file_name, 'wb')
-
-        pickle.dump(all_candidates, pickle_output, pickle.HIGHEST_PROTOCOL)
-
-        time_now = time.time()
-        mins = int((time_now - start_time) / 60)
-        secs = int((time_now - start_time)) % 60
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]"
-                         + " INFO: " + str(thread_prefix)
-                         + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
-        sys.stderr.flush()
         pickle_output.close()
 
         return process_id
