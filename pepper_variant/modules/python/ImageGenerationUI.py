@@ -2,6 +2,7 @@ import time
 import os
 import re
 import sys
+import gzip
 import pickle
 import concurrent.futures
 from datetime import datetime
@@ -229,7 +230,7 @@ class ImageGenerationUtils:
         if use_hp_info:
             file_name = file_name + "_" + "hp"
 
-        file_name = file_name + ".pkl"
+        file_name = file_name + ".pkl.gz"
 
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == process_id]
 
@@ -276,8 +277,21 @@ class ImageGenerationUtils:
                                      + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                     sys.stderr.flush()
 
-        pickle_output = open(file_name, 'wb')
-        pickle.dump(all_candidates, pickle_output)
+        start_time = time.time()
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]"
+                         + " INFO: STARTING SAVING PKL FILE.")
+        sys.stderr.flush()
+        pickle_output = gzip.open(file_name, 'wb')
+
+        pickle.dump(all_candidates, pickle_output, pickle.HIGHEST_PROTOCOL)
+
+        time_now = time.time()
+        mins = int((time_now - start_time) / 60)
+        secs = int((time_now - start_time)) % 60
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]"
+                         + " INFO: " + str(thread_prefix)
+                         + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
+        sys.stderr.flush()
         pickle_output.close()
 
         return process_id
