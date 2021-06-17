@@ -284,14 +284,35 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
     fasta_handler = PEPPER_VARIANT.FASTA_handler(reference_file_path)
     selected_candidate_list = []
     for file_chunk in file_chunks:
-        file_name, sub_index = file_chunk
-        image_file = open(file_name, "rb")
-        candidates = []
+        file_name, batch_key = file_chunk
+        all_candidates = []
+        with h5py.File(file_name, 'r') as hdf5_file:
+            if 'predictions' in hdf5_file.keys():
+                contigs = hdf5_file['predictions'][batch_key]['contigs'][()]
+                positions = hdf5_file['predictions'][batch_key]['positions'][()]
+                depths = hdf5_file['predictions'][batch_key]['depths'][()]
+                candidates = hdf5_file['predictions'][batch_key]['candidates'][()]
+                candidate_frequencies = hdf5_file['predictions'][batch_key]['candidate_frequency'][()]
+                base_predictions = hdf5_file['predictions'][batch_key]['base_prediction'][()]
+                type_predictions = hdf5_file['predictions'][batch_key]['type_prediction'][()]
 
-        for i in range(0, sub_index + 1):
-            candidates = pickle.load(image_file)
+                for i in range(len(contigs)):
+                    candidate = candidates[i].strip('][').split(', ')
+                    candidate = [x.strip("'") for x in candidate]
 
-        for candidate in candidates:
+                    candidate_frequency = candidate_frequencies[i].strip('][').split(', ')
+                    candidate_frequency = [int(x) for x in candidate_frequency]
+
+                    candidate = PEPPER_VARIANT.CandidateImagePrediction(contigs[i],
+                                                                        positions[i],
+                                                                        depths[i],
+                                                                        candidate,
+                                                                        candidate_frequency,
+                                                                        base_predictions[i],
+                                                                        type_predictions[i])
+                    all_candidates.append(candidate)
+
+        for candidate in all_candidates:
             reference_base = fasta_handler.get_reference_sequence(candidate.contig, candidate.position, candidate.position+1).upper()
 
             if reference_base not in ['A', 'C', 'G', 'T']:

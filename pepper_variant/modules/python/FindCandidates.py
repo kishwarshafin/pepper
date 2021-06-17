@@ -150,26 +150,21 @@ def get_file_paths_from_directory(directory_path):
     :return: A list of paths of files
     """
     file_paths = [join(directory_path, file) for file in listdir(directory_path) if isfile(join(directory_path, file))
-                  and file[-3:] == 'pkl']
+                  and file[-3:] == 'hdf']
     return file_paths
 
 
 def candidate_finder(input_dir, reference_file, bam_file, use_hp_info, sample_name, output_path, threads, freq_based, freq):
     all_prediction_files = get_file_paths_from_directory(input_dir)
 
-    all_contigs = set()
     all_prediction_pair = []
-    for prediction_file_name in all_prediction_files:
-        with open(prediction_file_name, "rb") as prediction_file:
-            sub_index = 0
-            while True:
-                try:
-                    predictions = pickle.load(prediction_file)
-                    # as it is a 0-based
-                    all_prediction_pair.append([prediction_file_name, sub_index])
-                    sub_index += 1
-                except EOFError:
-                    break
+
+    for prediction_file in all_prediction_files:
+        with h5py.File(prediction_file, 'r') as hdf5_file:
+            if 'predictions' in hdf5_file.keys():
+                batches = list(hdf5_file['predictions'].keys())
+                for batch in batches:
+                    all_prediction_pair.append((prediction_file, batch))
 
     vcf_file_name = "PEPPER_VARIANT_OUTPUT"
 

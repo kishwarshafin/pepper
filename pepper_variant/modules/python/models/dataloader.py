@@ -106,23 +106,26 @@ class SequenceDatasetFake(Dataset):
         sys.stderr.flush()
         for input_file in input_files:
             with h5py.File(input_file, 'r') as hdf5_file:
-                contigs = hdf5_file['summaries']['contigs'][()]
-                positions = hdf5_file['summaries']['positions'][()]
-                depths = hdf5_file['summaries']['depths'][()]
-                candidates = hdf5_file['summaries']['candidates'][()]
-                candidate_frequency = hdf5_file['summaries']['candidate_frequency'][()]
-                images = hdf5_file['summaries']['images'][()]
-                base_labels = hdf5_file['summaries']['base_labels'][()]
-                type_labels = hdf5_file['summaries']['type_label'][()]
+                if 'summaries' in hdf5_file:
+                    summary_names = list(hdf5_file['summaries'].keys())
+                    for summary_name in summary_names:
+                        contigs = hdf5_file['summaries'][summary_name]['contigs'][()]
+                        positions = hdf5_file['summaries'][summary_name]['positions'][()]
+                        depths = hdf5_file['summaries'][summary_name]['depths'][()]
+                        candidates = hdf5_file['summaries'][summary_name]['candidates'][()]
+                        candidate_frequency = hdf5_file['summaries'][summary_name]['candidate_frequency'][()]
+                        images = hdf5_file['summaries'][summary_name]['images'][()]
+                        base_labels = hdf5_file['summaries'][summary_name]['base_labels'][()]
+                        type_labels = hdf5_file['summaries'][summary_name]['type_label'][()]
 
-                self.all_contigs.extend(contigs)
-                self.all_positions.extend(positions)
-                self.all_depths.extend(depths)
-                self.all_candidates.extend(candidates)
-                self.all_candidate_frequency.extend(candidate_frequency)
-                self.all_images.extend(images)
-                self.all_base_labels.extend(base_labels)
-                self.all_type_labels.extend(type_labels)
+                        self.all_contigs.extend(contigs)
+                        self.all_positions.extend(positions)
+                        self.all_depths.extend(depths)
+                        self.all_candidates.extend(candidates)
+                        self.all_candidate_frequency.extend(candidate_frequency)
+                        self.all_images.extend(images)
+                        self.all_base_labels.extend(base_labels)
+                        self.all_type_labels.extend(type_labels)
 
         time_now = time.time()
         mins = int((time_now - start_time) / 60)

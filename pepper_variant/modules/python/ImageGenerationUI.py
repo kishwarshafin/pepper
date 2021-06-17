@@ -242,44 +242,47 @@ class ImageGenerationUtils:
         sys.stderr.flush()
 
         start_time = time.time()
+        with DataStore(file_name, 'w') as output_hdf_file:
+            for counter, interval in enumerate(intervals):
+                chr_name, _start, _end = interval
 
-        all_contig = []
-        all_position = []
-        all_depth = []
-        all_candidates = []
-        all_candidate_frequency = []
-        all_image_matrix = []
-        all_base_label = []
-        all_type_label = []
+                image_generator = ImageGenerator(chromosome_name=chr_name,
+                                                 bam_file_path=bam_file,
+                                                 draft_file_path=draft_file,
+                                                 use_hp_info=use_hp_info,
+                                                 truth_vcf=truth_vcf,
+                                                 train_mode=train_mode,
+                                                 random_draw_probability=random_draw_probability)
 
-        for counter, interval in enumerate(intervals):
-            chr_name, _start, _end = interval
+                if not use_hp_info:
+                    candidates = image_generator.generate_summary(_start, _end, downsample_rate, bed_list, process_id)
+                    if candidates is not None:
+                        # load the previously written objects
+                        # if os.path.exists(file_name):
+                        #     with gzip.open(file_name, 'rb') as rfp:
+                        #         previous_candidates = pickle.load(rfp)
+                        #         candidates.extend(previous_candidates)
+                        all_contig = []
+                        all_position = []
+                        all_depth = []
+                        all_candidates = []
+                        all_candidate_frequency = []
+                        all_image_matrix = []
+                        all_base_label = []
+                        all_type_label = []
+                        for candidate in candidates:
+                            all_contig.append(candidate.contig)
+                            all_position.append(candidate.position)
+                            all_depth.append(candidate.depth)
+                            all_candidates.append(candidate.candidates)
+                            all_candidate_frequency.append(candidate.candidate_frequency)
+                            all_image_matrix.append(candidate.image_matrix)
+                            all_base_label.append(candidate.base_label)
+                            all_type_label.append(candidate.type_label)
 
-            image_generator = ImageGenerator(chromosome_name=chr_name,
-                                             bam_file_path=bam_file,
-                                             draft_file_path=draft_file,
-                                             use_hp_info=use_hp_info,
-                                             truth_vcf=truth_vcf,
-                                             train_mode=train_mode,
-                                             random_draw_probability=random_draw_probability)
+                        summary_name = chr_name + "_" + str(_start) + "_" + str(_end)
 
-            if not use_hp_info:
-                candidates = image_generator.generate_summary(_start, _end, downsample_rate, bed_list, process_id)
-                if candidates is not None:
-                    # load the previously written objects
-                    # if os.path.exists(file_name):
-                    #     with gzip.open(file_name, 'rb') as rfp:
-                    #         previous_candidates = pickle.load(rfp)
-                    #         candidates.extend(previous_candidates)
-                    for candidate in candidates:
-                        all_contig.append(candidate.contig)
-                        all_position.append(candidate.position)
-                        all_depth.append(candidate.depth)
-                        all_candidates.append(candidate.candidates)
-                        all_candidate_frequency.append(candidate.candidate_frequency)
-                        all_image_matrix.append(candidate.image_matrix)
-                        all_base_label.append(candidate.base_label)
-                        all_type_label.append(candidate.type_label)
+                        output_hdf_file.write_summary(summary_name, all_contig, all_position, all_depth, all_candidates, all_candidate_frequency, all_image_matrix, all_base_label, all_type_label)
 
                     # all_candidates.extend(candidates)
 
@@ -295,8 +298,6 @@ class ImageGenerationUtils:
                                      + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                     sys.stderr.flush()
 
-        with DataStore(file_name, 'w') as output_hdf_file:
-            output_hdf_file.write_summary(all_contig, all_position, all_depth, all_candidates, all_candidate_frequency, all_image_matrix, all_base_label, all_type_label)
 
         return process_id
 

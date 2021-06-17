@@ -51,7 +51,7 @@ class DataStore(object):
         self._meta = self.meta
         self._meta.update(meta)
 
-    def write_summary(self, contigs, positions, depths, all_candidates, all_candidate_frequency, all_images, all_base_labels, all_type_label):
+    def write_summary(self, summary_name, contigs, positions, depths, all_candidates, all_candidate_frequency, all_images, all_base_labels, all_type_label):
         if 'summaries' not in self.meta:
             self.meta['summaries'] = set()
 
@@ -65,14 +65,16 @@ class DataStore(object):
         type_size = (len(all_type_label), 1)
 
         dt_candidates = h5py.special_dtype(vlen=str)
-        self.file_handler['{}/{}'.format(self._summary_path_, "contigs")] = np.array(contigs, dtype='S')
-        self.file_handler['{}/{}'.format(self._summary_path_, "positions")] = np.array(positions, dtype=np.int32)
-        self.file_handler['{}/{}'.format(self._summary_path_, "depths")] = np.array(depths, dtype=np.int32)
-        self.file_handler['{}/{}'.format(self._summary_path_, "candidates")] = np.array(all_candidates, dtype=dt_candidates)
-        self.file_handler['{}/{}'.format(self._summary_path_, "candidate_frequency")] = np.array(all_candidate_frequency, dtype=dt_candidates)
-        self.file_handler['{}/{}'.format(self._summary_path_, "images")] = np.array(all_images, dtype=np.int32)
-        self.file_handler['{}/{}'.format(self._summary_path_, "base_labels")] = np.array(all_base_labels, dtype=np.int32)
-        self.file_handler['{}/{}'.format(self._summary_path_, "type_label")] = np.array(all_type_label, dtype=np.int32)
+        if summary_name not in self.meta['summaries']:
+            self.meta['summaries'].add(summary_name)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "contigs")] = np.array(contigs, dtype='S')
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "positions")] = np.array(positions, dtype=np.int32)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "depths")] = np.array(depths, dtype=np.int32)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "candidates")] = np.array(all_candidates, dtype=dt_candidates)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "candidate_frequency")] = np.array(all_candidate_frequency, dtype=dt_candidates)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "images")] = np.array(all_images, dtype=np.int32)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "base_labels")] = np.array(all_base_labels, dtype=np.int32)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "type_label")] = np.array(all_type_label, dtype=np.int32)
         # self.file_handler['{}'.format(self._summary_path_)].create_dataset("contigs", contig_size, dtype=str_dt, data=contigs)
         # self.file_handler['{}'.format(self._summary_path_)].create_dataset("positions", position_size, dtype=np.int32, data=positions)
         # self.file_handler['{}'.format(self._summary_path_)].create_dataset("depth", depth_size, dtype=np.int32, data=depths)
