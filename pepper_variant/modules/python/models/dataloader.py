@@ -63,19 +63,17 @@ class SequenceDataset(Dataset):
         secs = int((time_now - start_time)) % 60
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
         sys.stderr.flush()
-        exit()
 
     def __getitem__(self, index):
         # load the image
-        candidate = self.all_candidates[index]
-        image = np.array(candidate.image_matrix)
-        type_label = candidate.type_label
-        base_label = candidate.base_label
+        image = np.array(self.all_images[index])
+        type_label = self.all_base_labels[index]
+        base_label = self.all_type_labels[index]
 
         return image, base_label, type_label
 
     def __len__(self):
-        return len(self.all_candidates)
+        return len(self.all_images)
 
 
 class SequenceDatasetFake(Dataset):
