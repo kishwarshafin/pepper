@@ -40,7 +40,7 @@ class SequenceDataset(Dataset):
         self.all_type_labels = []
 
         start_time = time.time()
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: STARTING LOADING PKL.\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: STARTING TO LOAD IMAGES.\n")
         sys.stderr.flush()
 
         for input_file in input_files:
@@ -55,7 +55,7 @@ class SequenceDataset(Dataset):
                         self.all_images.extend(images)
                         self.all_base_labels.extend(base_labels)
                         self.all_type_labels.extend(type_labels)
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING FINISHED.\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: IMAGE LOADING FINISHED.\n")
         sys.stderr.flush()
 
         time_now = time.time()
