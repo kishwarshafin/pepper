@@ -31,18 +31,18 @@ def predict_pytorch_fake(input_filepath, output_filepath, batch_size, num_worker
     with torch.no_grad():
 
         # for contig, depth, candidates, candidate_frequency, images, position, output_base, output_type in data_loader:
-        for candidates, images, output_base, output_type in data_loader:
+        for contigs, positions, depths, candidates, candidate_frequencies, images, base_predictions, type_predictions in data_loader:
             sys.stderr.flush()
             all_candidate_predictions = []
 
             for i in range(images.size(0)):
-                predicted_candidate = PEPPER_VARIANT.CandidateImagePrediction(candidates[i].contig,
-                                                                              candidates[i].position,
-                                                                              candidates[i].depth,
-                                                                              candidates[i].candidates,
-                                                                              candidates[i].candidate_frequency,
-                                                                              output_base[i],
-                                                                              output_type[i])
+                predicted_candidate = PEPPER_VARIANT.CandidateImagePrediction(contigs[i],
+                                                                              positions[i],
+                                                                              depths[i],
+                                                                              candidates[i],
+                                                                              candidate_frequencies[i],
+                                                                              base_predictions[i],
+                                                                              type_predictions[i])
                 all_candidate_predictions.append(predicted_candidate)
 
             pickle.dump(all_candidate_predictions, prediction_data_file)

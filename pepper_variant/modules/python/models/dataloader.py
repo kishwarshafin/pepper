@@ -22,7 +22,7 @@ def get_file_paths_from_directory(directory_path):
     :return: A list of paths of files
     """
     file_paths = [join(directory_path, file) for file in listdir(directory_path) if isfile(join(directory_path, file))
-                  and file[-6:] == 'pkl.gz']
+                  and file[-4:] == 'hdf5']
     return file_paths
 
 
@@ -88,23 +88,41 @@ class SequenceDatasetFake(Dataset):
     def __init__(self, image_directory):
         # self.transform = transforms.Compose([transforms.ToTensor()])
         # self.transform = transforms.Compose([])
-        pickle_files = get_file_paths_from_directory(image_directory)
+        input_files = get_file_paths_from_directory(image_directory)
+        self.all_contigs = []
+        self.all_positions = []
+        self.all_depths = []
         self.all_candidates = []
+        self.all_candidate_frequency = []
+        self.all_images = []
+        self.all_base_labels = []
+        self.all_type_labels = []
 
         start_time = time.time()
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: STARTING LOADING PKL.")
         sys.stderr.flush()
 
-        for pickle_file in pickle_files:
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING: " + str(pickle_file) + "\n")
-            sys.stderr.flush()
-            with gzip.open(pickle_file, "rb") as image_file:
-                while True:
-                    try:
-                        candidates = pickle.load(image_file)
-                        self.all_candidates.extend(candidates)
-                    except EOFError:
-                        break
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING: " + str(input_files) + "\n")
+        sys.stderr.flush()
+        for input_file in input_files:
+            with h5py.File(input_file, 'r') as hdf5_file:
+                contigs = hdf5_file['summaries']['contigs'][()]
+                positions = hdf5_file['summaries']['positions'][()]
+                depths = hdf5_file['summaries']['depths'][()]
+                candidates = hdf5_file['summaries']['candidates'][()]
+                candidate_frequency = hdf5_file['summaries']['candidate_frequency'][()]
+                images = hdf5_file['summaries']['images'][()]
+                base_labels = hdf5_file['summaries']['base_labels'][()]
+                type_labels = hdf5_file['summaries']['type_label'][()]
+
+                self.all_contigs.extend(contigs)
+                self.all_positions.extend(positions)
+                self.all_depths.extend(depths)
+                self.all_candidates.extend(candidates)
+                self.all_candidate_frequency.extend(candidate_frequency)
+                self.all_images.extend(images)
+                self.all_base_labels.extend(base_labels)
+                self.all_type_labels.extend(type_labels)
 
         time_now = time.time()
         mins = int((time_now - start_time) / 60)
@@ -114,50 +132,44 @@ class SequenceDatasetFake(Dataset):
 
     @staticmethod
     def my_collate(batch):
-        candidate = [item[0] for item in batch]
-        images = [item[1] for item in batch]
-        base_predictions = [item[2] for item in batch]
-        type_predictions = [item[3] for item in batch]
-        images = torch.LongTensor(images)
+        contig = [item[0] for item in batch]
+        position = [item[1] for item in batch]
+        depth = [item[2] for item in batch]
+        candidate = [item[3] for item in batch]
+        candidate_frequency = [item[4] for item in batch]
+        image = [item[5] for item in batch]
+        base_label = [item[6] for item in batch]
+        type_label = [item[7] for item in batch]
 
-        return [candidate, images, base_predictions, type_predictions]
+        image = torch.LongTensor(image)
+
+        return [contig, position, depth, candidate, candidate_frequency, image, base_label, type_label]
 
     def __getitem__(self, index):
         # load the image
-        candidate = self.all_candidates[index]
-        contig = candidate.contig
-        image = np.array(candidate.image_matrix)
+        contig = self.all_contigs[index].decode('UTF-8')
+        position = self.all_positions[index]
+        depth = self.all_depths[index]
+        candidate = self.all_candidates[index].strip('][').split(', ')
+        candidate_frequency = self.all_candidate_frequency[index].strip('][').split(', ')
+        image = self.all_images[index]
+        base_label = self.all_base_labels[index]
+        type_label = self.all_type_labels[index]
 
-        position = candidate.position
-        type_label = candidate.type_label
-        base_label = candidate.base_label
-        candidates = candidate.candidates
-        candidate_frequency = candidate.candidate_frequency
-        depth = candidate.depth
+        candidate_frequency = [int(x) for x in candidate_frequency]
+        candidate = [x.strip("'") for x in candidate]
 
         base_predictions = np.zeros(ImageSizeOptions.TOTAL_LABELS)
         base_predictions[base_label] = 1
 
         type_predictions = np.zeros(ImageSizeOptions.TOTAL_TYPE_LABELS)
         type_predictions[type_label] = 1
-        # print("######")
-        # print(contig)
-        #
-        # print(position)
-        # print(depth)
-        # print(candidates)
-        # print(candidate_frequency)
-        # print(type(image))
-        # print(base_predictions)
-        # print(type_predictions)
-        # print("######")
-        # exit(0)
 
-        return candidate, image, base_predictions, type_predictions
-        # return contig, depth, candidates, candidate_frequency, image, position, base_predictions, type_predictions
+        # return candidate, image, base_predictions, type_predictions
+        return contig, position, depth, candidate, candidate_frequency, image, base_predictions, type_predictions
 
     def __len__(self):
-        return len(self.all_candidates)
+        return len(self.all_images)
 
 
 class SequenceDatasetHP(Dataset):

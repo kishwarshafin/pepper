@@ -230,7 +230,7 @@ class ImageGenerationUtils:
         if use_hp_info:
             file_name = file_name + "_" + "hp"
 
-        file_name = file_name + ".pkl.gz"
+        file_name = file_name + ".hdf5"
 
         intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == process_id]
 
@@ -242,8 +242,16 @@ class ImageGenerationUtils:
         sys.stderr.flush()
 
         start_time = time.time()
-        pickle_output = gzip.open(file_name, 'wb')
+
+        all_contig = []
+        all_position = []
+        all_depth = []
         all_candidates = []
+        all_candidate_frequency = []
+        all_image_matrix = []
+        all_base_label = []
+        all_type_label = []
+
         for counter, interval in enumerate(intervals):
             chr_name, _start, _end = interval
 
@@ -264,7 +272,15 @@ class ImageGenerationUtils:
                     #         previous_candidates = pickle.load(rfp)
                     #         candidates.extend(previous_candidates)
                     for candidate in candidates:
-                        pickle.dump(candidate, pickle_output, pickle.HIGHEST_PROTOCOL)
+                        all_contig.append(candidate.contig)
+                        all_position.append(candidate.position)
+                        all_depth.append(candidate.depth)
+                        all_candidates.append(candidate.candidates)
+                        all_candidate_frequency.append(candidate.candidate_frequency)
+                        all_image_matrix.append(candidate.image_matrix)
+                        all_base_label.append(candidate.base_label)
+                        all_type_label.append(candidate.type_label)
+
                     # all_candidates.extend(candidates)
 
                 if counter > 0 and counter % 10 == 0 and process_id == 0:
@@ -279,7 +295,8 @@ class ImageGenerationUtils:
                                      + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                     sys.stderr.flush()
 
-        pickle_output.close()
+        with DataStore(file_name, 'w') as output_hdf_file:
+            output_hdf_file.write_summary(all_contig, all_position, all_depth, all_candidates, all_candidate_frequency, all_image_matrix, all_base_label, all_type_label)
 
         return process_id
 
