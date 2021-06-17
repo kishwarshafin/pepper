@@ -56,13 +56,6 @@ class DataStore(object):
             self.meta['summaries'] = set()
 
         # create the group
-        contig_size = (len(contigs), 1)
-        position_size = (len(positions), 1)
-        depth_size = (len(depths), 1)
-        candidate_frequency_size = (len(all_candidate_frequency),)
-        image_size = (len(all_images), len(all_images[0]), len(all_images[0][0]))
-        base_size = (len(all_base_labels), 1)
-        type_size = (len(all_type_label), 1)
 
         dt_candidates = h5py.special_dtype(vlen=str)
         if summary_name not in self.meta['summaries']:
