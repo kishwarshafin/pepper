@@ -34,35 +34,33 @@ class SequenceDataset(Dataset):
     def __init__(self, image_directory):
         # self.transform = transforms.Compose([transforms.ToTensor()])
         # self.transform = transforms.Compose([])
-        pickle_files = get_file_paths_from_directory(image_directory)
-        self.all_candidates = []
+        input_files = get_file_paths_from_directory(image_directory)
+        self.all_images = []
+        self.all_base_labels = []
+        self.all_type_labels = []
 
         start_time = time.time()
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: STARTING LOADING PKL.\n")
         sys.stderr.flush()
 
-        for pickle_file in pickle_files:
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING: " + str(pickle_file) + "\n")
-            sys.stderr.flush()
+        for input_file in input_files:
+            with h5py.File(input_file, 'r') as hdf5_file:
+                if 'summaries' in hdf5_file:
+                    summary_names = list(hdf5_file['summaries'].keys())
+                    for summary_name in summary_names:
+                        images = hdf5_file['summaries'][summary_name]['images'][()]
+                        base_labels = hdf5_file['summaries'][summary_name]['base_labels'][()]
+                        type_labels = hdf5_file['summaries'][summary_name]['type_label'][()]
 
-            gc.disable()
-            with gzip.open(pickle_file, "rb") as image_file:
-                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING\n")
-                sys.stderr.flush()
-                while True:
-                    try:
-                        candidate = pickle.load(image_file)
-                        self.all_candidates.append(candidate)
-                    except EOFError:
-                        break
-                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: DONE\n")
-                sys.stderr.flush()
-            gc.enable()
+                        self.all_images.extend(images)
+                        self.all_base_labels.extend(base_labels)
+                        self.all_type_labels.extend(type_labels)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING FINISHED.\n")
+        sys.stderr.flush()
 
         time_now = time.time()
         mins = int((time_now - start_time) / 60)
         secs = int((time_now - start_time)) % 60
-        print(len(self.all_candidates))
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
         sys.stderr.flush()
         exit()
