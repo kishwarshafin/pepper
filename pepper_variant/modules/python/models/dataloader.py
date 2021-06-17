@@ -5,8 +5,11 @@ from pepper_variant.modules.python.Options import ImageSizeOptions
 import torch
 import torchvision.transforms as transforms
 import h5py
+import gzip
 import pickle
 import sys
+import time
+from datetime import datetime
 import numpy as np
 
 
@@ -32,6 +35,10 @@ class SequenceDataset(Dataset):
         pickle_files = get_file_paths_from_directory(image_directory)
         self.all_candidates = []
 
+        start_time = time.time()
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: STARTING LOADING PKL.")
+        sys.stderr.flush()
+
         for pickle_file in pickle_files:
             with open(pickle_file, "rb") as image_file:
                 while True:
@@ -40,6 +47,12 @@ class SequenceDataset(Dataset):
                         self.all_candidates.extend(candidates)
                     except EOFError:
                         break
+
+        time_now = time.time()
+        mins = int((time_now - start_time) / 60)
+        secs = int((time_now - start_time)) % 60
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
+        sys.stderr.flush()
 
     def __getitem__(self, index):
         # load the image
@@ -65,14 +78,26 @@ class SequenceDatasetFake(Dataset):
         pickle_files = get_file_paths_from_directory(image_directory)
         self.all_candidates = []
 
+        start_time = time.time()
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: STARTING LOADING PKL.")
+        sys.stderr.flush()
+
         for pickle_file in pickle_files:
-            with open(pickle_file, "rb") as image_file:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING: " + str(pickle_file) + "\n")
+            sys.stderr.flush()
+            with gzip.open(pickle_file, "rb") as image_file:
                 while True:
                     try:
                         candidates = pickle.load(image_file)
                         self.all_candidates.extend(candidates)
                     except EOFError:
                         break
+
+        time_now = time.time()
+        mins = int((time_now - start_time) / 60)
+        secs = int((time_now - start_time)) % 60
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
+        sys.stderr.flush()
 
     @staticmethod
     def my_collate(batch):
