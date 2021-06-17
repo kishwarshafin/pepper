@@ -53,6 +53,7 @@ class SequenceDataset(Dataset):
         secs = int((time_now - start_time)) % 60
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
         sys.stderr.flush()
+        exit()
 
     def __getitem__(self, index):
         # load the image
