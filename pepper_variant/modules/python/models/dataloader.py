@@ -22,7 +22,7 @@ def get_file_paths_from_directory(directory_path):
     :return: A list of paths of files
     """
     file_paths = [join(directory_path, file) for file in listdir(directory_path) if isfile(join(directory_path, file))
-                  and file[-3:] == 'pkl']
+                  and file[-6:] == 'pkl.gz']
     return file_paths
 
 
@@ -46,7 +46,7 @@ class SequenceDataset(Dataset):
             sys.stderr.flush()
 
             gc.disable()
-            with open(pickle_file, "rb") as image_file:
+            with gzip.open(pickle_file, "rb") as image_file:
                 while True:
                     try:
                         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING\n")
