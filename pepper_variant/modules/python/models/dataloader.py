@@ -4,6 +4,7 @@ from torch.utils.data import Dataset
 from pepper_variant.modules.python.Options import ImageSizeOptions
 import concurrent.futures
 import torch
+import gc
 import torchvision.transforms as transforms
 import h5py
 import gzip
@@ -43,6 +44,8 @@ class SequenceDataset(Dataset):
         for pickle_file in pickle_files:
             sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: LOADING: " + str(pickle_file) + "\n")
             sys.stderr.flush()
+
+            gc.disable()
             with open(pickle_file, "rb") as image_file:
                 while True:
                     try:
@@ -56,6 +59,7 @@ class SequenceDataset(Dataset):
                         sys.stderr.flush()
                     except EOFError:
                         break
+            gc.enable()
 
         time_now = time.time()
         mins = int((time_now - start_time) / 60)
