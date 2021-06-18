@@ -37,7 +37,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
 
     # set all threads to 1 to avoid issues
-    threads = 1
+    # threads = 1
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: SETTING THREADS TO: " + str(threads) + ".\n")
     sys.stderr.flush()
     sess_options.intra_op_num_threads = threads
@@ -118,7 +118,7 @@ def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, ba
             prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_base)
             batch_completed += 1
 
-            if batch_completed % 10 == 0 and batch_completed != 0:
+            if batch_completed % 100 == 0 and batch_completed != 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
                 sys.stderr.flush()
 
