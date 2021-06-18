@@ -18,6 +18,18 @@ from pepper_variant.modules.python.DataStorePredict import DataStore
 
 
 def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, threads, thread_id):
+    # create output file
+    output_filename = output_filepath + "pepper_prediction_" + str(thread_id) + ".hdf"
+    # prediction_data_file = DataStore(output_filename, mode='w')
+
+    # data loader
+    input_data = SequenceDataset(input_filepath)
+    data_loader = DataLoader(input_data,
+                             batch_size=batch_size,
+                             shuffle=False,
+                             num_workers=num_workers,
+                             collate_fn=SequenceDataset.my_collate)
+
     # session options
     sess_options = onnxruntime.SessionOptions()
     sess_options.intra_op_num_threads = threads
@@ -26,20 +38,6 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
 
     ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
     torch.set_num_threads(threads)
-
-    # create output file
-    output_filename = output_filepath + "pepper_prediction_" + str(thread_id) + ".hdf"
-    # prediction_data_file = DataStore(output_filename, mode='w')
-
-    print(thread_id, file_chunks)
-    # data loader
-    input_data = SequenceDataset(input_filepath, file_chunks)
-
-    data_loader = DataLoader(input_data,
-                             batch_size=batch_size,
-                             shuffle=False,
-                             num_workers=num_workers,
-                             collate_fn=SequenceDataset.my_collate)
 
     batch_completed = 0
     total_batches = len(data_loader)

@@ -80,7 +80,7 @@ class SequenceDataset(Dataset):
         return [contig, position, depth, candidate, candidate_frequency, image]
 
     def __getitem__(self, index):
-        print(index)
+        # print(index)
 
         # load the image
         contig = self.all_contigs[index].decode('UTF-8')
@@ -94,6 +94,7 @@ class SequenceDataset(Dataset):
         return contig, position, depth, candidate, candidate_frequency, image
 
     def __len__(self):
+        print("RETURNING LENGTH: ", len(self.all_images))
         return len(self.all_images)
 
 
