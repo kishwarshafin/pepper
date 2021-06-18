@@ -22,8 +22,9 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     output_filename = output_filepath + "pepper_prediction_" + str(thread_id) + ".hdf"
     prediction_data_file = DataStore(output_filename, mode='w')
 
+    print(thread_id, len(file_chunks), file_chunks)
     # data loader
-    input_data = SequenceDataset(input_filepath)
+    input_data = SequenceDataset(input_filepath, file_chunks)
     data_loader = DataLoader(input_data,
                              batch_size=batch_size,
                              shuffle=False,
