@@ -19,7 +19,7 @@ def get_file_paths_from_directory(directory_path):
     :return: A list of paths of files
     """
     file_paths = [join(directory_path, file) for file in listdir(directory_path) if isfile(join(directory_path, file))
-                  and file[-3:] == 'hdf']
+                  and file[-4:] == 'hdf5']
     return file_paths
 
 
@@ -109,7 +109,7 @@ def distributed_cpu(image_dir, model_path, use_hp_info, batch_size, threads, num
     file_chunks = [x for x in file_chunks if x]
 
     callers = min(callers, len(file_chunks))
-    threads_per_caller = max(1, int(threads/callers))
+    threads_per_caller = max(1, int(threads/max(1, callers)))
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(callers) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREADS PER CALLER: " + str(threads_per_caller) + "\n")

@@ -91,7 +91,7 @@ def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, ba
                                                     num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
     transducer_model.eval()
     # create output file
-    output_filename = output_filepath + "pepper_prediction_" + ".hdf"
+    output_filename = output_filepath + "pepper_prediction" + ".hdf"
     prediction_data_file = DataStore(output_filename, mode='w')
 
     # data loader
@@ -99,7 +99,8 @@ def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, ba
     data_loader = DataLoader(input_data,
                              batch_size=batch_size,
                              shuffle=False,
-                             num_workers=num_workers)
+                             num_workers=num_workers,
+                             collate_fn=SequenceDataset.my_collate)
 
     transducer_model.eval()
 
@@ -107,29 +108,25 @@ def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, ba
     total_batches = len(data_loader)
 
     with torch.no_grad():
-        for contig, region_start, region_stop, images, position in data_loader:
+        for contigs, positions, depths, candidates, candidate_frequencies, images in data_loader:
             sys.stderr.flush()
             images = images.type(torch.FloatTensor)
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
             cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
             # run inference
-            output_base, output_type = transducer_model(images, hidden, cell_state, False)
+            output_base = transducer_model(images, hidden, cell_state, False)
+            # output_base, output_type = transducer_model(images, hidden, cell_state, False)
 
             output_base = output_base.detach().cpu().numpy()
-            output_type = output_type.detach().cpu().numpy()
+            # output_type = output_type.detach().cpu().numpy()
 
-            for i in range(images.size(0)):
-                prediction_data_file.write_prediction(contig[i],
-                                                      region_start[i],
-                                                      region_stop[i],
-                                                      position[i],
-                                                      output_base[i],
-                                                      output_type[i])
+            prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_base)
             batch_completed += 1
 
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
-            sys.stderr.flush()
+            if batch_completed % 10 == 0 and batch_completed != 0:
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
+                sys.stderr.flush()
 
 
 def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads_per_caller, num_workers):

@@ -46,7 +46,7 @@ class DataStore(object):
         self._meta = self.meta
         self._meta.update(meta)
 
-    def write_prediction(self, batch_no, contigs, positions, depths, candidates, candidate_frequencies, base_predictions, type_predictions):
+    def write_prediction(self, batch_no, contigs, positions, depths, candidates, candidate_frequencies, base_predictions):
         name = "batch_" + str(batch_no)
 
         if 'predictions' not in self.meta:
@@ -64,7 +64,7 @@ class DataStore(object):
             self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "candidates")] = np.array(candidates, dtype=dt_candidates)
             self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "candidate_frequency")] = np.array(candidate_frequencies, dtype=dt_candidates)
             self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "base_prediction")] = np.array(base_predictions, dtype=np.float)
-            self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "type_prediction")] = np.array(type_predictions, dtype=np.float)
+            # self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "type_prediction")] = np.array(type_predictions, dtype=np.float)
 
     def write_prediction_hp(self, contig, contig_start, contig_end, chunk_id, position, index, base_predictions_hp1, base_predictions_hp2):
         chunk_name_prefix = str(contig) + "-" + str(contig_start.item()) + "-" + str(contig_end.item())

@@ -51,7 +51,7 @@ class DataStore(object):
         self._meta = self.meta
         self._meta.update(meta)
 
-    def write_summary(self, summary_name, contigs, positions, depths, all_candidates, all_candidate_frequency, all_images, all_base_labels, all_type_label):
+    def write_summary(self, summary_name, contigs, positions, depths, all_candidates, all_candidate_frequency, all_images, all_base_labels, all_type_label, train_mode):
         if 'summaries' not in self.meta:
             self.meta['summaries'] = set()
 
@@ -66,8 +66,9 @@ class DataStore(object):
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "candidates")] = np.array(all_candidates, dtype=dt_candidates)
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "candidate_frequency")] = np.array(all_candidate_frequency, dtype=dt_candidates)
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "images")] = np.array(all_images, dtype=np.int32)
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "base_labels")] = np.array(all_base_labels, dtype=np.int32)
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "type_label")] = np.array(all_type_label, dtype=np.int32)
+            if train_mode:
+                self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "base_labels")] = np.array(all_base_labels, dtype=np.int32)
+                self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "type_label")] = np.array(all_type_label, dtype=np.int32)
         # self.file_handler['{}'.format(self._summary_path_)].create_dataset("contigs", contig_size, dtype=str_dt, data=contigs)
         # self.file_handler['{}'.format(self._summary_path_)].create_dataset("positions", position_size, dtype=np.int32, data=positions)
         # self.file_handler['{}'.format(self._summary_path_)].create_dataset("depth", depth_size, dtype=np.int32, data=depths)

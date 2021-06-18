@@ -282,7 +282,7 @@ class ImageGenerationUtils:
 
                         summary_name = chr_name + "_" + str(_start) + "_" + str(_end)
 
-                        output_hdf_file.write_summary(summary_name, all_contig, all_position, all_depth, all_candidates, all_candidate_frequency, all_image_matrix, all_base_label, all_type_label)
+                        output_hdf_file.write_summary(summary_name, all_contig, all_position, all_depth, all_candidates, all_candidate_frequency, all_image_matrix, all_base_label, all_type_label, train_mode)
 
                     # all_candidates.extend(candidates)
 

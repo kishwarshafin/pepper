@@ -294,22 +294,21 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                 candidates = hdf5_file['predictions'][batch_key]['candidates'][()]
                 candidate_frequencies = hdf5_file['predictions'][batch_key]['candidate_frequency'][()]
                 base_predictions = hdf5_file['predictions'][batch_key]['base_prediction'][()]
-                type_predictions = hdf5_file['predictions'][batch_key]['type_prediction'][()]
+                # type_predictions = hdf5_file['predictions'][batch_key]['type_prediction'][()]
 
                 for i in range(len(contigs)):
                     candidate = candidates[i].strip('][').split(', ')
                     candidate = [x.strip("'") for x in candidate]
 
                     candidate_frequency = candidate_frequencies[i].strip('][').split(', ')
-                    candidate_frequency = [int(x) for x in candidate_frequency]
-
-                    candidate = PEPPER_VARIANT.CandidateImagePrediction(contigs[i],
+                    candidate_frequency = [int(x.strip("'")) for x in candidate_frequency]
+                    candidate = PEPPER_VARIANT.CandidateImagePrediction(contigs[i].decode('UTF-8'),
                                                                         positions[i],
                                                                         depths[i],
                                                                         candidate,
                                                                         candidate_frequency,
                                                                         base_predictions[i],
-                                                                        type_predictions[i])
+                                                                        [])
                     all_candidates.append(candidate)
 
         for candidate in all_candidates:
