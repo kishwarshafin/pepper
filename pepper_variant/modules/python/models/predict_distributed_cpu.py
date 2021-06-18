@@ -37,7 +37,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
 
     # set all threads to 1 to avoid issues
-    # threads = 1
+    threads = 1
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: SETTING THREADS TO: " + str(threads) + ".\n")
     sys.stderr.flush()
     sess_options.intra_op_num_threads = threads
@@ -166,24 +166,23 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
 
     start_time = time.time()
 
-    file_chunks = None
-    thread_id = 0
-    predict(filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
+    # file_chunks = None
+    # thread_id = 0
+    # predict(filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
 
+    with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
+        futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
+                   for thread_id in range(0, total_callers)]
 
-    # with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
-        # futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
-        #            for thread_id in range(0, total_callers)]
-        #
-        # for fut in concurrent.futures.as_completed(futures):
-        #     if fut.exception() is None:
-        #         # get the results
-        #         thread_id = fut.result()
-        #         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
-        #                          + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
-        #     else:
-        #         sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
-        #     fut._result = None  # python issue 27144
+        for fut in concurrent.futures.as_completed(futures):
+            if fut.exception() is None:
+                # get the results
+                thread_id = fut.result()
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
+                                 + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
+            else:
+                sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
+            fut._result = None  # python issue 27144
 
     end_time = time.time()
     mins = int((end_time - start_time) / 60)
