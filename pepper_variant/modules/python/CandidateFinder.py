@@ -346,9 +346,6 @@ def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_p
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
         file_chunks = chunks(all_prediction_pair, max(2, int(len(all_prediction_pair) / threads) + 1))
-        for file in file_chunks:
-            print(file)
-        exit()
         futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, use_hp_info, file_chunk, freq_based, freq) for file_chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
@@ -358,7 +355,7 @@ def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_p
                 sys.stderr.write("ERROR IN THREAD: " + str(fut.exception()) + "\n")
             fut._result = None  # python issue 27144
 
-    # print("TOTAL CANDIDATES IN ", contig, len(all_selected_candidates))
+    print("TOTAL CANDIDATES ", len(all_selected_candidates))
     all_selected_candidates = sorted(all_selected_candidates, key=lambda x: x[1])
     # print("SORTED")
     return all_selected_candidates
