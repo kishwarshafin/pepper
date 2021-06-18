@@ -110,7 +110,7 @@ def distributed_cpu(image_dir, model_path, use_hp_info, batch_size, threads, num
 
     callers = min(callers, len(file_chunks))
     # use 1/2 the available CPUs to call
-    callers = max(1, int(callers/2))
+    callers = max(1, int(callers/4))
     # use uniform amount of CPUs per caller
     threads_per_caller = max(1, int(threads/callers))
 
