@@ -29,9 +29,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
 
     # create output file
     output_filename = output_filepath + "pepper_prediction_" + str(thread_id) + ".hdf"
-    prediction_data_file = DataStore(output_filename, mode='w')
 
-    print(thread_id, file_chunks)
     # data loader
     input_data = SequenceDataset(input_filepath, file_chunks)
 
@@ -43,27 +41,29 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
 
     batch_completed = 0
     total_batches = len(data_loader)
-    with torch.no_grad():
-        for contigs, positions, depths, candidates, candidate_frequencies, images in data_loader:
-            sys.stderr.flush()
-
-            images = images.type(torch.FloatTensor)
-            hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-            cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-
-            # run inference on onnx mode, which takes numpy inputs
-            ort_inputs = {ort_session.get_inputs()[0].name: images.cpu().numpy(),
-                          ort_session.get_inputs()[1].name: hidden.cpu().numpy(),
-                          ort_session.get_inputs()[2].name: cell_state.cpu().numpy()}
-            output_base = ort_session.run(None, ort_inputs)
-
-            prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_base)
-            batch_completed += 1
-
-            if thread_id == 0 and batch_completed % 5 == 0:
-                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
-                                 "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
+    with DataStore(output_filename, mode='w') as prediction_data_file:
+        with torch.no_grad():
+            for contigs, positions, depths, candidates, candidate_frequencies, images in data_loader:
                 sys.stderr.flush()
+
+                images = images.type(torch.FloatTensor)
+                hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+                cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+
+                # run inference on onnx mode, which takes numpy inputs
+                ort_inputs = {ort_session.get_inputs()[0].name: images.cpu().numpy(),
+                              ort_session.get_inputs()[1].name: hidden.cpu().numpy(),
+                              ort_session.get_inputs()[2].name: cell_state.cpu().numpy()}
+                print(ort_inputs)
+                output_base = ort_session.run(None, ort_inputs)
+
+                prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_base)
+                batch_completed += 1
+
+                if thread_id == 0 and batch_completed % 5 == 0:
+                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
+                                     "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
+                    sys.stderr.flush()
 
 
 def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, threads):
