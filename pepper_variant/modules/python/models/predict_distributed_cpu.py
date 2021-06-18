@@ -47,6 +47,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
         for contigs, positions, depths, candidates, candidate_frequencies, images in data_loader:
             sys.stderr.flush()
             print("HERE1")
+            print(images)
             images = images.type(torch.FloatTensor)
             print(images)
             print("HERE2")
