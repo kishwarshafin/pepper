@@ -350,13 +350,12 @@ def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_p
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
                 positional_candidates = fut.result()
-                print(len(positional_candidates))
                 all_selected_candidates.extend(positional_candidates)
             else:
                 sys.stderr.write("ERROR IN THREAD: " + str(fut.exception()) + "\n")
             fut._result = None  # python issue 27144
 
-    print("TOTAL CANDIDATES ", len(all_selected_candidates))
+
     all_selected_candidates = sorted(all_selected_candidates, key=lambda x: x[1])
     # print("SORTED")
     return all_selected_candidates
