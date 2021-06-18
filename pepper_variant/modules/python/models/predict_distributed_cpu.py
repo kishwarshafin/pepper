@@ -127,36 +127,36 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
     :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
-    predict_pytorch(filepath, file_chunks[0],  output_filepath, model_path, batch_size, num_workers, threads_per_caller)
-    # transducer_model, hidden_size, gru_layers, prev_ite = \
-    #     ModelHandler.load_simple_model_for_training(model_path,
-    #                                                 image_features=ImageSizeOptions.IMAGE_HEIGHT,
-    #                                                 num_classes=ImageSizeOptions.TOTAL_LABELS,
-    #                                                 num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
-    # transducer_model.eval()
-    #
-    # sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL LOADING TO ONNX\n")
-    # x = torch.zeros(1, ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1, ImageSizeOptions.IMAGE_HEIGHT)
-    # h = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-    # c = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-    #
-    # if not os.path.isfile(model_path + ".onnx"):
-    #     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SAVING MODEL TO ONNX\n")
-    #     torch.onnx.export(transducer_model, (x, h, c),
-    #                       model_path + ".onnx",
-    #                       training=False,
-    #                       opset_version=10,
-    #                       do_constant_folding=True,
-    #                       input_names=['image', 'hidden', 'cell_state'],
-    #                       output_names=['output_base'],
-    #                       dynamic_axes={'image': {0: 'batch_size'},
-    #                                     'hidden': {0: 'batch_size'},
-    #                                     'cell_state': {0: 'batch_size'},
-    #                                     'output_base': {0: 'batch_size'}})
-    #
-    # file_chunks = None
-    # thread_id = 0
-    # predict(filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
+    # predict_pytorch(filepath, file_chunks[0],  output_filepath, model_path, batch_size, num_workers, threads_per_caller)
+    transducer_model, hidden_size, gru_layers, prev_ite = \
+        ModelHandler.load_simple_model_for_training(model_path,
+                                                    image_features=ImageSizeOptions.IMAGE_HEIGHT,
+                                                    num_classes=ImageSizeOptions.TOTAL_LABELS,
+                                                    num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
+    transducer_model.eval()
+
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL LOADING TO ONNX\n")
+    x = torch.zeros(1, ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1, ImageSizeOptions.IMAGE_HEIGHT)
+    h = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+    c = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+
+    if not os.path.isfile(model_path + ".onnx"):
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SAVING MODEL TO ONNX\n")
+        torch.onnx.export(transducer_model, (x, h, c),
+                          model_path + ".onnx",
+                          training=False,
+                          opset_version=10,
+                          do_constant_folding=True,
+                          input_names=['image', 'hidden', 'cell_state'],
+                          output_names=['output_base'],
+                          dynamic_axes={'image': {0: 'batch_size'},
+                                        'hidden': {0: 'batch_size'},
+                                        'cell_state': {0: 'batch_size'},
+                                        'output_base': {0: 'batch_size'}})
+
+    file_chunks = None
+    thread_id = 0
+    predict(filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
 
     # start_time = time.time()
     # with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
