@@ -67,7 +67,7 @@ class SequenceDataset(Dataset):
         candidate_frequency = [item[4] for item in batch]
         image = [item[5] for item in batch]
 
-        image = torch.LongTensor(image)
+        image = torch.FloatTensor(image)
 
         return [contig, position, depth, candidate, candidate_frequency, image]
 
