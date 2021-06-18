@@ -46,7 +46,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     with torch.no_grad():
         for contigs, positions, depths, candidates, candidate_frequencies, images in data_loader:
             sys.stderr.flush()
-
+            print("HERE1")
             images = images.type(torch.FloatTensor)
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
             cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
