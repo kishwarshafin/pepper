@@ -140,7 +140,7 @@ class SequenceDatasetFake(Dataset):
         base_label = [item[6] for item in batch]
         type_label = [item[7] for item in batch]
 
-        image = torch.LongTensor(image)
+        image = image.type(torch.FloatTensor)
 
         return [contig, position, depth, candidate, candidate_frequency, image, base_label, type_label]
 
