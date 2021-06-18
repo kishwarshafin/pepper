@@ -57,7 +57,6 @@ class SequenceDataset(Dataset):
                         self.all_candidates.extend(candidates)
                         self.all_candidate_frequency.extend(candidate_frequency)
                         self.all_images.extend(images)
-        print("TOTAL IMAGE LENGTH: ", len(self.all_images))
 
     @staticmethod
     def my_collate(batch):
