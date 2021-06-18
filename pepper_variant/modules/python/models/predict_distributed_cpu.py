@@ -20,7 +20,7 @@ from pepper_variant.modules.python.DataStorePredict import DataStore
 def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, threads, thread_id):
     # create output file
     output_filename = output_filepath + "pepper_prediction_" + str(thread_id) + ".hdf"
-    # prediction_data_file = DataStore(output_filename, mode='w')
+    prediction_data_file = DataStore(output_filename, mode='w')
 
     # data loader
     input_data = SequenceDataset(input_filepath)
@@ -32,11 +32,13 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
 
     # session options
     sess_options = onnxruntime.SessionOptions()
-    sess_options.intra_op_num_threads = threads
     sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL
     sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
-
     ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
+
+    # set all threads to 1 to avoid issues
+    threads = 1
+    sess_options.intra_op_num_threads = threads
     torch.set_num_threads(threads)
 
     batch_completed = 0
@@ -54,7 +56,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                           ort_session.get_inputs()[2].name: cell_state.cpu().numpy()}
             output_base = ort_session.run(None, ort_inputs)
 
-            # prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_base)
+            prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_base)
             batch_completed += 1
 
             if thread_id == 0 and batch_completed % 5 == 0:
@@ -154,29 +156,29 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
                                         'cell_state': {0: 'batch_size'},
                                         'output_base': {0: 'batch_size'}})
 
-    file_chunks = None
-    thread_id = 0
-    predict(filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
+    # file_chunks = None
+    # thread_id = 0
+    # predict(filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
 
-    # start_time = time.time()
-    # with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
-    #     futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
-    #                for thread_id in range(0, total_callers)]
-    #
-    #     for fut in concurrent.futures.as_completed(futures):
-    #         if fut.exception() is None:
-    #             # get the results
-    #             thread_id = fut.result()
-    #             sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
-    #                              + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
-    #         else:
-    #             sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
-    #         fut._result = None  # python issue 27144
-    #
-    # end_time = time.time()
-    # mins = int((end_time - start_time) / 60)
-    # secs = int((end_time - start_time)) % 60
-    # sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PREDICTION\n")
-    # sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
+    start_time = time.time()
+    with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
+        futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
+                   for thread_id in range(0, total_callers)]
+
+        for fut in concurrent.futures.as_completed(futures):
+            if fut.exception() is None:
+                # get the results
+                thread_id = fut.result()
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREAD "
+                                 + str(thread_id) + " FINISHED SUCCESSFULLY.\n")
+            else:
+                sys.stderr.write("ERROR: " + str(fut.exception()) + "\n")
+            fut._result = None  # python issue 27144
+
+    end_time = time.time()
+    mins = int((end_time - start_time) / 60)
+    secs = int((end_time - start_time)) % 60
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PREDICTION\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
 
