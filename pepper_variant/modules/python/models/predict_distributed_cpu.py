@@ -51,12 +51,11 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     total_batches = len(data_loader)
 
     with torch.no_grad():
-        hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-        cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-
         for contigs, positions, depths, candidates, candidate_frequencies, images in data_loader:
             sys.stderr.flush()
             # images = images.type(torch.FloatTensor)
+            hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+            cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
             # run inference on onnx mode, which takes numpy inputs
             ort_inputs = {ort_session.get_inputs()[0].name: images.cpu().numpy(),
                           ort_session.get_inputs()[1].name: hidden.cpu().numpy(),
