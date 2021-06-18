@@ -59,13 +59,6 @@ class SequenceDataset(Dataset):
                         self.all_candidate_frequency.extend(candidate_frequency)
                         self.all_images.extend(images)
 
-        print(len(self.all_contigs))
-        print(len(self.all_positions))
-        print(len(self.all_depths))
-        print(len(self.all_candidates))
-        print(len(self.all_candidate_frequency))
-        print(len(self.all_images))
-
     @staticmethod
     def my_collate(batch):
         contig = [item[0] for item in batch]
