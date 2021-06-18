@@ -19,7 +19,6 @@ class VCFWriter:
 
     def write_vcf_records(self, variants_list):
         last_position = -1
-        print(len(variants_list))
         for called_variant in variants_list:
             contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability = called_variant
             # print(contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability)
