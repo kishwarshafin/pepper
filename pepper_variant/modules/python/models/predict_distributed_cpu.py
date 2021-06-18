@@ -40,8 +40,8 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: SETTING THREADS TO: " + str(threads) + ".\n")
         sys.stderr.flush()
 
-    sess_options.intra_op_num_threads = threads
-    # torch.set_num_threads(threads)
+    # sess_options.intra_op_num_threads = threads
+    torch.set_num_threads(threads)
 
     if thread_id == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: STARTING INFERENCE." + "\n")
