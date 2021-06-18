@@ -23,7 +23,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     prediction_data_file = DataStore(output_filename, mode='w')
 
     # data loader
-    input_data = SequenceDataset(input_filepath, file_chunks)
+    input_data = SequenceDataset(input_filepath)
     data_loader = DataLoader(input_data,
                              batch_size=batch_size,
                              shuffle=False,

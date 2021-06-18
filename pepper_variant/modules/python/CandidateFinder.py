@@ -284,9 +284,10 @@ def get_genotype_from_base(ref_base, base_prediction1, base_prediction2):
 def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chunks, freq_based, freq):
     fasta_handler = PEPPER_VARIANT.FASTA_handler(reference_file_path)
     selected_candidate_list = []
-    all_candidates = []
+
     for file_chunk in file_chunks:
         file_name, batch_key = file_chunk
+        all_candidates = []
         with h5py.File(file_name, 'r') as hdf5_file:
             if 'predictions' in hdf5_file.keys():
                 contigs = hdf5_file['predictions'][batch_key]['contigs'][()]
