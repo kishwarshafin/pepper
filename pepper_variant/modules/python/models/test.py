@@ -44,6 +44,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
     # Test the Model
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST STARTING\n")
+    sys.stderr.flush()
     confusion_matrix = meter.ConfusionMeter(num_classes)
     # confusion_matrix_type = meter.ConfusionMeter(num_type_classes)
 
@@ -55,6 +56,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
     with torch.no_grad():
         for ii, (images, labels, type_labels) in enumerate(test_loader):
+            sys.stderr.flush()
             labels = labels.type(torch.LongTensor)
             # type_labels = type_labels.type(torch.LongTensor)
             images = images.type(torch.FloatTensor)

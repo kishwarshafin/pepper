@@ -27,7 +27,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     data_loader = DataLoader(input_data,
                              batch_size=batch_size,
                              shuffle=False,
-                             num_workers=num_workers,
+                             num_workers=0,
                              collate_fn=SequenceDataset.my_collate)
 
     # session options
@@ -84,7 +84,7 @@ def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, ba
     data_loader = DataLoader(input_data,
                              batch_size=batch_size,
                              shuffle=False,
-                             num_workers=num_workers,
+                             num_workers=0,
                              collate_fn=SequenceDataset.my_collate)
 
     transducer_model.eval()
