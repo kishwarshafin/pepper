@@ -22,7 +22,6 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     output_filename = output_filepath + "pepper_prediction_" + str(thread_id) + ".hdf"
     prediction_data_file = DataStore(output_filename, mode='w')
 
-    print(thread_id, len(file_chunks), file_chunks)
     # data loader
     input_data = SequenceDataset(input_filepath, file_chunks)
     data_loader = DataLoader(input_data,
@@ -37,13 +36,12 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
     ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
 
-    threads = 1
     if thread_id == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: SETTING THREADS TO: " + str(threads) + ".\n")
         sys.stderr.flush()
 
     sess_options.intra_op_num_threads = threads
-    torch.set_num_threads(threads)
+    # torch.set_num_threads(threads)
 
     if thread_id == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: STARTING INFERENCE." + "\n")

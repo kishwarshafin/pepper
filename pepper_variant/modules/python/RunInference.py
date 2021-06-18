@@ -101,7 +101,7 @@ def distributed_cpu(image_dir, model_path, use_hp_info, batch_size, threads, num
     input_files = get_file_paths_from_directory(image_dir)
 
     # use 1/2 the available CPUs to call
-    callers = max(1, int(threads/2))
+    callers = max(1, int(threads/4))
 
     file_chunks = [[] for i in range(callers)]
     for i in range(0, len(input_files)):
@@ -112,7 +112,6 @@ def distributed_cpu(image_dir, model_path, use_hp_info, batch_size, threads, num
     callers = min(callers, len(file_chunks))
     # use uniform amount of CPUs per caller
     threads_per_caller = max(1, int(threads/callers))
-
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(callers) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREADS PER CALLER: " + str(threads_per_caller) + "\n")
