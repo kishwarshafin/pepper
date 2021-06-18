@@ -48,7 +48,11 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
             sys.stderr.flush()
             print("HERE1")
             images = images.type(torch.FloatTensor)
+            print(images)
+            print("HERE2")
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+            print(hidden)
+            print("HERE3")
             cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
             print("HERE")
             # run inference on onnx mode, which takes numpy inputs
