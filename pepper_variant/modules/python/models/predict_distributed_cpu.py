@@ -36,14 +36,16 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
     ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
 
-    # set all threads to 1 to avoid issues
-    threads = 1
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: SETTING THREADS TO: " + str(threads) + ".\n")
-    sys.stderr.flush()
+    if thread_id == 0:
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: SETTING THREADS TO: " + str(threads) + ".\n")
+        sys.stderr.flush()
+
     sess_options.intra_op_num_threads = threads
     torch.set_num_threads(threads)
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: SETTING THREADS TO: " + str(threads) + ".\n")
-    sys.stderr.flush()
+
+    if thread_id == 0:
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: STARTING INFERENCE." + "\n")
+        sys.stderr.flush()
 
     batch_completed = 0
     total_batches = len(data_loader)
@@ -64,7 +66,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
 
             batch_completed += 1
 
-            if thread_id == 0 and batch_completed % 50 == 0:
+            if thread_id == 0 and batch_completed % 10 == 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
                 sys.stderr.flush()
