@@ -36,6 +36,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
     ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
 
+    threads = 1
     if thread_id == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: SETTING THREADS TO: " + str(threads) + ".\n")
         sys.stderr.flush()
