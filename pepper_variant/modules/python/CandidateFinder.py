@@ -11,6 +11,7 @@ from numpy import argmax
 from pepper_variant.modules.python.Options import PEPPERVariantCandidateFinderOptions, ImageSizeOptions
 from pepper_variant.modules.python.CandidateFinderCPP import CandidateFinderCPP
 import pickle
+from datetime import datetime
 from pepper_variant.build import PEPPER_VARIANT
 
 
@@ -355,6 +356,8 @@ def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_p
                 sys.stderr.write("ERROR IN THREAD: " + str(fut.exception()) + "\n")
             fut._result = None  # python issue 27144
 
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: : TOTAL CANDIDATES FOUND: " + str(len(all_selected_candidates)) + "\n")
+    sys.stderr.flush()
 
     all_selected_candidates = sorted(all_selected_candidates, key=lambda x: x[1])
     # print("SORTED")
