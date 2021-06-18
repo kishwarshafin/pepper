@@ -64,8 +64,8 @@ def add_run_inference_arguments(parser):
         "--num_workers",
         type=int,
         required=False,
-        default=4,
-        help="Number of workers for loading images. Default is 4."
+        default=0,
+        help="Number of workers for loading images. Default is 0."
     )
     parser.add_argument(
         "-t",

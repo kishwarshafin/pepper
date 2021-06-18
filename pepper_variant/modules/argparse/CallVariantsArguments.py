@@ -97,8 +97,8 @@ def add_call_variant_arguments(parser):
         "--num_workers",
         type=int,
         required=False,
-        default=4,
-        help="Number of workers for loading images. Default is 4."
+        default=0,
+        help="Number of workers for loading images. Default is 0."
     )
     parser.add_argument(
         "--freq_based",

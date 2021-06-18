@@ -25,10 +25,13 @@ class SequenceDataset(Dataset):
     Arguments:
         A pkl directory
     """
-    def __init__(self, image_directory):
+    def __init__(self, image_directory, file_chunks=None):
         # self.transform = transforms.Compose([transforms.ToTensor()])
         # self.transform = transforms.Compose([])
-        input_files = get_file_paths_from_directory(image_directory)
+        if file_chunks is None:
+            input_files = get_file_paths_from_directory(image_directory)
+        else:
+            input_files = file_chunks
         self.all_contigs = []
         self.all_positions = []
         self.all_depths = []

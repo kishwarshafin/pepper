@@ -61,7 +61,7 @@ class TransducerGRU(nn.Module):
         self.output_layer = nn.Linear(self.linear_5_size, self.num_classes)
         # self.output_layer_type = nn.Linear(self.linear_5_size, self.num_classes_type)
 
-    def forward(self, x, hidden, cell_state, train_mode):
+    def forward(self, x, hidden, cell_state, train_mode=False):
         hidden = hidden.transpose(0, 1).contiguous()
         cell_state = cell_state.transpose(0, 1).contiguous()
 
