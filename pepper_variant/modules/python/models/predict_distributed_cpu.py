@@ -48,7 +48,7 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
             sys.stderr.flush()
             print("HERE1")
             print(images)
-            images = images.type(torch.FloatTensor)
+            # images = images.type(torch.FloatTensor)
             print(images)
             print("HERE2")
             hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
