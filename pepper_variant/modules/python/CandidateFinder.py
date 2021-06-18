@@ -302,6 +302,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
 
                     candidate_frequency = candidate_frequencies[i].strip('][').split(', ')
                     candidate_frequency = [int(x.strip("'")) for x in candidate_frequency]
+
                     candidate = PEPPER_VARIANT.CandidateImagePrediction(contigs[i].decode('UTF-8'),
                                                                         positions[i],
                                                                         depths[i],

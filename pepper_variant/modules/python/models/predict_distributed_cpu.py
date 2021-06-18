@@ -61,7 +61,8 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
             ort_inputs = {ort_session.get_inputs()[0].name: images.cpu().numpy(),
                           ort_session.get_inputs()[1].name: hidden.cpu().numpy(),
                           ort_session.get_inputs()[2].name: cell_state.cpu().numpy()}
-            output_base = ort_session.run(None, ort_inputs)
+            # the return value comes as a list
+            output_base = ort_session.run(None, ort_inputs)[0]
 
             prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_base)
 
