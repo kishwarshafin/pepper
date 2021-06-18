@@ -32,6 +32,7 @@ class SequenceDataset(Dataset):
             input_files = get_file_paths_from_directory(image_directory)
         else:
             input_files = file_chunks
+
         self.all_contigs = []
         self.all_positions = []
         self.all_depths = []
@@ -58,6 +59,13 @@ class SequenceDataset(Dataset):
                         self.all_candidate_frequency.extend(candidate_frequency)
                         self.all_images.extend(images)
 
+        print(len(self.all_contigs))
+        print(len(self.all_positions))
+        print(len(self.all_depths))
+        print(len(self.all_candidates))
+        print(len(self.all_candidate_frequency))
+        print(len(self.all_images))
+
     @staticmethod
     def my_collate(batch):
         contig = [item[0] for item in batch]
@@ -72,6 +80,8 @@ class SequenceDataset(Dataset):
         return [contig, position, depth, candidate, candidate_frequency, image]
 
     def __getitem__(self, index):
+        print(index)
+
         # load the image
         contig = self.all_contigs[index].decode('UTF-8')
         position = self.all_positions[index]
