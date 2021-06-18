@@ -67,8 +67,8 @@ class SequenceDataset(Dataset):
     def __getitem__(self, index):
         # load the image
         image = np.array(self.all_images[index])
-        type_label = self.all_base_labels[index]
-        base_label = self.all_type_labels[index]
+        base_label = self.all_base_labels[index]
+        type_label = self.all_type_labels[index]
 
         return image, base_label, type_label
 
