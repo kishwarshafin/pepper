@@ -87,7 +87,6 @@ class SequenceDataset(Dataset):
         return contig, position, depth, candidate, candidate_frequency, image
 
     def __len__(self):
-        print("RETURNING LENGTH: ", len(self.all_images))
         return len(self.all_images)
 
 
