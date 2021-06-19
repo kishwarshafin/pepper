@@ -39,9 +39,9 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     # session options
     sess_options = onnxruntime.SessionOptions()
     # sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL
-    sess_options.inter_op_num_threads = threads
-    sess_options.intra_op_num_threads = threads
-    sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_PARALLEL
+    sess_options.inter_op_num_threads = 1
+    sess_options.intra_op_num_threads = 1
+    sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL
     sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
 
     ort_session = onnxruntime.InferenceSession(model_path + "quantized.onnx", sess_options=sess_options)
