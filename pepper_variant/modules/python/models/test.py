@@ -59,7 +59,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
             sys.stderr.flush()
             labels = labels.type(torch.LongTensor)
             # type_labels = type_labels.type(torch.LongTensor)
-            images = images.type(torch.IntTensor)
+            images = images.type(torch.FloatTensor)
             if gpu_mode:
                 # encoder_hidden = encoder_hidden.cuda()
                 images = images.cuda()
