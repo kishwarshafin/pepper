@@ -178,7 +178,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             # image and label handling
             labels = labels.type(torch.LongTensor)
             # type_labels = type_labels.type(torch.LongTensor)
-            images = images.type(torch.FloatTensor)
+            images = images.type(torch.IntTensor)
             if gpu_mode:
                 images = images.to(device_id)
                 labels = labels.to(device_id)

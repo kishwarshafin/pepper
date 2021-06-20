@@ -59,7 +59,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
             sys.stderr.flush()
             labels = labels.type(torch.LongTensor)
             # type_labels = type_labels.type(torch.LongTensor)
-            images = images.type(torch.FloatTensor)
+            images = images.type(torch.IntTensor)
             if gpu_mode:
                 # encoder_hidden = encoder_hidden.cuda()
                 images = images.cuda()
@@ -128,9 +128,11 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST LOSS: " + str(avg_loss) + "\n")
     sys.stderr.write("Confusion Matrix:" + "\n")
     sys.stderr.write("            ")
+    sys.stderr.flush()
     for label in ImageSizeOptions.decoded_labels:
         sys.stderr.write(str(label) + '         ')
     sys.stderr.write("\n")
+    sys.stderr.flush()
 
     for i, row in enumerate(confusion_matrix.value()):
         sys.stderr.write(str(ImageSizeOptions.decoded_labels[i]) + '   ')
