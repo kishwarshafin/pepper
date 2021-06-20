@@ -48,9 +48,9 @@ class SequenceDataset(Dataset):
                 if 'summaries' in hdf5_file:
                     summary_names = list(hdf5_file['summaries'].keys())
                     for summary_name in summary_names:
-                        images = hdf5_file['summaries'][summary_name]['images'][()]
-                        base_labels = hdf5_file['summaries'][summary_name]['base_labels'][()]
-                        type_labels = hdf5_file['summaries'][summary_name]['type_label'][()]
+                        images = np.array(hdf5_file['summaries'][summary_name]['images'][()], dtype=np.int16)
+                        base_labels = hdf5_file['summaries'][summary_name]['base_labels'][()].astype(np.uint8)
+                        type_labels = hdf5_file['summaries'][summary_name]['type_label'][()].astype(np.uint8)
 
                         self.all_images.extend(images)
                         self.all_base_labels.extend(base_labels)
@@ -66,7 +66,7 @@ class SequenceDataset(Dataset):
 
     def __getitem__(self, index):
         # load the image
-        image = np.array(self.all_images[index])
+        image = np.array(self.all_images[index], dtype=np.int16)
         base_label = self.all_base_labels[index]
         type_label = self.all_type_labels[index]
 
