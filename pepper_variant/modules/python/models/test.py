@@ -87,7 +87,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
             total_loss += loss.item()
             total_images += images.size(0)
 
-            if (ii + 1) % 50 == 0:
+            if (ii + 1) % 10 == 0:
                 cm_value = confusion_matrix.value()
                 denom = cm_value.sum() if cm_value.sum() > 0 else 1.0
 

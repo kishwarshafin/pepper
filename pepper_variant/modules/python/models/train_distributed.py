@@ -249,8 +249,8 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 dist.barrier()
 
                 if rank == 0:
-                    transducer_model = transducer_model.eval()
-                    torch.cuda.empty_cache()
+                    # transducer_model = transducer_model.eval()
+                    # torch.cuda.empty_cache()
 
                     save_best_model(transducer_model, model_optimizer, hidden_size, gru_layers, epoch, model_dir + "PEPPER_VARIANT_STEP_" + str(step_no) + '_checkpoint.pkl')
 
