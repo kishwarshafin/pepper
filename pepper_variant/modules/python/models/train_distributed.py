@@ -71,6 +71,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
 
     if rank == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOADING DATA\n")
+        sys.stderr.flush()
 
     train_data_set = SequenceDataset(train_file)
 
@@ -296,6 +297,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                     confusion_matrix_logger.flush()
 
                     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST COMPLETED.\n")
+                    sys.stderr.flush()
                     transducer_model = transducer_model.train()
 
                 epoch += 1
