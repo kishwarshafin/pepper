@@ -36,11 +36,11 @@ class TransducerGRU(nn.Module):
         self.bn1 = nn.BatchNorm2d(2)
         self.relu = nn.ReLU()
 
-        self.conv2d_2 = nn.Conv2d(2, 4, kernel_size=3, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(4)
-
-        self.conv2d_3 = nn.Conv2d(4, 2, kernel_size=3, padding=1, bias=False)
-        self.bn3 = nn.BatchNorm2d(2)
+        # self.conv2d_2 = nn.Conv2d(2, 4, kernel_size=3, padding=1, bias=False)
+        # self.bn2 = nn.BatchNorm2d(4)
+        #
+        # self.conv2d_3 = nn.Conv2d(4, 2, kernel_size=3, padding=1, bias=False)
+        # self.bn3 = nn.BatchNorm2d(2)
 
         self.linear_1 = nn.Linear(2 * (self.lstm_2_hidden_size * 2) * (ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1), self.linear_1_size)
         self.linear_2 = nn.Linear(self.linear_1_size, self.linear_2_size)
@@ -82,14 +82,14 @@ class TransducerGRU(nn.Module):
         x = self.relu(x)
 
         # Convolution block 2
-        x = self.conv2d_2(x)
-        x = self.bn2(x)
-        x = self.relu(x)
+        # x = self.conv2d_2(x)
+        # x = self.bn2(x)
+        # x = self.relu(x)
 
         # Convolution block 3
-        x = self.conv2d_3(x)
-        x = self.bn3(x)
-        x = self.relu(x)
+        # x = self.conv2d_3(x)
+        # x = self.bn3(x)
+        # x = self.relu(x)
 
         # Flatten the output of convolution
         x = torch.flatten(x, start_dim=1, end_dim=3)
