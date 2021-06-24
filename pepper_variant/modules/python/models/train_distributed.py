@@ -51,6 +51,7 @@ def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoc
         'epochs': epoch,
     }, file_name)
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL" + file_name + " SAVED SUCCESSFULLY.\n")
+    sys.stderr.flush()
 
 
 def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_limit, gpu_mode, num_workers, retrain_model,
@@ -250,13 +251,13 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 dist.barrier()
 
                 if rank == 0:
-                    # transducer_model = transducer_model.eval()
-                    # torch.cuda.empty_cache()
-
-                    save_best_model(transducer_model, model_optimizer, hidden_size, gru_layers, epoch, model_dir + "PEPPER_VARIANT_STEP_" + str(step_no) + '_checkpoint.pkl')
+                    transducer_model = transducer_model.eval()
+                    torch.cuda.empty_cache()
 
                     stats_dictioanry = test(test_file, test_batch_size, gpu_mode, transducer_model, num_workers,
                                             gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS, num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
+
+                    save_best_model(transducer_model, model_optimizer, hidden_size, gru_layers, epoch, model_dir + "PEPPER_VARIANT_STEP_" + str(step_no) + '_checkpoint.pkl')
 
                     train_loss_logger.write(str(step_no) + "," + str(avg_loss) + "\n")
                     # test_loss_logger.write(str(step_no) + "," + str(stats_dictioanry['loss']) + "," + str(stats_dictioanry['base_loss']) + "," + str(stats_dictioanry['type_loss']) + "," + str(stats_dictioanry['base_accuracy']) + "," + str(stats_dictioanry['type_accuracy']) + "\n")
