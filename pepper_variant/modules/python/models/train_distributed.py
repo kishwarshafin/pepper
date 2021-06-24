@@ -85,7 +85,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         batch_size=batch_size,
         shuffle=False,
         num_workers=0,
-        pin_memory=True,
+        pin_memory=False,
         sampler=train_sampler)
 
     num_classes = ImageSizeOptions.TOTAL_LABELS

@@ -30,67 +30,88 @@ class TransducerGRU(nn.Module):
                                bidirectional=bidirectional,
                                batch_first=True)
         self.dropout_1 = nn.Dropout(p=0.1)
+        self.dropout_2 = nn.Dropout(p=0.2)
+
+        self.conv2d_1 = nn.Conv2d(1, 16, kernel_size=3, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(16)
+        self.relu = nn.ReLU()
+
+        self.conv2d_2 = nn.Conv2d(16, 32, kernel_size=3, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(32)
+
+        self.conv2d_3 = nn.Conv2d(32, 32, kernel_size=3, padding=1, bias=False)
+        self.bn3 = nn.BatchNorm2d(32)
 
         self.linear_1 = nn.Linear((self.lstm_2_hidden_size * 2) * (ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1), self.linear_1_size)
-        self.relu_1 = nn.ReLU()
-
-        self.dropout_2 = nn.Dropout(p=0.2)
         self.linear_2 = nn.Linear(self.linear_1_size, self.linear_2_size)
-        self.relu_2 = nn.ReLU()
-
-        self.dropout_3 = nn.Dropout(p=0.1)
         self.linear_3 = nn.Linear(self.linear_2_size, self.linear_3_size)
-        self.relu_3 = nn.ReLU()
-
-        self.dropout_4 = nn.Dropout(p=0.2)
         self.linear_4 = nn.Linear(self.linear_3_size, self.linear_4_size)
-        self.relu_4 = nn.ReLU()
+        self.linear_5 = nn.Linear(self.linear_4_size, self.linear_5_size)
+
+        self.output_layer = nn.Linear(self.linear_5_size, self.num_classes)
 
         # self.dropout_4_type = nn.Dropout(p=0.2)
         # self.linear_4_type = nn.Linear(self.linear_3_size, self.linear_4_size)
         # self.relu_4_type = nn.ReLU()
 
-        self.dropout_5 = nn.Dropout(p=0.1)
-        self.linear_5 = nn.Linear(self.linear_4_size, self.linear_5_size)
-        self.relu_5 = nn.ReLU()
-
         # self.dropout_5_type = nn.Dropout(p=0.1)
         # self.linear_5_type = nn.Linear(self.linear_4_size, self.linear_5_size)
         # self.relu_5_type = nn.ReLU()
 
-        self.output_layer = nn.Linear(self.linear_5_size, self.num_classes)
         # self.output_layer_type = nn.Linear(self.linear_5_size, self.num_classes_type)
 
     def forward(self, x, hidden, cell_state, train_mode=False):
         hidden = hidden.transpose(0, 1).contiguous()
         cell_state = cell_state.transpose(0, 1).contiguous()
 
+        # Encoder RNN
         self.encoder.flatten_parameters()
         x, (hidden, cell_state) = self.encoder(x, (hidden, cell_state))
 
+        # Decoder RNN
         self.decoder.flatten_parameters()
         x, (hidden, cell_state) = self.decoder(x, (hidden, cell_state))
         x = self.dropout_1(x)
+
+        # Convolution block 1
+        x = self.conv2d_1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+
+        # Convolution block 2
+        x = self.conv2d_2(x)
+        x = self.bn2(x)
+        x = self.relu(x)
+
+        # Convolution block 3
+        x = self.conv2d_3(x)
+        x = self.bn3(x)
+        x = self.relu(x)
+
+        # Flatten the output of convolution
         x = torch.flatten(x, start_dim=1, end_dim=2)
 
+        print(x.size())
+        exit(0)
+        # Linear layer 1
         x = self.linear_1(x)
-        x = self.relu_1(x)
-        x = self.dropout_2(x)
-
+        x = self.relu(x)
+        x = self.dropout_1(x)
+        # Linear layer 2
         x = self.linear_2(x)
-        x = self.relu_2(x)
-        x = self.dropout_3(x)
-
+        x = self.relu(x)
+        x = self.dropout_1(x)
+        # Linear layer 3
         x = self.linear_3(x)
-        x = self.relu_3(x)
-        x = self.dropout_4(x)
-
+        x = self.relu(x)
+        x = self.dropout_2(x)
+        # Linear layer 4
         x_base = self.linear_4(x)
-        x_base = self.relu_4(x_base)
-        x_base = self.dropout_5(x_base)
-
+        x_base = self.relu(x_base)
+        x_base = self.dropout_1(x_base)
+        # Linear layer 5
         x_base = self.linear_5(x_base)
-        x_base = self.relu_5(x_base)
+        x_base = self.relu(x_base)
         x_base = self.output_layer(x_base)
 
         if train_mode:
