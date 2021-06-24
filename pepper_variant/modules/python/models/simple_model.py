@@ -32,15 +32,15 @@ class TransducerGRU(nn.Module):
         self.dropout_1 = nn.Dropout(p=0.1)
         self.dropout_2 = nn.Dropout(p=0.2)
 
-        self.conv2d_1 = nn.Conv2d(1, 4, kernel_size=3, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(16)
+        self.conv2d_1 = nn.Conv2d(1, 2, kernel_size=3, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(2)
         self.relu = nn.ReLU()
 
-        self.conv2d_2 = nn.Conv2d(4, 8, kernel_size=3, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(32)
+        self.conv2d_2 = nn.Conv2d(2, 4, kernel_size=3, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(4)
 
-        self.conv2d_3 = nn.Conv2d(8, 2, kernel_size=3, padding=1, bias=False)
-        self.bn3 = nn.BatchNorm2d(32)
+        self.conv2d_3 = nn.Conv2d(4, 2, kernel_size=3, padding=1, bias=False)
+        self.bn3 = nn.BatchNorm2d(2)
 
         self.linear_1 = nn.Linear(2 * (self.lstm_2_hidden_size * 2) * (ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1), self.linear_1_size)
         self.linear_2 = nn.Linear(self.linear_1_size, self.linear_2_size)
