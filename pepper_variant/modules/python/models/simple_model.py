@@ -73,25 +73,29 @@ class TransducerGRU(nn.Module):
         x, (hidden, cell_state) = self.decoder(x, (hidden, cell_state))
         x = self.dropout_1(x)
 
+        print("After RNN", x.size())
         # Convolution block 1
         x = self.conv2d_1(x)
         x = self.bn1(x)
         x = self.relu(x)
+        print("After CNN1", x.size())
 
         # Convolution block 2
         x = self.conv2d_2(x)
         x = self.bn2(x)
         x = self.relu(x)
+        print("After CNN2", x.size())
 
         # Convolution block 3
         x = self.conv2d_3(x)
         x = self.bn3(x)
         x = self.relu(x)
+        print("After CNN3", x.size())
 
         # Flatten the output of convolution
         x = torch.flatten(x, start_dim=1, end_dim=2)
 
-        print(x.size())
+        print("After flatten", x.size())
         exit(0)
         # Linear layer 1
         x = self.linear_1(x)
