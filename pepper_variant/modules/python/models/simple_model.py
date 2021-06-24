@@ -94,7 +94,7 @@ class TransducerGRU(nn.Module):
         print("After CNN3", x.size())
 
         # Flatten the output of convolution
-        x = torch.flatten(x, start_dim=1, end_dim=2)
+        x = torch.flatten(x, start_dim=1, end_dim=3)
 
         print("After flatten", x.size())
         exit(0)
