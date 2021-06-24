@@ -13,11 +13,11 @@ class TransducerGRU(nn.Module):
 
         self.lstm_1_hidden_size = 256
         self.lstm_2_hidden_size = 256
-        self.linear_1_size = 256
-        self.linear_2_size = 256
-        self.linear_3_size = 256
-        self.linear_4_size = 128
-        self.linear_5_size = 128
+        self.linear_1_size = 1024
+        self.linear_2_size = 512
+        self.linear_3_size = 512
+        self.linear_4_size = 256
+        self.linear_5_size = 256
 
         self.encoder = nn.LSTM(image_features,
                                self.lstm_1_hidden_size,
@@ -42,7 +42,7 @@ class TransducerGRU(nn.Module):
         self.conv2d_3 = nn.Conv2d(32, 32, kernel_size=3, padding=1, bias=False)
         self.bn3 = nn.BatchNorm2d(32)
 
-        self.linear_1 = nn.Linear((self.lstm_2_hidden_size * 2) * (ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1), self.linear_1_size)
+        self.linear_1 = nn.Linear(32 * (self.lstm_2_hidden_size * 2) * (ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1), self.linear_1_size)
         self.linear_2 = nn.Linear(self.linear_1_size, self.linear_2_size)
         self.linear_3 = nn.Linear(self.linear_2_size, self.linear_3_size)
         self.linear_4 = nn.Linear(self.linear_3_size, self.linear_4_size)
@@ -73,31 +73,27 @@ class TransducerGRU(nn.Module):
         x, (hidden, cell_state) = self.decoder(x, (hidden, cell_state))
         x = self.dropout_1(x)
 
+        # Reshape for CNN
         x = torch.reshape(x, (x.size()[0], 1, x.size()[1], x.size()[2]))
-        print("After RNN", x.size())
+
         # Convolution block 1
         x = self.conv2d_1(x)
         x = self.bn1(x)
         x = self.relu(x)
-        print("After CNN1", x.size())
 
         # Convolution block 2
         x = self.conv2d_2(x)
         x = self.bn2(x)
         x = self.relu(x)
-        print("After CNN2", x.size())
 
         # Convolution block 3
         x = self.conv2d_3(x)
         x = self.bn3(x)
         x = self.relu(x)
-        print("After CNN3", x.size())
 
         # Flatten the output of convolution
         x = torch.flatten(x, start_dim=1, end_dim=3)
 
-        print("After flatten", x.size())
-        exit(0)
         # Linear layer 1
         x = self.linear_1(x)
         x = self.relu(x)
