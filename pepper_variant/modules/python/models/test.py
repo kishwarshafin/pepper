@@ -28,7 +28,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
                              batch_size=batch_size,
                              shuffle=False,
                              num_workers=num_workers,
-                             pin_memory=gpu_mode)
+                             pin_memory=True)
 
     # set the evaluation mode of the model
     transducer_model.eval()
@@ -70,6 +70,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
             cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
             if gpu_mode:
+                cell_state = cell_state.cuda()
                 hidden = hidden.cuda()
 
             output_base = transducer_model(images, hidden, cell_state, train_mode=True)
@@ -81,8 +82,7 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
 
             # loss = loss_base + loss_type
             loss = loss_base
-            confusion_matrix.add(output_base.data.contiguous().view(-1, num_classes),
-                                 labels.data.contiguous().view(-1))
+            confusion_matrix.add(output_base.data.contiguous().view(-1, num_classes), labels.data.contiguous().view(-1))
 
             total_loss += loss.item()
             total_images += images.size(0)

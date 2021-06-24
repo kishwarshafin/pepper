@@ -117,6 +117,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     param_count = sum(p.numel() for p in transducer_model.parameters() if p.requires_grad)
     if rank == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n")
+        sys.stderr.flush()
 
     model_optimizer = torch.optim.Adam(transducer_model.parameters(), lr=lr, weight_decay=decay)
 
