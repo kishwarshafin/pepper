@@ -27,15 +27,15 @@ def test(data_file, batch_size, gpu_mode, transducer_model, num_workers, gru_lay
     test_loader = DataLoader(test_data,
                              batch_size=batch_size,
                              shuffle=False,
-                             num_workers=num_workers,
-                             pin_memory=True)
+                             num_workers=0,
+                             pin_memory=False)
 
     # set the evaluation mode of the model
     transducer_model.eval()
-    class_weights = torch.Tensor(ImageSizeOptions.class_weights)
+    # class_weights = torch.Tensor(ImageSizeOptions.class_weights)
     # class_weights_type = torch.Tensor(ImageSizeOptions.class_weights_type)
     # Loss
-    criterion_base = nn.NLLLoss(class_weights)
+    criterion_base = nn.NLLLoss()
     # criterion_type = nn.NLLLoss(class_weights_type)
 
     if gpu_mode is True:

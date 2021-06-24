@@ -55,40 +55,23 @@ def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoc
 
 
 def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_limit, gpu_mode, num_workers, retrain_model,
-          retrain_model_path, gru_layers, hidden_size, lr, decay, model_dir, stats_dir, train_mode,
-          world_size, rank, device_id):
+          retrain_model_path, gru_layers, hidden_size, lr, decay, model_dir, stats_dir, train_mode):
+    train_loss_logger = open(stats_dir + "train_loss.csv", 'w')
+    test_loss_logger = open(stats_dir + "test_loss.csv", 'w')
+    confusion_matrix_logger = open(stats_dir + "base_confusion_matrix.txt", 'w')
 
-    if train_mode is True and rank == 0:
-        train_loss_logger = open(stats_dir + "train_loss.csv", 'w')
-        test_loss_logger = open(stats_dir + "test_loss.csv", 'w')
-        confusion_matrix_logger = open(stats_dir + "base_confusion_matrix.txt", 'w')
-    else:
-        train_loss_logger = None
-        test_loss_logger = None
-        confusion_matrix_logger = None
-
-    torch.cuda.set_device(device_id)
-
-    if rank == 0:
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOADING DATA\n")
-        sys.stderr.flush()
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOADING DATA\n")
+    sys.stderr.flush()
 
     train_data_set = SequenceDataset(train_file)
-
-    train_sampler = torch.utils.data.distributed.DistributedSampler(
-        train_data_set,
-        num_replicas=world_size,
-        rank=rank
-    )
 
     # shuffle is off because we are using distributed sampler, which has shuffle on
     train_loader = torch.utils.data.DataLoader(
         dataset=train_data_set,
         batch_size=batch_size,
-        shuffle=False,
-        num_workers=0,
-        pin_memory=True,
-        sampler=train_sampler)
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=True)
 
     num_classes = ImageSizeOptions.TOTAL_LABELS
     num_type_classes = ImageSizeOptions.TOTAL_TYPE_LABELS
@@ -117,9 +100,9 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         prev_ite = 0
 
     param_count = sum(p.numel() for p in transducer_model.parameters() if p.requires_grad)
-    if rank == 0:
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n")
-        sys.stderr.flush()
+
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL TRAINABLE PARAMETERS:\t" + str(param_count) + "\n")
+    sys.stderr.flush()
 
     model_optimizer = torch.optim.Adam(transducer_model.parameters(), lr=lr, weight_decay=decay)
 
@@ -130,26 +113,25 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         sys.stderr.flush()
 
     if gpu_mode:
-        transducer_model = transducer_model.to(device_id)
-        transducer_model = nn.parallel.DistributedDataParallel(transducer_model, device_ids=[device_id])
+        transducer_model = transducer_model.cuda()
+        transducer_model = nn.parallel.DataParallel(transducer_model)
 
-    class_weights = torch.tensor(ImageSizeOptions.class_weights).to(device_id)
+    # class_weights = torch.tensor(ImageSizeOptions.class_weights).cud()
     # class_weights_type = torch.tensor(ImageSizeOptions.class_weights_type).to(device_id)
     # Loss
-    criterion_base = nn.NLLLoss(weight=class_weights)
+    criterion_base = nn.NLLLoss()
     # criterion_type = nn.NLLLoss(weight=class_weights_type)
 
     if gpu_mode is True:
-        criterion_base = criterion_base.to(device_id)
+        criterion_base = criterion_base.cida()
         # criterion_type = criterion_type.to(device_id)
 
     start_epoch = prev_ite
 
     # Train the Model
-    if rank == 0:
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAINING STARTING\n")
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: START: " + str(start_epoch + 1) + " END: " + str(epoch_limit) + "\n")
-        sys.stderr.flush()
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAINING STARTING\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: START: " + str(start_epoch + 1) + " END: " + str(epoch_limit) + "\n")
+    sys.stderr.flush()
 
     # Creates a GradScaler once at the beginning of training.
     # scaler = torch.cuda.amp.GradScaler()
@@ -162,12 +144,10 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     step_no = 0
     epoch = 0
 
-    if rank == 0:
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ITERATION LIMIT: " + str(iteration_limit) + "\n")
-        sys.stderr.flush()
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ITERATION LIMIT: " + str(iteration_limit) + "\n")
+    sys.stderr.flush()
 
     for iteration in range(start_iteration, iteration_limit, 1):
-        train_sampler.set_epoch(iteration)
         start_time = time.time()
         total_loss = 0
         total_base_loss = 0
@@ -183,8 +163,8 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             # type_labels = type_labels.type(torch.LongTensor)
             images = images.type(torch.FloatTensor)
             if gpu_mode:
-                images = images.to(device_id)
-                labels = labels.to(device_id)
+                images = images.cuda()
+                labels = labels.cuda()
                 # type_labels = type_labels.to(device_id)
 
             # generate hidden and cell state
@@ -192,8 +172,8 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
             if gpu_mode:
-                hidden = hidden.to(device_id)
-                cell_state = cell_state.to(device_id)
+                hidden = hidden.cuda()
+                cell_state = cell_state.cuda()
 
             # set the optimizer to zero grad
             model_optimizer.zero_grad()
@@ -231,7 +211,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             # avg_base_loss = (total_base_loss / total_images) if total_images else 0
             # avg_type_loss = (total_type_loss / total_images) if total_images else 0
 
-            if rank == 0 and step_no % 10 == 0 and step_no > 0:
+            if step_no % 10 == 0 and step_no > 0:
                 percent_complete = int((float(step_no) / float((iteration + 1) * len(train_loader))) * 100)
                 time_now = time.time()
                 mins = int((time_now - start_time) / 60)
@@ -249,60 +229,54 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 sys.stderr.flush()
 
             if step_no % step_size == 0 and step_no > 0:
-                dist.barrier()
+                transducer_model = transducer_model.eval()
+                torch.cuda.empty_cache()
 
-                if rank == 0:
-                    transducer_model = transducer_model.eval()
-                    torch.cuda.empty_cache()
+                stats_dictioanry = test(test_file, test_batch_size, gpu_mode, transducer_model, num_workers,
+                                        gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS, num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
+                save_best_model(transducer_model, model_optimizer, hidden_size, gru_layers, epoch, model_dir + "PEPPER_VARIANT_STEP_" + str(step_no) + '_checkpoint.pkl')
+                train_loss_logger.write(str(step_no) + "," + str(avg_loss) + "\n")
 
-                    stats_dictioanry = test(test_file, test_batch_size, gpu_mode, transducer_model, num_workers,
-                                            gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS, num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
+                # test_loss_logger.write(str(step_no) + "," + str(stats_dictioanry['loss']) + "," + str(stats_dictioanry['base_loss']) + "," + str(stats_dictioanry['type_loss']) + "," + str(stats_dictioanry['base_accuracy']) + "," + str(stats_dictioanry['type_accuracy']) + "\n")
+                test_loss_logger.write(str(step_no) + "," + str(stats_dictioanry['loss']) + "," + str(stats_dictioanry['base_accuracy']) + "\n")
+                confusion_matrix_logger.write(str(step_no) + "\n")
 
-                    save_best_model(transducer_model, model_optimizer, hidden_size, gru_layers, epoch, model_dir + "PEPPER_VARIANT_STEP_" + str(step_no) + '_checkpoint.pkl')
+                # print confusion matrix to file
+                confusion_matrix_logger.write("Confusion Matrix:" + "\n")
+                confusion_matrix_logger.write("            ")
 
-                    train_loss_logger.write(str(step_no) + "," + str(avg_loss) + "\n")
-                    # test_loss_logger.write(str(step_no) + "," + str(stats_dictioanry['loss']) + "," + str(stats_dictioanry['base_loss']) + "," + str(stats_dictioanry['type_loss']) + "," + str(stats_dictioanry['base_accuracy']) + "," + str(stats_dictioanry['type_accuracy']) + "\n")
-                    test_loss_logger.write(str(step_no) + "," + str(stats_dictioanry['loss']) + "," + str(stats_dictioanry['base_accuracy']) + "\n")
-                    confusion_matrix_logger.write(str(step_no) + "\n")
+                for label in ImageSizeOptions.decoded_labels:
+                    confusion_matrix_logger.write(str(label) + '         ')
+                confusion_matrix_logger.write("\n")
 
-                    # print confusion matrix to file
-                    confusion_matrix_logger.write("Confusion Matrix:" + "\n")
-                    confusion_matrix_logger.write("            ")
-                    for label in ImageSizeOptions.decoded_labels:
-                        confusion_matrix_logger.write(str(label) + '         ')
+                for i, row in enumerate(stats_dictioanry['base_confusion_matrix'].value()):
+                    confusion_matrix_logger.write(str(ImageSizeOptions.decoded_labels[i]) + '   ')
+                    for j, val in enumerate(row):
+                        confusion_matrix_logger.write("{0:9d}".format(val) + '  ')
                     confusion_matrix_logger.write("\n")
+                confusion_matrix_logger.flush()
+                # confusion_matrix_logger.write("Type Confusion Matrix:" + "\n")
+                # confusion_matrix_logger.write("            ")
+                # for label in ImageSizeOptions.decoded_type_labels:
+                #     confusion_matrix_logger.write(str(label) + '         ')
+                # confusion_matrix_logger.write("\n")
+                #
+                # for i, row in enumerate(stats_dictioanry['type_confusion_matrix'].value()):
+                #     confusion_matrix_logger.write(str(ImageSizeOptions.decoded_type_labels[i]) + '   ')
+                #     for j, val in enumerate(row):
+                #         confusion_matrix_logger.write("{0:9d}".format(val) + '  ')
+                #     confusion_matrix_logger.write("\n")
+                # confusion_matrix_logger.flush()
 
-                    for i, row in enumerate(stats_dictioanry['base_confusion_matrix'].value()):
-                        confusion_matrix_logger.write(str(ImageSizeOptions.decoded_labels[i]) + '   ')
-                        for j, val in enumerate(row):
-                            confusion_matrix_logger.write("{0:9d}".format(val) + '  ')
-                        confusion_matrix_logger.write("\n")
-                    confusion_matrix_logger.flush()
+                train_loss_logger.flush()
+                test_loss_logger.flush()
+                confusion_matrix_logger.flush()
 
-                    # confusion_matrix_logger.write("Type Confusion Matrix:" + "\n")
-                    # confusion_matrix_logger.write("            ")
-                    # for label in ImageSizeOptions.decoded_type_labels:
-                    #     confusion_matrix_logger.write(str(label) + '         ')
-                    # confusion_matrix_logger.write("\n")
-                    #
-                    # for i, row in enumerate(stats_dictioanry['type_confusion_matrix'].value()):
-                    #     confusion_matrix_logger.write(str(ImageSizeOptions.decoded_type_labels[i]) + '   ')
-                    #     for j, val in enumerate(row):
-                    #         confusion_matrix_logger.write("{0:9d}".format(val) + '  ')
-                    #     confusion_matrix_logger.write("\n")
-                    # confusion_matrix_logger.flush()
-
-                    train_loss_logger.flush()
-                    test_loss_logger.flush()
-                    confusion_matrix_logger.flush()
-
-                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST COMPLETED.\n")
-                    sys.stderr.flush()
-                    transducer_model = transducer_model.train()
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST COMPLETED.\n")
+                sys.stderr.flush()
+                transducer_model = transducer_model.train()
 
                 epoch += 1
-
-                dist.barrier()
 
             # increase step size
             step_no += 1
@@ -311,18 +285,16 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 dist.barrier()
                 break
 
-        if rank == 0:
-            time_now = time.time()
-            mins = int((time_now - start_time) / 60)
-            secs = int((time_now - start_time)) % 60
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME FOR ONE ITERATION: " + str(mins) + " Min " + str(secs) + " Sec\n")
+        time_now = time.time()
+        mins = int((time_now - start_time) / 60)
+        secs = int((time_now - start_time)) % 60
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME FOR ONE ITERATION: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
         if epoch == epoch_limit:
             dist.barrier()
             break
 
-    if rank == 0:
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED TRAINING\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED TRAINING\n")
 
 
 def cleanup():
@@ -366,11 +338,15 @@ def train_distributed(train_file, test_file, batch_size, test_batch_size, step_s
                       retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
                       stats_dir, device_ids, total_callers, train_mode):
 
-    args = (train_file, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model,
-            retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
-            stats_dir, total_callers, train_mode)
+    # run linearly
+    train(train_file, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model, retrain_model_path,
+          gru_layers, hidden_size, learning_rate, weight_decay, model_dir, stats_dir, train_mode)
 
-    mp.spawn(setup,
-             args=(device_ids, args),
-             nprocs=len(device_ids),
-             join=True)
+    # args = (train_file, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model,
+    #         retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir,
+    #         stats_dir, total_callers, train_mode)
+    #
+    # mp.spawn(setup,
+    #          args=(device_ids, args),
+    #          nprocs=len(device_ids),
+    #          join=True)
