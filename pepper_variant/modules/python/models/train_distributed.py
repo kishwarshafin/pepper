@@ -123,7 +123,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     # criterion_type = nn.NLLLoss(weight=class_weights_type)
 
     if gpu_mode is True:
-        criterion_base = criterion_base.cida()
+        criterion_base = criterion_base.cuda()
         # criterion_type = criterion_type.to(device_id)
 
     start_epoch = prev_ite
