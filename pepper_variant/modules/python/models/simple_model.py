@@ -32,14 +32,14 @@ class TransducerGRU(nn.Module):
         self.dropout_1 = nn.Dropout(p=0.1)
         self.dropout_2 = nn.Dropout(p=0.2)
 
-        self.conv2d_1 = nn.Conv1d(1, 16, kernel_size=3, padding=1, bias=False)
+        self.conv2d_1 = nn.Conv2d(1, 16, kernel_size=3, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(16)
         self.relu = nn.ReLU()
 
-        self.conv2d_2 = nn.Conv1d(16, 32, kernel_size=3, padding=1, bias=False)
+        self.conv2d_2 = nn.Conv2d(16, 32, kernel_size=3, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(32)
 
-        self.conv2d_3 = nn.Conv1d(32, 32, kernel_size=3, padding=1, bias=False)
+        self.conv2d_3 = nn.Conv2d(32, 32, kernel_size=3, padding=1, bias=False)
         self.bn3 = nn.BatchNorm2d(32)
 
         self.linear_1 = nn.Linear((self.lstm_2_hidden_size * 2) * (ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1), self.linear_1_size)
@@ -73,6 +73,7 @@ class TransducerGRU(nn.Module):
         x, (hidden, cell_state) = self.decoder(x, (hidden, cell_state))
         x = self.dropout_1(x)
 
+        x = torch.reshape(x, (x.size()[0], 1, x.size()[1], x.size()[2]))
         print("After RNN", x.size())
         # Convolution block 1
         x = self.conv2d_1(x)
