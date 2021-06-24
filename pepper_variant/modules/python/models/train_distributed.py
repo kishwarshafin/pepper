@@ -211,7 +211,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             # avg_base_loss = (total_base_loss / total_images) if total_images else 0
             # avg_type_loss = (total_type_loss / total_images) if total_images else 0
 
-            if step_no % 10 == 0 and step_no > 0:
+            if step_no % 100 == 0 and step_no > 0:
                 percent_complete = int((float(step_no) / float((iteration + 1) * len(train_loader))) * 100)
                 time_now = time.time()
                 mins = int((time_now - start_time) / 60)
