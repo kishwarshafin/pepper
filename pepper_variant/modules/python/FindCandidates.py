@@ -166,23 +166,28 @@ def candidate_finder(input_dir, reference_file, bam_file, use_hp_info, sample_na
                 for batch in batches:
                     all_prediction_pair.append((prediction_file, batch))
 
-    vcf_file_name = "PEPPER_VARIANT_OUTPUT"
+    vcf_file_name_phasing = "PEPPER_VARIANT_OUTPUT_PHASING"
+    vcf_file_name_variant_calling = "PEPPER_VARIANT_OUTPUT_VARIANT_CALLING"
 
-    vcf_file = VCFWriter(reference_file, sample_name, output_path, vcf_file_name)
+    vcf_file_phasing = VCFWriter(reference_file, sample_name, output_path, vcf_file_name_phasing)
+    vcf_file_variant_calling = VCFWriter(reference_file, sample_name, output_path, vcf_file_name_variant_calling)
 
     local_start_time = time.time()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING CANDIDATE FINDING." + "\n")
 
-    selected_candidates = find_candidates(input_dir, reference_file, bam_file, use_hp_info, all_prediction_pair, threads, freq_based, freq)
+    selected_candidates_phasing, selected_candidates_variant_calling = find_candidates(input_dir, reference_file, bam_file, use_hp_info, all_prediction_pair, threads, freq_based, freq)
     end_time = time.time()
 
     mins = int((end_time - local_start_time) / 60)
     secs = int((end_time - local_start_time)) % 60
 
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL CANDIDATES FOUND: "
-                     + str(len(selected_candidates)) + " TOTAL TIME SPENT: " + str(mins) + " Min " + str(secs) + " Sec\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL CANDIDATES FOUND FOR PHASING: "
+                     + str(len(selected_candidates_phasing)) + " TOTAL TIME SPENT: " + str(mins) + " Min " + str(secs) + " Sec\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL CANDIDATES FOUND FOR VARIANT CALLING: "
+                     + str(len(selected_candidates_variant_calling)) + " TOTAL TIME SPENT: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
-    vcf_file.write_vcf_records(selected_candidates)
+    vcf_file_phasing.write_vcf_records(selected_candidates_phasing)
+    vcf_file_variant_calling.write_vcf_records(selected_candidates_variant_calling)
 
 
 def process_candidates(input_dir, reference, bam_file, use_hp_info, sample_name, output_dir, threads, freq_based, freq):

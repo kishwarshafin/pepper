@@ -283,7 +283,8 @@ def get_genotype_from_base(ref_base, base_prediction1, base_prediction2):
 
 def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chunks, freq_based, freq):
     fasta_handler = PEPPER_VARIANT.FASTA_handler(reference_file_path)
-    selected_candidate_list = []
+    selected_candidate_list_margin = []
+    selected_candidate_list_deepvariant = []
 
     for file_chunk in file_chunks:
         file_name, batch_key = file_chunk
@@ -321,29 +322,102 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                 continue
 
             predicted_bases = ImageSizeOptions.decoded_labels[np.argmax(candidate.prediction_base)]
+
+            max_observed_likelihood = defaultdict()
+            bases = set()
+            for prediction_class, predicted_value in zip(ImageSizeOptions.decoded_labels, candidate.prediction_base):
+                prediction_class1 = prediction_class[0]
+                prediction_class2 = prediction_class[1]
+                if prediction_class1 not in bases:
+                    bases.add(prediction_class1)
+                    max_observed_likelihood[prediction_class1] = predicted_value
+                else:
+                    max_observed_likelihood[prediction_class1] = max(max_observed_likelihood[prediction_class1], predicted_value)
+
+                if prediction_class2 not in bases:
+                    bases.add(prediction_class2)
+                    max_observed_likelihood[prediction_class2] = predicted_value
+                else:
+                    max_observed_likelihood[prediction_class2] = max(max_observed_likelihood[prediction_class2], predicted_value)
+
             genotype = get_genotype_from_base(reference_base, predicted_bases[0], predicted_bases[1])
             prediction_value = candidate.prediction_base[np.argmax(candidate.prediction_base)]
 
+            # this is for Margin. Only pick SNPs.
             alt_alleles = []
             variant_allele_support = []
             for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
                 alt_type = alt_allele[0]
                 allele = alt_allele[1:]
-                # only process SNPs for now
+                # only process SNPs for margin
                 if alt_type == '1':
                     if allele == predicted_bases[0] or allele == predicted_bases[1]:
                         alt_alleles.append(allele)
                         variant_allele_support.append(allele_frequency)
+            if len(alt_alleles) > 0:
+                # print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support)
+                selected_candidate_list_margin.append((candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value))
+
+            # this is candidate finding for DeepVariant
+            alt_alleles = []
+            variant_allele_support = []
+            max_delete_length = 0
+            reference_allele = reference_base
+            for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
+                alt_type = alt_allele[0]
+                allele = alt_allele[1:]
+                if alt_type == '3':
+                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 1.0:
+                        if len(allele) > max_delete_length:
+                            reference_allele = allele
+                            max_delete_length = len(allele)
+
+            for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
+                alt_type = alt_allele[0]
+                allele = alt_allele[1:]
+                if alt_type == '1':
+                    if allele == predicted_bases[0] or allele == predicted_bases[1] or max_observed_likelihood[allele] >= 1.0:
+                        alt_allele = list(reference_allele)
+                        alt_allele[0] = allele[0]
+                        # add them to list
+                        alt_alleles.append(''.join(alt_allele))
+                        variant_allele_support.append(allele_frequency)
+                        # print("SINGLE: ", predicted_bases, max_observed_likelihood[allele], candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
+                elif alt_type == '2':
+                    if predicted_bases[0] == '*' or predicted_bases[1] == '*' or max_observed_likelihood['*'] >= 1.0:
+                        bases_needed = max_delete_length
+                        if bases_needed > 0:
+                            ref_suffix = reference_allele[-bases_needed:]
+                            allele = allele + ref_suffix
+                        # add them to list
+                        alt_alleles.append(allele)
+                        variant_allele_support.append(allele_frequency)
+                        # print("INSERT: ", predicted_bases, max_observed_likelihood['*'], candidate.contig, candidate.position, reference_allele, allele, candidate.depth, allele_frequency)
+                elif alt_type == '3':
+                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 1.0:
+                        bases_needed = max_delete_length - len(allele)
+                        if bases_needed > 0:
+                            ref_suffix = reference_allele[-bases_needed:]
+                            alt_allele = reference_base + ref_suffix
+                        else:
+                            alt_allele = reference_base
+                        # add them to list
+                        alt_alleles.append(alt_allele)
+                        variant_allele_support.append(allele_frequency)
+
+                        # print("DELETE: ", predicted_bases, max_observed_likelihood['#'], candidate.contig, candidate.position, reference_allele, alt_allele, candidate.depth, allele_frequency)
 
             if len(alt_alleles) > 0:
                 # print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support)
-                selected_candidate_list.append((candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value))
+                selected_candidate_list_deepvariant.append((candidate.contig, candidate.position, candidate.position + len(reference_allele), reference_allele, alt_alleles, [0, 0], candidate.depth, variant_allele_support, prediction_value))
 
-    return selected_candidate_list
+    return selected_candidate_list_margin, selected_candidate_list_deepvariant
 
 
 def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_prediction_pair, threads, freq_based, freq):
 
+    all_selected_candidates_phasing = list()
+    all_selected_candidates_variant_calling = list()
     all_selected_candidates = list()
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
@@ -351,8 +425,9 @@ def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_p
         futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, use_hp_info, file_chunk, freq_based, freq) for file_chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
-                positional_candidates = fut.result()
-                all_selected_candidates.extend(positional_candidates)
+                positional_candidates_phasing, positional_candidates_variant_calling = fut.result()
+                all_selected_candidates_phasing.extend(positional_candidates_phasing)
+                all_selected_candidates_variant_calling.extend(positional_candidates_variant_calling)
             else:
                 sys.stderr.write("ERROR IN THREAD: " + str(fut.exception()) + "\n")
             fut._result = None  # python issue 27144
@@ -360,6 +435,7 @@ def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_p
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CANDIDATES FOUND: " + str(len(all_selected_candidates)) + "\n")
     sys.stderr.flush()
 
-    all_selected_candidates = sorted(all_selected_candidates, key=lambda x: x[1])
+    all_selected_candidates_phasing = sorted(all_selected_candidates_phasing, key=lambda x: x[1])
+    all_selected_candidates_variant_calling = sorted(all_selected_candidates_variant_calling, key=lambda x: x[1])
     # print("SORTED")
-    return all_selected_candidates
+    return all_selected_candidates_phasing, all_selected_candidates_variant_calling
