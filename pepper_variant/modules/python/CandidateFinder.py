@@ -364,6 +364,8 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
             max_delete_length = 0
             reference_allele = reference_base
             for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
+                if allele_frequency <= 2:
+                    continue
                 alt_type = alt_allele[0]
                 allele = alt_allele[1:]
                 if alt_type == '3':
@@ -373,6 +375,8 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                             max_delete_length = len(allele)
 
             for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
+                if allele_frequency <= 2:
+                    continue
                 alt_type = alt_allele[0]
                 allele = alt_allele[1:]
                 if alt_type == '1':

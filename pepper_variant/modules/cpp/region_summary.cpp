@@ -658,9 +658,6 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
 
             int allele_depth = AlleleFrequencyMap[candidate_position - ref_start][candidate_string];
 
-            if(allele_depth <= 2) {
-                continue;
-            }
             if(snp_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '1') {
                 // cout << candidate_string << ",";
                 // cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
