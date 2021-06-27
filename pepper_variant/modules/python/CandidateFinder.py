@@ -447,7 +447,7 @@ def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_p
     all_selected_candidates = list()
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
-        file_chunks = chunks(all_prediction_pair, int(len(all_prediction_pair) / threads) + 1)
+        file_chunks = chunks(all_prediction_pair, int(len(all_prediction_pair) / threads))
         print(len(file_chunks))
         for file_chunk in file_chunks:
             print(file_chunk)
