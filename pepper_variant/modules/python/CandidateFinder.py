@@ -448,6 +448,10 @@ def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_p
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
         file_chunks = chunks(all_prediction_pair, max(2, int(len(all_prediction_pair) / threads) + 1))
+        print(len(file_chunks))
+        for file_chunk in file_chunks:
+            print(file_chunk)
+        exit()
         futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, use_hp_info, file_chunk, freq_based, freq) for file_chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
