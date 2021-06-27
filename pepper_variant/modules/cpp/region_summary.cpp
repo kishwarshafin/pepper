@@ -439,7 +439,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     int base_index = (int)((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start]);
                     int insert_count_index =  get_feature_index(ref_base, 'I', read.flags.is_reverse);
                     image_matrix[base_index][insert_count_index] += 1;
-                    insert_count[ref_position - 1 - ref_start] += 1;
+
 
 
                     if (read_index - 1 >= 0) alt = read.sequence.substr(read_index - 1, cigar.length + 1);
@@ -450,6 +450,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
 
                     // only process candidates that are smaller than 50bp as they 50bp+ means SV
                     if(candidate_string.length() <= 50) {
+                        insert_count[ref_position - 1 - ref_start] += 1;
                         int region_index = (int) (ref_position - 1 - ref_start);
 
                         if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
@@ -482,7 +483,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     int base_index = (int)(ref_position - 1 - ref_start + cumulative_observed_insert[ref_position - 1 - ref_start]);
                     int delete_count_index =  get_feature_index(ref_base, 'D', read.flags.is_reverse);
                     image_matrix[base_index][delete_count_index] += 1.0;
-                    delete_count[ref_position - 1 - ref_start] += 1;
+
 
                     // process delete allele here
                     string ref = reference_sequence.substr(ref_position - ref_start - 1, cigar.length + 1);
@@ -495,6 +496,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
 
                     // only process candidates that are smaller than 50bp as they 50bp+ means SV
                     if(candidate_string.length() <= 50) {
+                        delete_count[ref_position - 1 - ref_start] += 1;
                         int region_index = (int) (ref_position - 1 - ref_start);
 
                         if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
