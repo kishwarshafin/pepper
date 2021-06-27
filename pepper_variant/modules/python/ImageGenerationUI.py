@@ -369,8 +369,6 @@ class ImageGenerationUtils:
                          + " TOTAL INTERVALS: " + str(len(all_intervals))
                          + " TOTAL BASES: " + str(total_bases) + "\n")
         sys.stderr.flush()
-        print(all_intervals)
-        exit()
 
         args = (output_path, bam_file, draft_file, use_hp_info, truth_vcf, train_mode, downsample_rate, bed_list, random_draw_probability)
         with concurrent.futures.ProcessPoolExecutor(max_workers=total_processes) as executor:
