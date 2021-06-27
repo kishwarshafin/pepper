@@ -367,7 +367,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                 alt_type = alt_allele[0]
                 allele = alt_allele[1:]
                 if alt_type == '3':
-                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 1.0:
+                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 0.3:
                         if len(allele) > max_delete_length:
                             reference_allele = allele
                             max_delete_length = len(allele)
