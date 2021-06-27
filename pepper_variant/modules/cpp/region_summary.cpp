@@ -449,7 +449,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     string candidate_string = char(AlleleType::INSERT_ALLELE + '0') + alt;
 
                     // only process candidates that are smaller than 50bp as they 50bp+ means SV
-                    if(candidate_string.length() <= 50) {
+                    if(candidate_string.length() <= 61) {
                         insert_count[ref_position - 1 - ref_start] += 1;
                         int region_index = (int) (ref_position - 1 - ref_start);
 
@@ -495,7 +495,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     string candidate_string = char(AlleleType::DELETE_ALLELE + '0') + ref;
 
                     // only process candidates that are smaller than 50bp as they 50bp+ means SV
-                    if(candidate_string.length() <= 50) {
+                    if(candidate_string.length() <= 61) {
                         delete_count[ref_position - 1 - ref_start] += 1;
                         int region_index = (int) (ref_position - 1 - ref_start);
 
