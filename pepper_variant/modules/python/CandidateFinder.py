@@ -353,6 +353,9 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                 allele = alt_allele[1:]
                 # only process SNPs for margin
                 if alt_type == '1':
+                    if candidate.contig == 'chr20' and 153770 < candidate.position < 153790:
+                        print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value)
+
                     if allele == predicted_bases[0] or allele == predicted_bases[1]:
                         alt_alleles.append(allele)
                         variant_allele_support.append(allele_frequency)
@@ -447,11 +450,7 @@ def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_p
     all_selected_candidates = list()
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
-        file_chunks = chunks(all_prediction_pair, int(len(all_prediction_pair) / threads))
-        print(len(file_chunks))
-        for file_chunk in file_chunks:
-            print(file_chunk)
-        exit()
+        file_chunks = chunks(all_prediction_pair, max(2, int(len(all_prediction_pair) / threads) + 1))
         futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, use_hp_info, file_chunk, freq_based, freq) for file_chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:

@@ -157,14 +157,14 @@ def get_file_paths_from_directory(directory_path):
 def candidate_finder(input_dir, reference_file, bam_file, use_hp_info, sample_name, output_path, threads, freq_based, freq):
     all_prediction_files = get_file_paths_from_directory(input_dir)
 
-    # all_prediction_pair = []
-    #
-    # for prediction_file in all_prediction_files:
-    #     with h5py.File(prediction_file, 'r') as hdf5_file:
-    #         if 'predictions' in hdf5_file.keys():
-    #             batches = list(hdf5_file['predictions'].keys())
-    #             for batch in batches:
-    #                 all_prediction_pair.append((prediction_file, batch))
+    all_prediction_pair = []
+
+    for prediction_file in all_prediction_files:
+        with h5py.File(prediction_file, 'r') as hdf5_file:
+            if 'predictions' in hdf5_file.keys():
+                batches = list(hdf5_file['predictions'].keys())
+                for batch in batches:
+                    all_prediction_pair.append((prediction_file, batch))
 
     vcf_file_name_phasing = "PEPPER_VARIANT_OUTPUT_PHASING"
     vcf_file_name_variant_calling = "PEPPER_VARIANT_OUTPUT_VARIANT_CALLING"
@@ -175,8 +175,8 @@ def candidate_finder(input_dir, reference_file, bam_file, use_hp_info, sample_na
     local_start_time = time.time()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING CANDIDATE FINDING." + "\n")
 
-    # selected_candidates_phasing, selected_candidates_variant_calling = find_candidates(input_dir, reference_file, bam_file, use_hp_info, all_prediction_pair, threads, freq_based, freq)
-    selected_candidates_phasing, selected_candidates_variant_calling = find_candidates(input_dir, reference_file, bam_file, use_hp_info, all_prediction_files, threads, freq_based, freq)
+    selected_candidates_phasing, selected_candidates_variant_calling = find_candidates(input_dir, reference_file, bam_file, use_hp_info, all_prediction_pair, threads, freq_based, freq)
+    # selected_candidates_phasing, selected_candidates_variant_calling = find_candidates(input_dir, reference_file, bam_file, use_hp_info, all_prediction_files, threads, freq_based, freq)
     end_time = time.time()
 
     mins = int((end_time - local_start_time) / 60)
