@@ -27,10 +27,10 @@ class VCFWriter:
 
             if len(alleles) <= 0:
                 continue
-            if ref_start == last_position:
-                continue
-
-            last_position = ref_start
+            # if ref_start == last_position:
+            #     continue
+            #
+            # last_position = ref_start
             alleles = tuple([ref_seq]) + tuple(alleles)
             qual = max(1, int(-10 * math.log10(max(0.000001, 1.0 - max(0.0001, genotype_probability)))))
             alt_qual = max(1, int(-10 * math.log10(max(0.000001, 1.0 - max(0.0001, genotype_probability)))))
