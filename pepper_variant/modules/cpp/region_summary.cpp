@@ -448,16 +448,19 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     // save the candidate
                     string candidate_string = char(AlleleType::INSERT_ALLELE + '0') + alt;
 
-                    int region_index = (int) (ref_position - 1 - ref_start);
+                    // only process candidates that are smaller than 50bp as they 50bp+ means SV
+                    if(candidate_string.length() <= 50) {
+                        int region_index = (int) (ref_position - 1 - ref_start);
 
-                    if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
-                        AlleleFrequencyMap[region_index][candidate_string] += 1;
-                    } else {
-                        AlleleFrequencyMap[region_index][candidate_string] = 1;
+                        if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
+                            AlleleFrequencyMap[region_index][candidate_string] += 1;
+                        } else {
+                            AlleleFrequencyMap[region_index][candidate_string] = 1;
+                        }
+
+                        if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
+                            AlleleMap[region_index].insert(candidate_string);
                     }
-
-                    if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
-                        AlleleMap[region_index].insert(candidate_string);
 
 //                    if(ImageOptionsRegion::GENERATE_INDELS == true) {
 //                        alt = read.sequence.substr(read_index, cigar.length);
@@ -490,16 +493,19 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
 
                     string candidate_string = char(AlleleType::DELETE_ALLELE + '0') + ref;
 
-                    int region_index = (int) (ref_position - 1 - ref_start);
+                    // only process candidates that are smaller than 50bp as they 50bp+ means SV
+                    if(candidate_string.length() <= 50) {
+                        int region_index = (int) (ref_position - 1 - ref_start);
 
-                    if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
-                        AlleleFrequencyMap[region_index][candidate_string] += 1;
-                    } else {
-                        AlleleFrequencyMap[region_index][candidate_string] = 1;
+                        if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
+                            AlleleFrequencyMap[region_index][candidate_string] += 1;
+                        } else {
+                            AlleleFrequencyMap[region_index][candidate_string] = 1;
+                        }
+
+                        if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
+                            AlleleMap[region_index].insert(candidate_string);
                     }
-
-                    if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
-                        AlleleMap[region_index].insert(candidate_string);
 
                     // cout<<"DEL: "<<ref_position<<" "<<ref<<" "<<alt<<" "<<AlleleFrequencyMap[candidate_alt]<<endl;
 
