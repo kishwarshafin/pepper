@@ -346,6 +346,8 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
             # this is for Margin. Only pick SNPs.
             alt_alleles = []
             variant_allele_support = []
+            total_observed_indels = 0
+            indel_allele_frequencies = []
             for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
                 alt_type = alt_allele[0]
                 allele = alt_allele[1:]
@@ -354,6 +356,15 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                     if allele == predicted_bases[0] or allele == predicted_bases[1]:
                         alt_alleles.append(allele)
                         variant_allele_support.append(allele_frequency)
+                if alt_type == '2' or alt_type == '3':
+                    total_observed_indels += 1
+                    indel_allele_frequencies.append(float(allele_frequency) / float(candidate.depth))
+
+            indel_allele_frequencies = sorted(indel_allele_frequencies, reverse=True)
+            indel_allele_frequency_threshold = 0.0
+            if total_observed_indels > 5:
+                indel_allele_frequency_threshold = indel_allele_frequencies[4]
+
             if len(alt_alleles) > 0:
                 # print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support)
                 selected_candidate_list_margin.append((candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value))
@@ -369,6 +380,9 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                 alt_type = alt_allele[0]
                 allele = alt_allele[1:]
                 if alt_type == '3':
+                    vaf = float(allele_frequency) / float(candidate.depth)
+                    if total_observed_indels > 5 and vaf < indel_allele_frequency_threshold:
+                        continue
                     if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 0.3:
                         if len(allele) > max_delete_length:
                             reference_allele = allele
@@ -379,6 +393,8 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                     continue
                 alt_type = alt_allele[0]
                 allele = alt_allele[1:]
+                vaf = float(allele_frequency) / float(candidate.depth)
+
                 if alt_type == '1':
                     if allele == predicted_bases[0] or allele == predicted_bases[1] or max_observed_likelihood[allele] >= 0.1:
                         alt_allele = list(reference_allele)
@@ -388,6 +404,9 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                         variant_allele_support.append(allele_frequency)
                         # print("SINGLE: ", predicted_bases, max_observed_likelihood[allele], candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
                 elif alt_type == '2':
+                    if total_observed_indels > 5 and vaf < indel_allele_frequency_threshold:
+                        continue
+
                     if predicted_bases[0] == '*' or predicted_bases[1] == '*' or max_observed_likelihood['*'] >= 0.3:
                         bases_needed = max_delete_length
                         if bases_needed > 0:
@@ -398,6 +417,9 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                         variant_allele_support.append(allele_frequency)
                         # print("INSERT: ", predicted_bases, max_observed_likelihood['*'], candidate.contig, candidate.position, reference_allele, allele, candidate.depth, allele_frequency)
                 elif alt_type == '3':
+                    if total_observed_indels > 5 and vaf < indel_allele_frequency_threshold:
+                        continue
+
                     if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 0.3:
                         bases_needed = max_delete_length - len(allele)
                         if bases_needed > 0:
