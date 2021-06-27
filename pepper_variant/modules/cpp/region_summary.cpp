@@ -656,21 +656,26 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
         for (auto it=AlleleMap[candidate_position - ref_start].begin(); it!=AlleleMap[candidate_position - ref_start].end(); ++it) {
             string candidate_string = *it;
 
+            int allele_depth = AlleleFrequencyMap[candidate_position - ref_start][candidate_string];
+
+            if(allele_depth <= 2) {
+                continue;
+            }
             if(snp_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '1') {
                 // cout << candidate_string << ",";
                 // cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
                 candidate_summary.candidates.push_back(candidate_string);
-                candidate_summary.candidate_frequency.push_back(AlleleFrequencyMap[candidate_position - ref_start][candidate_string]);
+                candidate_summary.candidate_frequency.push_back(allele_depth);
             } else if (insert_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '2') {
                 // cout << candidate_string << ",";
                 // cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
                 candidate_summary.candidates.push_back(candidate_string);
-                candidate_summary.candidate_frequency.push_back(AlleleFrequencyMap[candidate_position - ref_start][candidate_string]);
+                candidate_summary.candidate_frequency.push_back(allele_depth);
             } else if (delete_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '3') {
                 // cout << candidate_string << ",";
                 // cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
                 candidate_summary.candidates.push_back(candidate_string);
-                candidate_summary.candidate_frequency.push_back(AlleleFrequencyMap[candidate_position - ref_start][candidate_string]);
+                candidate_summary.candidate_frequency.push_back(allele_depth);
             }
 
         }
