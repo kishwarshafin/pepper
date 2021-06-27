@@ -352,8 +352,8 @@ class ImageGenerationUtils:
             # this is the interval size each of the process is going to get which is 10^6
             # I will split this into 10^4 size inside the worker process
             for pos in range(interval_start, interval_end, max_size):
-                pos_start = max(interval_start, pos - ImageSizeOptions.MIN_IMAGE_OVERLAP)
-                pos_end = min(interval_end, pos + max_size + ImageSizeOptions.MIN_IMAGE_OVERLAP)
+                pos_start = max(interval_start, pos)
+                pos_end = min(interval_end, pos + max_size)
 
                 inv_size = pos_end - pos_start
                 if train_mode and inv_size < ImageSizeOptions.MIN_SEQUENCE_LENGTH:
