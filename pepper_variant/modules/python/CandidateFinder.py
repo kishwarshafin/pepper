@@ -447,7 +447,6 @@ def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_p
 
     all_selected_candidates_phasing = list()
     all_selected_candidates_variant_calling = list()
-    all_selected_candidates = list()
     # generate the dictionary in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
         file_chunks = chunks(all_prediction_pair, max(2, int(len(all_prediction_pair) / threads) + 1))
@@ -461,10 +460,7 @@ def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_p
                 sys.stderr.write("ERROR IN THREAD: " + str(fut.exception()) + "\n")
             fut._result = None  # python issue 27144
 
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CANDIDATES FOUND: " + str(len(all_selected_candidates)) + "\n")
-    sys.stderr.flush()
-
-    all_selected_candidates_phasing = sorted(all_selected_candidates_phasing, key=lambda x: x[1])
-    all_selected_candidates_variant_calling = sorted(all_selected_candidates_variant_calling, key=lambda x: x[1])
+    all_selected_candidates_phasing = sorted(all_selected_candidates_phasing, key=lambda x: (x[0], x[1]))
+    all_selected_candidates_variant_calling = sorted(all_selected_candidates_variant_calling, key=lambda x: (x[0], x[1]))
     # print("SORTED")
     return all_selected_candidates_phasing, all_selected_candidates_variant_calling

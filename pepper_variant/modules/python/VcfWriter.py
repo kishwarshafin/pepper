@@ -21,7 +21,9 @@ class VCFWriter:
         last_position = -1
         for called_variant in variants_list:
             contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability = called_variant
-            # print(contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability)
+
+            if contig == 'chr20' and 153770 < ref_start < 153790:
+                print(contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability)
 
             if len(alleles) <= 0:
                 continue
