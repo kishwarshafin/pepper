@@ -65,7 +65,7 @@ def predict(input_filepath, output_filepath, model_path, batch_size, num_workers
             prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_base)
             batch_completed += 1
 
-            if batch_completed % 5 == 0:
+            if batch_completed % 100 == 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
                                  "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
                 sys.stderr.flush()
