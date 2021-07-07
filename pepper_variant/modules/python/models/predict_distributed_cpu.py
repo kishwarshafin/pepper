@@ -30,11 +30,9 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
                              num_workers=0,
                              collate_fn=SequenceDataset.my_collate)
 
-
     if thread_id == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: SETTING THREADS TO: " + str(threads) + ".\n")
         sys.stderr.flush()
-
 
     # session options
     sess_options = onnxruntime.SessionOptions()
@@ -129,7 +127,6 @@ def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, ba
             if batch_completed % 100 == 0 and batch_completed != 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
                 sys.stderr.flush()
-
 
 
 def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads_per_caller, num_workers):
