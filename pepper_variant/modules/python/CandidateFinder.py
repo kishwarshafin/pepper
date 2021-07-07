@@ -365,9 +365,6 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
             if total_observed_indels > 5:
                 indel_allele_frequency_threshold = indel_allele_frequencies[4]
 
-            if candidate.contig == 'chr20' and 153770 < candidate.position < 153790:
-                print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value)
-
             if len(alt_alleles) > 0:
                 # print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support)
                 selected_candidate_list_margin.append((candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value))
