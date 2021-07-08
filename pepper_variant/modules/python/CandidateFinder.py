@@ -364,7 +364,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
             indel_allele_frequency_threshold = 0.0
             if total_observed_indels > 4:
                 indel_allele_frequency_threshold = indel_allele_frequencies[0]
-                for i in range(1, 4):
+                for i in range(1, 3):
                     if indel_allele_frequencies[i] != indel_allele_frequencies[i+1]:
                         indel_allele_frequency_threshold = indel_allele_frequencies[i]
                 print(indel_allele_frequencies, indel_allele_frequency_threshold)
