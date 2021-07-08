@@ -362,9 +362,10 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
 
             indel_allele_frequencies = sorted(indel_allele_frequencies, reverse=True)
             indel_allele_frequency_threshold = 0.0
-            if total_observed_indels > 4:
+            allowed_multiallelics = 4
+            if total_observed_indels > allowed_multiallelics:
                 indel_allele_frequency_threshold = indel_allele_frequencies[0]
-                for i in range(1, 3):
+                for i in range(1, allowed_multiallelics):
                     if indel_allele_frequencies[i] != indel_allele_frequencies[i+1]:
                         indel_allele_frequency_threshold = indel_allele_frequencies[i]
                 print(indel_allele_frequencies, indel_allele_frequency_threshold)
@@ -385,7 +386,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                 allele = alt_allele[1:]
                 if alt_type == '3':
                     vaf = float(allele_frequency) / float(candidate.depth)
-                    if total_observed_indels > 5 and vaf < indel_allele_frequency_threshold:
+                    if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
                         continue
                     if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 0.3:
                         if len(allele) > max_delete_length:
@@ -408,7 +409,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                         variant_allele_support.append(allele_frequency)
                         # print("SINGLE: ", predicted_bases, max_observed_likelihood[allele], candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
                 elif alt_type == '2':
-                    if total_observed_indels > 5 and vaf < indel_allele_frequency_threshold:
+                    if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
                         continue
 
                     if predicted_bases[0] == '*' or predicted_bases[1] == '*' or max_observed_likelihood['*'] >= 1.0:
@@ -421,7 +422,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                         variant_allele_support.append(allele_frequency)
                         # print("INSERT: ", predicted_bases, max_observed_likelihood['*'], candidate.contig, candidate.position, reference_allele, allele, candidate.depth, allele_frequency)
                 elif alt_type == '3':
-                    if total_observed_indels > 5 and vaf < indel_allele_frequency_threshold:
+                    if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
                         continue
 
                     if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 1.0:
