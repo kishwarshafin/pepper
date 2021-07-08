@@ -368,7 +368,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                 for i in range(1, allowed_multiallelics):
                     if indel_allele_frequencies[i] != indel_allele_frequencies[i+1]:
                         indel_allele_frequency_threshold = indel_allele_frequencies[i]
-                print(indel_allele_frequencies, indel_allele_frequency_threshold)
+                # print(indel_allele_frequencies, indel_allele_frequency_threshold)
 
             if len(alt_alleles) > 0:
                 # print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support)
