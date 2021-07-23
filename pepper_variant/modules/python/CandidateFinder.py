@@ -378,7 +378,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                 allele = alt_allele[1:]
                 if alt_type == '3':
                     vaf = float(allele_frequency) / float(candidate.depth)
-                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 0.3:
+                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 1.0:
                         if len(allele) > max_delete_length:
                             reference_allele = allele
                             max_delete_length = len(allele)
@@ -399,7 +399,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                         variant_allele_support.append(allele_frequency)
                         # print("SINGLE: ", predicted_bases, max_observed_likelihood[allele], candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
                 elif alt_type == '2':
-                    if predicted_bases[0] == '*' or predicted_bases[1] == '*' or max_observed_likelihood['*'] >= 0.3:
+                    if predicted_bases[0] == '*' or predicted_bases[1] == '*' or max_observed_likelihood['*'] >= 1.0:
                         bases_needed = max_delete_length
                         if bases_needed > 0:
                             ref_suffix = reference_allele[-bases_needed:]
@@ -409,7 +409,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                         variant_allele_support.append(allele_frequency)
                         # print("INSERT: ", predicted_bases, max_observed_likelihood['*'], candidate.contig, candidate.position, reference_allele, allele, candidate.depth, allele_frequency)
                 elif alt_type == '3':
-                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 0.3:
+                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 1.0:
                         bases_needed = max_delete_length - len(allele)
                         if bases_needed > 0:
                             ref_suffix = reference_allele[-bases_needed:]
