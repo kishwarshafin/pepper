@@ -360,21 +360,13 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                     total_observed_indels += 1
                     indel_allele_frequencies.append(float(allele_frequency) / float(candidate.depth))
 
-            indel_allele_frequencies = sorted(indel_allele_frequencies, reverse=True)
-            indel_allele_frequency_threshold = 0.0
-            allowed_multiallelics = 4
-            if total_observed_indels > allowed_multiallelics:
-                indel_allele_frequency_threshold = indel_allele_frequencies[0]
-                for i in range(1, allowed_multiallelics):
-                    if indel_allele_frequencies[i] != indel_allele_frequencies[i+1]:
-                        indel_allele_frequency_threshold = indel_allele_frequencies[i]
-                # print(indel_allele_frequencies, indel_allele_frequency_threshold)
-
             if len(alt_alleles) > 0:
                 # print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support)
                 selected_candidate_list_margin.append((candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value))
 
+            ################################################
             # this is candidate finding for DeepVariant
+            ################################################
             alt_alleles = []
             variant_allele_support = []
             max_delete_length = 0
@@ -386,8 +378,6 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                 allele = alt_allele[1:]
                 if alt_type == '3':
                     vaf = float(allele_frequency) / float(candidate.depth)
-                    if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
-                        continue
                     if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 0.3:
                         if len(allele) > max_delete_length:
                             reference_allele = allele
@@ -401,7 +391,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                 vaf = float(allele_frequency) / float(candidate.depth)
 
                 if alt_type == '1':
-                    if allele == predicted_bases[0] or allele == predicted_bases[1] or max_observed_likelihood[allele] >= 0.1:
+                    if allele == predicted_bases[0] or allele == predicted_bases[1] or max_observed_likelihood[allele] >= 0.1 or vaf >= 0.2:
                         alt_allele = list(reference_allele)
                         alt_allele[0] = allele[0]
                         # add them to list
@@ -409,10 +399,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                         variant_allele_support.append(allele_frequency)
                         # print("SINGLE: ", predicted_bases, max_observed_likelihood[allele], candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
                 elif alt_type == '2':
-                    if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
-                        continue
-
-                    if predicted_bases[0] == '*' or predicted_bases[1] == '*' or max_observed_likelihood['*'] >= 1.0:
+                    if predicted_bases[0] == '*' or predicted_bases[1] == '*' or max_observed_likelihood['*'] >= 0.3:
                         bases_needed = max_delete_length
                         if bases_needed > 0:
                             ref_suffix = reference_allele[-bases_needed:]
@@ -422,10 +409,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                         variant_allele_support.append(allele_frequency)
                         # print("INSERT: ", predicted_bases, max_observed_likelihood['*'], candidate.contig, candidate.position, reference_allele, allele, candidate.depth, allele_frequency)
                 elif alt_type == '3':
-                    if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
-                        continue
-
-                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 1.0:
+                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 0.3:
                         bases_needed = max_delete_length - len(allele)
                         if bases_needed > 0:
                             ref_suffix = reference_allele[-bases_needed:]

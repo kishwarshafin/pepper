@@ -1,9 +1,9 @@
 class ConsensCandidateFinder(object):
     REGION_SAFE_BASES = 100
-    SNP_FREQUENCY = 0.10
-    INSERT_FREQUENCY = 0.15
+    SNP_FREQUENCY = 0.08
+    INSERT_FREQUENCY = 0.10
     DELETE_FREQUENCY = 0.15
-    MIN_COVERAGE_THRESHOLD = 5
+    MIN_COVERAGE_THRESHOLD = 3
 
 
 class ImageSizeOptions(object):
