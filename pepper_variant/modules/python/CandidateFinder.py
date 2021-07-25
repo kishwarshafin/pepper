@@ -386,7 +386,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                     vaf = float(allele_frequency) / float(candidate.depth)
                     if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
                         continue
-                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 0.3:
+                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 1.0:
                         if len(allele) > max_delete_length:
                             reference_allele = allele
                             max_delete_length = len(allele)
@@ -399,7 +399,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                 vaf = float(allele_frequency) / float(candidate.depth)
 
                 if alt_type == '1':
-                    if allele == predicted_bases[0] or allele == predicted_bases[1] or max_observed_likelihood[allele] >= 0.1 or vaf >= 0.15:
+                    if allele == predicted_bases[0] or allele == predicted_bases[1] or max_observed_likelihood[allele] >= 0.1:
                         alt_allele = list(reference_allele)
                         alt_allele[0] = allele[0]
                         # add them to list
@@ -410,7 +410,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                     if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
                         continue
 
-                    if predicted_bases[0] == '*' or predicted_bases[1] == '*' or max_observed_likelihood['*'] >= 0.3:
+                    if predicted_bases[0] == '*' or predicted_bases[1] == '*' or max_observed_likelihood['*'] >= 1.0:
                         bases_needed = max_delete_length
                         if bases_needed > 0:
                             ref_suffix = reference_allele[-bases_needed:]
@@ -423,7 +423,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                     if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
                         continue
 
-                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 0.3:
+                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= 1.0:
                         bases_needed = max_delete_length - len(allele)
                         if bases_needed > 0:
                             ref_suffix = reference_allele[-bases_needed:]
