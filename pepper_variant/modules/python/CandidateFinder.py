@@ -382,7 +382,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
             variant_allele_support = []
             max_delete_length = 0
             reference_allele = reference_base
-            max_indel_p_value = 0.4
+            max_indel_p_value = 0.3
             max_snp_p_value = 0.1
             for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
                 if allele_frequency <= 2:
