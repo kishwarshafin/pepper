@@ -14,6 +14,5 @@ cd pepper
 make install
 . ./vnev/bin/activate
 
-pepper_snp --help
-pepper_hp --help
+pepper_variant --help
 ```
