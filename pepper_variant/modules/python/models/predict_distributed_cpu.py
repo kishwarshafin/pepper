@@ -42,7 +42,10 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL
     sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
 
-    ort_session = onnxruntime.InferenceSession(model_path + "quantized.onnx", sess_options=sess_options)
+    if os.path.isfile(model_path + ".quantized.onnx"):
+        ort_session = onnxruntime.InferenceSession(model_path + ".quantized.onnx", sess_options=sess_options)
+    else:
+        ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
 
     torch.set_num_threads(1)
 
@@ -169,8 +172,9 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
                                         'output_base': {0: 'batch_size'}})
 
     from onnxruntime.quantization import quantize_dynamic, QuantType
-    quantize_dynamic(model_path + ".onnx", model_path + "quantized.onnx", weight_type=QuantType.QUInt8)
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: QUANTIZED MODEL SAVED.\n")
+    if not os.path.isfile(model_path + ".quantized.onnx"):
+        quantize_dynamic(model_path + ".onnx", model_path + ".quantized.onnx", weight_type=QuantType.QUInt8)
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: QUANTIZED MODEL SAVED.\n")
     start_time = time.time()
 
     # file_chunks = None
