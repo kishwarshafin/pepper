@@ -2,7 +2,7 @@
 Here we show a quickstart for the Oxford Nanopore and PacBio HiFi variant calling.
 
 ### Install docker
-Please see our [ONT](../pipeline_docker/ONT_variant_calling.md) or [PacBio HiFi](../pipeline_docker/HiFi_variant_calling.md) case-study documentation to see instructions on how to install docker.
+Please see our [ONT](../pipeline_docker/ONT_variant_calling.md) case-study documentation to see instructions on how to install docker.
 
 ## Quickstart: Nanopore variant calling
 ```bash
