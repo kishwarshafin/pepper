@@ -11,15 +11,15 @@ BASE="${HOME}/ont-quickstart"
 # Set up input data
 INPUT_DIR="${BASE}/input/data"
 REF="GRCh38_no_alt.chr20.fa"
-BAM="HG002_ONT_50x_2_GRCh38.chr20.quickstart.bam"
+BAM="HG002_ONT_2_GRCh38.chr20.quickstart.bam"
 
 # Set the number of CPUs to use
 THREADS="1"
 
 # Set up output directory
 OUTPUT_DIR="${BASE}/output"
-OUTPUT_PREFIX="HG002_ONT_50x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
-OUTPUT_VCF="HG002_ONT_50x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
+OUTPUT_PREFIX="HG002_ONT_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
+OUTPUT_VCF="HG002_ONT_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
 TRUTH_VCF="HG002_GRCh38_1_22_v4.2.1_benchmark.quickstart.vcf.gz"
 TRUTH_BED="HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.quickstart.bed"
 
@@ -28,8 +28,8 @@ mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${INPUT_DIR}"
 
 # Download the data to input directory
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/HG002_ONT_50x_2_GRCh38.chr20.quickstart.bam
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/HG002_ONT_50x_2_GRCh38.chr20.quickstart.bam.bai
+wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/HG002_ONT_2_GRCh38.chr20.quickstart.bam
+wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/HG002_ONT_2_GRCh38.chr20.quickstart.bam.bai
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/GRCh38_no_alt.chr20.fa
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/GRCh38_no_alt.chr20.fa.fai
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/HG002_GRCh38_1_22_v4.2.1_benchmark.quickstart.vcf.gz
@@ -37,13 +37,13 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/qu
 
 # Pull the docker images
 sudo docker pull jmcdani20/hap.py:v0.3.12
-sudo docker pull kishwars/pepper_deepvariant:r0.4
+sudo docker pull kishwars/pepper_deepvariant:r0.5
 
 # Run PEPPER-Margin-DeepVariant
 sudo docker run --ipc=host \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.4 \
+kishwars/pepper_deepvariant:r0.5 \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
@@ -73,96 +73,7 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 |  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives | Recall | Precision | F1-Score |
 |:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:------:|:---------:|:--------:|
-| INDEL |        2       |         1         |          1         |          1         |   0.5  |    0.5    |    0.5   |
-|  SNP  |       39       |         39        |         39         |         39         |   1.0  |    1.0    |    1.0   |
-
-
-## Quickstart: PacBio HiFi variant calling
-```bash
-BASE="${HOME}/hifi-quickstart"
-
-# Set up input data
-INPUT_DIR="${BASE}/input/data"
-REF="GRCh38_no_alt.chr20.fa"
-BAM="HG002_PacBio_HiFi_35x_2_GRCh38_no_alt.chr20.quickstart.bam"
-TRUTH_VCF="HG002_GRCh38_1_22_v4.2.1_benchmark.quickstart.vcf.gz"
-TRUTH_BED="HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.quickstart.bed"
-
-# Set the number of CPUs to use
-THREADS="1"
-
-# Set up output directory
-OUTPUT_DIR="${BASE}/output"
-
-## Create local directory structure
-mkdir -p "${OUTPUT_DIR}"
-mkdir -p "${INPUT_DIR}"
-
-# Download the data to input directory
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/HG002_PacBio_HiFi_35x_2_GRCh38_no_alt.chr20.quickstart.bam
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/HG002_PacBio_HiFi_35x_2_GRCh38_no_alt.chr20.quickstart.bam.bai
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/GRCh38_no_alt.chr20.fa
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/GRCh38_no_alt.chr20.fa.fai
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/HG002_GRCh38_1_22_v4.2.1_benchmark.quickstart.vcf.gz
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/quickstart_data/HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.quickstart.bed
-
-# Pull the docker images
-sudo docker pull jmcdani20/hap.py:v0.3.12
-sudo docker pull kishwars/pepper_deepvariant:r0.4
-sudo docker pull google/deepvariant:1.1.0
-
-# Run PEPPER-Margin to generate a phased bam
-sudo docker run --ipc=host \
--v "${INPUT_DIR}":"${INPUT_DIR}" \
--v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.4 \
-run_pepper_margin_deepvariant call_variant \
--b "${INPUT_DIR}/${BAM}" \
--f "${INPUT_DIR}/${REF}" \
--o "${OUTPUT_DIR}" \
--t ${THREADS} \
--l chr20:1000000-1020000 \
---ccs
-
-PHASED_BAM=MARGIN_PHASED.PEPPER_SNP_MARGIN.haplotagged.bam
-OUTPUT_PREFIX="HG002_HiFi_35x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
-OUTPUT_VCF="HG002_HiFi_35x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
-
-# Run DeepVariant
-sudo docker run \
--v "${INPUT_DIR}":"${INPUT_DIR}" \
--v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-google/deepvariant:1.1.0 \
-/opt/deepvariant/bin/run_deepvariant \
---model_type=PACBIO \
---ref="${INPUT_DIR}/${REF}" \
---reads="${OUTPUT_DIR}/${PHASED_BAM}" \
---output_vcf="${OUTPUT_DIR}/${OUTPUT_VCF}" \
---regions="chr20:1000000-1020000" \
---num_shards=${THREADS} \
---use_hp_information
-
-# Run hap.py
-sudo docker run -it \
--v "${INPUT_DIR}":"${INPUT_DIR}" \
--v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-jmcdani20/hap.py:v0.3.12 /opt/hap.py/bin/hap.py \
-${INPUT_DIR}/${TRUTH_VCF} \
-${OUTPUT_DIR}/${OUTPUT_VCF} \
--f "${INPUT_DIR}/${TRUTH_BED}" \
--r "${INPUT_DIR}/${REF}" \
--o "${OUTPUT_DIR}/happy.output" \
---pass-only \
--l chr20:1000000-1020000 \
---engine=vcfeval \
---threads="${THREADS}"
-```
-
-**Expected output:**
-
-|  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives | Recall | Precision | F1-Score |
-|:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:------:|:---------:|:--------:|
-| INDEL |        2       |         2         |          2         |          2         |   1.0  |    1.0    |    1.0   |
+| INDEL |        2       |         2         |          0         |          1         |   1.0  |    0.6    |    0.8   |
 |  SNP  |       39       |         39        |         39         |         39         |   1.0  |    1.0    |    1.0   |
 
 ### Authors:
