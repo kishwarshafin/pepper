@@ -6,11 +6,12 @@ from pepper_variant.modules.argparse.CallVariantsArguments import add_call_varia
 from pepper_variant.modules.argparse.MakeImagesArguments import add_make_images_arguments
 from pepper_variant.modules.argparse.RunInferenceArguments import add_run_inference_arguments
 from pepper_variant.modules.argparse.FindCandidatesArguments import add_find_candidates_arguments
+from pepper_variant.modules.python.MergeVariants import merge_vcf_records
 from pepper_variant.modules.python.MakeImages import make_images
 from pepper_variant.modules.python.RunInference import run_inference
 from pepper_variant.modules.python.FindCandidates import process_candidates
 from pepper_variant.modules.python.CallVariant import call_variant
-
+from pepper_variant.modules.argparse.MergeVariantsArguments import add_merge_variants_arguments
 
 def main():
     """
@@ -47,6 +48,9 @@ def main():
 
     parser_find_candidates = subparsers.add_parser('find_candidates', help="Find candidate variants.")
     add_find_candidates_arguments(parser_find_candidates)
+
+    parser_merge_variants = subparsers.add_parser('merge_variants', help="Merge SNP variants from PEPPER and DeepVariant.")
+    add_merge_variants_arguments(parser_merge_variants)
 
     FLAGS, unparsed = parser.parse_known_args()
 
@@ -107,6 +111,10 @@ def main():
                            FLAGS.threads,
                            FLAGS.freq_based,
                            FLAGS.freq)
+
+    elif FLAGS.sub_command == 'merge_variants':
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MERGE VARIANTS SUBCOMMAND SELECTED\n")
+        merge_vcf_records(FLAGS.vcf_pepper, FLAGS.vcf_deepvariant, FLAGS.quality_threshold, FLAGS.output_dir)
 
     elif FLAGS.version is True:
         print("PEPPER VERSION: ", __version__)
