@@ -351,6 +351,15 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
             for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
                 alt_type = alt_allele[0]
                 allele = alt_allele[1:]
+
+                allele_list = list(allele)
+                valid_allele = True
+                for base in allele_list:
+                    if base not in ['A', 'C', 'G', 'T']:
+                        valid_allele = False
+
+                if not valid_allele:
+                    continue
                 # only process SNPs for margin
                 if alt_type == '1':
                     if allele == predicted_bases[0] or allele == predicted_bases[1]:
@@ -389,6 +398,16 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                     continue
                 alt_type = alt_allele[0]
                 allele = alt_allele[1:]
+
+                allele_list = list(allele)
+                valid_allele = True
+                for base in allele_list:
+                    if base not in ['A', 'C', 'G', 'T']:
+                        valid_allele = False
+
+                if not valid_allele:
+                    continue
+
                 if alt_type == '3':
                     vaf = float(allele_frequency) / float(candidate.depth)
                     if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
@@ -403,6 +422,16 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                     continue
                 alt_type = alt_allele[0]
                 allele = alt_allele[1:]
+
+                allele_list = list(allele)
+                valid_allele = True
+                for base in allele_list:
+                    if base not in ['A', 'C', 'G', 'T']:
+                        valid_allele = False
+
+                if not valid_allele:
+                    continue
+
                 vaf = float(allele_frequency) / float(candidate.depth)
 
                 if alt_type == '1':

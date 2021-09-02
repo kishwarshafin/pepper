@@ -550,7 +550,6 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
 
 
     int region_size = (int) (ref_end - ref_start + total_observered_insert_bases + 1);
-
     // Generate a cover vector of chunk size. Chunk size = 10kb defining the region
     int coverage_vector[ref_end - ref_start + 1];
     int snp_count[ref_end - ref_start + 1];
@@ -630,6 +629,7 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
 //        }
     }
 
+
     labels.resize(region_size + 1, 0);
     labels_variant_type.resize(region_size + 1, 0);
     // check if train mode, if yes, then generate labels
@@ -650,8 +650,8 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
         // cout<<"Candidate position: "<< candidate_position<<endl;
         // cout<<"Coverage: "<<coverage_vector[candidate_position-ref_start]<<endl;
         // cout<<"Candidates: "<<endl;
-
         candidate_summary.depth = coverage_vector[candidate_position-ref_start];
+
 
         for (auto it=AlleleMap[candidate_position - ref_start].begin(); it!=AlleleMap[candidate_position - ref_start].end(); ++it) {
             string candidate_string = *it;
@@ -690,13 +690,16 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
         int base_left = base_index - candidate_window_size / 2;
         int base_right = base_index + candidate_window_size / 2;
 
-//        cout<<base_left<<" "<<base_right<<endl;
         candidate_summary.image_matrix.resize(candidate_window_size + 1, vector<int>(feature_size));
         // now copy the entire feature matrix
 
         for(int i=base_left; i<=base_right;i++) {
             for (int j = 0; j < feature_size; j++) {
-                candidate_summary.image_matrix[i-base_left][j] = image_matrix[i][j];
+                if( i < 0 || i > region_size) {
+                    candidate_summary.image_matrix[i-base_left][j] = 0;
+                } else {
+                    candidate_summary.image_matrix[i - base_left][j] = image_matrix[i][j];
+                }
             }
         }
         all_candidate_images.push_back(candidate_summary);
