@@ -8,9 +8,11 @@
 </p>
 
 ---
-## Version 0.5 update
+### Version 0.5 update
 
 We have updated PEPPER to support `Guppy v5.0.7`. The current v0.5 only supports ONT variant calling.
+
+**NOTE: The models are trained on v0.5 with Guppy v5.0.7 "sup" mode. If you use have Guppy v4.X data, [please use PEPPER v0.4](https://github.com/kishwarshafin/pepper/tree/r0.4)**
 
 **If you want to use PEPPER-Margin-DeepVariant for assembly polishing or PacBio HiFi variant calling, [please use PEPPER v0.4](https://github.com/kishwarshafin/pepper/tree/r0.4)**
 
