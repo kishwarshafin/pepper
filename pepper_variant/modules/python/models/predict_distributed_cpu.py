@@ -17,7 +17,7 @@ from pepper_variant.modules.python.Options import ImageSizeOptions, TrainOptions
 from pepper_variant.modules.python.DataStorePredict import DataStore
 
 
-def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, threads, thread_id):
+def predict(options, input_filepath, file_chunks, output_filepath, threads, thread_id):
     # create output file
     output_filename = output_filepath + "pepper_prediction_" + str(thread_id) + ".hdf"
     prediction_data_file = DataStore(output_filename, mode='w')
@@ -25,9 +25,9 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     # data loader
     input_data = SequenceDataset(input_filepath, file_chunks)
     data_loader = DataLoader(input_data,
-                             batch_size=batch_size,
+                             batch_size=options.batch_size,
                              shuffle=False,
-                             num_workers=0,
+                             num_workers=options.num_workers,
                              collate_fn=SequenceDataset.my_collate)
 
     if thread_id == 0:
@@ -42,10 +42,10 @@ def predict(input_filepath, file_chunks, output_filepath, model_path, batch_size
     sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL
     sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
 
-    # if os.path.isfile(model_path + ".quantized.onnx"):
-    #     ort_session = onnxruntime.InferenceSession(model_path + ".quantized.onnx", sess_options=sess_options)
-    # else:
-    ort_session = onnxruntime.InferenceSession(model_path + ".onnx", sess_options=sess_options)
+    if options.quantized:
+        ort_session = onnxruntime.InferenceSession(options.quantized_model, sess_options=sess_options)
+    else:
+        ort_session = onnxruntime.InferenceSession(options.model_path + ".onnx", sess_options=sess_options)
 
     torch.set_num_threads(1)
 
@@ -132,22 +132,20 @@ def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, ba
                 sys.stderr.flush()
 
 
-def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, batch_size, total_callers, threads_per_caller, num_workers):
+def predict_distributed_cpu(options, filepath, file_chunks, output_filepath, total_callers, threads_per_caller):
     """
     Create a prediction table/dictionary of an images set using a trained model.
+    :param options: Options set for prediction
     :param filepath: Path to image files to predict on
     :param file_chunks: Path to chunked files
-    :param batch_size: Batch size used for prediction
-    :param model_path: Path to a trained model
     :param output_filepath: Path to output directory
     :param total_callers: Number of callers to start
     :param threads_per_caller: Number of threads per caller.
-    :param num_workers: Number of workers to be used by the dataloader
     :return: Prediction dictionary
     """
     # predict_pytorch(filepath, file_chunks[0],  output_filepath, model_path, batch_size, num_workers, threads_per_caller)
     transducer_model, hidden_size, gru_layers, prev_ite = \
-        ModelHandler.load_simple_model_for_training(model_path,
+        ModelHandler.load_simple_model_for_training(options.model_path,
                                                     image_features=ImageSizeOptions.IMAGE_HEIGHT,
                                                     num_classes=ImageSizeOptions.TOTAL_LABELS,
                                                     num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
@@ -158,10 +156,10 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
     h = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
     c = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
-    if not os.path.isfile(model_path + ".onnx"):
+    if not os.path.isfile(options.model_path + ".onnx"):
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SAVING MODEL TO ONNX\n")
         torch.onnx.export(transducer_model, (x, h, c),
-                          model_path + ".onnx",
+                          options.model_path + ".onnx",
                           opset_version=11,
                           do_constant_folding=True,
                           input_names=['image', 'hidden', 'cell_state'],
@@ -171,10 +169,12 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
                                         'cell_state': {0: 'batch_size'},
                                         'output_base': {0: 'batch_size'}})
 
-    # from onnxruntime.quantization import quantize_dynamic, QuantType
-    # if not os.path.isfile(model_path + ".quantized.onnx"):
-    #     quantize_dynamic(model_path + ".onnx", model_path + ".quantized.onnx", weight_type=QuantType.QUInt8)
-    #     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: QUANTIZED MODEL SAVED.\n")
+    if options.quantized:
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL QUANTIZATION ENABLED. \n")
+        from onnxruntime.quantization import quantize_dynamic, QuantType
+        quantize_dynamic(options.model_path + ".onnx", output_filepath + "pepper_model.quantized.onnx", weight_type=QuantType.QUInt8)
+        options.quantized_model = output_filepath + "pepper_model.quantized.onnx"
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: QUANTIZED MODEL SAVED.\n")
     start_time = time.time()
 
     # file_chunks = None
@@ -182,7 +182,7 @@ def predict_distributed_cpu(filepath, file_chunks, output_filepath, model_path, 
     # predict(filepath, file_chunks, output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=total_callers) as executor:
-        futures = [executor.submit(predict, filepath, file_chunks[thread_id], output_filepath, model_path, batch_size, num_workers, threads_per_caller, thread_id)
+        futures = [executor.submit(predict, options, filepath, file_chunks[thread_id], output_filepath, threads_per_caller, thread_id)
                    for thread_id in range(0, total_callers)]
 
         for fut in concurrent.futures.as_completed(futures):

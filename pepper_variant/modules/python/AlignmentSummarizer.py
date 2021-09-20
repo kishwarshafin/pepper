@@ -77,10 +77,17 @@ class AlignmentSummarizer:
 
         return haplotype_1_records, haplotype_2_records
 
-    def create_summary(self, truth_vcf, train_mode, downsample_rate, bed_list, thread_id, random_draw_prob):
+    def create_summary(self, options, bed_list, thread_id):
+        """
+        Core process to generate image summaries.
+        :param options: Options for image generation
+        :param bed_list: List of regions from a bed file. [GIAB high-confidence region]
+        :param thread_id: Process id.
+        :return:
+        """
         all_candidate_images = []
 
-        if train_mode:
+        if options.train_mode:
             truth_regions = []
             # now intersect with bed file
             if bed_list is not None:
@@ -203,7 +210,7 @@ class AlignmentSummarizer:
                     if candidate.type_label == 0:
                         random_draw = random_sampling[random_sampling_index]
                         random_sampling_index += 1
-                        if random_draw <= random_draw_prob:
+                        if random_draw <= options.random_draw_probability:
                             all_candidate_images.append(candidate)
                             picked_refs += 1
                     else:
@@ -215,12 +222,12 @@ class AlignmentSummarizer:
             all_reads = self.bam_handler.get_reads(self.chromosome_name,
                                                    region_start,
                                                    region_end,
-                                                   ReadFilterOptions.INCLUDE_SUPPLEMENTARY,
-                                                   ReadFilterOptions.MIN_MAPQ,
-                                                   ReadFilterOptions.MIN_BASEQ)
+                                                   options.include_supplementary,
+                                                   options.min_mapq,
+                                                   options.min_baseq)
 
             total_reads = len(all_reads)
-            total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, downsample_rate * total_reads))
+            total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, options.downsample_rate * total_reads))
 
             if total_reads > total_allowed_reads:
                 # sys.stderr.write("INFO: " + log_prefix + "HIGH COVERAGE CHUNK: " + str(total_reads) + " Reads.\n")
@@ -247,43 +254,19 @@ class AlignmentSummarizer:
                                                                 region_start,
                                                                 region_end + 1)
 
-            # Find positions that has allele frequency >= threshold
-            # candidate finder objects
-            # candidate_finder = PEPPER_VARIANT.CandidateFinder(ref_seq,
-            #                                                   self.chromosome_name,
-            #                                                   region_start,
-            #                                                   region_end,
-            #                                                   region_start,
-            #                                                   region_end)
-
-            # find candidates
-            # candidate_positions = candidate_finder.find_candidates_consensus(all_reads,
-            #                                                                  ConsensCandidateFinder.SNP_FREQUENCY,
-            #                                                                  ConsensCandidateFinder.INSERT_FREQUENCY,
-            #                                                                  ConsensCandidateFinder.DELETE_FREQUENCY)
-
-            # filter the candidates to the sub regions only
-            # candidate_positions = [pos for pos in candidate_positions if self.region_start_position <= pos <= self.region_end_position]
-
-            # if len(candidate_positions) == 0:
-            #     return None
-
-
-            # if thread_id == 0:
-            #     sys.stderr.write("INFO: " + "TOTAL CANDIDATES FOUND: " + str(len(candidate_positions)) + " IN REGION: " + str(region_start) + "   " + str(region_end) + ".\n")
             regional_summary = PEPPER_VARIANT.RegionalSummaryGenerator(self.chromosome_name, region_start, region_end, ref_seq)
             regional_summary.generate_max_insert_summary(all_reads)
 
             candidate_image_summary = regional_summary.generate_summary(all_reads,
-                                                                        ConsensCandidateFinder.SNP_FREQUENCY,
-                                                                        ConsensCandidateFinder.INSERT_FREQUENCY,
-                                                                        ConsensCandidateFinder.DELETE_FREQUENCY,
-                                                                        ConsensCandidateFinder.MIN_COVERAGE_THRESHOLD,
+                                                                        options.snp_frequency,
+                                                                        options.insert_frequency,
+                                                                        options.delete_frequency,
+                                                                        options.min_coverage_threshold,
                                                                         self.region_start_position,
                                                                         self.region_end_position,
                                                                         ImageSizeOptions.CANDIDATE_WINDOW_SIZE,
                                                                         ImageSizeOptions.IMAGE_HEIGHT,
-                                                                        train_mode)
+                                                                        options.train_mode)
             #############################
             all_candidate_images.extend(candidate_image_summary)
 

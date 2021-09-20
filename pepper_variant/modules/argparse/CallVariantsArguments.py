@@ -26,13 +26,6 @@ def add_call_variant_arguments(parser):
         help="Path to a trained model."
     )
     parser.add_argument(
-        "-d",
-        "--downsample_rate",
-        type=float,
-        default=1.0,
-        help="Downsample rate of reads while generating images."
-    )
-    parser.add_argument(
         "-o",
         "--output_dir",
         type=str,
@@ -54,25 +47,103 @@ def add_call_variant_arguments(parser):
         help="Number of threads to use."
     )
     parser.add_argument(
+        "-d",
+        "--downsample_rate",
+        type=float,
+        default=1.0,
+        help="Downsample rate of reads while generating images. Default is 1.0"
+    )
+    parser.add_argument(
         "-r",
         "--region",
         type=str,
-        help="Region in [contig_name:start-end] format"
+        default=None,
+        help="Region in [contig_name:start-end] format. Default is None."
     )
+    parser.add_argument(
+        "--region_size",
+        type=int,
+        required=False,
+        default=100000,
+        help="Region size in bp used to chunk the genome. Default is 100000."
+    )
+    parser.add_argument(
+        "--region_bed",
+        type=str,
+        required=False,
+        default=None,
+        help="Bed file to process regions only in the bed region. Default is None."
+    )
+    parser.add_argument(
+        "-hp",
+        "--use_hp_info",
+        default=False,
+        action='store_true',
+        help="If true use HP information for variant calling. Default is False."
+    )
+    parser.add_argument(
+        "--include_supplementary",
+        default=False,
+        action='store_true',
+        help="If true then supplementary reads will be used. Default is False."
+    )
+    parser.add_argument(
+        "--min_mapq",
+        type=int,
+        required=False,
+        default=5,
+        help="Minimum mapping quality for read to be considered valid. Default is 5"
+    )
+    parser.add_argument(
+        "--min_baseq",
+        type=int,
+        required=False,
+        default=1,
+        help="Minimum base quality for base to be considered valid. Default is 1"
+    )
+    parser.add_argument(
+        "--snp_frequency",
+        type=float,
+        required=False,
+        default=0.10,
+        help="Minimum SNP frequency for a site to be considered to have a variant. Default is 0.10"
+    )
+    parser.add_argument(
+        "--insert_frequency",
+        type=float,
+        required=False,
+        default=0.15,
+        help="Minimum insert frequency for a site to be considered to have a variant. Default is 0.15"
+    )
+    parser.add_argument(
+        "--delete_frequency",
+        type=float,
+        required=False,
+        default=0.15,
+        help="Minimum delete frequency for a site to be considered to have a variant. Default is 0.15"
+    )
+    parser.add_argument(
+        "--min_coverage_threshold",
+        type=int,
+        required=False,
+        default=5,
+        help="Minimum delete frequency for a site to be considered to have a variant. Default is 5"
+    )
+
     parser.add_argument(
         "-bs",
         "--batch_size",
         type=int,
         required=False,
         default=128,
-        help="Batch size for testing, default is 128. Suggested values: 256/512/1024."
+        help="Batch size for testing, default is 128. Suggested values: 256/512/1024. Default is 128"
     )
     parser.add_argument(
         "-g",
         "--gpu",
         default=False,
         action='store_true',
-        help="If set then PyTorch will use GPUs for inference. CUDA required."
+        help="If set then PyTorch will use GPUs for inference. CUDA required. Default is False."
     )
     parser.add_argument(
         "-per_gpu",
@@ -80,7 +151,7 @@ def add_call_variant_arguments(parser):
         type=int,
         required=False,
         default=4,
-        help="Number of callers to initialize per GPU, on a 11GB GPU, you can go up to 10. Default is 4."
+        help="Number of callers to initialize per GPU. Default is 4"
     )
     parser.add_argument(
         "-d_ids",
@@ -90,7 +161,13 @@ def add_call_variant_arguments(parser):
         default=None,
         help="List of gpu device ids to use for inference. Only used in distributed setting.\n"
              "Example usage: --device_ids 0,1,2 (this will create three callers in id 'cuda:0, cuda:1 and cuda:2'\n"
-             "If none then it will use all available devices."
+             "If none then it will use all available devices. Default is None."
+    )
+    parser.add_argument(
+        "--quantized",
+        default=False,
+        action='store_true',
+        help="Use quantization for inference while on CPU inference mode. Speeds up inference. Default is False."
     )
     parser.add_argument(
         "-w",
@@ -98,7 +175,35 @@ def add_call_variant_arguments(parser):
         type=int,
         required=False,
         default=0,
-        help="Number of workers for loading images. Default is 0."
+        help="Number of workers for loading images. Default is 0"
+    )
+    parser.add_argument(
+        "--allowed_multiallelics",
+        type=int,
+        required=False,
+        default=4,
+        help="Number of maximum multialleleic variants allowed per site. Default is 4"
+    )
+    parser.add_argument(
+        "--snp_p_value",
+        required=False,
+        type=float,
+        default=0.4,
+        help="Predicted value used for a SNP to be considered a candidate. Default is 0.4"
+    )
+    parser.add_argument(
+        "--insert_p_value",
+        required=False,
+        type=float,
+        default=0.1,
+        help="Predicted value used for a insert to be considered a candidate. Default is 0.1"
+    )
+    parser.add_argument(
+        "--delete_p_value",
+        required=False,
+        type=float,
+        default=0.2,
+        help="Predicted value used for a delete to be considered a candidate. Default is 0.2"
     )
     parser.add_argument(
         "--freq_based",
@@ -112,12 +217,5 @@ def add_call_variant_arguments(parser):
         type=float,
         default=0.10,
         help="If frequency based variant finding in enabled then this frequency will be the threshold."
-    )
-    parser.add_argument(
-        "-hp",
-        "--use_hp_info",
-        default=False,
-        action='store_true',
-        help="If set then haplotype-aware mode will be enabled."
     )
     return parser

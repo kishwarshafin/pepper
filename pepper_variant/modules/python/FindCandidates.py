@@ -154,7 +154,7 @@ def get_file_paths_from_directory(directory_path):
     return file_paths
 
 
-def candidate_finder(input_dir, reference_file, bam_file, use_hp_info, sample_name, output_path, threads, freq_based, freq):
+def candidate_finder(options, input_dir, output_path):
     all_prediction_files = get_file_paths_from_directory(input_dir)
 
     all_prediction_pair = []
@@ -169,14 +169,13 @@ def candidate_finder(input_dir, reference_file, bam_file, use_hp_info, sample_na
     vcf_file_name_phasing = "PEPPER_VARIANT_OUTPUT_PHASING"
     vcf_file_name_variant_calling = "PEPPER_VARIANT_OUTPUT_VARIANT_CALLING"
 
-    vcf_file_phasing = VCFWriter(reference_file, sample_name, output_path, vcf_file_name_phasing)
-    vcf_file_variant_calling = VCFWriter(reference_file, sample_name, output_path, vcf_file_name_variant_calling)
+    vcf_file_phasing = VCFWriter(options.fasta, options.sample_name, output_path, vcf_file_name_phasing)
+    vcf_file_variant_calling = VCFWriter(options.fasta, options.sample_name, output_path, vcf_file_name_variant_calling)
 
     local_start_time = time.time()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING CANDIDATE FINDING." + "\n")
 
-    selected_candidates_phasing, selected_candidates_variant_calling = find_candidates(input_dir, reference_file, bam_file, use_hp_info, all_prediction_pair, threads, freq_based, freq)
-    # selected_candidates_phasing, selected_candidates_variant_calling = find_candidates(input_dir, reference_file, bam_file, use_hp_info, all_prediction_files, threads, freq_based, freq)
+    selected_candidates_phasing, selected_candidates_variant_calling = find_candidates(options, input_dir, all_prediction_pair)
     end_time = time.time()
 
     mins = int((end_time - local_start_time) / 60)
@@ -191,15 +190,9 @@ def candidate_finder(input_dir, reference_file, bam_file, use_hp_info, sample_na
     vcf_file_variant_calling.write_vcf_records(selected_candidates_variant_calling)
 
 
-def process_candidates(input_dir, reference, bam_file, use_hp_info, sample_name, output_dir, threads, freq_based, freq):
+def process_candidates(options, input_dir, output_dir):
     output_dir = ImageGenerationUtils.handle_output_directory(output_dir)
 
-    candidate_finder(input_dir,
-                     reference,
-                     bam_file,
-                     use_hp_info,
-                     sample_name,
-                     output_dir,
-                     threads,
-                     freq_based,
-                     freq)
+    candidate_finder(options,
+                     input_dir,
+                     output_dir)

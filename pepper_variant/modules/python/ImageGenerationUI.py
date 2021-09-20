@@ -19,79 +19,44 @@ class ImageGenerator:
     """
     Process manager that runs sequence of processes to generate images and their labels.
     """
-    def __init__(self, chromosome_name, bam_file_path, draft_file_path, use_hp_info, truth_vcf, train_mode, random_draw_probability):
+    def __init__(self, chromosome_name, bam_file_path, fasta_file_path):
         """
         Initialize a manager object
         :param chromosome_name: Name of the chromosome
         :param bam_file_path: Path to the BAM file
-        :param draft_file_path: Path to the reference FASTA file
-        :param truth_bam_h1: Path to the truth sequence of hp1 to reference mapping file
-        :param truth_bam_h2: Path to the truth sequence of hp2 to reference mapping file
+        :param fasta_file_path: Path to the reference FASTA file
         """
         # --- initialize handlers ---
         # create objects to handle different files and query
-        self.bam_path = bam_file_path
-        self.fasta_path = draft_file_path
         self.bam_handler = PEPPER_VARIANT.BAM_handler(bam_file_path)
-        self.fasta_handler = PEPPER_VARIANT.FASTA_handler(draft_file_path)
-        self.train_mode = train_mode
-        self.downsample_rate = 1.0
-        self.use_hp_info = use_hp_info
-        self.truth_vcf = None
-        self.random_draw_probability = random_draw_probability
-
-        if self.train_mode:
-            self.truth_vcf = truth_vcf
+        self.fasta_handler = PEPPER_VARIANT.FASTA_handler(fasta_file_path)
 
         # --- initialize names ---
         # name of the chromosome
         self.chromosome_name = chromosome_name
 
-    def generate_summary(self, start_position, end_position, downsample_rate, bed_list, thread_id):
+    def generate_summary(self, options, start_position, end_position, bed_list, thread_id):
         """
         Generate labeled images of a given region of the genome
+        :param options: Options for generating images
         :param start_position: Start position of the region
         :param end_position: End position of the region
-        :param downsample_rate: End position of the region
-        :param realignment_flag: If true then realignment will be performed
-        :param bed_list: If true then realignment will be performed
+        :param bed_list: List of regions from bed file. [GIAB high-confidence regions]
+        :param thread_id: Process ID.
         :return:
         """
-        if not self.use_hp_info:
+        if not options.use_hp_info:
             alignment_summarizer = AlignmentSummarizer(self.bam_handler,
                                                        self.fasta_handler,
                                                        self.chromosome_name,
                                                        start_position,
                                                        end_position)
 
-            candidate_images = alignment_summarizer.create_summary(self.truth_vcf,
-                                                                   self.train_mode,
-                                                                   downsample_rate,
+            candidate_images = alignment_summarizer.create_summary(options,
                                                                    bed_list,
-                                                                   thread_id,
-                                                                   self.random_draw_probability)
+                                                                   thread_id)
 
             return candidate_images
-        else:
-            alignment_summarizer_hp = AlignmentSummarizerHP(self.bam_handler,
-                                                            self.fasta_handler,
-                                                            self.chromosome_name,
-                                                            start_position,
-                                                            end_position)
-
-            region_summary = alignment_summarizer_hp.create_summary(self.truth_vcf,
-                                                                    self.train_mode,
-                                                                    downsample_rate,
-                                                                    bed_list,
-                                                                    self.random_draw_probability)
-
-            if region_summary is not None:
-                images_hp1, images_hp2, labels_hp1, labels_hp2, positions, index, image_chunk_ids = region_summary
-            else:
-                images_hp1, images_hp2, labels_hp1, labels_hp2, positions, index, image_chunk_ids = [], [], [], [], [], [], []
-
-            return images_hp1, images_hp2, labels_hp1, labels_hp2, positions, index, image_chunk_ids
-
 
 
 class ImageGenerationUtils:
@@ -211,28 +176,26 @@ class ImageGenerationUtils:
         return chromosome_name_list, region_bed_list
 
     @staticmethod
-    def generate_image_and_save_to_file(args, all_intervals, total_threads, process_id):
+    def generate_image_and_save_to_file(options, all_intervals, bed_list, process_id):
         """
         Method description
-        :param args:
-        :param all_intervals:
-        :param total_threads:
-        :param process_id:
+        :param options: Image generation options.
+        :param all_intervals: All intervals.
+        :param bed_list: List of intervals from bed file.
+        :param process_id: Process id.
         :return:
         """
         thread_prefix = "[THREAD " + "{:02d}".format(process_id) + "]"
 
-        output_path, bam_file, draft_file, use_hp_info, truth_vcf, train_mode, downsample_rate, bed_list, random_draw_probability = args
-
         timestr = time.strftime("%m%d%Y_%H%M%S")
-        file_name = output_path + "pepper_variants_images_thread_" + str(process_id) + "_" + str(timestr)
+        file_name = options.image_output_directory + "pepper_variants_images_thread_" + str(process_id) + "_" + str(timestr)
 
-        if use_hp_info:
+        if options.use_hp_info:
             file_name = file_name + "_" + "hp"
 
         file_name = file_name + ".hdf5"
 
-        intervals = [r for i, r in enumerate(all_intervals) if i % total_threads == process_id]
+        intervals = [r for i, r in enumerate(all_intervals) if i % options.threads == process_id]
 
         # initial notification
         if process_id == 0:
@@ -247,15 +210,11 @@ class ImageGenerationUtils:
                 chr_name, _start, _end = interval
 
                 image_generator = ImageGenerator(chromosome_name=chr_name,
-                                                 bam_file_path=bam_file,
-                                                 draft_file_path=draft_file,
-                                                 use_hp_info=use_hp_info,
-                                                 truth_vcf=truth_vcf,
-                                                 train_mode=train_mode,
-                                                 random_draw_probability=random_draw_probability)
+                                                 bam_file_path=options.bam,
+                                                 fasta_file_path=options.fasta)
 
-                if not use_hp_info:
-                    candidates = image_generator.generate_summary(_start, _end, downsample_rate, bed_list, process_id)
+                if not options.use_hp_info:
+                    candidates = image_generator.generate_summary(options, _start, _end, bed_list, process_id)
                     if candidates is not None:
                         # load the previously written objects
                         # if os.path.exists(file_name):
@@ -282,7 +241,16 @@ class ImageGenerationUtils:
 
                         summary_name = chr_name + "_" + str(_start) + "_" + str(_end)
 
-                        output_hdf_file.write_summary(summary_name, all_contig, all_position, all_depth, all_candidates, all_candidate_frequency, all_image_matrix, all_base_label, all_type_label, train_mode)
+                        output_hdf_file.write_summary(summary_name,
+                                                      all_contig,
+                                                      all_position,
+                                                      all_depth,
+                                                      all_candidates,
+                                                      all_candidate_frequency,
+                                                      all_image_matrix,
+                                                      all_base_label,
+                                                      all_type_label,
+                                                      options.train_mode)
 
                     # all_candidates.extend(candidates)
 
@@ -298,40 +266,20 @@ class ImageGenerationUtils:
                                      + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                     sys.stderr.flush()
 
-
         return process_id
 
     @staticmethod
-    def generate_images(chr_list,
-                        bam_file,
-                        draft_file,
-                        use_hp_info,
-                        truth_vcf,
-                        output_path,
-                        total_processes,
-                        train_mode,
-                        downsample_rate,
-                        bed_list,
-                        random_draw_probability):
+    def generate_images(options):
         """
-        Description of this method
-        :param chr_list:
-        :param bam_file:
-        :param draft_file:
-        :param use_hp_info:
-        :param truth_vcf:
-        :param output_path:
-        :param total_processes:
-        :param train_mode:
-        :param downsample_rate:
-        :param bed_list:
+        Generates images.
+        :param options: Option for generating images.
         :return:
         """
-
-        max_size = 100000
+        chr_list, bed_list = ImageGenerationUtils.get_chromosome_list(options.region, options.fasta, options.bam, region_bed=options.region_bed)
+        options.image_output_directory = ImageGenerationUtils.handle_output_directory(os.path.abspath(options.image_output_directory))
 
         start_time = time.time()
-        fasta_handler = PEPPER_VARIANT.FASTA_handler(draft_file)
+        fasta_handler = PEPPER_VARIANT.FASTA_handler(options.fasta)
 
         all_intervals = []
         total_bases = 0
@@ -346,17 +294,17 @@ class ImageGenerationUtils:
                 interval_end = min(interval_end, fasta_handler.get_chromosome_sequence_length(chr_name) - 1)
 
             interval_size = interval_end - interval_start
-            if train_mode and interval_size < ImageSizeOptions.MIN_SEQUENCE_LENGTH:
+            if options.train_mode and interval_size < ImageSizeOptions.MIN_SEQUENCE_LENGTH:
                 continue
 
             # this is the interval size each of the process is going to get which is 10^6
             # I will split this into 10^4 size inside the worker process
-            for pos in range(interval_start, interval_end, max_size):
+            for pos in range(interval_start, interval_end, options.region_size):
                 pos_start = max(interval_start, pos)
-                pos_end = min(interval_end, pos + max_size)
+                pos_end = min(interval_end, pos + options.region_size)
 
                 inv_size = pos_end - pos_start
-                if train_mode and inv_size < ImageSizeOptions.MIN_SEQUENCE_LENGTH:
+                if options.train_mode and inv_size < ImageSizeOptions.MIN_SEQUENCE_LENGTH:
                     continue
 
                 all_intervals.append((chr_name, pos_start, pos_end))
@@ -370,10 +318,9 @@ class ImageGenerationUtils:
                          + " TOTAL BASES: " + str(total_bases) + "\n")
         sys.stderr.flush()
 
-        args = (output_path, bam_file, draft_file, use_hp_info, truth_vcf, train_mode, downsample_rate, bed_list, random_draw_probability)
-        with concurrent.futures.ProcessPoolExecutor(max_workers=total_processes) as executor:
-            futures = [executor.submit(ImageGenerationUtils.generate_image_and_save_to_file, args, all_intervals, total_processes, process_id)
-                       for process_id in range(0, total_processes)]
+        with concurrent.futures.ProcessPoolExecutor(max_workers=options.threads) as executor:
+            futures = [executor.submit(ImageGenerationUtils.generate_image_and_save_to_file, options, all_intervals, bed_list, process_id)
+                       for process_id in range(0, options.threads)]
 
             for fut in concurrent.futures.as_completed(futures):
                 if fut.exception() is None:

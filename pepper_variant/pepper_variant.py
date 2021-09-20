@@ -7,7 +7,7 @@ from pepper_variant.modules.argparse.MakeImagesArguments import add_make_images_
 from pepper_variant.modules.argparse.RunInferenceArguments import add_run_inference_arguments
 from pepper_variant.modules.argparse.FindCandidatesArguments import add_find_candidates_arguments
 from pepper_variant.modules.python.MergeVariants import merge_vcf_records
-from pepper_variant.modules.python.MakeImages import make_images
+from pepper_variant.modules.python.ImageGenerationUI import ImageGenerationUtils
 from pepper_variant.modules.python.RunInference import run_inference
 from pepper_variant.modules.python.FindCandidates import process_candidates
 from pepper_variant.modules.python.CallVariant import call_variant
@@ -49,74 +49,67 @@ def main():
     parser_find_candidates = subparsers.add_parser('find_candidates', help="Find candidate variants.")
     add_find_candidates_arguments(parser_find_candidates)
 
-    parser_merge_variants = subparsers.add_parser('merge_variants', help="Merge SNP variants from PEPPER and DeepVariant.")
-    add_merge_variants_arguments(parser_merge_variants)
+    # parser_merge_variants = subparsers.add_parser('merge_variants', help="Merge SNP variants from PEPPER and DeepVariant.")
+    # add_merge_variants_arguments(parser_merge_variants)
 
-    FLAGS, unparsed = parser.parse_known_args()
+    options, unparsed = parser.parse_known_args()
 
-    if FLAGS.sub_command == 'call_variant':
+    # Following parameters are only used during training, so turning them off by default
+    options.train_mode = False
+    options.truth_vcf = None
+    options.random_draw_probability = 1.0
+    options.dry_mode = False
+
+    if options.sub_command == 'call_variant':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CALL VARIANT MODULE SELECTED\n")
-        call_variant(FLAGS.bam,
-                     FLAGS.fasta,
-                     FLAGS.output_dir,
-                     FLAGS.use_hp_info,
-                     FLAGS.freq_based,
-                     FLAGS.freq,
-                     FLAGS.threads,
-                     FLAGS.region,
-                     FLAGS.model_path,
-                     FLAGS.batch_size,
-                     FLAGS.gpu,
-                     FLAGS.callers_per_gpu,
-                     FLAGS.device_ids,
-                     FLAGS.num_workers,
-                     FLAGS.sample_name,
-                     FLAGS.downsample_rate)
+        # generate images
+        # options.region_size = 100000
+        # options.train_mode = False
+        # options.region_bed = None
+        # options.use_hp_info = False
+        # options.truth_vcf = None
+        # options.random_draw_probability = 1.0
+        # options.include_supplementary = False
+        # options.min_mapq = 5
+        # options.min_baseq = 1
+        # options.snp_frequency = 0.10
+        # options.insert_frequency = 0.15
+        # options.delete_frequency = 0.15
+        # options.min_coverage_threshold = 5
+        #
+        # # inference
+        # options.quantized = True
+        #
+        # # candidate finding
+        # options.allowed_multiallelics = 4
+        # options.snp_p_value = 0.4
+        # options.insert_p_value = 0.1
+        # options.delete_p_value = 0.2
 
-    elif FLAGS.sub_command == 'make_images':
+        call_variant(options)
+
+    elif options.sub_command == 'make_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE IMAGE MODULE SELECTED.\n")
-        make_images(bam=FLAGS.bam,
-                    fasta=FLAGS.fasta,
-                    use_hp_info=FLAGS.use_hp_info,
-                    truth_vcf=None,
-                    region=FLAGS.region,
-                    region_bed=None,
-                    output_dir=FLAGS.output_dir,
-                    threads=FLAGS.threads,
-                    downsample_rate=FLAGS.downsample_rate,
-                    train_mode=False)
+        options.image_output_directory = options.output_dir
+        ImageGenerationUtils.generate_images(options)
 
-    elif FLAGS.sub_command == 'run_inference':
+    elif options.sub_command == 'run_inference':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN INFERENCE MODULE SELECTED.\n")
-        run_inference(FLAGS.image_dir,
-                      FLAGS.model_path,
-                      FLAGS.use_hp_info,
-                      FLAGS.batch_size,
-                      FLAGS.num_workers,
-                      FLAGS.output_dir,
-                      FLAGS.device_ids,
-                      FLAGS.callers_per_gpu,
-                      FLAGS.gpu,
-                      FLAGS.threads,
-                      FLAGS.dry)
+        run_inference(options,
+                      options.image_dir,
+                      options.output_dir)
 
-    elif FLAGS.sub_command == 'find_candidates':
+    elif options.sub_command == 'find_candidates':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FIND CANDIDATE MODULE SELECTED\n")
-        process_candidates(FLAGS.input_dir,
-                           FLAGS.fasta,
-                           FLAGS.bam,
-                           FLAGS.use_hp_info,
-                           FLAGS.sample_name,
-                           FLAGS.output_dir,
-                           FLAGS.threads,
-                           FLAGS.freq_based,
-                           FLAGS.freq)
+        process_candidates(options,
+                           options.input_dir,
+                           options.output_dir)
 
-    elif FLAGS.sub_command == 'merge_variants':
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MERGE VARIANTS SUBCOMMAND SELECTED\n")
-        merge_vcf_records(FLAGS.vcf_pepper, FLAGS.vcf_deepvariant, FLAGS.quality_threshold, FLAGS.output_dir)
+    # elif options.sub_command == 'merge_variants':
+    #     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MERGE VARIANTS SUBCOMMAND SELECTED\n")
+    #     merge_vcf_records(FLAGS.vcf_pepper, FLAGS.vcf_deepvariant, FLAGS.quality_threshold, FLAGS.output_dir)
 
-    elif FLAGS.version is True:
+    elif options.version is True:
         print("PEPPER VERSION: ", __version__)
     else:
         sys.stderr.write("ERROR: NO SUBCOMMAND SELECTED. PLEASE SELECT ONE OF THE AVAIABLE SUB-COMMANDS.\n")

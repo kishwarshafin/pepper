@@ -1,17 +1,11 @@
 import h5py
-import time
 import sys
 from os.path import isfile, join
 from os import listdir
 import concurrent.futures
 import numpy as np
 from collections import defaultdict
-import operator
-from numpy import argmax
 from pepper_variant.modules.python.Options import PEPPERVariantCandidateFinderOptions, ImageSizeOptions
-from pepper_variant.modules.python.CandidateFinderCPP import CandidateFinderCPP
-import pickle
-from datetime import datetime
 from pepper_variant.build import PEPPER_VARIANT
 
 
@@ -281,8 +275,8 @@ def get_genotype_from_base(ref_base, base_prediction1, base_prediction2):
         return [0, 1]
 
 
-def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chunks, freq_based, freq):
-    fasta_handler = PEPPER_VARIANT.FASTA_handler(reference_file_path)
+def small_chunk_stitch(options, file_chunks):
+    fasta_handler = PEPPER_VARIANT.FASTA_handler(options.fasta)
     selected_candidate_list_margin = []
     selected_candidate_list_deepvariant = []
 
@@ -300,10 +294,13 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                 # type_predictions = hdf5_file['predictions'][batch_key]['type_prediction'][()]
 
                 for i in range(len(contigs)):
-                    candidate = candidates[i].strip('][').split(', ')
+                    candidate = candidates[i].strip('][')
+                    candidate = candidate.replace(',', ' ')
+                    candidate = candidate.split()
                     candidate = [x.strip("'") for x in candidate]
-
-                    candidate_frequency = candidate_frequencies[i].strip('][').split(', ')
+                    candidate_frequency = candidate_frequencies[i].strip('][')
+                    candidate_frequency = candidate_frequency.replace(',', ' ')
+                    candidate_frequency = candidate_frequency.split()
                     candidate_frequency = [int(x.strip("'")) for x in candidate_frequency]
 
                     candidate = PEPPER_VARIANT.CandidateImagePrediction(contigs[i].decode('UTF-8'),
@@ -373,10 +370,9 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
             indel_allele_frequency_threshold = 0.0
 
             # fix a frequency boundary based on multiallelics present at this site
-            allowed_multiallelics = 4
-            if total_observed_indels > allowed_multiallelics:
+            if total_observed_indels > options.allowed_multiallelics:
                 indel_allele_frequency_threshold = indel_allele_frequencies[0]
-                for i in range(1, allowed_multiallelics):
+                for i in range(1, options.allowed_multiallelics):
                     if indel_allele_frequencies[i] != indel_allele_frequencies[i+1]:
                         indel_allele_frequency_threshold = indel_allele_frequencies[i]
 
@@ -391,8 +387,7 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
             variant_allele_support = []
             max_delete_length = 0
             reference_allele = reference_base
-            max_indel_p_value = 0.3
-            max_snp_p_value = 0.1
+
             for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
                 if allele_frequency <= 2:
                     continue
@@ -410,14 +405,20 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
 
                 if alt_type == '3':
                     vaf = float(allele_frequency) / float(candidate.depth)
-                    if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
+                    if total_observed_indels > options.allowed_multiallelics and vaf < indel_allele_frequency_threshold:
                         continue
-                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= max_indel_p_value:
+                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= options.delete_p_value:
                         if len(allele) > max_delete_length:
                             reference_allele = allele
                             max_delete_length = len(allele)
 
             for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
+                # print("GENERAL: ", candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
+                # print("INSERT Predicted: ", max_observed_likelihood['*'])
+                # print("DELETE Predicted: ", max_observed_likelihood['#'])
+                # print("PREDICETED BASES: ", predicted_bases)
+
+
                 if allele_frequency <= 2:
                     continue
                 alt_type = alt_allele[0]
@@ -433,9 +434,13 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                     continue
 
                 vaf = float(allele_frequency) / float(candidate.depth)
+                # print("TOTAL OBSERVED INDELS: ", total_observed_indels)
+                # print("ALLOWED MULTI", options.allowed_multiallelics)
+                # print("VAF", vaf)
+                # print("INDEL VAF THRESHOLD", indel_allele_frequency_threshold)
 
                 if alt_type == '1':
-                    if allele == predicted_bases[0] or allele == predicted_bases[1] or max_observed_likelihood[allele] >= max_snp_p_value:
+                    if allele == predicted_bases[0] or allele == predicted_bases[1] or max_observed_likelihood[allele] >= options.snp_p_value:
                         alt_allele = list(reference_allele)
                         alt_allele[0] = allele[0]
                         # add them to list
@@ -443,10 +448,10 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                         variant_allele_support.append(allele_frequency)
                         # print("SINGLE: ", predicted_bases, max_observed_likelihood[allele], candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
                 elif alt_type == '2':
-                    if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
+                    if total_observed_indels > options.allowed_multiallelics and vaf < indel_allele_frequency_threshold:
                         continue
 
-                    if predicted_bases[0] == '*' or predicted_bases[1] == '*' or max_observed_likelihood['*'] >= max_indel_p_value:
+                    if predicted_bases[0] == '*' or predicted_bases[1] == '*' or max_observed_likelihood['*'] >= options.insert_p_value:
                         bases_needed = max_delete_length
                         if bases_needed > 0:
                             ref_suffix = reference_allele[-bases_needed:]
@@ -456,10 +461,10 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
                         variant_allele_support.append(allele_frequency)
                         # print("INSERT: ", predicted_bases, max_observed_likelihood['*'], candidate.contig, candidate.position, reference_allele, allele, candidate.depth, allele_frequency)
                 elif alt_type == '3':
-                    if total_observed_indels > allowed_multiallelics and vaf < indel_allele_frequency_threshold:
+                    if total_observed_indels > options.allowed_multiallelics and vaf < indel_allele_frequency_threshold:
                         continue
 
-                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= max_indel_p_value:
+                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= options.delete_p_value:
                         bases_needed = max_delete_length - len(allele)
                         if bases_needed > 0:
                             ref_suffix = reference_allele[-bases_needed:]
@@ -479,14 +484,14 @@ def small_chunk_stitch(reference_file_path, bam_file_path, use_hp_info, file_chu
     return selected_candidate_list_margin, selected_candidate_list_deepvariant
 
 
-def find_candidates(input_dir, reference_file_path, bam_file, use_hp_info, all_prediction_pair, threads, freq_based, freq):
+def find_candidates(options, input_dir, all_prediction_pair):
 
     all_selected_candidates_phasing = list()
     all_selected_candidates_variant_calling = list()
     # generate the dictionary in parallel
-    with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
-        file_chunks = chunks(all_prediction_pair, max(2, int(len(all_prediction_pair) / threads) + 1))
-        futures = [executor.submit(small_chunk_stitch, reference_file_path, bam_file, use_hp_info, file_chunk, freq_based, freq) for file_chunk in file_chunks]
+    with concurrent.futures.ProcessPoolExecutor(max_workers=options.threads) as executor:
+        file_chunks = chunks(all_prediction_pair, max(2, int(len(all_prediction_pair) / options.threads) + 1))
+        futures = [executor.submit(small_chunk_stitch, options, file_chunk) for file_chunk in file_chunks]
         for fut in concurrent.futures.as_completed(futures):
             if fut.exception() is None:
                 positional_candidates_phasing, positional_candidates_variant_calling = fut.result()

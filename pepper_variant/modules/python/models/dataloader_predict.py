@@ -69,6 +69,7 @@ class SequenceDataset(Dataset):
         image = [item[5] for item in batch]
 
         image = torch.FloatTensor(image)
+        # print(type(contig), type(position), type(depth), type(candidate), type(candidate_frequency), type(image))
 
         return [contig, position, depth, candidate, candidate_frequency, image]
 
@@ -82,6 +83,7 @@ class SequenceDataset(Dataset):
         candidate = self.all_candidates[index]
         candidate_frequency = self.all_candidate_frequency[index]
         image = self.all_images[index]
+
 
         # return candidate, image, base_predictions, type_predictions
         return contig, position, depth, candidate, candidate_frequency, image

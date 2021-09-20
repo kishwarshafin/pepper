@@ -23,24 +23,24 @@ def get_file_paths_from_directory(directory_path):
     return file_paths
 
 
-def distributed_gpu(image_dir, model_path, use_hp_info, batch_size, threads, num_workers, output_dir, callers_per_gpu, device_ids):
+def distributed_gpu(options, image_dir, output_dir):
     start_time = time.time()
 
-    if device_ids is None:
+    if options.device_ids is None:
         total_gpu_devices = torch.cuda.device_count()
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL GPU AVAILABLE: " + str(total_gpu_devices) + "\n")
         device_ids = [i for i in range(0, total_gpu_devices)]
 
         multiplied_device_ids = []
         for device_id in device_ids:
-            for i in range(0, callers_per_gpu):
+            for i in range(0, options.callers_per_gpu):
                 multiplied_device_ids.append(device_id)
         device_ids = multiplied_device_ids
 
         total_callers = len(device_ids)
     else:
-        device_ids = [int(i) for i in device_ids.split(',')]
-        device_ids = list(set(device_ids))
+        device_ids = [int(i) for i in options.device_ids.split(',')]
+        options.device_ids = list(set(device_ids))
         for device_id in device_ids:
             major_capable, minor_capable = torch.cuda.get_device_capability(device=device_id)
             if major_capable < 0:
@@ -55,7 +55,7 @@ def distributed_gpu(image_dir, model_path, use_hp_info, batch_size, threads, num
 
         multiplied_device_ids = []
         for device_id in device_ids:
-            for i in range(0, callers_per_gpu):
+            for i in range(0, options.callers_per_gpu):
                 multiplied_device_ids.append(device_id)
         device_ids = multiplied_device_ids
 
@@ -76,14 +76,14 @@ def distributed_gpu(image_dir, model_path, use_hp_info, batch_size, threads, num
     file_chunks = [x for x in file_chunks if x]
 
     total_callers = min(total_callers, len(file_chunks))
-    threads_per_caller = max(1, int(threads/total_callers))
+    threads_per_caller = max(1, int(options.threads/total_callers))
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(total_callers) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL THREADS PER CALLER: " + str(threads_per_caller) + "\n")
 
-    if not use_hp_info:
-        predict_distributed_gpu(image_dir, file_chunks, output_dir, model_path, batch_size, total_callers, threads_per_caller, device_ids, num_workers)
+    if not options.use_hp_info:
+        predict_distributed_gpu(options, image_dir, output_dir, total_callers)
     else:
-        predict_hp_distributed_gpu(image_dir, file_chunks, output_dir, model_path, batch_size, total_callers, threads_per_caller, device_ids, num_workers)
+        predict_hp_distributed_gpu(image_dir, file_chunks, output_dir, options.model_path, options.batch_size, total_callers, threads_per_caller, device_ids, options.num_workers)
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION GENERATED SUCCESSFULLY.\n")
 
@@ -93,7 +93,7 @@ def distributed_gpu(image_dir, model_path, use_hp_info, batch_size, threads, num
     sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
 
-def distributed_cpu(image_dir, model_path, use_hp_info, batch_size, threads, num_workers, output_dir):
+def distributed_cpu(options, image_dir, output_dir):
     start_time = time.time()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DISTRIBUTED CPU SETUP.\n")
 
@@ -101,7 +101,7 @@ def distributed_cpu(image_dir, model_path, use_hp_info, batch_size, threads, num
     input_files = get_file_paths_from_directory(image_dir)
 
     # use 1/2 the available CPUs to call
-    callers = max(1, int(threads))
+    callers = max(1, int(options.threads))
 
     file_chunks = [[] for i in range(callers)]
     for i in range(0, len(input_files)):
@@ -111,14 +111,14 @@ def distributed_cpu(image_dir, model_path, use_hp_info, batch_size, threads, num
 
     callers = min(callers, len(file_chunks))
     # use uniform amount of CPUs per caller
-    threads_per_caller = max(1, int(threads/callers))
+    threads_per_caller = max(1, int(options.threads/callers))
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(callers) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREADS PER CALLER: " + str(threads_per_caller) + "\n")
-    if not use_hp_info:
-        predict_distributed_cpu(image_dir, file_chunks, output_dir, model_path, batch_size, callers, threads_per_caller, num_workers)
+    if not options.use_hp_info:
+        predict_distributed_cpu(options, image_dir, file_chunks, output_dir, callers, threads_per_caller)
     else:
-        predict_hp_distributed_cpu(image_dir, file_chunks, output_dir, model_path, batch_size, callers, threads_per_caller, num_workers)
+        predict_hp_distributed_cpu(image_dir, file_chunks, output_dir, options.model_path, options.batch_size, callers, threads_per_caller, options.num_workers)
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION FINISHED SUCCESSFULLY. \n")
 
     end_time = time.time()
@@ -127,36 +127,18 @@ def distributed_cpu(image_dir, model_path, use_hp_info, batch_size, threads, num
     sys.stderr.write("[" + datetime.now().strftime('%m-%d-%Y %H:%M:%S') + "] INFO: TOTAL ELAPSED TIME FOR INFERENCE: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
 
-def run_inference(image_dir,
-                  model,
-                  use_hp_info,
-                  batch_size,
-                  num_workers,
-                  output_dir,
-                  device_ids,
-                  callers_per_gpu,
-                  gpu_mode,
-                  threads,
-                  dry_mode=False):
+def run_inference(options,
+                  image_dir,
+                  output_dir):
     output_dir = ImageGenerationUtils.handle_output_directory(output_dir)
 
-    if dry_mode:
-        predict_distributed_cpu_fake(image_dir, output_dir, batch_size, num_workers)
-    elif gpu_mode:
-        distributed_gpu(image_dir,
-                        model,
-                        use_hp_info,
-                        batch_size,
-                        threads,
-                        num_workers,
-                        output_dir,
-                        callers_per_gpu,
-                        device_ids)
+    if options.dry_mode:
+        predict_distributed_cpu_fake(image_dir, output_dir, options.batch_size, options.num_workers)
+    elif options.gpu:
+        distributed_gpu(options,
+                        image_dir,
+                        output_dir)
     else:
-        distributed_cpu(image_dir,
-                        model,
-                        use_hp_info,
-                        batch_size,
-                        threads,
-                        num_workers,
+        distributed_cpu(options,
+                        image_dir,
                         output_dir)

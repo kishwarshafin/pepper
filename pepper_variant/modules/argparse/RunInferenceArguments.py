@@ -35,6 +35,12 @@ def add_run_inference_arguments(parser):
         help="Batch size for testing, default is 100. Suggested values: 256/512/1024. Default is 128."
     )
     parser.add_argument(
+        "--quantized",
+        default=False,
+        action='store_true',
+        help="Use quantization for inference while on CPU inference mode. Speeds up inference. Default is False."
+    )
+    parser.add_argument(
         "-g",
         "--gpu",
         default=False,
