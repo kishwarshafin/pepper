@@ -294,11 +294,11 @@ def small_chunk_stitch(options, file_chunks):
                 # type_predictions = hdf5_file['predictions'][batch_key]['type_prediction'][()]
 
                 for i in range(len(contigs)):
-                    candidate = candidates[i].strip('][')
+                    candidate = str(candidates[i]).strip('][')
                     candidate = candidate.replace(',', ' ')
                     candidate = candidate.split()
                     candidate = [x.strip("'") for x in candidate]
-                    candidate_frequency = candidate_frequencies[i].strip('][')
+                    candidate_frequency = str(candidate_frequencies[i]).strip('][')
                     candidate_frequency = candidate_frequency.replace(',', ' ')
                     candidate_frequency = candidate_frequency.split()
                     candidate_frequency = [int(x.strip("'")) for x in candidate_frequency]

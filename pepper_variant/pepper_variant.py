@@ -54,7 +54,7 @@ def main():
 
     options, unparsed = parser.parse_known_args()
 
-    # Following parameters are only used during training, so turning them off by default
+    # Following parameters are only used during training, so turning them off by default.
     options.train_mode = False
     options.truth_vcf = None
     options.random_draw_probability = 1.0
@@ -62,30 +62,6 @@ def main():
 
     if options.sub_command == 'call_variant':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CALL VARIANT MODULE SELECTED\n")
-        # generate images
-        # options.region_size = 100000
-        # options.train_mode = False
-        # options.region_bed = None
-        # options.use_hp_info = False
-        # options.truth_vcf = None
-        # options.random_draw_probability = 1.0
-        # options.include_supplementary = False
-        # options.min_mapq = 5
-        # options.min_baseq = 1
-        # options.snp_frequency = 0.10
-        # options.insert_frequency = 0.15
-        # options.delete_frequency = 0.15
-        # options.min_coverage_threshold = 5
-        #
-        # # inference
-        # options.quantized = True
-        #
-        # # candidate finding
-        # options.allowed_multiallelics = 4
-        # options.snp_p_value = 0.4
-        # options.insert_p_value = 0.1
-        # options.delete_p_value = 0.2
-
         call_variant(options)
 
     elif options.sub_command == 'make_images':
