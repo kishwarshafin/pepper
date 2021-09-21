@@ -46,6 +46,7 @@ string FASTA_handler::get_reference_sequence(string region, long long start, lon
         cerr<<"ENCOUNTERED ERROR IN FETCHING REFERENCE FASTA FILE: "<<region<<" "<<start<<" "<<stop<<endl;
         return NULL;
     }
+    transform(sequence.begin(), sequence.end(), sequence.begin(), ptr_fun<int, int>(toupper));
     return sequence;
 }
 
