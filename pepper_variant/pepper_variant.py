@@ -58,7 +58,7 @@ def main():
     options.train_mode = False
     options.truth_vcf = None
     options.random_draw_probability = 1.0
-    options.dry_mode = False
+    options.dry = False
 
     if options.sub_command == 'call_variant':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CALL VARIANT MODULE SELECTED\n")

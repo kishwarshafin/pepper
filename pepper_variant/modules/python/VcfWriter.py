@@ -2,6 +2,7 @@ from pysam import VariantFile, VariantHeader
 from pepper_variant.build import PEPPER_VARIANT
 import collections
 import math
+import numpy as np
 Candidate = collections.namedtuple('Candidate', 'chromosome_name pos_start pos_end ref '
                                                 'alternate_alleles allele_depths '
                                                 'allele_frequencies genotype qual gq predictions')
@@ -17,11 +18,93 @@ class VCFWriter:
         self.filename = filename
         self.vcf_file = VariantFile(self.output_dir + self.filename + '.vcf', 'w', header=self.vcf_header)
 
+    def candidate_list_to_variant(self, candidates):
+        candidates = sorted(candidates, key=lambda x: (x[8]))
+        max_ref_length = 0
+        max_ref_allele = ''
+
+        # find the maximum reference allele
+        for candidate in candidates:
+            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions = candidate
+            if len(ref_allele) > max_ref_length:
+                max_ref_length = len(ref_allele)
+                max_ref_allele = ref_allele
+
+        normalized_candidates = []
+        for candidate in candidates:
+            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions = candidate
+            suffix_needed = 0
+            if len(ref_allele) < max_ref_length:
+                suffix_needed = max_ref_length - len(ref_allele)
+
+            if suffix_needed > 0:
+                suffix_seq = max_ref_allele[-suffix_needed:]
+                ref_allele = ref_allele + suffix_seq
+                alt_allele = [alt + suffix_seq for alt in alt_allele]
+
+            normalized_candidates.append((contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions))
+
+        candidates = normalized_candidates
+        gt_qual = 0.0
+        genotype_hp1 = []
+        genotype_hp2 = []
+
+        all_initialized = False
+        site_contig = ''
+        site_ref_start = 0
+        site_ref_end = 0
+        site_ref_allele = ''
+        site_depth = 0
+        site_alts = []
+        site_supports = []
+        site_qualities = []
+
+        for i, candidate in enumerate(candidates):
+            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions = candidate
+            # print(contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions)
+            predicted_genotype = np.argmax(predictions)
+
+            if not all_initialized:
+                site_contig = contig
+                site_ref_start = ref_start
+                site_ref_end = ref_start + len(ref_allele)
+                site_ref_allele = ref_allele
+                site_depth = depth
+                all_initialized = True
+
+            site_depth = min(site_depth, depth)
+            site_alts.append(alt_allele[0])
+            site_supports.append(variant_allele_support[0])
+            site_qualities.append(genotype_probability)
+
+            # het
+            if predicted_genotype == 1:
+                genotype_hp1.append(i+1)
+                gt_qual = min(gt_qual, genotype_probability)
+            # hom-alt
+            elif predicted_genotype == 2:
+                genotype_hp1.append(i+1)
+                genotype_hp2.append(i+1)
+                gt_qual = min(gt_qual, genotype_probability)
+
+        if 0 < len(genotype_hp1) + len(genotype_hp2) <= 2:
+            gt = genotype_hp1 + genotype_hp2
+            if len(gt) == 1:
+                gt = [0, gt[0]]
+        else:
+            gt = [0, 0]
+
+        return site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual
+
+
+
     def write_vcf_records(self, variants_list):
         last_position = -1
-        for called_variant in variants_list:
-            contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability = called_variant
+        for contig, position in sorted(variants_list):
+            all_candidates = variants_list[(contig, position)]
 
+            contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability = self.candidate_list_to_variant(all_candidates)
+            # print("RETURNED", contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability)
             if len(alleles) <= 0:
                 continue
             if ref_start == last_position:
@@ -33,6 +116,8 @@ class VCFWriter:
             alt_qual = max(1, int(-10 * math.log10(max(0.000001, 1.0 - max(0.0001, genotype_probability)))))
 
             vafs = [round(ad/max(1, depth), 3) for ad in variant_allele_support]
+
+            # print(str(contig), ref_start, ref_end, qual, 'refCall', alleles, genotype, alt_qual, alt_qual, depth, variant_allele_support, vafs)
             if genotype == [0, 0]:
                 vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
                                                       stop=ref_end, id='.', qual=qual,

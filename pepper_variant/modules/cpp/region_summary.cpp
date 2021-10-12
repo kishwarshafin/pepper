@@ -162,17 +162,30 @@ int RegionalSummaryGenerator::get_reference_feature_index(char base) {
     return ImageOptionsRegion::REFERENCE_INDEX_START + 4;
 }
 
+int RegionalSummaryGenerator::get_reference_feature_value(char base) {
+    base = toupper(base);
+    if (base == 'A') return 1;
+    if (base == 'C') return 2;
+    if (base == 'G') return 3;
+    if (base == 'T') return 4;
+    return 5;
+}
+
 void RegionalSummaryGenerator::encode_reference_bases(vector< vector<int> >& image_matrix) {
     for (long long ref_position = ref_start; ref_position <= ref_end; ref_position++) {
         // encode the C base
         int base_index = (int) (ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]);
-        int feature_index = get_reference_feature_index(reference_sequence[ref_position - ref_start]);
-        image_matrix[base_index][feature_index] = 255;
+        // int feature_index = get_reference_feature_index(reference_sequence[ref_position - ref_start]);
+        int feature_index = 0;
+        int value = get_reference_feature_value(reference_sequence[ref_position - ref_start]);
+        image_matrix[base_index][feature_index] = value;
 
         for(int i = 1; i <= max_observed_insert[ref_position - ref_start]; i++) {
             base_index = (int) (ref_position - ref_start + cumulative_observed_insert[ref_position - ref_start]) + i;
-            feature_index = get_reference_feature_index('*');
-            image_matrix[base_index][feature_index] = 255;
+            // feature_index = get_reference_feature_index('*');
+            feature_index = 0;
+            value = get_reference_feature_value(reference_sequence[ref_position - ref_start]);
+            image_matrix[base_index][feature_index] = value;
         }
     }
 }
@@ -193,38 +206,42 @@ int RegionalSummaryGenerator::get_feature_index(char ref_base, char base, bool i
     if(valid_ref && ref_base == base) {
         // this is a match situation
         if (!is_reverse) {
-            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START;
-            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 1;
-            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 2;
-            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 3;
-            return ImageOptionsRegion::BASE_INDEX_START;
+//            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START;
+//            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 1;
+//            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 2;
+//            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 3;
+            // return ImageOptionsRegion::BASE_INDEX_START;
+            return 1;
         } else {
             // tagged and forward
-            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 4;
-            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 5;
-            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 6;
-            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 7;
-            return ImageOptionsRegion::BASE_INDEX_START;
+//            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 4;
+//            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 5;
+//            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 6;
+//            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 7;
+            // return ImageOptionsRegion::BASE_INDEX_START + 1;
+            return 2;
         }
     } else {
         // this is a mismatch situation
         if (!is_reverse) {
-            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 8;
-            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 9;
-            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 10;
-            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 11;
-            if (base == 'I') return ImageOptionsRegion::BASE_INDEX_START + 12;
-            if (base == 'D') return ImageOptionsRegion::BASE_INDEX_START + 13;
-            return ImageOptionsRegion::BASE_INDEX_START + 14;
+            int start_index  = 0;
+            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + start_index + 1;
+            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + start_index + 2;
+            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + start_index + 3;
+            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + start_index + 4;
+            if (base == 'I') return ImageOptionsRegion::BASE_INDEX_START + start_index + 5;
+            if (base == 'D') return ImageOptionsRegion::BASE_INDEX_START + start_index + 6;
+            return ImageOptionsRegion::BASE_INDEX_START + start_index + 7;
         } else {
             // tagged and forward
-            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 15;
-            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 16;
-            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 17;
-            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 18;
-            if (base == 'I') return ImageOptionsRegion::BASE_INDEX_START + 19;
-            if (base == 'D') return ImageOptionsRegion::BASE_INDEX_START + 20;
-            return ImageOptionsRegion::BASE_INDEX_START + 21;
+            int start_index  = 7;
+            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + start_index + 1;
+            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + start_index + 2;
+            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + start_index + 3;
+            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + start_index + 4;
+            if (base == 'I') return ImageOptionsRegion::BASE_INDEX_START + start_index + 5;
+            if (base == 'D') return ImageOptionsRegion::BASE_INDEX_START + start_index + 6;
+            return ImageOptionsRegion::BASE_INDEX_START + start_index + 7;
         }
     }
 }
@@ -238,6 +255,9 @@ void RegionalSummaryGenerator::generate_labels(const vector<type_truth_record>& 
     variant_type_labels_hp1.resize(region_size + 1, VariantTypes::HOM_REF);
     variant_type_labels_hp2.resize(region_size + 1, VariantTypes::HOM_REF);
 
+    hp1_truth_alleles.resize(region_size + 1);
+    hp2_truth_alleles.resize(region_size + 1);
+
     for(long long pos = ref_start; pos <= ref_end; pos++) {
         int base_index = (int)(pos - ref_start + cumulative_observed_insert[pos - ref_start]);
         labels_hp1[base_index] = 'R';
@@ -245,44 +265,32 @@ void RegionalSummaryGenerator::generate_labels(const vector<type_truth_record>& 
     }
 
     for(const auto& truth_record : hap1_records) {
+
         if(truth_record.ref.length() > truth_record.alt.length()) {
             //it's a delete
+//            cout<<"TRUTH DELETE: "<<truth_record.contig<<" "<<truth_record.pos_start<<" "<<truth_record.ref<<" "<<truth_record.alt<<endl;
             if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
                 int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
                 variant_type_labels_hp1[base_index] = VariantTypes::DELETE;
                 labels_hp1[base_index] = '#';
+                hp1_truth_alleles[base_index].push_back(truth_record);
             }
-            // dont expand to the rest of the bases
-
-//            for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-//                if (pos >= ref_start && pos <= ref_end) {
-//                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-//                    if (pos - truth_record.pos_start < truth_record.alt.length()) {
-//                        labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
-//                    } else {
-//                        labels_hp1[base_index] = '*';
-//                    }
-//                }
-//            }
         } else if(truth_record.ref.length() < truth_record.alt.length()) {
             //it's an insert
+//            cout<<"TRUTH INSERT: "<<truth_record.contig<<" "<<truth_record.pos_start<<" "<<truth_record.ref<<" "<<truth_record.alt<<endl;
             if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
                 int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
                 variant_type_labels_hp1[base_index] = VariantTypes::INSERT;
                 labels_hp1[base_index] = '*';
+                hp1_truth_alleles[base_index].push_back(truth_record);
             }
-
-//            for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-//                if (pos >= ref_start && pos <= ref_end) {
-//                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-//                    labels_hp1[base_index] = truth_record.alt[pos - truth_record.pos_start];
-//                }
-//            }
         } else if(truth_record.ref.length() == truth_record.alt.length()) {
             //it's a SNP
+//            cout<<"TRUTH SNP: "<<truth_record.contig<<" "<<truth_record.pos_start<<" "<<truth_record.ref<<" "<<truth_record.alt<<endl;
             if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
                 int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
                 variant_type_labels_hp1[base_index] = VariantTypes::SNP;
+                hp1_truth_alleles[base_index].push_back(truth_record);
             }
 
             for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
@@ -307,38 +315,22 @@ void RegionalSummaryGenerator::generate_labels(const vector<type_truth_record>& 
                 int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
                 variant_type_labels_hp2[base_index] = VariantTypes::DELETE;
                 labels_hp2[base_index] = '#';
+                hp2_truth_alleles[base_index].push_back(truth_record);
             }
-            // dont expand to the rest of the bases
-
-//            for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-//                if (pos >= ref_start && pos <= ref_end) {
-//                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-//                    if (pos - truth_record.pos_start < truth_record.alt.length()) {
-//                        labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
-//                    } else {
-//                        labels_hp2[base_index] = '*';
-//                    }
-//                }
-//            }
         } else if(truth_record.ref.length() < truth_record.alt.length()) {
             //it's an insert
             if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
                 int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
                 variant_type_labels_hp2[base_index] = VariantTypes::INSERT;
                 labels_hp2[base_index] = '*';
+                hp2_truth_alleles[base_index].push_back(truth_record);
             }
-
-//            for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
-//                if (pos >= ref_start && pos <= ref_end) {
-//                    int base_index = (int) (pos - ref_start + cumulative_observed_insert[pos - ref_start]);
-//                    labels_hp2[base_index] = truth_record.alt[pos - truth_record.pos_start];
-//                }
-//            }
         } else if(truth_record.ref.length() == truth_record.alt.length()) {
             //it's a SNP
             if (truth_record.pos_start >= ref_start && truth_record.pos_start <= ref_end) {
                 int base_index = (int) (truth_record.pos_start - ref_start + cumulative_observed_insert[truth_record.pos_start - ref_start]);
                 variant_type_labels_hp2[base_index] = VariantTypes::SNP;
+                hp2_truth_alleles[base_index].push_back(truth_record);
             }
 
             for(long long pos = truth_record.pos_start; pos < truth_record.pos_end; pos++) {
@@ -365,6 +357,8 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                                                        int *insert_count,
                                                        int *delete_count,
                                                        vector< map<string, int> > &AlleleFrequencyMap,
+                                                       vector< map<string, int> > &AlleleFrequencyMapFwdStrand,
+                                                       vector< map<string, int> > &AlleleFrequencyMapRevStrand,
                                                        vector< set<string> > &AlleleMap,
                                                        type_read read) {
     int read_index = 0;
@@ -412,15 +406,27 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
 
                                 if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
                                     AlleleFrequencyMap[region_index][candidate_string] += 1;
+                                    if(read.flags.is_reverse) {
+                                        AlleleFrequencyMapRevStrand[region_index][candidate_string] += 1;
+                                    } else {
+                                        AlleleFrequencyMapFwdStrand[region_index][candidate_string] += 1;
+                                    }
                                 } else {
                                     AlleleFrequencyMap[region_index][candidate_string] = 1;
+                                    if(read.flags.is_reverse) {
+                                        AlleleFrequencyMapFwdStrand[region_index][candidate_string] = 0;
+                                        AlleleFrequencyMapRevStrand[region_index][candidate_string] = 1;
+                                    } else {
+                                        AlleleFrequencyMapFwdStrand[region_index][candidate_string] = 1;
+                                        AlleleFrequencyMapRevStrand[region_index][candidate_string] = 0;
+                                    }
                                 }
 
                                 if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
                                     AlleleMap[region_index].insert(candidate_string);
 
                             } else {
-                                image_matrix[base_index][feature_index] -= 1;
+                                image_matrix[base_index][feature_index] += 1;
                             }
                         }
 
@@ -455,8 +461,20 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
 
                         if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
                             AlleleFrequencyMap[region_index][candidate_string] += 1;
+                            if(read.flags.is_reverse) {
+                                AlleleFrequencyMapRevStrand[region_index][candidate_string] += 1;
+                            } else {
+                                AlleleFrequencyMapFwdStrand[region_index][candidate_string] += 1;
+                            }
                         } else {
                             AlleleFrequencyMap[region_index][candidate_string] = 1;
+                            if(read.flags.is_reverse) {
+                                AlleleFrequencyMapFwdStrand[region_index][candidate_string] = 0;
+                                AlleleFrequencyMapRevStrand[region_index][candidate_string] = 1;
+                            } else {
+                                AlleleFrequencyMapFwdStrand[region_index][candidate_string] = 1;
+                                AlleleFrequencyMapRevStrand[region_index][candidate_string] = 0;
+                            }
                         }
 
                         if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
@@ -501,8 +519,20 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
 
                         if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
                             AlleleFrequencyMap[region_index][candidate_string] += 1;
+                            if(read.flags.is_reverse) {
+                                AlleleFrequencyMapRevStrand[region_index][candidate_string] += 1;
+                            } else {
+                                AlleleFrequencyMapFwdStrand[region_index][candidate_string] += 1;
+                            }
                         } else {
                             AlleleFrequencyMap[region_index][candidate_string] = 1;
+                            if(read.flags.is_reverse) {
+                                AlleleFrequencyMapFwdStrand[region_index][candidate_string] = 0;
+                                AlleleFrequencyMapRevStrand[region_index][candidate_string] = 1;
+                            } else {
+                                AlleleFrequencyMapFwdStrand[region_index][candidate_string] = 1;
+                                AlleleFrequencyMapRevStrand[region_index][candidate_string] = 0;
+                            }
                         }
 
                         if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
@@ -556,6 +586,8 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
     int insert_count[ref_end - ref_start + 1];
     int delete_count[ref_end - ref_start + 1];
     vector< map<string, int> > AlleleFrequencyMap;
+    vector< map<string, int> > AlleleFrequencyMapFwdStrand;
+    vector< map<string, int> > AlleleFrequencyMapRevStrand;
     vector< set<string> > AlleleMap;
 
     // generate the image matrix of chunk_size (10kb) * feature_size (10)
@@ -563,6 +595,8 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
 
     image_matrix.resize(region_size + 1, vector<int>(feature_size));
     AlleleFrequencyMap.resize(region_size + 1);
+    AlleleFrequencyMapFwdStrand.resize(region_size + 1);
+    AlleleFrequencyMapRevStrand.resize(region_size + 1);
     AlleleMap.resize(region_size + 1);
 
     for (int i = 0; i < region_size + 1; i++) {
@@ -575,13 +609,14 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
     memset(insert_count, 0, sizeof(insert_count));
     memset(delete_count, 0, sizeof(delete_count));
 
-//    encode_reference_bases(image_matrix);
+    encode_reference_bases(image_matrix);
 
     // now iterate over all of the reads and populate the image matrix and coverage matrix
     for (auto &read:reads) {
         // this populates base_summaries and insert_summaries dictionaries
         if(read.mapping_quality > 0) {
-            populate_summary_matrix(image_matrix, coverage_vector, snp_count, insert_count, delete_count, AlleleFrequencyMap, AlleleMap, read);
+            populate_summary_matrix(image_matrix, coverage_vector, snp_count, insert_count, delete_count,
+                                    AlleleFrequencyMap, AlleleFrequencyMapFwdStrand, AlleleFrequencyMapRevStrand, AlleleMap, read);
         }
     }
 
@@ -643,68 +678,199 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
     vector<CandidateImageSummary> all_candidate_images;
     // at this point all of the images are generated. So we can create the images for each candidate position.
     for(long long candidate_position : filtered_candidate_positions) {
-        CandidateImageSummary candidate_summary;
-        candidate_summary.contig = contig;
-        candidate_summary.position = candidate_position;
-
-        // cout<<"Candidate position: "<< candidate_position<<endl;
-        // cout<<"Coverage: "<<coverage_vector[candidate_position-ref_start]<<endl;
-        // cout<<"Candidates: "<<endl;
-        candidate_summary.depth = coverage_vector[candidate_position-ref_start];
-
-
         for (auto it=AlleleMap[candidate_position - ref_start].begin(); it!=AlleleMap[candidate_position - ref_start].end(); ++it) {
+            CandidateImageSummary candidate_summary;
+            candidate_summary.contig = contig;
+            candidate_summary.position = candidate_position;
+
+//            cout<<"Candidate position: "<< candidate_position<<endl;
+//            cout<<"Coverage: "<<coverage_vector[candidate_position-ref_start]<<endl;
+//            cout<<"Candidates: "<<endl;
+
+            candidate_summary.depth = min(coverage_vector[candidate_position-ref_start], ImageOptionsRegion::MAX_COLOR_VALUE);
+
             string candidate_string = *it;
 
             int allele_depth = AlleleFrequencyMap[candidate_position - ref_start][candidate_string];
-
-            if(snp_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '1') {
-                // cout << candidate_string << ",";
-                // cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
-                candidate_summary.candidates.push_back(candidate_string);
-                candidate_summary.candidate_frequency.push_back(allele_depth);
-            } else if (insert_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '2') {
-                // cout << candidate_string << ",";
-                // cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
-                candidate_summary.candidates.push_back(candidate_string);
-                candidate_summary.candidate_frequency.push_back(allele_depth);
-            } else if (delete_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '3') {
-                // cout << candidate_string << ",";
-                // cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
-                candidate_summary.candidates.push_back(candidate_string);
-                candidate_summary.candidate_frequency.push_back(allele_depth);
+            int allele_depth_fwd = AlleleFrequencyMapFwdStrand[candidate_position - ref_start][candidate_string];
+            int allele_depth_rev = AlleleFrequencyMapRevStrand[candidate_position - ref_start][candidate_string];
+            double candidate_frequency = 100.0 * ((double) allele_depth / max(1.0, (double) candidate_summary.depth));
+            string candidate_allele = candidate_string.substr(1, candidate_string.length());
+            // minimum 2 reads supporting the candidate or frequency is lower than 10
+//            cout<<"CANDIDATE ALLELE: "<<candidate_allele<<endl;
+//            cout<<"DEPTH AND FREQUENCY: "<<allele_depth<<" "<<candidate_frequency<<endl;
+            if (allele_depth < 2 || candidate_frequency < 10.0) {
+                continue;
+            }
+            // pick no SNP that has a strand bias
+            if ( candidate_string[0] == '1' and (allele_depth_fwd == 0 || allele_depth_rev == 0)) {
+                continue;
+            }
+            // only pick type-specific candidates for each site
+            if((candidate_string[0] == '1' && !snp_threshold_pass[candidate_position - ref_start]) ||
+               (candidate_string[0] == '2' && !insert_threshold_pass[candidate_position - ref_start]) ||
+               (candidate_string[0] == '3' && !delete_threshold_pass[candidate_position - ref_start])) {
+                continue;
             }
 
-        }
-        int base_index = (int)(candidate_position - ref_start + cumulative_observed_insert[candidate_position - ref_start]);
+            int base_index = (int) (candidate_position - ref_start + cumulative_observed_insert[candidate_position - ref_start]);
 
+//            cout<<"-------------------------START----------------------------------------"<<endl;
+//            cout<<"CANDIDATE ALLELE: "<<candidate_allele<<endl;
+//            cout<<"CANDIDATE TYPE: "<<candidate_string[0]<<endl;
+            if (train_mode) {
+                vector<type_truth_record> hp1_truths = hp1_truth_alleles[base_index];
+                vector<type_truth_record> hp2_truths = hp2_truth_alleles[base_index];
+                vector<string> hp1_alleles;
+                vector<string> hp2_alleles;
+                for(const auto& truth_record : hp1_truths) {
+                    if(truth_record.ref.length() > truth_record.alt.length()) {
+                        //it's a delete
+                        string alt_allele = truth_record.ref;
+                        string ref_allele = truth_record.alt;
+                        if(alt_allele.length() > 1 && ref_allele.length() > 1) {
+                            int min_length = min(alt_allele.length(), ref_allele.length());
+                            alt_allele = alt_allele.substr(0, alt_allele.length() - min_length + 1);
+                        }
+                        hp1_alleles.push_back(char(AlleleType::DELETE_ALLELE + '0') + alt_allele);
+                    } else if(truth_record.ref.length() < truth_record.alt.length()) {
+                        //it's an insert
+                        string alt_allele = truth_record.alt;
+                        string ref_allele = truth_record.ref;
+                        if(alt_allele.length() > 1 && ref_allele.length() > 1) {
+                            int min_length = min(alt_allele.length(), ref_allele.length());
+                            alt_allele = alt_allele.substr(0, alt_allele.length() - min_length + 1);
+                        }
+                        hp1_alleles.push_back(char(AlleleType::INSERT_ALLELE + '0') + alt_allele);
+                    } else if(truth_record.ref.length() == truth_record.alt.length()) {
+                        //it's a SNP
+                        string alt_allele = truth_record.alt;
+                        string ref_allele = truth_record.ref;
+                        if(alt_allele.length() > 1 && ref_allele.length() > 1) {
+                            int min_length = min(alt_allele.length(), ref_allele.length());
+                            alt_allele = alt_allele.substr(0, alt_allele.length() - min_length + 1);
+                        }
+                        hp1_alleles.push_back(char(AlleleType::SNP_ALLELE + '0') + alt_allele);
+                    }
+                }
+                for(const auto& truth_record : hp2_truths) {
+                    if(truth_record.ref.length() > truth_record.alt.length()) {
+                        //it's a delete
+                        string alt_allele = truth_record.ref;
+                        string ref_allele = truth_record.alt;
+                        if(alt_allele.length() > 1 && ref_allele.length() > 1) {
+//                            cout<<"BEFORE: "<<alt_allele<<endl;
+                            int min_length = min(alt_allele.length(), ref_allele.length());
+                            alt_allele = alt_allele.substr(0, alt_allele.length() - min_length + 1);
+//                            cout<<"AFTER: "<<alt_allele<<endl;
+                        }
 
-        if(train_mode) {
-            candidate_summary.base_label = labels[base_index];
-            candidate_summary.type_label = labels_variant_type[base_index];
-        } else {
-            candidate_summary.base_label = 0;
-            candidate_summary.type_label = 0;
-        }
+                        hp2_alleles.push_back(char(AlleleType::DELETE_ALLELE + '0') + alt_allele);
+                    } else if(truth_record.ref.length() < truth_record.alt.length()) {
+                        //it's an insert
+                        string alt_allele = truth_record.alt;
+                        string ref_allele = truth_record.ref;
+                        if(alt_allele.length() > 1 && ref_allele.length() > 1) {
+                            int min_length = min(alt_allele.length(), ref_allele.length());
+                            alt_allele = alt_allele.substr(0, alt_allele.length() - min_length + 1);
+                        }
+                        hp2_alleles.push_back(char(AlleleType::INSERT_ALLELE + '0') + alt_allele);
+                    } else if(truth_record.ref.length() == truth_record.alt.length()) {
+                        //it's a SNP
+                        string alt_allele = truth_record.alt;
+                        string ref_allele = truth_record.ref;
+                        if(alt_allele.length() > 1 && ref_allele.length() > 1) {
+                            int min_length = min(alt_allele.length(), ref_allele.length());
+                            alt_allele = alt_allele.substr(0, alt_allele.length() - min_length + 1);
+                        }
+                        hp2_alleles.push_back(char(AlleleType::SNP_ALLELE + '0') + alt_allele);
+                    }
+                }
+                bool found_in_hp1 = false;
+                bool found_in_hp2 = false;
+//                cout<<"##############"<<endl;
+//                cout<<"Candidate: "<<candidate_allele<<endl;
+//                cout<<"HP1 truths:"<<endl;
+                for(const auto& alt_hp1 : hp1_alleles) {
+//                    cout<<alt_hp1<<endl;
+                    if(alt_hp1 == candidate_string) {
+                        found_in_hp1 = true;
+                    }
+                }
 
-        int base_left = base_index - candidate_window_size / 2;
-        int base_right = base_index + candidate_window_size / 2;
+//                cout<<"HP2 truths:"<<endl;
+                for(const auto& alt_hp2 : hp2_alleles) {
+//                    cout<<alt_hp2<<endl;
+                    if(alt_hp2 == candidate_string) {
+                        found_in_hp2 = true;
+                    }
+                }
+//                cout<<"##############"<<endl;
 
-        candidate_summary.image_matrix.resize(candidate_window_size + 1, vector<int>(feature_size));
-        // now copy the entire feature matrix
+                int gt_label = 0;
+                if(found_in_hp1 && found_in_hp2) {
+                    gt_label = 2;
+                } else if(found_in_hp1 || found_in_hp2){
+                    gt_label = 1;
+                }
 
-        for(int i=base_left; i<=base_right;i++) {
-            for (int j = 0; j < feature_size; j++) {
-                if( i < 0 || i > region_size) {
-                    candidate_summary.image_matrix[i-base_left][j] = 0;
-                } else {
-                    candidate_summary.image_matrix[i - base_left][j] = image_matrix[i][j];
+                candidate_summary.base_label = gt_label;
+                candidate_summary.type_label = gt_label;
+            } else {
+                candidate_summary.base_label = 0;
+                candidate_summary.type_label = 0;
+            }
+
+            int base_left = base_index - candidate_window_size / 2;
+            int base_right = base_index + candidate_window_size / 2;
+
+            candidate_summary.image_matrix.resize(candidate_window_size + 1, vector<int>(feature_size));
+            // now copy the entire feature matrix
+            for (int i = base_left; i <= base_right; i++) {
+                for (int j = 0; j < feature_size; j++) {
+                    if (i < 0 || i > region_size) {
+                        candidate_summary.image_matrix[i - base_left][j] = 0;
+                    } else {
+                        candidate_summary.image_matrix[i - base_left][j] = image_matrix[i][j];
+                    }
                 }
             }
-        }
-        all_candidate_images.push_back(candidate_summary);
-//        debug_candidate_summary(candidate_summary, candidate_window_size, train_mode);
 
+            // set type-specific feature values
+//            cout << candidate_string << " " << allele_depth << " " << candidate_summary.depth << " " << candidate_frequency << endl;
+//            cout<<snp_threshold_pass[candidate_position - ref_start]<<" "<<insert_threshold_pass[candidate_position - ref_start]<<" "<<delete_threshold_pass[candidate_position - ref_start]<<endl;
+            if (snp_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '1') {
+//                cout << candidate_string << ",";
+//                cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
+                int mid_index = candidate_window_size / 2;
+                candidate_summary.image_matrix[mid_index][3] = min((int) candidate_string.length() - 1, ImageOptionsRegion::MAX_COLOR_VALUE);
+                candidate_summary.image_matrix[mid_index][4] = min(allele_depth_fwd, ImageOptionsRegion::MAX_COLOR_VALUE);
+                candidate_summary.image_matrix[mid_index][5] = min(allele_depth_rev, ImageOptionsRegion::MAX_COLOR_VALUE);
+                candidate_summary.candidates.push_back(candidate_string);
+                candidate_summary.candidate_frequency.push_back(min(allele_depth, ImageOptionsRegion::MAX_COLOR_VALUE));
+            } else if (insert_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '2') {
+//                cout << "INSERT"<<" "<<candidate_string << ",";
+//                cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
+                int mid_index = candidate_window_size / 2;
+                candidate_summary.image_matrix[mid_index][6] = min((int) candidate_string.length() - 1, ImageOptionsRegion::MAX_COLOR_VALUE);
+                candidate_summary.image_matrix[mid_index][7] = min(allele_depth_fwd, ImageOptionsRegion::MAX_COLOR_VALUE);
+                candidate_summary.image_matrix[mid_index][8] = min(allele_depth_rev, ImageOptionsRegion::MAX_COLOR_VALUE);
+                candidate_summary.candidates.push_back(candidate_string);
+                candidate_summary.candidate_frequency.push_back(min(allele_depth, ImageOptionsRegion::MAX_COLOR_VALUE));
+            } else if (delete_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '3') {
+//                cout << "DELETE: "<<candidate_string << ",";
+//                cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
+                int mid_index = candidate_window_size / 2;
+                candidate_summary.image_matrix[mid_index][9] = min((int) candidate_string.length() - 1, ImageOptionsRegion::MAX_COLOR_VALUE);
+                candidate_summary.image_matrix[mid_index][10] = min(allele_depth_fwd, ImageOptionsRegion::MAX_COLOR_VALUE);
+                candidate_summary.image_matrix[mid_index][11] = min(allele_depth_rev, ImageOptionsRegion::MAX_COLOR_VALUE);
+                candidate_summary.candidates.push_back(candidate_string);
+                candidate_summary.candidate_frequency.push_back(min(allele_depth, ImageOptionsRegion::MAX_COLOR_VALUE));
+            }
+            all_candidate_images.push_back(candidate_summary);
+//            debug_candidate_summary(candidate_summary, candidate_window_size, train_mode);
+//            cout<<"-------------------------END----------------------------------------"<<endl;
+        }
     }
 
 
@@ -713,7 +879,6 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
 //    for (int i = 0; i < region_size + 1; i++)
 //        free(image_matrix[i]);
 //    free(image_matrix);
-//    exit(0);
 
 
     return all_candidate_images;
@@ -764,7 +929,7 @@ void RegionalSummaryGenerator::debug_print_matrix(vector<vector<int> > image_mat
         printf("%3lld\t", positions[i] % 100);
     }
     cout << endl;
-    int image_size = ImageOptionsRegion::REFERENCE_INDEX_SIZE + ImageOptionsRegion::BASE_INDEX_SIZE;
+    int image_size = ImageOptionsRegion::REFERENCE_INDEX_SIZE + ImageOptionsRegion::SUPPORT_INDEX_SIZE + ImageOptionsRegion::BASE_INDEX_SIZE;
     for (int i = 0; i < image_size; i++) {
         cout<< ImageOptionsRegion::column_values[i] <<"\t";
         int region_size = (int) (ref_end - ref_start + total_observered_insert_bases + 1);

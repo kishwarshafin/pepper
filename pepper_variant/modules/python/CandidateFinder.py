@@ -302,7 +302,6 @@ def small_chunk_stitch(options, file_chunks):
                     candidate_frequency = candidate_frequency.replace(',', ' ')
                     candidate_frequency = candidate_frequency.split()
                     candidate_frequency = [int(x.strip("'")) for x in candidate_frequency]
-
                     candidate = PEPPER_VARIANT.CandidateImagePrediction(contigs[i].decode('UTF-8'),
                                                                         positions[i],
                                                                         depths[i],
@@ -318,33 +317,20 @@ def small_chunk_stitch(options, file_chunks):
             if reference_base not in ['A', 'C', 'G', 'T']:
                 continue
 
-            predicted_bases = ImageSizeOptions.decoded_labels[np.argmax(candidate.prediction_base)]
+            predicted_genotype = np.argmax(candidate.prediction_base)
 
-            max_observed_likelihood = defaultdict()
-            bases = set()
-            for prediction_class, predicted_value in zip(ImageSizeOptions.decoded_labels, candidate.prediction_base):
-                prediction_class1 = prediction_class[0]
-                prediction_class2 = prediction_class[1]
-                if prediction_class1 not in bases:
-                    bases.add(prediction_class1)
-                    max_observed_likelihood[prediction_class1] = predicted_value
-                else:
-                    max_observed_likelihood[prediction_class1] = max(max_observed_likelihood[prediction_class1], predicted_value)
+            if predicted_genotype == 0:
+                genotype = [0, 0]
+            elif predicted_genotype == 1:
+                genotype = [0, 1]
+            else:
+                genotype = [1, 1]
 
-                if prediction_class2 not in bases:
-                    bases.add(prediction_class2)
-                    max_observed_likelihood[prediction_class2] = predicted_value
-                else:
-                    max_observed_likelihood[prediction_class2] = max(max_observed_likelihood[prediction_class2], predicted_value)
-
-            genotype = get_genotype_from_base(reference_base, predicted_bases[0], predicted_bases[1])
             prediction_value = candidate.prediction_base[np.argmax(candidate.prediction_base)]
 
             # this is for Margin. Only pick SNPs.
             alt_alleles = []
             variant_allele_support = []
-            total_observed_indels = 0
-            indel_allele_frequencies = []
             for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
                 alt_type = alt_allele[0]
                 allele = alt_allele[1:]
@@ -359,26 +345,13 @@ def small_chunk_stitch(options, file_chunks):
                     continue
                 # only process SNPs for margin
                 if alt_type == '1':
-                    if allele == predicted_bases[0] or allele == predicted_bases[1]:
+                    if predicted_genotype != 0:
                         alt_alleles.append(allele)
                         variant_allele_support.append(allele_frequency)
-                if alt_type == '2' or alt_type == '3':
-                    total_observed_indels += 1
-                    indel_allele_frequencies.append(float(allele_frequency) / float(candidate.depth))
-
-            indel_allele_frequencies = sorted(indel_allele_frequencies, reverse=True)
-            indel_allele_frequency_threshold = 0.0
-
-            # fix a frequency boundary based on multiallelics present at this site
-            if total_observed_indels > options.allowed_multiallelics:
-                indel_allele_frequency_threshold = indel_allele_frequencies[0]
-                for i in range(1, options.allowed_multiallelics):
-                    if indel_allele_frequencies[i] != indel_allele_frequencies[i+1]:
-                        indel_allele_frequency_threshold = indel_allele_frequencies[i]
 
             if len(alt_alleles) > 0:
                 # print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support)
-                selected_candidate_list_margin.append((candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value))
+                selected_candidate_list_margin.append((candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value, candidate.prediction_base))
 
             ################################################
             # this is candidate finding for DeepVariant
@@ -389,36 +362,10 @@ def small_chunk_stitch(options, file_chunks):
             reference_allele = reference_base
 
             for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
-                if allele_frequency <= 2:
-                    continue
-                alt_type = alt_allele[0]
-                allele = alt_allele[1:]
-
-                allele_list = list(allele)
-                valid_allele = True
-                for base in allele_list:
-                    if base not in ['A', 'C', 'G', 'T']:
-                        valid_allele = False
-
-                if not valid_allele:
-                    continue
-
-                if alt_type == '3':
-                    vaf = float(allele_frequency) / float(candidate.depth)
-                    if total_observed_indels > options.allowed_multiallelics and vaf < indel_allele_frequency_threshold:
-                        continue
-                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= options.delete_p_value:
-                        if len(allele) > max_delete_length:
-                            reference_allele = allele
-                            max_delete_length = len(allele)
-
-            for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
                 # print("GENERAL: ", candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
                 # print("INSERT Predicted: ", max_observed_likelihood['*'])
                 # print("DELETE Predicted: ", max_observed_likelihood['#'])
                 # print("PREDICETED BASES: ", predicted_bases)
-
-
                 if allele_frequency <= 2:
                     continue
                 alt_type = alt_allele[0]
@@ -438,48 +385,31 @@ def small_chunk_stitch(options, file_chunks):
                 # print("ALLOWED MULTI", options.allowed_multiallelics)
                 # print("VAF", vaf)
                 # print("INDEL VAF THRESHOLD", indel_allele_frequency_threshold)
-
+                non_alt_prediction = 1.0 - candidate.prediction_base[0]
                 if alt_type == '1':
-                    if allele == predicted_bases[0] or allele == predicted_bases[1] or max_observed_likelihood[allele] >= options.snp_p_value:
-                        alt_allele = list(reference_allele)
-                        alt_allele[0] = allele[0]
+                    if non_alt_prediction >= options.snp_p_value:
                         # add them to list
-                        alt_alleles.append(''.join(alt_allele))
+                        alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                         # print("SINGLE: ", predicted_bases, max_observed_likelihood[allele], candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
                 elif alt_type == '2':
-                    if total_observed_indels > options.allowed_multiallelics and vaf < indel_allele_frequency_threshold:
-                        continue
-
-                    if predicted_bases[0] == '*' or predicted_bases[1] == '*' or max_observed_likelihood['*'] >= options.insert_p_value:
-                        bases_needed = max_delete_length
-                        if bases_needed > 0:
-                            ref_suffix = reference_allele[-bases_needed:]
-                            allele = allele + ref_suffix
+                    if non_alt_prediction >= options.insert_p_value:
                         # add them to list
-                        alt_alleles.append(allele)
+                        alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                         # print("INSERT: ", predicted_bases, max_observed_likelihood['*'], candidate.contig, candidate.position, reference_allele, allele, candidate.depth, allele_frequency)
                 elif alt_type == '3':
-                    if total_observed_indels > options.allowed_multiallelics and vaf < indel_allele_frequency_threshold:
-                        continue
-
-                    if predicted_bases[0] == '#' or predicted_bases[1] == '#' or max_observed_likelihood['#'] >= options.delete_p_value:
-                        bases_needed = max_delete_length - len(allele)
-                        if bases_needed > 0:
-                            ref_suffix = reference_allele[-bases_needed:]
-                            alt_allele = reference_base + ref_suffix
-                        else:
-                            alt_allele = reference_base
+                    if non_alt_prediction >= options.delete_p_value:
                         # add them to list
-                        alt_alleles.append(alt_allele)
+                        alt_alleles.append(reference_allele)
+                        reference_allele = ''.join(alt_allele[1:])
                         variant_allele_support.append(allele_frequency)
 
                         # print("DELETE: ", predicted_bases, max_observed_likelihood['#'], candidate.contig, candidate.position, reference_allele, alt_allele, candidate.depth, allele_frequency)
 
             if len(alt_alleles) > 0:
                 # print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support)
-                selected_candidate_list_deepvariant.append((candidate.contig, candidate.position, candidate.position + len(reference_allele), reference_allele, alt_alleles, [0, 0], candidate.depth, variant_allele_support, prediction_value))
+                selected_candidate_list_deepvariant.append((candidate.contig, candidate.position, candidate.position + len(reference_allele), reference_allele, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value, candidate.prediction_base))
 
     return selected_candidate_list_margin, selected_candidate_list_deepvariant
 
@@ -503,5 +433,19 @@ def find_candidates(options, input_dir, all_prediction_pair):
 
     all_selected_candidates_phasing = sorted(all_selected_candidates_phasing, key=lambda x: (x[0], x[1]))
     all_selected_candidates_variant_calling = sorted(all_selected_candidates_variant_calling, key=lambda x: (x[0], x[1]))
+
+    all_selected_candidates_phasing_positional_dictionary = defaultdict(list)
+    all_selected_candidates_variant_calling_positional_dictionary = defaultdict(list)
+
+    for candidate in all_selected_candidates_phasing:
+        all_selected_candidates_phasing_positional_dictionary[(candidate[0], candidate[1])].append(candidate)
+
+    for candidate in all_selected_candidates_variant_calling:
+        all_selected_candidates_variant_calling_positional_dictionary[(candidate[0], candidate[1])].append(candidate)
+
+    # print(all_selected_candidates_variant_calling_positional_dictionary)
+    # print(all_selected_candidates_phasing_positional_dictionary)
+    # exit(0)
+
     # print("SORTED")
-    return all_selected_candidates_phasing, all_selected_candidates_variant_calling
+    return all_selected_candidates_phasing_positional_dictionary, all_selected_candidates_variant_calling_positional_dictionary

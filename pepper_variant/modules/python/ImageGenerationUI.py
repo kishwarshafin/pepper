@@ -229,7 +229,7 @@ class ImageGenerationUtils:
                         all_image_matrix = []
                         all_base_label = []
                         all_type_label = []
-                        for candidate in candidates:
+                        for i, candidate in enumerate(candidates):
                             all_contig.append(candidate.contig)
                             all_position.append(candidate.position)
                             all_depth.append(candidate.depth)

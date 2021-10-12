@@ -119,7 +119,7 @@ class AlignmentSummarizer:
                                                        ReadFilterOptions.MIN_BASEQ)
 
                 total_reads = len(all_reads)
-                total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, downsample_rate * total_reads))
+                total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, options.downsample_rate * total_reads))
 
                 if total_reads > total_allowed_reads:
                     # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
@@ -141,7 +141,7 @@ class AlignmentSummarizer:
                     continue
 
                 # get vcf records from truth
-                truth_hap1_records, truth_hap2_records = self.get_truth_vcf_records(truth_vcf, region_start, region_end)
+                truth_hap1_records, truth_hap2_records = self.get_truth_vcf_records(options.truth_vcf, region_start, region_end)
 
                 # ref_seq should contain region_end_position base
                 ref_seq = self.fasta_handler.get_reference_sequence(self.chromosome_name,
@@ -186,7 +186,7 @@ class AlignmentSummarizer:
                                                                             sub_region_end,
                                                                             ImageSizeOptions.CANDIDATE_WINDOW_SIZE,
                                                                             ImageSizeOptions.IMAGE_HEIGHT,
-                                                                            train_mode)
+                                                                            options.train_mode)
 
                 # for candidate in candidate_image_summary:
                 #     print("CONTIG: ", candidate.contig)

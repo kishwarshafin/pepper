@@ -43,7 +43,7 @@ def predict_pytorch_fake(input_filepath, output_filepath, batch_size, num_worker
             #                                                                   base_predictions[i],
             #                                                                   type_predictions[i])
             #     all_candidate_predictions.append(predicted_candidate)
-            output_hdf_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, base_predictions, type_predictions)
+            output_hdf_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, base_predictions)
             # pickle.dump(all_candidate_predictions, prediction_data_file)
 
             batch_completed += 1

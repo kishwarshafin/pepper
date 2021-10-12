@@ -16,16 +16,21 @@ namespace ImageOptionsRegion {
     static constexpr int MISMATCH_COLOR_START = 128;
     static constexpr int REFERENCE_INDEX_START = 0;
     static constexpr int REFERENCE_INDEX_SIZE = 0;
-    static constexpr int BASE_INDEX_START = 0;
-    static constexpr int BASE_INDEX_SIZE = 22;
-    vector<string> column_values{"ARFW:",
-                                 "CRFW:",
-                                 "GRFW:",
-                                 "TRFW:",
-                                 "ARRE:",
-                                 "CRRE:",
-                                 "GRRE:",
-                                 "TRRE:",
+    static constexpr int SUPPORT_INDEX_SIZE = 0;
+    static constexpr int BASE_INDEX_START = 11;
+    static constexpr int BASE_INDEX_SIZE = 14;
+    vector<string> column_values{"REFB:",
+                                 "REFF:",
+                                 "REFR:",
+                                 "SNPS:",
+                                 "SUPF:",
+                                 "SUPW:",
+                                 "INSS:",
+                                 "SUPF:",
+                                 "SUPR:",
+                                 "DELS:",
+                                 "DELF:",
+                                 "DELR:",
                                  "AFRW:",
                                  "CFRW:",
                                  "GFRW:",
@@ -134,6 +139,8 @@ class RegionalSummaryGenerator {
     long long ref_start;
     long long ref_end;
     string reference_sequence;
+    vector< vector<type_truth_record> > hp1_truth_alleles;
+    vector< vector<type_truth_record> > hp2_truth_alleles;
     vector<char> labels_hp1;
     vector<char> labels_hp2;
     vector<int> variant_type_labels_hp1;
@@ -166,8 +173,11 @@ public:
                                  int *insert_count,
                                  int *delete_count,
                                  vector< map<string, int> > &AlleleFrequencyMap,
+                                 vector< map<string, int> > &AlleleFrequencyMapFwdStrand,
+                                 vector< map<string, int> > &AlleleFrequencyMapRevStrand,
                                  vector< set<string> > &AlleleMap,
                                  type_read read);
+
 
     static int get_feature_index(char ref_base, char base, bool is_reverse);
 
@@ -185,6 +195,9 @@ public:
                                                    int candidate_window_size,
                                                    int feature_size,
                                                    bool train_mode);
+
+    int get_reference_feature_value(char base);
+
 };
 
 #endif //PEPPER_PRIVATE_REGION_SUMMARY_H

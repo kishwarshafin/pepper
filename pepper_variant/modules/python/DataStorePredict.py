@@ -60,9 +60,9 @@ class DataStore(object):
             dt_candidates = h5py.special_dtype(vlen=str)
             self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "contigs")] = np.array(contigs, dtype='S')
             self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "positions")] = np.array(positions, dtype=np.int32)
-            self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "depths")] = np.array(depths, dtype=np.int32)
+            self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "depths")] = np.array(depths, dtype=np.uint8)
             self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "candidates")] = np.array(candidates, dtype=dt_candidates)
-            self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "candidate_frequency")] = np.array(candidate_frequencies, dtype=dt_candidates)
+            self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "candidate_frequency")] = np.array(candidate_frequencies, dtype=np.uint8)
             self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "base_prediction")] = np.array(base_predictions, dtype=np.float)
             # self.file_handler['{}/{}/{}'.format(self._prediction_path_, name, "type_prediction")] = np.array(type_predictions, dtype=np.float)
 

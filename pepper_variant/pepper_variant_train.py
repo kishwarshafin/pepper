@@ -1,7 +1,7 @@
 import argparse
 import sys
 import torch
-from pepper_variant.modules.python.MakeImages import make_images
+from pepper_variant.modules.python.ImageGenerationUI import ImageGenerationUtils
 from pepper_variant.modules.python.TrainModule import train_pepper_model
 from pepper_variant.modules.python.TestModule import do_test
 from datetime import datetime
@@ -56,7 +56,7 @@ def add_make_train_images_arguments(parser):
     )
     parser.add_argument(
         "-p",
-        "--random_draw_p",
+        "--random_draw_probability",
         required=True,
         type=float,
         help="Random draw probabilty will set the percentage of ref examples to keep in the training set. (Recommended: 0.33)"
@@ -68,6 +68,13 @@ def add_make_train_images_arguments(parser):
         required=True,
         default=None,
         help="Region in [chr_name:start-end] format"
+    )
+    parser.add_argument(
+        "--region_size",
+        type=int,
+        required=False,
+        default=100000,
+        help="Region size in bp used to chunk the genome. Default is 100000."
     )
     parser.add_argument(
         "-rb",
@@ -359,62 +366,45 @@ def main():
 
     parser_torch_stat = subparsers.add_parser('torch_stat', help="See PyTorch configuration.")
 
-    FLAGS, unparsed = parser.parse_known_args()
+    options, unparsed = parser.parse_known_args()
+    options.train_mode = True
 
-    if FLAGS.sub_command == 'make_train_images':
+    if options.sub_command == 'make_train_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE TRAIN IMAGE MODULE SELECTED\n")
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DOWNSAMPLE RATE:\t" + str(FLAGS.downsample_rate) + "\n")
-        make_images(FLAGS.bam,
-                    FLAGS.fasta,
-                    FLAGS.use_hp_info,
-                    FLAGS.truth_vcf,
-                    FLAGS.region,
-                    FLAGS.region_bed,
-                    FLAGS.output_dir,
-                    FLAGS.threads,
-                    FLAGS.downsample_rate,
-                    train_mode=True,
-                    random_draw_probability=FLAGS.random_draw_p)
-    elif FLAGS.sub_command == 'train_model':
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DOWNSAMPLE RATE:\t" + str(options.downsample_rate) + "\n")
+        options.image_output_directory = options.output_dir
+
+        ImageGenerationUtils.generate_images(options)
+    elif options.sub_command == 'train_model':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN MODEL MODULE SELECTED\n")
-        distributed = not FLAGS.distributed_off
+        distributed = not options.distributed_off
 
-        train_pepper_model(FLAGS.train_image_dir,
-                           FLAGS.test_image_dir,
-                           FLAGS.use_hp_info,
-                           FLAGS.output_dir,
-                           FLAGS.gpu,
-                           FLAGS.epoch_size,
-                           FLAGS.batch_size,
-                           FLAGS.test_batch_size,
-                           FLAGS.step_size,
-                           FLAGS.num_workers,
-                           FLAGS.retrain_model,
-                           FLAGS.retrain_model_path,
+        train_pepper_model(options.train_image_dir,
+                           options.test_image_dir,
+                           options.use_hp_info,
+                           options.output_dir,
+                           options.gpu,
+                           options.epoch_size,
+                           options.batch_size,
+                           options.test_batch_size,
+                           options.step_size,
+                           options.num_workers,
+                           options.retrain_model,
+                           options.retrain_model_path,
                            distributed,
-                           FLAGS.device_ids,
-                           FLAGS.callers_per_gpu)
+                           options.device_ids,
+                           options.callers_per_gpu)
 
-    elif FLAGS.sub_command == 'test_model':
+    elif options.sub_command == 'test_model':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST MODEL MODULE SELECTED\n")
-        do_test(FLAGS.test_image_dir,
-                FLAGS.use_hp_info,
-                FLAGS.batch_size,
-                FLAGS.gpu,
-                FLAGS.num_workers,
-                FLAGS.model_path)
+        do_test(options.test_image_dir,
+                options.use_hp_info,
+                options.batch_size,
+                options.gpu,
+                options.num_workers,
+                options.model_path)
 
-    # elif FLAGS.sub_command == 'run_hyperband':
-    #     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RUN HYPERBAND MODULE SELECTED\n")
-    #     run_hyperband(FLAGS.train_image_dir,
-    #                   FLAGS.test_image_dir,
-    #                   FLAGS.output_dir,
-    #                   FLAGS.max_epochs,
-    #                   FLAGS.batch_size,
-    #                   FLAGS.num_workers,
-    #                   FLAGS.gpu)
-
-    elif FLAGS.sub_command == 'torch_stat':
+    elif options.sub_command == 'torch_stat':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TORCH VERSION: " + str(torch.__version__) + "\n\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PARALLEL CONFIG:\n")
         print(torch.__config__.parallel_info())
@@ -424,7 +414,7 @@ def main():
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CUDA AVAILABLE: " + str(torch.cuda.is_available()) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: GPU DEVICES: " + str(torch.cuda.device_count()) + "\n")
 
-    elif FLAGS.version is True:
+    elif options.version is True:
         print("PEPPER VERSION: ", __version__)
 
     else:

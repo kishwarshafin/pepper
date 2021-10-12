@@ -7,15 +7,15 @@ class ConsensCandidateFinder(object):
 
 
 class ImageSizeOptions(object):
-    IMAGE_HEIGHT = 22
+    IMAGE_HEIGHT = 26
     IMAGE_CHANNELS = 1
     CANDIDATE_WINDOW_SIZE = 20
 
-    TOTAL_LABELS = 28
-    TOTAL_TYPE_LABELS = 10
+    TOTAL_LABELS = 3
+    TOTAL_TYPE_LABELS = 3
     MIN_SEQUENCE_LENGTH = 1000
     MIN_IMAGE_OVERLAP = 100
-    decoded_labels = ["RR", "RA", "RC", "RT", "RG", "R*", "R#", "AA", "AC", "AT", "AG", "A*", "A#", "CC", "CT", "CG", "C*", "C#", "TT", "TG", "T*", "T#", "GG", "G*", "G#", "**", "*#", "##"]
+    decoded_labels = ["HOM-REF", "HET-ALT", "HOM-ALT"]
     class_weights = [1.0] * TOTAL_LABELS
     # class_weights_type = [1.0] * TOTAL_TYPE_LABELS
     # decoded_type_labels = ['RR', 'RS', 'RI', 'RD', 'SS', 'SI', 'SD', 'II', 'ID', 'DD']
@@ -32,6 +32,7 @@ class ImageSizeOptionsHP(object):
     TOTAL_LABELS = 5
     MIN_SEQUENCE_LENGTH = 1000
     MIN_IMAGE_OVERLAP = 100
+
 
 class ReadFilterOptions(object):
     MIN_MAPQ = 5

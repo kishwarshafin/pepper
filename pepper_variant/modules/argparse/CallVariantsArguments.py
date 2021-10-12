@@ -174,8 +174,8 @@ def add_call_variant_arguments(parser):
         "--num_workers",
         type=int,
         required=False,
-        default=0,
-        help="Number of workers for loading images. Default is 0"
+        default=8,
+        help="Number of workers for loading images. Default is 8"
     )
     parser.add_argument(
         "--allowed_multiallelics",
@@ -188,14 +188,14 @@ def add_call_variant_arguments(parser):
         "--snp_p_value",
         required=False,
         type=float,
-        default=0.4,
+        default=0.1,
         help="Predicted value used for a SNP to be considered a candidate. Default is 0.4"
     )
     parser.add_argument(
         "--insert_p_value",
         required=False,
         type=float,
-        default=0.1,
+        default=0.3,
         help="Predicted value used for a insert to be considered a candidate. Default is 0.1"
     )
     parser.add_argument(
