@@ -572,6 +572,9 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
                                                                          double insert_freq_threshold,
                                                                          double delete_freq_threshold,
                                                                          double min_coverage_threshold,
+                                                                         double candidate_freq_threshold,
+                                                                         double candidate_support_threshold,
+                                                                         bool skip_indels,
                                                                          long long candidate_region_start,
                                                                          long long candidate_region_end,
                                                                          int candidate_window_size,
@@ -642,26 +645,10 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
                 if(delete_fraction >= delete_freq_threshold) delete_threshold_pass[positions[i] - ref_start] = true;
             }
         }
-        // normalize things
-//        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
-//            image_matrix[i][j] = (int) (((double)image_matrix[i][j] / max(1.0, (double) coverage_vector[positions[i]-ref_start])) * ImageOptionsRegion::MAX_COLOR_VALUE);
-//        }
 
         for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++){
             image_matrix[i][j] = (int) min(image_matrix[i][j], ImageOptionsRegion::MAX_COLOR_VALUE);
         }
-//        int fwd_feature_index = get_feature_index(ref_at_labels[i], false);
-//        int rev_feature_index = get_feature_index(ref_at_labels[i], true);
-//
-//        for(int j=ImageOptionsRegion::BASE_INDEX_START; j < ImageOptionsRegion::BASE_INDEX_START + ImageOptionsRegion::BASE_INDEX_SIZE ; j++) {
-//            if(image_matrix[i][j] == 0) continue;
-//
-//            if (j == fwd_feature_index || j == rev_feature_index){
-//                image_matrix[i][j] = min(ImageOptionsRegion::MAX_REF_COLOR_VALUE, image_matrix[i][j]);
-//            } else {
-//                image_matrix[i][j] = min(ImageOptionsRegion::MAX_COLOR_VALUE, ImageOptionsRegion::MISMATCH_COLOR_START + image_matrix[i][j]);
-//            }
-//        }
     }
 
 
@@ -694,16 +681,20 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
             int allele_depth = AlleleFrequencyMap[candidate_position - ref_start][candidate_string];
             int allele_depth_fwd = AlleleFrequencyMapFwdStrand[candidate_position - ref_start][candidate_string];
             int allele_depth_rev = AlleleFrequencyMapRevStrand[candidate_position - ref_start][candidate_string];
-            double candidate_frequency = 100.0 * ((double) allele_depth / max(1.0, (double) candidate_summary.depth));
+            double candidate_frequency = ((double) allele_depth / max(1.0, (double) candidate_summary.depth));
             string candidate_allele = candidate_string.substr(1, candidate_string.length());
             // minimum 2 reads supporting the candidate or frequency is lower than 10
 //            cout<<"CANDIDATE ALLELE: "<<candidate_allele<<endl;
 //            cout<<"DEPTH AND FREQUENCY: "<<allele_depth<<" "<<candidate_frequency<<endl;
-            if (allele_depth < 2 || candidate_frequency < 10.0) {
+            if (allele_depth < candidate_support_threshold || candidate_frequency < candidate_freq_threshold) {
                 continue;
             }
             // pick no SNP that has a strand bias
             if ( candidate_string[0] == '1' and (allele_depth_fwd == 0 || allele_depth_rev == 0)) {
+                continue;
+            }
+            // if Candidate is INDEL but we are skipping INDELs
+            if ( candidate_string[0] != '1' and skip_indels == true) {
                 continue;
             }
             // only pick type-specific candidates for each site
@@ -872,13 +863,6 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
 //            cout<<"-------------------------END----------------------------------------"<<endl;
         }
     }
-
-
-
-//    debug_print_matrix(image_matrix, train_mode);
-//    for (int i = 0; i < region_size + 1; i++)
-//        free(image_matrix[i]);
-//    free(image_matrix);
 
 
     return all_candidate_images;

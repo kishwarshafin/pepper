@@ -1,10 +1,12 @@
 import argparse
 import sys
 import torch
+from pepper_variant.modules.argparse.SetParameters import set_parameters
 from pepper_variant.modules.python.ImageGenerationUI import ImageGenerationUtils
 from pepper_variant.modules.python.TrainModule import train_pepper_model
 from pepper_variant.modules.python.TestModule import do_test
 from datetime import datetime
+from pepper_variant.modules.argparse.MakeImagesArguments import add_make_images_arguments
 from pepper.version import __version__
 
 
@@ -26,20 +28,6 @@ def add_make_train_images_arguments(parser):
     :return:
     """
     parser.add_argument(
-        "-b",
-        "--bam",
-        type=str,
-        required=True,
-        help="BAM file containing mapping between reads and the draft assembly."
-    )
-    parser.add_argument(
-        "-f",
-        "--fasta",
-        type=str,
-        required=True,
-        help="FASTA file containing the draft assembly."
-    )
-    parser.add_argument(
         "-tv",
         "--truth_vcf",
         type=str,
@@ -48,62 +36,11 @@ def add_make_train_images_arguments(parser):
         help="VCF file containing the truth variants [Usually from GIAB]."
     )
     parser.add_argument(
-        "-d",
-        "--downsample_rate",
-        type=float,
-        default=1.0,
-        help="Downsample rate of reads while generating images."
-    )
-    parser.add_argument(
         "-p",
         "--random_draw_probability",
         required=True,
         type=float,
         help="Random draw probabilty will set the percentage of ref examples to keep in the training set. (Recommended: 0.33)"
-    )
-    parser.add_argument(
-        "-r",
-        "--region",
-        type=str,
-        required=True,
-        default=None,
-        help="Region in [chr_name:start-end] format"
-    )
-    parser.add_argument(
-        "--region_size",
-        type=int,
-        required=False,
-        default=100000,
-        help="Region size in bp used to chunk the genome. Default is 100000."
-    )
-    parser.add_argument(
-        "-rb",
-        "--region_bed",
-        default=None,
-        type=str,
-        required=True,
-        help="BED file containing high-confidence region [Usually from GIAB]."
-    )
-    parser.add_argument(
-        "-o",
-        "--output_dir",
-        type=str,
-        default="candidate_finder_output/",
-        help="Path to output directory, if it doesn't exist it will be created."
-    )
-    parser.add_argument(
-        "-t",
-        "--threads",
-        type=int,
-        default=5,
-        help="Number of threads to use. Default is 5."
-    )
-    parser.add_argument(
-        "-hp",
-        "--use_hp_info",
-        default=False,
-        action='store_true',
-        help="If set then haplotype-aware mode will be enabled."
     )
     return parser
 
@@ -353,6 +290,7 @@ def main():
     subparsers = parser.add_subparsers(dest='sub_command')
 
     parser_make_images = subparsers.add_parser('make_train_images', help="Generate training samples")
+    add_make_images_arguments(parser_make_images)
     add_make_train_images_arguments(parser_make_images)
 
     parser_train_model = subparsers.add_parser('train_model', help="Train a model.")
@@ -369,11 +307,15 @@ def main():
     options, unparsed = parser.parse_known_args()
     options.train_mode = True
 
+    options = set_parameters(options)
+    exit(0)
+
     if options.sub_command == 'make_train_images':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE TRAIN IMAGE MODULE SELECTED\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DOWNSAMPLE RATE:\t" + str(options.downsample_rate) + "\n")
         options.image_output_directory = options.output_dir
-
+        if not options.region_bed:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: HIGH CONFIDENCE REGIONS NOT PROVIDED. PLEASE PROVIDE A BED FILE USING -rb.\n")
         ImageGenerationUtils.generate_images(options)
     elif options.sub_command == 'train_model':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN MODEL MODULE SELECTED\n")

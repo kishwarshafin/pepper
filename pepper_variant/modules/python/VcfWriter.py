@@ -45,7 +45,7 @@ class VCFWriter:
             normalized_candidates.append((contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions))
 
         candidates = normalized_candidates
-        gt_qual = 0.0
+        gt_qual = 1.0
         genotype_hp1 = []
         genotype_hp2 = []
 
@@ -63,6 +63,7 @@ class VCFWriter:
             contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions = candidate
             # print(contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions)
             predicted_genotype = np.argmax(predictions)
+            gt_qual = min(gt_qual, predictions[predicted_genotype])
 
             if not all_initialized:
                 site_contig = contig
@@ -80,12 +81,10 @@ class VCFWriter:
             # het
             if predicted_genotype == 1:
                 genotype_hp1.append(i+1)
-                gt_qual = min(gt_qual, genotype_probability)
             # hom-alt
             elif predicted_genotype == 2:
                 genotype_hp1.append(i+1)
                 genotype_hp2.append(i+1)
-                gt_qual = min(gt_qual, genotype_probability)
 
         if 0 < len(genotype_hp1) + len(genotype_hp2) <= 2:
             gt = genotype_hp1 + genotype_hp2
@@ -95,8 +94,6 @@ class VCFWriter:
             gt = [0, 0]
 
         return site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual
-
-
 
     def write_vcf_records(self, variants_list):
         last_position = -1
@@ -112,8 +109,8 @@ class VCFWriter:
 
             last_position = ref_start
             alleles = tuple([ref_seq]) + tuple(alleles)
-            qual = max(1, int(-10 * math.log10(max(0.000001, 1.0 - max(0.0001, genotype_probability)))))
-            alt_qual = max(1, int(-10 * math.log10(max(0.000001, 1.0 - max(0.0001, genotype_probability)))))
+            qual = max(1, int(-10 * math.log10(max(0.000000001, 1.0 - genotype_probability))))
+            alt_qual = max(1, int(-10 * math.log10(max(0.000000001, 1.0 - genotype_probability))))
 
             vafs = [round(ad/max(1, depth), 3) for ad in variant_allele_support]
 

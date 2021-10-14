@@ -6,12 +6,13 @@ from pepper_variant.modules.argparse.CallVariantsArguments import add_call_varia
 from pepper_variant.modules.argparse.MakeImagesArguments import add_make_images_arguments
 from pepper_variant.modules.argparse.RunInferenceArguments import add_run_inference_arguments
 from pepper_variant.modules.argparse.FindCandidatesArguments import add_find_candidates_arguments
-from pepper_variant.modules.python.MergeVariants import merge_vcf_records
+from pepper_variant.modules.argparse.SetParameters import set_parameters
 from pepper_variant.modules.python.ImageGenerationUI import ImageGenerationUtils
 from pepper_variant.modules.python.RunInference import run_inference
 from pepper_variant.modules.python.FindCandidates import process_candidates
 from pepper_variant.modules.python.CallVariant import call_variant
-from pepper_variant.modules.argparse.MergeVariantsArguments import add_merge_variants_arguments
+
+
 
 def main():
     """
@@ -59,6 +60,8 @@ def main():
     options.truth_vcf = None
     options.random_draw_probability = 1.0
     options.dry = False
+
+    options = set_parameters(options)
 
     if options.sub_command == 'call_variant':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CALL VARIANT MODULE SELECTED\n")

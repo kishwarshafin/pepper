@@ -64,14 +64,14 @@ def add_find_candidates_arguments(parser):
         "--snp_p_value",
         required=False,
         type=float,
-        default=0.4,
+        default=0.1,
         help="Predicted value used for a SNP to be considered a candidate. Default is 0.4"
     )
     parser.add_argument(
         "--insert_p_value",
         required=False,
         type=float,
-        default=0.1,
+        default=0.3,
         help="Predicted value used for a insert to be considered a candidate. Default is 0.1"
     )
     parser.add_argument(
@@ -94,4 +94,21 @@ def add_find_candidates_arguments(parser):
         default=0.10,
         help="If frequency based variant finding in enabled then this frequency will be the threshold."
     )
+    profile_group = parser.add_mutually_exclusive_group(required=True)
+    profile_group.add_argument("--ont",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on Oxford Nanopore reads.")
+    profile_group.add_argument("--hifi",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on PacBio HiFi reads.")
+    profile_group.add_argument("--clr",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on PacBio CLR reads.")
+    profile_group.add_argument("--custom",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants with user-defined parameters.")
     return parser

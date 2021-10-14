@@ -55,6 +55,7 @@ def add_make_images_arguments(parser):
     )
     parser.add_argument(
         "--region_bed",
+        "-rb",
         type=str,
         required=False,
         default=None,
@@ -115,5 +116,42 @@ def add_make_images_arguments(parser):
         default=5,
         help="Minimum delete frequency for a site to be considered to have a variant. Default is 5"
     )
+    parser.add_argument(
+        "--candidate_support_threshold",
+        type=int,
+        required=False,
+        default=2,
+        help="Minimum number of reads supporting a variant to be considered as a candidate. Default is 2"
+    )
+    parser.add_argument(
+        "--candidate_frequency_threshold",
+        type=float,
+        required=False,
+        default=0.10,
+        help="Minimum frequency for a candidate to be considered to be a variant. Default is 0.10"
+    )
+    parser.add_argument(
+        "--skip_indels",
+        default=False,
+        action='store_true',
+        help="If set then PyTorch will use GPUs for inference. CUDA required. Default is False."
+    )
+    profile_group = parser.add_mutually_exclusive_group(required=True)
+    profile_group.add_argument("--ont",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on Oxford Nanopore reads.")
+    profile_group.add_argument("--hifi",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on PacBio HiFi reads.")
+    profile_group.add_argument("--clr",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on PacBio CLR reads.")
+    profile_group.add_argument("--custom",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants with user-defined parameters.")
 
     return parser
