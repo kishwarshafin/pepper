@@ -82,6 +82,20 @@ def add_find_candidates_arguments(parser):
         help="Predicted value used for a delete to be considered a candidate."
     )
     parser.add_argument(
+        "--snp_q_cutoff",
+        required=False,
+        type=float,
+        default=None,
+        help="GQ cutoff for a SNP variant to be re-genotyped with DeepVariant. Variants with GQ below this will be re-genotyped."
+    )
+    parser.add_argument(
+        "--indel_q_cutoff",
+        required=False,
+        type=float,
+        default=None,
+        help="GQ cutoff for an INDEL variant to be re-genotyped with DeepVariant. Variants with GQ below this will be re-genotyped."
+    )
+    parser.add_argument(
         "--freq_based",
         default=False,
         action='store_true',

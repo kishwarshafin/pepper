@@ -98,7 +98,8 @@ class VCFWriter:
 
         return site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual
 
-    def write_vcf_records(self, variants_list, options):
+    def write_vcf_records(self, variants_list, options, calling_mode):
+
         last_position = -1
         for contig, position in sorted(variants_list):
             all_candidates = variants_list[(contig, position)]
@@ -109,11 +110,25 @@ class VCFWriter:
                 continue
             if ref_start == last_position:
                 continue
-
+            max_alt_len = max(len(ref_seq), max([len(x) for x in alleles]))
             last_position = ref_start
             alleles = tuple([ref_seq]) + tuple(alleles)
             qual = max(1, int(-10 * math.log10(max(0.000000001, 1.0 - genotype_probability))))
             alt_qual = max(1, int(-10 * math.log10(max(0.000000001, 1.0 - genotype_probability))))
+
+            failed_variant = False
+            if max_alt_len == 1:
+                # this is a SNP
+                if qual <= options.snp_q_cutoff:
+                    failed_variant = True
+            else:
+                if qual <= options.indel_q_cutoff:
+                    failed_variant = True
+
+            if calling_mode == 1 and failed_variant:
+                continue
+            if calling_mode == 2 and not failed_variant:
+                continue
 
             vafs = [round(ad/max(1, depth), 3) for ad in variant_allele_support]
 

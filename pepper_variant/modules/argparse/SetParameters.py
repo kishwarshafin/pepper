@@ -39,6 +39,10 @@ def set_parameters(options):
             options.insert_p_value = 0.3
         if options.delete_p_value is None:
             options.delete_p_value = 0.2
+        if options.snp_q_cutoff is None:
+            options.snp_q_cutoff = 20
+        if options.indel_q_cutoff is None:
+            options.indel_q_cutoff = 20
     elif options.hifi:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: HiFi VARIANT CALLING MODE SELECTED.\n")
         # image generation
@@ -66,9 +70,13 @@ def set_parameters(options):
         if options.snp_p_value is None:
             options.snp_p_value = 0.1
         if options.insert_p_value is None:
-            options.insert_p_value = 0.2
+            options.insert_p_value = 0.1
         if options.delete_p_value is None:
-            options.delete_p_value = 0.2
+            options.delete_p_value = 0.1
+        if options.snp_q_cutoff is None:
+            options.snp_q_cutoff = 15
+        if options.indel_q_cutoff is None:
+            options.indel_q_cutoff = 15
     elif options.clr:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CLR VARIANT CALLING MODE SELECTED.\n")
         # image generation
@@ -99,6 +107,10 @@ def set_parameters(options):
             options.insert_p_value = 0.2
         if options.delete_p_value is None:
             options.delete_p_value = 0.2
+        if options.snp_q_cutoff is None:
+            options.snp_q_cutoff = 20
+        if options.indel_q_cutoff is None:
+            options.indel_q_cutoff = 20
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THRESHOLDS ARE SET TO: \n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN MAPQ:\t\t\t\t" + str(options.min_mapq) + "\n" )

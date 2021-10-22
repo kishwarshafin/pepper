@@ -167,7 +167,9 @@ def candidate_finder(options, input_dir, output_path):
                     all_prediction_pair.append((prediction_file, batch))
 
     vcf_file_name_phasing = "PEPPER_VARIANT_OUTPUT_PHASING"
+    vcf_file_name_full = "PEPPER_VARIANT_FULL"
     vcf_file_name_variant_calling = "PEPPER_VARIANT_OUTPUT_VARIANT_CALLING"
+    vcf_file_name_pepper = "PEPPER_VARIANT_OUTPUT_PEPPER"
 
     local_start_time = time.time()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: STARTING CANDIDATE FINDING." + "\n")
@@ -177,6 +179,8 @@ def candidate_finder(options, input_dir, output_path):
 
     vcf_file_phasing = VCFWriter(contigs, options.fasta, options.sample_name, output_path, vcf_file_name_phasing)
     vcf_file_variant_calling = VCFWriter(contigs, options.fasta, options.sample_name, output_path, vcf_file_name_variant_calling)
+    vcf_file_pepper = VCFWriter(contigs, options.fasta, options.sample_name, output_path, vcf_file_name_pepper)
+    vcf_file_full = VCFWriter(contigs, options.fasta, options.sample_name, output_path, vcf_file_name_full)
 
     mins = int((end_time - local_start_time) / 60)
     secs = int((end_time - local_start_time)) % 60
@@ -186,8 +190,11 @@ def candidate_finder(options, input_dir, output_path):
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL CANDIDATES FOUND FOR VARIANT CALLING: "
                      + str(len(selected_candidates_variant_calling)) + " TOTAL TIME SPENT: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
-    vcf_file_phasing.write_vcf_records(selected_candidates_phasing, options)
-    vcf_file_variant_calling.write_vcf_records(selected_candidates_variant_calling, options)
+    vcf_file_phasing.write_vcf_records(selected_candidates_phasing, options, calling_mode=0)
+    vcf_file_full.write_vcf_records(selected_candidates_variant_calling, options, calling_mode=0)
+    vcf_file_pepper.write_vcf_records(selected_candidates_variant_calling, options, calling_mode=1)
+    vcf_file_variant_calling.write_vcf_records(selected_candidates_variant_calling, options, calling_mode=2)
+
 
 
 def process_candidates(options, input_dir, output_dir):
