@@ -9,17 +9,20 @@ Candidate = collections.namedtuple('Candidate', 'chromosome_name pos_start pos_e
 
 
 class VCFWriter:
-    def __init__(self, reference_file_path, sample_name, output_dir, filename):
+    def __init__(self, all_contigs, reference_file_path, sample_name, output_dir, filename):
         self.fasta_handler = PEPPER_VARIANT.FASTA_handler(reference_file_path)
         contigs = self.fasta_handler.get_chromosome_names()
+        contigs = [x for x in contigs if x in all_contigs]
         self.contigs = contigs
         self.vcf_header = self.get_vcf_header(sample_name, contigs)
         self.output_dir = output_dir
         self.filename = filename
         self.vcf_file = VariantFile(self.output_dir + self.filename + '.vcf', 'w', header=self.vcf_header)
 
-    def candidate_list_to_variant(self, candidates):
-        candidates = sorted(candidates, key=lambda x: (x[8]))
+    def candidate_list_to_variant(self, candidates, options):
+        candidates = sorted(candidates, key=lambda x: (x[5], x[8]), reverse=True)
+        if len(candidates) > options.allowed_multiallelics:
+            candidates = candidates[:options.allowed_multiallelics]
         max_ref_length = 0
         max_ref_allele = ''
 
@@ -95,12 +98,12 @@ class VCFWriter:
 
         return site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual
 
-    def write_vcf_records(self, variants_list):
+    def write_vcf_records(self, variants_list, options):
         last_position = -1
         for contig, position in sorted(variants_list):
             all_candidates = variants_list[(contig, position)]
 
-            contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability = self.candidate_list_to_variant(all_candidates)
+            contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability = self.candidate_list_to_variant(all_candidates, options)
             # print("RETURNED", contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability)
             if len(alleles) <= 0:
                 continue

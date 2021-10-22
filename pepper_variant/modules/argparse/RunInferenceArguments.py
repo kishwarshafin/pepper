@@ -31,14 +31,14 @@ def add_run_inference_arguments(parser):
         "--batch_size",
         type=int,
         required=False,
-        default=128,
-        help="Batch size for testing, default is 100. Suggested values: 256/512/1024. Default is 128."
+        default=512,
+        help="Batch size for testing, default is 100. Suggested values: 256/512/1024. Default is 512."
     )
     parser.add_argument(
         "--quantized",
-        default=False,
+        default=True,
         action='store_true',
-        help="Use quantization for inference while on CPU inference mode. Speeds up inference. Default is False."
+        help="Use quantization for inference while on CPU inference mode. Speeds up inference. Default is True."
     )
     parser.add_argument(
         "-g",
@@ -107,8 +107,4 @@ def add_run_inference_arguments(parser):
                                default=False,
                                action='store_true',
                                help="Set to call variants on PacBio CLR reads.")
-    profile_group.add_argument("--custom",
-                               default=False,
-                               action='store_true',
-                               help="Set to call variants with user-defined parameters.")
     return parser

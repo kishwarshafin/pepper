@@ -57,29 +57,29 @@ def add_find_candidates_arguments(parser):
         "--allowed_multiallelics",
         type=int,
         required=False,
-        default=4,
-        help="Number of maximum multialleleic variants allowed per site. Default is 4"
+        default=None,
+        help="Number of maximum multialleleic variants allowed per site."
     )
     parser.add_argument(
         "--snp_p_value",
         required=False,
         type=float,
-        default=0.1,
-        help="Predicted value used for a SNP to be considered a candidate. Default is 0.4"
+        default=None,
+        help="Predicted value used for a SNP to be considered a candidate."
     )
     parser.add_argument(
         "--insert_p_value",
         required=False,
         type=float,
-        default=0.3,
-        help="Predicted value used for a insert to be considered a candidate. Default is 0.1"
+        default=None,
+        help="Predicted value used for a insert to be considered a candidate."
     )
     parser.add_argument(
         "--delete_p_value",
         required=False,
         type=float,
-        default=0.2,
-        help="Predicted value used for a delete to be considered a candidate. Default is 0.2"
+        default=None,
+        help="Predicted value used for a delete to be considered a candidate."
     )
     parser.add_argument(
         "--freq_based",
@@ -107,8 +107,4 @@ def add_find_candidates_arguments(parser):
                                default=False,
                                action='store_true',
                                help="Set to call variants on PacBio CLR reads.")
-    profile_group.add_argument("--custom",
-                               default=False,
-                               action='store_true',
-                               help="Set to call variants with user-defined parameters.")
     return parser

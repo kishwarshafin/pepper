@@ -279,7 +279,6 @@ def small_chunk_stitch(options, file_chunks):
     fasta_handler = PEPPER_VARIANT.FASTA_handler(options.fasta)
     selected_candidate_list_margin = []
     selected_candidate_list_deepvariant = []
-
     for file_chunk in file_chunks:
         file_name, batch_key = file_chunk
         all_candidates = []
@@ -312,6 +311,7 @@ def small_chunk_stitch(options, file_chunks):
                     all_candidates.append(candidate)
 
         for candidate in all_candidates:
+
             reference_base = fasta_handler.get_reference_sequence(candidate.contig, candidate.position, candidate.position+1).upper()
 
             if reference_base not in ['A', 'C', 'G', 'T']:
@@ -326,7 +326,7 @@ def small_chunk_stitch(options, file_chunks):
             else:
                 genotype = [1, 1]
 
-            prediction_value = candidate.prediction_base[np.argmax(candidate.prediction_base)]
+            prediction_value = 1.0 - candidate.prediction_base[0]
 
             # this is for Margin. Only pick SNPs.
             alt_alleles = []
@@ -407,6 +407,10 @@ def small_chunk_stitch(options, file_chunks):
 
                         # print("DELETE: ", predicted_bases, max_observed_likelihood['#'], candidate.contig, candidate.position, reference_allele, alt_allele, candidate.depth, allele_frequency)
 
+                predicted_genotype = np.argmax(candidate.prediction_base)
+
+                # if predicted_genotype == 0:
+                #     print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_allele, allele_frequency, candidate.depth, vaf, non_alt_prediction, prediction_value, candidate.prediction_base)
             if len(alt_alleles) > 0:
                 # print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support)
                 selected_candidate_list_deepvariant.append((candidate.contig, candidate.position, candidate.position + len(reference_allele), reference_allele, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value, candidate.prediction_base))
@@ -435,12 +439,27 @@ def find_candidates(options, input_dir, all_prediction_pair):
     all_selected_candidates_variant_calling = sorted(all_selected_candidates_variant_calling, key=lambda x: (x[0], x[1]))
 
     all_selected_candidates_phasing_positional_dictionary = defaultdict(list)
+    all_selected_candidates_phasing_positional_dictionary_alts = defaultdict(list)
     all_selected_candidates_variant_calling_positional_dictionary = defaultdict(list)
+    all_selected_candidates_variant_calling_positional_dictionary_alts = defaultdict(list)
 
     for candidate in all_selected_candidates_phasing:
+        ref = candidate[3]
+        alt = candidate[4][0]
+        if (ref, alt) in all_selected_candidates_phasing_positional_dictionary_alts[(candidate[0], candidate[1])]:
+            continue
+        all_selected_candidates_phasing_positional_dictionary_alts[(candidate[0], candidate[1])].append((ref, alt))
         all_selected_candidates_phasing_positional_dictionary[(candidate[0], candidate[1])].append(candidate)
 
+    contigs = list()
     for candidate in all_selected_candidates_variant_calling:
+        if candidate[0] not in contigs:
+            contigs.append(candidate[0])
+        ref = candidate[3]
+        alt = candidate[4][0]
+        if (ref, alt) in all_selected_candidates_variant_calling_positional_dictionary_alts[(candidate[0], candidate[1])]:
+            continue
+        all_selected_candidates_variant_calling_positional_dictionary_alts[(candidate[0], candidate[1])].append((ref, alt))
         all_selected_candidates_variant_calling_positional_dictionary[(candidate[0], candidate[1])].append(candidate)
 
     # print(all_selected_candidates_variant_calling_positional_dictionary)
@@ -448,4 +467,4 @@ def find_candidates(options, input_dir, all_prediction_pair):
     # exit(0)
 
     # print("SORTED")
-    return all_selected_candidates_phasing_positional_dictionary, all_selected_candidates_variant_calling_positional_dictionary
+    return contigs, all_selected_candidates_phasing_positional_dictionary, all_selected_candidates_variant_calling_positional_dictionary

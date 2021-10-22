@@ -670,6 +670,7 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
             candidate_summary.contig = contig;
             candidate_summary.position = candidate_position;
 
+//            cout<<"-------------------------START----------------------------------------"<<endl;
 //            cout<<"Candidate position: "<< candidate_position<<endl;
 //            cout<<"Coverage: "<<coverage_vector[candidate_position-ref_start]<<endl;
 //            cout<<"Candidates: "<<endl;
@@ -684,13 +685,7 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
             double candidate_frequency = ((double) allele_depth / max(1.0, (double) candidate_summary.depth));
             string candidate_allele = candidate_string.substr(1, candidate_string.length());
             // minimum 2 reads supporting the candidate or frequency is lower than 10
-//            cout<<"CANDIDATE ALLELE: "<<candidate_allele<<endl;
-//            cout<<"DEPTH AND FREQUENCY: "<<allele_depth<<" "<<candidate_frequency<<endl;
             if (allele_depth < candidate_support_threshold || candidate_frequency < candidate_freq_threshold) {
-                continue;
-            }
-            // pick no SNP that has a strand bias
-            if ( candidate_string[0] == '1' and (allele_depth_fwd == 0 || allele_depth_rev == 0)) {
                 continue;
             }
             // if Candidate is INDEL but we are skipping INDELs
@@ -706,9 +701,10 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
 
             int base_index = (int) (candidate_position - ref_start + cumulative_observed_insert[candidate_position - ref_start]);
 
-//            cout<<"-------------------------START----------------------------------------"<<endl;
+
 //            cout<<"CANDIDATE ALLELE: "<<candidate_allele<<endl;
 //            cout<<"CANDIDATE TYPE: "<<candidate_string[0]<<endl;
+//            cout<<"REF BASE: "<<reference_sequence[candidate_position - ref_start]<<endl;
             if (train_mode) {
                 vector<type_truth_record> hp1_truths = hp1_truth_alleles[base_index];
                 vector<type_truth_record> hp2_truths = hp2_truth_alleles[base_index];

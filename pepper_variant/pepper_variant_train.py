@@ -109,6 +109,22 @@ def add_train_model_arguments(parser):
         help="Number of data loaders to use."
     )
     parser.add_argument(
+        "-lr",
+        "--learning_rate",
+        type=float,
+        required=False,
+        default=0.0001,
+        help="Learning rate. Default: 0.0001."
+    )
+    parser.add_argument(
+        "-wd",
+        "--weight_decay",
+        type=float,
+        required=False,
+        default=0.000001,
+        help="Weight decay. Default: 0.000001."
+    )
+    parser.add_argument(
         "-g",
         "--gpu",
         default=False,
@@ -307,10 +323,8 @@ def main():
     options, unparsed = parser.parse_known_args()
     options.train_mode = True
 
-    options = set_parameters(options)
-    exit(0)
-
     if options.sub_command == 'make_train_images':
+        options = set_parameters(options)
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAKE TRAIN IMAGE MODULE SELECTED\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: DOWNSAMPLE RATE:\t" + str(options.downsample_rate) + "\n")
         options.image_output_directory = options.output_dir
@@ -319,23 +333,7 @@ def main():
         ImageGenerationUtils.generate_images(options)
     elif options.sub_command == 'train_model':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAIN MODEL MODULE SELECTED\n")
-        distributed = not options.distributed_off
-
-        train_pepper_model(options.train_image_dir,
-                           options.test_image_dir,
-                           options.use_hp_info,
-                           options.output_dir,
-                           options.gpu,
-                           options.epoch_size,
-                           options.batch_size,
-                           options.test_batch_size,
-                           options.step_size,
-                           options.num_workers,
-                           options.retrain_model,
-                           options.retrain_model_path,
-                           distributed,
-                           options.device_ids,
-                           options.callers_per_gpu)
+        train_pepper_model(options)
 
     elif options.sub_command == 'test_model':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TEST MODEL MODULE SELECTED\n")

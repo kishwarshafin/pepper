@@ -108,7 +108,8 @@ class AlignmentSummarizer:
 
                 total_reads = len(all_reads)
                 total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, options.downsample_rate * total_reads))
-
+                # print("Total reads: ", total_reads)
+                # print("Total allowed reads: ", total_allowed_reads)
                 if total_reads > total_allowed_reads:
                     # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py
                     # reservoir_sample method utilized here
@@ -186,7 +187,8 @@ class AlignmentSummarizer:
 
             total_reads = len(all_reads)
             total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, options.downsample_rate * total_reads))
-
+            # print("Total reads: ", total_reads)
+            # print("Total allowed reads: ", total_allowed_reads)
             if total_reads > total_allowed_reads:
                 # sys.stderr.write("INFO: " + log_prefix + "HIGH COVERAGE CHUNK: " + str(total_reads) + " Reads.\n")
                 # https://github.com/google/nucleus/blob/master/nucleus/util/utils.py

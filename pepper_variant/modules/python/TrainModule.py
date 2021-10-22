@@ -14,7 +14,7 @@ class TrainModule:
     Train module
     """
     def __init__(self, train_file, test_file, use_hp_info, gpu_mode, max_epochs, batch_size, test_batch_size, step_size, num_workers,
-                 retrain_model, retrain_model_path, model_dir, stats_dir):
+                 learning_rate, weight_decay, retrain_model, retrain_model_path, model_dir, stats_dir):
         self.train_file = train_file
         self.test_file = test_file
         self.use_hp_info = use_hp_info
@@ -32,8 +32,8 @@ class TrainModule:
         self.hidden_size = TrainOptions.HIDDEN_SIZE
         self.gru_layers = TrainOptions.GRU_LAYERS
         # {'l2': 1.4946789574136535e-05, 'lr': 0.000541365592065579}
-        self.learning_rate = 0.0001
-        self.weight_decay = 0.000001
+        self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
 
     def train_model_distributed(self, device_ids, callers_per_gpu):
         """
@@ -159,21 +159,24 @@ def handle_output_directory(output_dir):
     return model_save_dir, stats_directory
 
 
-def train_pepper_model(train_file, test_file, use_hp_info, output_dir, gpu_mode, epoch_size, batch_size, test_batch_size, step_size, num_workers,
-                          retrain_model, retrain_model_path, distributed, device_ids, per_gpu_callers):
-    model_out_dir, log_dir = handle_output_directory(output_dir)
-    tm = TrainModule(train_file,
-                     test_file,
-                     use_hp_info,
-                     gpu_mode,
-                     epoch_size,
-                     batch_size,
-                     test_batch_size,
-                     step_size,
-                     num_workers,
-                     retrain_model,
-                     retrain_model_path,
+def train_pepper_model(options):
+    model_out_dir, log_dir = handle_output_directory(options.output_dir)
+    distributed = not options.distributed_off
+
+    tm = TrainModule(options.train_image_dir,
+                     options.test_image_dir,
+                     options.use_hp_info,
+                     options.gpu,
+                     options.epoch_size,
+                     options.batch_size,
+                     options.test_batch_size,
+                     options.step_size,
+                     options.num_workers,
+                     options.learning_rate,
+                     options.weight_decay,
+                     options.retrain_model,
+                     options.retrain_model_path,
                      model_out_dir,
                      log_dir)
 
-    tm.train_model_distributed(device_ids, per_gpu_callers)
+    tm.train_model_distributed(options.device_ids, options.callers_per_gpu)

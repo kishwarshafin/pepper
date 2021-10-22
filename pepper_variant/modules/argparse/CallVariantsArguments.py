@@ -52,7 +52,7 @@ def add_call_variant_arguments(parser):
         "--downsample_rate",
         type=float,
         default=1.0,
-        help="Downsample rate of reads while generating images. Default is 1.0"
+        help="Downsample rate of reads while generating images."
     )
     parser.add_argument(
         "-r",
@@ -93,63 +93,63 @@ def add_call_variant_arguments(parser):
         "--min_mapq",
         type=int,
         required=False,
-        default=5,
-        help="Minimum mapping quality for read to be considered valid. Default is 5"
+        default=None,
+        help="Minimum mapping quality for read to be considered valid."
     )
     parser.add_argument(
         "--min_baseq",
         type=int,
         required=False,
-        default=1,
-        help="Minimum base quality for base to be considered valid. Default is 1"
+        default=None,
+        help="Minimum base quality for base to be considered valid."
     )
     parser.add_argument(
         "--snp_frequency",
         type=float,
         required=False,
-        default=0.10,
-        help="Minimum SNP frequency for a site to be considered to have a variant. Default is 0.10"
+        default=None,
+        help="Minimum SNP frequency for a site to be considered to have a variant."
     )
     parser.add_argument(
         "--insert_frequency",
         type=float,
         required=False,
-        default=0.15,
-        help="Minimum insert frequency for a site to be considered to have a variant. Default is 0.15"
+        default=None,
+        help="Minimum insert frequency for a site to be considered to have a variant."
     )
     parser.add_argument(
         "--delete_frequency",
         type=float,
         required=False,
-        default=0.15,
-        help="Minimum delete frequency for a site to be considered to have a variant. Default is 0.15"
+        default=None,
+        help="Minimum delete frequency for a site to be considered to have a variant."
     )
     parser.add_argument(
         "--min_coverage_threshold",
         type=int,
         required=False,
-        default=5,
-        help="Minimum delete frequency for a site to be considered to have a variant. Default is 5"
+        default=None,
+        help="Minimum delete frequency for a site to be considered to have a variant."
     )
     parser.add_argument(
         "--candidate_support_threshold",
         type=int,
         required=False,
-        default=2,
-        help="Minimum number of reads supporting a variant to be considered as a candidate. Default is 2"
+        default=None,
+        help="Minimum number of reads supporting a variant to be considered as a candidate."
     )
     parser.add_argument(
         "--candidate_frequency_threshold",
         type=float,
         required=False,
-        default=0.10,
-        help="Minimum frequency for a candidate to be considered to be a variant. Default is 0.10"
+        default=None,
+        help="Minimum frequency for a candidate to be considered to be a variant."
     )
     parser.add_argument(
         "--skip_indels",
         default=False,
         action='store_true',
-        help="If set then PyTorch will use GPUs for inference. CUDA required. Default is False."
+        help="If true then INDEL calling is skipped. [Always true for PacBio CLR]."
     )
 
     # Inference parameters
@@ -158,7 +158,7 @@ def add_call_variant_arguments(parser):
         "--batch_size",
         type=int,
         required=False,
-        default=128,
+        default=512,
         help="Batch size for testing, default is 128. Suggested values: 256/512/1024. Default is 128"
     )
     parser.add_argument(
@@ -188,46 +188,46 @@ def add_call_variant_arguments(parser):
     )
     parser.add_argument(
         "--quantized",
-        default=False,
+        default=True,
         action='store_true',
-        help="Use quantization for inference while on CPU inference mode. Speeds up inference. Default is False."
+        help="Use quantization for inference while on CPU inference mode. Speeds up inference. Default is True."
     )
     parser.add_argument(
         "-w",
         "--num_workers",
         type=int,
         required=False,
-        default=8,
-        help="Number of workers for loading images. Default is 8"
+        default=0,
+        help="Number of workers for loading images. Default is 0"
     )
     # find candidates arguments
     parser.add_argument(
         "--allowed_multiallelics",
         type=int,
         required=False,
-        default=4,
-        help="Number of maximum multialleleic variants allowed per site. Default is 4"
+        default=None,
+        help="Number of maximum multialleleic variants allowed per site."
     )
     parser.add_argument(
         "--snp_p_value",
         required=False,
         type=float,
-        default=0.1,
-        help="Predicted value used for a SNP to be considered a candidate. Default is 0.4"
+        default=None,
+        help="Predicted value used for a SNP to be considered a candidate."
     )
     parser.add_argument(
         "--insert_p_value",
         required=False,
         type=float,
-        default=0.3,
-        help="Predicted value used for a insert to be considered a candidate. Default is 0.1"
+        default=None,
+        help="Predicted value used for a insert to be considered a candidate."
     )
     parser.add_argument(
         "--delete_p_value",
         required=False,
         type=float,
-        default=0.2,
-        help="Predicted value used for a delete to be considered a candidate. Default is 0.2"
+        default=None,
+        help="Predicted value used for a delete to be considered a candidate."
     )
     profile_group = parser.add_mutually_exclusive_group(required=True)
     profile_group.add_argument("--ont",
@@ -242,8 +242,4 @@ def add_call_variant_arguments(parser):
                                default=False,
                                action='store_true',
                                help="Set to call variants on PacBio CLR reads.")
-    profile_group.add_argument("--custom",
-                               default=False,
-                               action='store_true',
-                               help="Set to call variants with user-defined parameters.")
     return parser

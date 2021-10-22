@@ -78,63 +78,63 @@ def add_make_images_arguments(parser):
         "--min_mapq",
         type=int,
         required=False,
-        default=5,
+        default=None,
         help="Minimum mapping quality for read to be considered valid. Default is 5"
     )
     parser.add_argument(
         "--min_baseq",
         type=int,
         required=False,
-        default=1,
+        default=None,
         help="Minimum base quality for base to be considered valid. Default is 1"
     )
     parser.add_argument(
         "--snp_frequency",
         type=float,
         required=False,
-        default=0.10,
+        default=None,
         help="Minimum SNP frequency for a site to be considered to have a variant. Default is 0.10"
     )
     parser.add_argument(
         "--insert_frequency",
         type=float,
         required=False,
-        default=0.15,
+        default=None,
         help="Minimum insert frequency for a site to be considered to have a variant. Default is 0.15"
     )
     parser.add_argument(
         "--delete_frequency",
         type=float,
         required=False,
-        default=0.15,
+        default=None,
         help="Minimum delete frequency for a site to be considered to have a variant. Default is 0.15"
     )
     parser.add_argument(
         "--min_coverage_threshold",
         type=int,
         required=False,
-        default=5,
+        default=None,
         help="Minimum delete frequency for a site to be considered to have a variant. Default is 5"
     )
     parser.add_argument(
         "--candidate_support_threshold",
         type=int,
         required=False,
-        default=2,
+        default=None,
         help="Minimum number of reads supporting a variant to be considered as a candidate. Default is 2"
     )
     parser.add_argument(
         "--candidate_frequency_threshold",
         type=float,
         required=False,
-        default=0.10,
+        default=None,
         help="Minimum frequency for a candidate to be considered to be a variant. Default is 0.10"
     )
     parser.add_argument(
         "--skip_indels",
         default=False,
         action='store_true',
-        help="If set then PyTorch will use GPUs for inference. CUDA required. Default is False."
+        help="If set then INDEL calling will be skipped."
     )
     profile_group = parser.add_mutually_exclusive_group(required=True)
     profile_group.add_argument("--ont",
@@ -149,9 +149,5 @@ def add_make_images_arguments(parser):
                                default=False,
                                action='store_true',
                                help="Set to call variants on PacBio CLR reads.")
-    profile_group.add_argument("--custom",
-                               default=False,
-                               action='store_true',
-                               help="Set to call variants with user-defined parameters.")
 
     return parser
