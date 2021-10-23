@@ -61,7 +61,8 @@ def main():
     options.truth_vcf = None
     options.random_draw_probability = 1.0
 
-    options = set_parameters(options)
+    if options.sub_command != 'merge_variants':
+        options = set_parameters(options)
 
     if options.sub_command == 'call_variant':
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CALL VARIANT MODULE SELECTED\n")
