@@ -2,17 +2,16 @@ from collections import defaultdict
 from pysam import VariantFile
 
 
-def merge_vcf_records(pepper_vcf_file, deepvariant_vcf_file, quality_threshold, output_directory):
-    pepper_vcf_file = VariantFile(pepper_vcf_file)
+def merge_vcf_records(options):
+    pepper_vcf_file = VariantFile(options.vcf_pepper)
     all_pepper_records = pepper_vcf_file.fetch()
-    output_vcf = output_directory + "/" + 'PEPPER_DEEPVARIANT_MERGED.vcf.gz'
+    output_vcf = options.output_directory + "/" + 'PEPPER_MARGIN_DEEPVARIANT_OUTPUT.vcf.gz'
 
     positional_pepper_records = defaultdict(lambda: defaultdict())
     for record in all_pepper_records:
-        if record.qual >= quality_threshold:
-            positional_pepper_records[record.chrom][record.pos] = record
+        positional_pepper_records[record.chrom][record.pos] = record
 
-    deepvariant_vcf_file = VariantFile(deepvariant_vcf_file)
+    deepvariant_vcf_file = VariantFile(options.vcf_deepvariant)
     all_deepvariant_records = deepvariant_vcf_file.fetch()
     vcf_out = VariantFile(output_vcf, 'w', header=deepvariant_vcf_file.header)
 

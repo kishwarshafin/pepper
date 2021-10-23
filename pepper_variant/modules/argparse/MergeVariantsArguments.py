@@ -19,13 +19,6 @@ def add_merge_variants_arguments(parser):
         help="Path to VCF file from DeepVariant."
     )
     parser.add_argument(
-        "-q",
-        "--quality_threshold",
-        type=int,
-        required=True,
-        help="Quality threshold to use for the merge."
-    )
-    parser.add_argument(
         "-o",
         "--output_dir",
         type=str,

@@ -53,13 +53,13 @@ def set_parameters(options):
         if options.snp_frequency is None:
             options.snp_frequency = 0.10
         if options.insert_frequency is None:
-            options.insert_frequency = 0.10
+            options.insert_frequency = 0.12
         if options.delete_frequency is None:
-            options.delete_frequency = 0.10
+            options.delete_frequency = 0.12
         if options.min_coverage_threshold is None:
             options.min_coverage_threshold = 2
         if options.candidate_support_threshold is None:
-            options.candidate_support_threshold = 1
+            options.candidate_support_threshold = 2
         if options.candidate_frequency_threshold is None:
             options.candidate_frequency_threshold = 0.10
         if not options.skip_indels:
@@ -70,9 +70,9 @@ def set_parameters(options):
         if options.snp_p_value is None:
             options.snp_p_value = 0.1
         if options.insert_p_value is None:
-            options.insert_p_value = 0.1
+            options.insert_p_value = 0.2
         if options.delete_p_value is None:
-            options.delete_p_value = 0.1
+            options.delete_p_value = 0.2
         if options.snp_q_cutoff is None:
             options.snp_q_cutoff = 15
         if options.indel_q_cutoff is None:
