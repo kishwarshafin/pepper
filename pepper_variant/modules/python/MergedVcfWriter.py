@@ -8,7 +8,7 @@ class VCFWriter:
         self.vcf_header = self.get_vcf_header(sample_name, all_contigs)
         self.output_dir = output_dir
         self.filename = filename
-        self.vcf_file = VariantFile(self.output_dir + self.filename, 'w', header=self.vcf_header)
+        self.vcf_file = VariantFile(self.output_dir + "/" + self.filename, 'w', header=self.vcf_header)
 
     def write_vcf_records(self, vcf_record, sample, is_deepvariant_call):
         if 'PASS' not in vcf_record.filter.keys():
