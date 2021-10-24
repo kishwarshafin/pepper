@@ -391,7 +391,9 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                         int feature_index = get_feature_index(ref_base, base, read.flags.is_reverse);
 
                         // update the summary of base
-                        coverage_vector[ref_position - ref_start] += 1;
+                        if(base_quality >= min_baseq)
+                            coverage_vector[ref_position - ref_start] += 1;
+
                         if(ref_base != base && base_quality >= min_baseq) {
                             snp_count[ref_position - ref_start] += 1;
                             image_matrix[base_index][feature_index] += 1;
@@ -429,7 +431,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                 }
                 break;
             case CIGAR_OPERATIONS::IN:
-                if (ref_position - 1 >= ref_start && ref_position - 1 <= ref_end) {
+                if (ref_position - 1 >= ref_start && ref_position - 1 <= ref_end && read_index - 1 >= 0) {
                     // process insert allele here
                     string alt;
                     char ref_base = reference_sequence[ref_position - 1 - ref_start];
@@ -445,8 +447,11 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     for(int i = 0; i < len; i++) {
                         base_quality += read.base_qualities[read_index+i];
                     }
-//                    if(ref_position == 392557)
-//                        cout<<ref_position<<" "<<alt<<" "<< len <<" "<<base_quality << " "<< min_baseq * len<<endl;
+
+                    // exclude reads which are not usable
+                    if(base_quality < min_baseq * len && read.base_qualities[read_index - 1] >= min_baseq)
+                        coverage_vector[ref_position - 1 - ref_start] -= 1;
+                    // cout<<ref_position - 1 <<" "<<alt<<" "<< len <<" "<<base_quality << " "<< min_baseq * len<<" "<<endl;
 
 
                     // save the candidate
@@ -676,6 +681,7 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
             int allele_depth_fwd = AlleleFrequencyMapFwdStrand[candidate_position - ref_start][candidate_string];
             int allele_depth_rev = AlleleFrequencyMapRevStrand[candidate_position - ref_start][candidate_string];
             double candidate_frequency = ((double) allele_depth / max(1.0, (double) candidate_summary.depth));
+//            cout<<candidate_string<<" "<<allele_depth<<" "<<candidate_frequency<<endl;
             string candidate_allele = candidate_string.substr(1, candidate_string.length());
             // minimum 2 reads supporting the candidate or frequency is lower than 10
             if (allele_depth < candidate_support_threshold) {
