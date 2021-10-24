@@ -440,12 +440,11 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     if (read_index - 1 >= 0) alt = read.sequence.substr(read_index - 1, cigar.length + 1);
                     else alt = ref_base + read.sequence.substr(read_index, cigar.length);
 
-                    int len = cigar.length;
+                    int len = cigar.length + 1;
                     base_quality = 0;
                     for(int i = 0; i< cigar.length; i++) {
                         base_quality += read.base_qualities[read_index+i];
                     }
-                    // cout<<alt<<" "<< len <<" "<<base_quality << " "<< min_baseq * len<<endl;
 
 
                     // save the candidate
@@ -499,7 +498,8 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     string candidate_string = char(AlleleType::DELETE_ALLELE + '0') + ref;
 
                     // only process candidates that are smaller than 50bp as they 50bp+ means SV
-                    if(candidate_string.length() <= 61 && base_quality >= min_baseq) {
+                    // no base-quality check for deletes
+                    if(candidate_string.length() <= 61) {
                         delete_count[ref_position - 1 - ref_start] += 1;
                         int region_index = (int) (ref_position - 1 - ref_start);
 
