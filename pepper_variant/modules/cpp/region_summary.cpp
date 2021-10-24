@@ -440,11 +440,13 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     if (read_index - 1 >= 0) alt = read.sequence.substr(read_index - 1, cigar.length + 1);
                     else alt = ref_base + read.sequence.substr(read_index, cigar.length);
 
-                    int len = cigar.length + 1;
+                    int len = cigar.length;
                     base_quality = 0;
-                    for(int i = 0; i< cigar.length; i++) {
+                    for(int i = 0; i < len; i++) {
                         base_quality += read.base_qualities[read_index+i];
                     }
+//                    if(ref_position == 392557)
+//                        cout<<ref_position<<" "<<alt<<" "<< len <<" "<<base_quality << " "<< min_baseq * len<<endl;
 
 
                     // save the candidate
