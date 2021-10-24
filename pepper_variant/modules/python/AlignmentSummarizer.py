@@ -144,11 +144,13 @@ class AlignmentSummarizer:
                 regional_summary.generate_labels(truth_hap1_records, truth_hap2_records)
 
                 candidate_image_summary = regional_summary.generate_summary(all_reads,
+                                                                            options.min_baseq,
                                                                             options.snp_frequency,
                                                                             options.insert_frequency,
                                                                             options.delete_frequency,
                                                                             options.min_coverage_threshold,
-                                                                            options.candidate_frequency_threshold,
+                                                                            options.snp_candidate_frequency_threshold,
+                                                                            options.indel_candidate_frequency_threshold,
                                                                             options.candidate_support_threshold,
                                                                             options.skip_indels,
                                                                             self.region_start_position,
@@ -218,11 +220,13 @@ class AlignmentSummarizer:
             regional_summary.generate_max_insert_summary(all_reads)
 
             candidate_image_summary = regional_summary.generate_summary(all_reads,
+                                                                        options.min_baseq,
                                                                         options.snp_frequency,
                                                                         options.insert_frequency,
                                                                         options.delete_frequency,
                                                                         options.min_coverage_threshold,
-                                                                        options.candidate_frequency_threshold,
+                                                                        options.snp_candidate_frequency_threshold,
+                                                                        options.indel_candidate_frequency_threshold,
                                                                         options.candidate_support_threshold,
                                                                         options.skip_indels,
                                                                         self.region_start_position,
@@ -230,6 +234,7 @@ class AlignmentSummarizer:
                                                                         ImageSizeOptions.CANDIDATE_WINDOW_SIZE,
                                                                         ImageSizeOptions.IMAGE_HEIGHT,
                                                                         options.train_mode)
+
             all_candidate_images.extend(candidate_image_summary)
 
         return all_candidate_images

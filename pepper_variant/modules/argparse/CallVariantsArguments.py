@@ -139,11 +139,18 @@ def add_call_variant_arguments(parser):
         help="Minimum number of reads supporting a variant to be considered as a candidate."
     )
     parser.add_argument(
-        "--candidate_frequency_threshold",
+        "--snp_candidate_frequency_threshold",
         type=float,
         required=False,
         default=None,
-        help="Minimum frequency for a candidate to be considered to be a variant."
+        help="Minimum frequency for a SNP candidate to be considered to be a variant."
+    )
+    parser.add_argument(
+        "--indel_candidate_frequency_threshold",
+        type=float,
+        required=False,
+        default=None,
+        help="Minimum frequency for a SNP candidate to be considered to be a variant."
     )
     parser.add_argument(
         "--skip_indels",

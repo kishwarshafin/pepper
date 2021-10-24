@@ -124,11 +124,18 @@ def add_make_images_arguments(parser):
         help="Minimum number of reads supporting a variant to be considered as a candidate. Default is 2"
     )
     parser.add_argument(
-        "--candidate_frequency_threshold",
+        "--snp_candidate_frequency_threshold",
         type=float,
         required=False,
         default=None,
-        help="Minimum frequency for a candidate to be considered to be a variant. Default is 0.10"
+        help="Minimum frequency for a SNP candidate to be considered to be a variant."
+    )
+    parser.add_argument(
+        "--indel_candidate_frequency_threshold",
+        type=float,
+        required=False,
+        default=None,
+        help="Minimum frequency for a SNP candidate to be considered to be a variant."
     )
     parser.add_argument(
         "--skip_indels",

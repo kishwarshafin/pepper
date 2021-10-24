@@ -360,11 +360,12 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                                                        vector< map<string, int> > &AlleleFrequencyMapFwdStrand,
                                                        vector< map<string, int> > &AlleleFrequencyMapRevStrand,
                                                        vector< set<string> > &AlleleMap,
-                                                       type_read read) {
+                                                       type_read read,
+                                                       double min_baseq) {
     int read_index = 0;
     long long ref_position = read.pos;
     int cigar_index = 0;
-    double base_quality = 1.0 - pow(10.0 , (-1.0 * read.base_qualities[read_index])/10);
+    double base_quality = read.base_qualities[read_index];
     for (int cigar_i=0; cigar_i<read.cigar_tuples.size(); cigar_i++) {
         CigarOp cigar = read.cigar_tuples[cigar_i];
         if (ref_position > ref_end) break;
@@ -379,8 +380,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     ref_position += cigar_index;
                 }
                 for (int i = cigar_index; i < cigar.length; i++) {
-                    //read.base_qualities[read_index] base quality
-//                    double base_quality = 1.0 - pow(10.0 , (-1.0 * read.base_qualities[read_index])/10);
+                    base_quality = read.base_qualities[read_index];
 
                     if (ref_position >= ref_start && ref_position <= ref_end) {
                         char base = read.sequence[read_index];
@@ -391,47 +391,38 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                         int feature_index = get_feature_index(ref_base, base, read.flags.is_reverse);
 
                         // update the summary of base
-                        if (ref_position >= ref_start && ref_position <= ref_end) {
+                        coverage_vector[ref_position - ref_start] += 1;
+                        if(ref_base != base && base_quality >= min_baseq) {
+                            snp_count[ref_position - ref_start] += 1;
+                            image_matrix[base_index][feature_index] += 1;
+                            // save the candidate
+                            string candidate_string = char(AlleleType::SNP_ALLELE + '0') + alt;
 
-                            coverage_vector[ref_position - ref_start] += 1;
+                            int region_index = (int) (ref_position - ref_start);
 
-                            if(ref_base != base) {
-                                snp_count[ref_position - ref_start] += 1;
-                                image_matrix[base_index][feature_index] += 1;
-
-                                // save the candidate
-                                string candidate_string = char(AlleleType::SNP_ALLELE + '0') + alt;
-
-                                int region_index = (int) (ref_position - ref_start);
-
-                                if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
-                                    AlleleFrequencyMap[region_index][candidate_string] += 1;
-                                    if(read.flags.is_reverse) {
-                                        AlleleFrequencyMapRevStrand[region_index][candidate_string] += 1;
-                                    } else {
-                                        AlleleFrequencyMapFwdStrand[region_index][candidate_string] += 1;
-                                    }
+                            if (AlleleFrequencyMap[region_index].find(candidate_string) != AlleleFrequencyMap[region_index].end()) {
+                                AlleleFrequencyMap[region_index][candidate_string] += 1;
+                                if(read.flags.is_reverse) {
+                                    AlleleFrequencyMapRevStrand[region_index][candidate_string] += 1;
                                 } else {
-                                    AlleleFrequencyMap[region_index][candidate_string] = 1;
-                                    if(read.flags.is_reverse) {
-                                        AlleleFrequencyMapFwdStrand[region_index][candidate_string] = 0;
-                                        AlleleFrequencyMapRevStrand[region_index][candidate_string] = 1;
-                                    } else {
-                                        AlleleFrequencyMapFwdStrand[region_index][candidate_string] = 1;
-                                        AlleleFrequencyMapRevStrand[region_index][candidate_string] = 0;
-                                    }
+                                    AlleleFrequencyMapFwdStrand[region_index][candidate_string] += 1;
                                 }
-
-                                if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
-                                    AlleleMap[region_index].insert(candidate_string);
-
                             } else {
-                                image_matrix[base_index][feature_index] += 1;
+                                AlleleFrequencyMap[region_index][candidate_string] = 1;
+                                if(read.flags.is_reverse) {
+                                    AlleleFrequencyMapFwdStrand[region_index][candidate_string] = 0;
+                                    AlleleFrequencyMapRevStrand[region_index][candidate_string] = 1;
+                                } else {
+                                    AlleleFrequencyMapFwdStrand[region_index][candidate_string] = 1;
+                                    AlleleFrequencyMapRevStrand[region_index][candidate_string] = 0;
+                                }
                             }
+
+                            if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
+                                AlleleMap[region_index].insert(candidate_string);
+                        } else {
+                            image_matrix[base_index][feature_index] += 1;
                         }
-
-
-
                     }
                     read_index += 1;
                     ref_position += 1;
@@ -446,16 +437,16 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     int insert_count_index =  get_feature_index(ref_base, 'I', read.flags.is_reverse);
                     image_matrix[base_index][insert_count_index] += 1;
 
-
-
                     if (read_index - 1 >= 0) alt = read.sequence.substr(read_index - 1, cigar.length + 1);
                     else alt = ref_base + read.sequence.substr(read_index, cigar.length);
+
+                    base_quality = read.base_qualities[read_index];
 
                     // save the candidate
                     string candidate_string = char(AlleleType::INSERT_ALLELE + '0') + alt;
 
                     // only process candidates that are smaller than 50bp as they 50bp+ means SV
-                    if(candidate_string.length() <= 61) {
+                    if(candidate_string.length() <= 61 && base_quality >= min_baseq) {
                         insert_count[ref_position - 1 - ref_start] += 1;
                         int region_index = (int) (ref_position - 1 - ref_start);
 
@@ -480,15 +471,6 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                         if (AlleleMap[region_index].find(candidate_string) == AlleleMap[region_index].end())
                             AlleleMap[region_index].insert(candidate_string);
                     }
-
-//                    if(ImageOptionsRegion::GENERATE_INDELS == true) {
-//                        alt = read.sequence.substr(read_index, cigar.length);
-//                        for (int i = 0; i < cigar.length; i++) {
-//                            base_index = (int) ((ref_position - 1) - ref_start + cumulative_observed_insert[(ref_position - 1) - ref_start] + (i + 1));
-//                            int feature_index = get_feature_index(alt[i], read.flags.is_reverse);
-//                            image_matrix[base_index][feature_index] += 1;
-//                        }
-//                    }
                 }
                 read_index += cigar.length;
                 break;
@@ -502,7 +484,6 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     int delete_count_index =  get_feature_index(ref_base, 'D', read.flags.is_reverse);
                     image_matrix[base_index][delete_count_index] += 1.0;
 
-
                     // process delete allele here
                     string ref = reference_sequence.substr(ref_position - ref_start - 1, cigar.length + 1);
                     string alt;
@@ -510,10 +491,11 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     if (read_index - 1 >= 0) alt = read.sequence.substr(read_index - 1, 1);
                     else alt = reference_sequence.substr(ref_position - ref_start - 1, 1);
 
+                    base_quality = read.base_qualities[read_index];
                     string candidate_string = char(AlleleType::DELETE_ALLELE + '0') + ref;
 
                     // only process candidates that are smaller than 50bp as they 50bp+ means SV
-                    if(candidate_string.length() <= 61) {
+                    if(candidate_string.length() <= 61 && base_quality >= min_baseq) {
                         delete_count[ref_position - 1 - ref_start] += 1;
                         int region_index = (int) (ref_position - 1 - ref_start);
 
@@ -568,11 +550,13 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
 }
 
 vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector <type_read> &reads,
+                                                                         double min_baseq,
                                                                          double snp_freq_threshold,
                                                                          double insert_freq_threshold,
                                                                          double delete_freq_threshold,
                                                                          double min_coverage_threshold,
-                                                                         double candidate_freq_threshold,
+                                                                         double snp_candidate_freq_threshold,
+                                                                         double indel_candidate_freq_threshold,
                                                                          double candidate_support_threshold,
                                                                          bool skip_indels,
                                                                          long long candidate_region_start,
@@ -619,7 +603,7 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
         // this populates base_summaries and insert_summaries dictionaries
         if(read.mapping_quality > 0) {
             populate_summary_matrix(image_matrix, coverage_vector, snp_count, insert_count, delete_count,
-                                    AlleleFrequencyMap, AlleleFrequencyMapFwdStrand, AlleleFrequencyMapRevStrand, AlleleMap, read);
+                                    AlleleFrequencyMap, AlleleFrequencyMapFwdStrand, AlleleFrequencyMapRevStrand, AlleleMap, read, min_baseq);
         }
     }
 
@@ -685,7 +669,14 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
             double candidate_frequency = ((double) allele_depth / max(1.0, (double) candidate_summary.depth));
             string candidate_allele = candidate_string.substr(1, candidate_string.length());
             // minimum 2 reads supporting the candidate or frequency is lower than 10
-            if (allele_depth < candidate_support_threshold || candidate_frequency < candidate_freq_threshold) {
+            if (allele_depth < candidate_support_threshold) {
+                continue;
+            }
+            // see if candidate passes the candidate frequency threshold
+            if (candidate_string[0] != '1' && candidate_frequency < indel_candidate_freq_threshold) {
+                continue;
+            }
+            if (candidate_string[0] == '1' && candidate_frequency < snp_candidate_freq_threshold) {
                 continue;
             }
             // if Candidate is INDEL but we are skipping INDELs
