@@ -440,13 +440,19 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     if (read_index - 1 >= 0) alt = read.sequence.substr(read_index - 1, cigar.length + 1);
                     else alt = ref_base + read.sequence.substr(read_index, cigar.length);
 
-                    base_quality = read.base_qualities[read_index];
+                    int len = cigar.length;
+                    base_quality = 0;
+                    for(int i = 0; i< cigar.length; i++) {
+                        base_quality += read.base_qualities[read_index+i];
+                    }
+                    // cout<<alt<<" "<< len <<" "<<base_quality << " "<< min_baseq * len<<endl;
+
 
                     // save the candidate
                     string candidate_string = char(AlleleType::INSERT_ALLELE + '0') + alt;
 
                     // only process candidates that are smaller than 50bp as they 50bp+ means SV
-                    if(candidate_string.length() <= 61 && base_quality >= min_baseq) {
+                    if(candidate_string.length() <= 61 && base_quality >= min_baseq * len) {
                         insert_count[ref_position - 1 - ref_start] += 1;
                         int region_index = (int) (ref_position - 1 - ref_start);
 
@@ -474,8 +480,6 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                 }
                 read_index += cigar.length;
                 break;
-            case CIGAR_OPERATIONS::REF_SKIP:
-            case CIGAR_OPERATIONS::PAD:
             case CIGAR_OPERATIONS::DEL:
                 // process delete allele here
                 if (ref_position -1 >= ref_start && ref_position - 1 <= ref_end) {
@@ -540,6 +544,9 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
 
                 ref_position += cigar.length;
                 break;
+            case CIGAR_OPERATIONS::REF_SKIP:
+            case CIGAR_OPERATIONS::PAD:
+                ref_position += cigar.length;
             case CIGAR_OPERATIONS::SOFT_CLIP:
                 read_index += cigar.length;
                 break;
@@ -693,7 +700,7 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
             int base_index = (int) (candidate_position - ref_start + cumulative_observed_insert[candidate_position - ref_start]);
 
 
-//            cout<<"CANDIDATE ALLELE: "<<candidate_allele<<endl;
+//            cout<<"CANDIDATE ALLELE SELECTED: "<<candidate_allele<<endl;
 //            cout<<"CANDIDATE TYPE: "<<candidate_string[0]<<endl;
 //            cout<<"REF BASE: "<<reference_sequence[candidate_position - ref_start]<<endl;
             if (train_mode) {
