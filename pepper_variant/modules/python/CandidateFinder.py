@@ -363,11 +363,6 @@ def small_chunk_stitch(options, file_chunks):
 
             for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
                 # print("GENERAL: ", candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
-                # print("INSERT Predicted: ", max_observed_likelihood['*'])
-                # print("DELETE Predicted: ", max_observed_likelihood['#'])
-                # print("PREDICETED BASES: ", predicted_bases)
-                if allele_frequency <= 2:
-                    continue
                 alt_type = alt_allele[0]
                 allele = alt_allele[1:]
 
@@ -381,10 +376,6 @@ def small_chunk_stitch(options, file_chunks):
                     continue
 
                 vaf = float(allele_frequency) / float(candidate.depth)
-                # print("TOTAL OBSERVED INDELS: ", total_observed_indels)
-                # print("ALLOWED MULTI", options.allowed_multiallelics)
-                # print("VAF", vaf)
-                # print("INDEL VAF THRESHOLD", indel_allele_frequency_threshold)
                 non_alt_prediction = 1.0 - candidate.prediction_base[0]
                 if alt_type == '1':
                     if non_alt_prediction >= options.snp_p_value:
@@ -408,9 +399,7 @@ def small_chunk_stitch(options, file_chunks):
                         # print("DELETE: ", predicted_bases, max_observed_likelihood['#'], candidate.contig, candidate.position, reference_allele, alt_allele, candidate.depth, allele_frequency)
 
                 predicted_genotype = np.argmax(candidate.prediction_base)
-
-                # if predicted_genotype == 0:
-                #     print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_allele, allele_frequency, candidate.depth, vaf, non_alt_prediction, prediction_value, candidate.prediction_base)
+                # print(candidate.contig, candidate.position, reference_base, alt_allele, allele_frequency, candidate.depth, vaf, prediction_value, candidate.prediction_base)
             if len(alt_alleles) > 0:
                 # print(candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support)
                 selected_candidate_list_deepvariant.append((candidate.contig, candidate.position, candidate.position + len(reference_allele), reference_allele, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value, candidate.prediction_base))

@@ -47,15 +47,15 @@ def set_parameters(options):
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: HiFi VARIANT CALLING MODE SELECTED.\n")
         # image generation
         if options.min_mapq is None:
-            options.min_mapq = 1
+            options.min_mapq = 5
         if options.min_baseq is None:
-            options.min_baseq = 1
+            options.min_baseq = 10
         if options.snp_frequency is None:
             options.snp_frequency = 0.10
         if options.insert_frequency is None:
-            options.insert_frequency = 0.12
+            options.insert_frequency = 0.10
         if options.delete_frequency is None:
-            options.delete_frequency = 0.12
+            options.delete_frequency = 0.10
         if options.min_coverage_threshold is None:
             options.min_coverage_threshold = 2
         if options.candidate_support_threshold is None:
@@ -70,13 +70,13 @@ def set_parameters(options):
         if options.snp_p_value is None:
             options.snp_p_value = 0.1
         if options.insert_p_value is None:
-            options.insert_p_value = 0.2
+            options.insert_p_value = 0.001
         if options.delete_p_value is None:
-            options.delete_p_value = 0.2
+            options.delete_p_value = 0.1
         if options.snp_q_cutoff is None:
-            options.snp_q_cutoff = 15
+            options.snp_q_cutoff = 10
         if options.indel_q_cutoff is None:
-            options.indel_q_cutoff = 15
+            options.indel_q_cutoff = 20
     elif options.clr:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CLR VARIANT CALLING MODE SELECTED.\n")
         # image generation
@@ -127,6 +127,6 @@ def set_parameters(options):
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN INSERT PREDICTIVE VALUE:\t" + str(options.insert_p_value)+ "\n" )
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN DELETE PREDICTIVE VALUE:\t" + str(options.delete_p_value)+ "\n" )
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SNP QV CUTOFF FOR RE-GENOTYPING:\t" + str(options.snp_q_cutoff)+ "\n" )
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SNP QV CUTOFF FOR RE-GENOTYPING:\t" + str(options.indel_q_cutoff)+ "\n" )
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: INDEL QV CUTOFF FOR RE-GENOTYPING:\t" + str(options.indel_q_cutoff)+ "\n" )
 
     return options

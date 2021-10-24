@@ -115,7 +115,6 @@ class VCFWriter:
             alleles = tuple([ref_seq]) + tuple(alleles)
             qual = max(1, int(-10 * math.log10(max(0.000000001, 1.0 - genotype_probability))))
             alt_qual = max(1, int(-10 * math.log10(max(0.000000001, 1.0 - genotype_probability))))
-
             failed_variant = False
             if max_alt_len == 1:
                 # this is a SNP
