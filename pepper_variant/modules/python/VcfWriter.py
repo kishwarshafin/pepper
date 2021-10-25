@@ -124,10 +124,16 @@ class VCFWriter:
                 if qual <= options.indel_q_cutoff:
                     failed_variant = True
 
-            if calling_mode == 1 and failed_variant:
-                continue
-            if calling_mode == 2 and not failed_variant:
-                continue
+            # Mode 1 are variants we will NOT re-genotype. Mode 2 is the variants selected for re-genotyping.
+            if genotype == [0, 0]:
+                # all variants that could not be genotyped, we will always re-genotype them
+                if calling_mode == 1:
+                    continue
+            else:
+                if calling_mode == 1 and failed_variant:
+                    continue
+                if calling_mode == 2 and not failed_variant:
+                    continue
 
             vafs = [round(ad/max(1, depth), 3) for ad in variant_allele_support]
 
