@@ -14,7 +14,7 @@ def set_parameters(options):
         # image generation
         if options.sub_command in ['call_variant', 'make_images']:
             if options.min_mapq is None:
-                options.min_mapq = 5
+                options.min_mapq = 1
             if options.min_baseq is None:
                 options.min_baseq = 1
             if options.snp_frequency is None:
@@ -30,7 +30,7 @@ def set_parameters(options):
             if options.snp_candidate_frequency_threshold is None:
                 options.snp_candidate_frequency_threshold = 0.10
             if options.indel_candidate_frequency_threshold is None:
-                options.indel_candidate_frequency_threshold = 0.12
+                options.indel_candidate_frequency_threshold = 0.10
             if not options.skip_indels:
                 options.skip_indels = False
         # candidate finding
@@ -40,9 +40,9 @@ def set_parameters(options):
             if options.snp_p_value is None:
                 options.snp_p_value = 0.1
             if options.insert_p_value is None:
-                options.insert_p_value = 0.3
+                options.insert_p_value = 0.1
             if options.delete_p_value is None:
-                options.delete_p_value = 0.2
+                options.delete_p_value = 0.1
             if options.snp_q_cutoff is None:
                 options.snp_q_cutoff = 20
             if options.indel_q_cutoff is None:
@@ -136,7 +136,7 @@ def set_parameters(options):
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN SNP CANDIDATE FREQUENCY:\t" + str(options.snp_candidate_frequency_threshold) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN INDEL CANDIDATE FREQUENCY:\t" + str(options.indel_candidate_frequency_threshold) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SKIP INDEL CANDIDATES:\t\t" + str(options.skip_indels) + "\n")
-    else:
+    if options.sub_command in ['call_variant', 'find_candidates']:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MAX ALLOWED CANDIDATE IN ONE SITE:\t" + str(options.allowed_multiallelics) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN SNP PREDICTIVE VALUE:\t\t" + str(options.snp_p_value) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN INSERT PREDICTIVE VALUE:\t" + str(options.insert_p_value) + "\n")
