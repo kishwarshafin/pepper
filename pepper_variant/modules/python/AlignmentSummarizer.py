@@ -104,7 +104,7 @@ class AlignmentSummarizer:
                                                        region_end + 1,
                                                        options.include_supplementary,
                                                        options.min_mapq,
-                                                       options.min_baseq)
+                                                       options.min_snp_baseq)
 
                 total_reads = len(all_reads)
                 total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, options.downsample_rate * total_reads))
@@ -144,7 +144,8 @@ class AlignmentSummarizer:
                 regional_summary.generate_labels(truth_hap1_records, truth_hap2_records)
 
                 candidate_image_summary = regional_summary.generate_summary(all_reads,
-                                                                            options.min_baseq,
+                                                                            options.min_snp_baseq,
+                                                                            options.min_indel_baseq,
                                                                             options.snp_frequency,
                                                                             options.insert_frequency,
                                                                             options.delete_frequency,
@@ -185,7 +186,7 @@ class AlignmentSummarizer:
                                                    region_end,
                                                    options.include_supplementary,
                                                    options.min_mapq,
-                                                   options.min_baseq)
+                                                   options.min_snp_baseq)
 
             total_reads = len(all_reads)
             total_allowed_reads = int(min(AlingerOptions.MAX_READS_IN_REGION, options.downsample_rate * total_reads))
@@ -220,7 +221,8 @@ class AlignmentSummarizer:
             regional_summary.generate_max_insert_summary(all_reads)
 
             candidate_image_summary = regional_summary.generate_summary(all_reads,
-                                                                        options.min_baseq,
+                                                                        options.min_snp_baseq,
+                                                                        options.min_indel_baseq,
                                                                         options.snp_frequency,
                                                                         options.insert_frequency,
                                                                         options.delete_frequency,

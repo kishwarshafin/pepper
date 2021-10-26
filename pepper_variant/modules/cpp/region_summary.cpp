@@ -361,7 +361,8 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                                                        vector< map<string, int> > &AlleleFrequencyMapRevStrand,
                                                        vector< set<string> > &AlleleMap,
                                                        type_read read,
-                                                       double min_baseq) {
+                                                       double min_snp_baseq,
+                                                       double min_indel_baseq) {
     int read_index = 0;
     long long ref_position = read.pos;
     int cigar_index = 0;
@@ -391,10 +392,10 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                         int feature_index = get_feature_index(ref_base, base, read.flags.is_reverse);
 
                         // update the summary of base
-                        if(base_quality >= min_baseq)
+                        if(base_quality >= min_snp_baseq)
                             coverage_vector[ref_position - ref_start] += 1;
 
-                        if(ref_base != base && base_quality >= min_baseq) {
+                        if(ref_base != base && base_quality >= min_snp_baseq) {
                             snp_count[ref_position - ref_start] += 1;
                             image_matrix[base_index][feature_index] += 1;
                             // save the candidate
@@ -449,7 +450,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     }
 
                     // exclude reads which are not usable
-                    if(base_quality < min_baseq * len && read.base_qualities[read_index - 1] >= min_baseq)
+                    if(base_quality < min_indel_baseq * len && read.base_qualities[read_index - 1] >= min_snp_baseq)
                         coverage_vector[ref_position - 1 - ref_start] -= 1;
                     // cout<<ref_position - 1 <<" "<<alt<<" "<< len <<" "<<base_quality << " "<< min_baseq * len<<" "<<endl;
 
@@ -458,7 +459,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     string candidate_string = char(AlleleType::INSERT_ALLELE + '0') + alt;
 
                     // only process candidates that are smaller than 50bp as they 50bp+ means SV
-                    if(candidate_string.length() <= 61 && base_quality >= min_baseq * len) {
+                    if(candidate_string.length() <= 61 && base_quality >= min_indel_baseq * len) {
                         insert_count[ref_position - 1 - ref_start] += 1;
                         int region_index = (int) (ref_position - 1 - ref_start);
 
@@ -564,7 +565,8 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
 }
 
 vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector <type_read> &reads,
-                                                                         double min_baseq,
+                                                                         double min_snp_baseq,
+                                                                         double min_indel_baseq,
                                                                          double snp_freq_threshold,
                                                                          double insert_freq_threshold,
                                                                          double delete_freq_threshold,
@@ -617,7 +619,7 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
         // this populates base_summaries and insert_summaries dictionaries
         if(read.mapping_quality > 0) {
             populate_summary_matrix(image_matrix, coverage_vector, snp_count, insert_count, delete_count,
-                                    AlleleFrequencyMap, AlleleFrequencyMapFwdStrand, AlleleFrequencyMapRevStrand, AlleleMap, read, min_baseq);
+                                    AlleleFrequencyMap, AlleleFrequencyMapFwdStrand, AlleleFrequencyMapRevStrand, AlleleMap, read, min_snp_baseq, min_indel_baseq);
         }
     }
 

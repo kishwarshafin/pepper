@@ -82,11 +82,18 @@ def add_make_images_arguments(parser):
         help="Minimum mapping quality for read to be considered valid. Default is 5"
     )
     parser.add_argument(
-        "--min_baseq",
+        "--min_snp_baseq",
         type=int,
         required=False,
         default=None,
-        help="Minimum base quality for base to be considered valid. Default is 1"
+        help="Minimum base quality for base to be considered valid for snp."
+    )
+    parser.add_argument(
+        "--min_indel_baseq",
+        type=int,
+        required=False,
+        default=None,
+        help="Minimum base quality for base to be considered valid for indels."
     )
     parser.add_argument(
         "--snp_frequency",

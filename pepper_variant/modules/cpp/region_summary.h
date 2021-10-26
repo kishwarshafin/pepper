@@ -177,7 +177,8 @@ public:
                                  vector< map<string, int> > &AlleleFrequencyMapRevStrand,
                                  vector< set<string> > &AlleleMap,
                                  type_read read,
-                                 double min_baseq);
+                                 double min_snp_baseq,
+                                 double min_indel_baseq);
 
 
     static int get_feature_index(char ref_base, char base, bool is_reverse);
@@ -187,7 +188,8 @@ public:
     void debug_candidate_summary(CandidateImageSummary candidate, int small_chunk_size, bool train_mode);
 
     vector<CandidateImageSummary> generate_summary(vector <type_read> &reads,
-                                                   double min_baseq,
+                                                   double min_snp_baseq,
+                                                   double min_indel_baseq,
                                                    double snp_freq_threshold,
                                                    double insert_freq_threshold,
                                                    double delete_freq_threshold,
