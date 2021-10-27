@@ -49,7 +49,7 @@ class VCFWriter:
             normalized_candidates.append((contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions))
 
         candidates = normalized_candidates
-        gt_qual = 1.0
+        gt_qual = 0.0
         genotype_hp1 = []
         genotype_hp2 = []
 
@@ -67,7 +67,7 @@ class VCFWriter:
             contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions = candidate
             # print(contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions)
             predicted_genotype = np.argmax(predictions)
-            gt_qual = min(gt_qual, predictions[predicted_genotype])
+            gt_qual = max(gt_qual, 1.0 - predictions[0])
 
             if not all_initialized:
                 site_contig = contig
@@ -115,8 +115,8 @@ class VCFWriter:
             max_alt_len = max(len(ref_seq), max([len(x) for x in alleles]))
             last_position = ref_start
             alleles = tuple([ref_seq]) + tuple(alleles)
-            qual = max(1, int(-10 * math.log10(max(0.000000001, 1.0 - genotype_probability))))
-            alt_qual = max(1, int(-10 * math.log10(max(0.000000001, 1.0 - genotype_probability))))
+            qual = max(1, int(-10 * math.log10(1.0 - genotype_probability)))
+
             failed_variant = False
             if max_alt_len == 1:
                 # this is a SNP
@@ -141,12 +141,12 @@ class VCFWriter:
                 vcf_record = self.vcf_file_full.new_record(contig=str(contig), start=ref_start,
                                                            stop=ref_end, id='.', qual=qual,
                                                            filter='refCall', alleles=alleles, GT=genotype,
-                                                           AP=alt_qual, GQ=alt_qual, DP=depth, AD=variant_allele_support, VAF=vafs)
+                                                           AP=qual, GQ=qual, DP=depth, AD=variant_allele_support, VAF=vafs)
             else:
                 vcf_record = self.vcf_file_full.new_record(contig=str(contig), start=ref_start,
                                                            stop=ref_end, id='.', qual=qual,
                                                            filter='PASS', alleles=alleles, GT=genotype,
-                                                           AP=alt_qual, GQ=qual, DP=depth, AD=variant_allele_support, VAF=vafs)
+                                                           AP=qual, GQ=qual, DP=depth, AD=variant_allele_support, VAF=vafs)
 
             self.vcf_file_full.write(vcf_record)
             total_variants += 1
