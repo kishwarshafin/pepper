@@ -9,15 +9,16 @@ Candidate = collections.namedtuple('Candidate', 'chromosome_name pos_start pos_e
 
 
 class VCFWriter:
-    def __init__(self, all_contigs, reference_file_path, sample_name, output_dir, filename):
+    def __init__(self, all_contigs, reference_file_path, sample_name, output_dir, filename_full, filename_pepper, filename_variant_calling):
         self.fasta_handler = PEPPER_VARIANT.FASTA_handler(reference_file_path)
         contigs = self.fasta_handler.get_chromosome_names()
         contigs = [x for x in contigs if x in all_contigs]
         self.contigs = contigs
         self.vcf_header = self.get_vcf_header(sample_name, contigs)
         self.output_dir = output_dir
-        self.filename = filename
-        self.vcf_file = VariantFile(self.output_dir + self.filename + '.vcf', 'w', header=self.vcf_header)
+        self.vcf_file_full = VariantFile(self.output_dir + filename_full + '.vcf', 'w', header=self.vcf_header)
+        self.vcf_file_pepper = VariantFile(self.output_dir + filename_pepper + '.vcf', 'w', header=self.vcf_header)
+        self.vcf_file_variant_calling = VariantFile(self.output_dir + filename_variant_calling + '.vcf', 'w', header=self.vcf_header)
 
     def candidate_list_to_variant(self, candidates, options):
         candidates = sorted(candidates, key=lambda x: (x[5], x[8]), reverse=True)
@@ -98,7 +99,8 @@ class VCFWriter:
 
         return site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual
 
-    def write_vcf_records(self, variants_list, options, calling_mode):
+    def write_vcf_records(self, variants_list, options):
+        total_variants, total_variants_pepper, total_variants_variant_calling = 0, 0, 0
 
         last_position = -1
         for contig, position in sorted(variants_list):
@@ -124,32 +126,39 @@ class VCFWriter:
                 if qual <= options.indel_q_cutoff:
                     failed_variant = True
 
+            selected_for_variant_calling = False
             # Mode 1 are variants we will NOT re-genotype. Mode 2 is the variants selected for re-genotyping.
-            if genotype == [0, 0]:
+            if genotype == [0, 0] or failed_variant:
                 # all variants that could not be genotyped, we will always re-genotype them
-                if calling_mode == 1:
-                    continue
-            else:
-                if calling_mode == 1 and failed_variant:
-                    continue
-                if calling_mode == 2 and not failed_variant:
-                    continue
+                selected_for_variant_calling = True
 
             vafs = [round(ad/max(1, depth), 3) for ad in variant_allele_support]
 
             # print(str(contig), ref_start, ref_end, qual, 'refCall', alleles, genotype, alt_qual, alt_qual, depth, variant_allele_support, vafs)
-            if genotype == [0, 0]:
-                vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
-                                                      stop=ref_end, id='.', qual=qual,
-                                                      filter='refCall', alleles=alleles, GT=genotype,
-                                                      AP=alt_qual, GQ=alt_qual, DP=depth, AD=variant_allele_support, VAF=vafs)
-            else:
-                vcf_record = self.vcf_file.new_record(contig=str(contig), start=ref_start,
-                                                      stop=ref_end, id='.', qual=qual,
-                                                      filter='PASS', alleles=alleles, GT=genotype,
-                                                      AP=alt_qual, GQ=qual, DP=depth, AD=variant_allele_support, VAF=vafs)
 
-            self.vcf_file.write(vcf_record)
+            # always put things in all vcf
+            if genotype == [0, 0]:
+                vcf_record = self.vcf_file_full.new_record(contig=str(contig), start=ref_start,
+                                                           stop=ref_end, id='.', qual=qual,
+                                                           filter='refCall', alleles=alleles, GT=genotype,
+                                                           AP=alt_qual, GQ=alt_qual, DP=depth, AD=variant_allele_support, VAF=vafs)
+            else:
+                vcf_record = self.vcf_file_full.new_record(contig=str(contig), start=ref_start,
+                                                           stop=ref_end, id='.', qual=qual,
+                                                           filter='PASS', alleles=alleles, GT=genotype,
+                                                           AP=alt_qual, GQ=qual, DP=depth, AD=variant_allele_support, VAF=vafs)
+
+            self.vcf_file_full.write(vcf_record)
+            total_variants += 1
+
+            if selected_for_variant_calling:
+                self.vcf_file_variant_calling.write(vcf_record)
+                total_variants_variant_calling += 1
+            else:
+                self.vcf_file_pepper.write(vcf_record)
+                total_variants_pepper += 1
+
+        return total_variants, total_variants_pepper, total_variants_variant_calling
 
     def get_vcf_header(self, sample_name, contigs):
         header = VariantHeader()

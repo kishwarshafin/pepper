@@ -270,4 +270,8 @@ def add_call_variant_arguments(parser):
                                default=False,
                                action='store_true',
                                help="Set to call variants on PacBio CLR reads.")
+    profile_group.add_argument("--ont_R10_q20",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on ONT R10.4 Q20+ reads.")
     return parser

@@ -61,7 +61,7 @@ def main():
     options.truth_vcf = None
     options.random_draw_probability = 1.0
 
-    if options.sub_command != 'merge_variants':
+    if options.sub_command in ['call_variant', 'make_images', 'find_candidates']:
         options = set_parameters(options)
 
     if options.sub_command == 'call_variant':

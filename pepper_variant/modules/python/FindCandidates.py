@@ -166,7 +166,6 @@ def candidate_finder(options, input_dir, output_path):
                 for batch in batches:
                     all_prediction_pair.append((prediction_file, batch))
 
-    vcf_file_name_phasing = "PEPPER_VARIANT_OUTPUT_PHASING"
     vcf_file_name_full = "PEPPER_VARIANT_FULL"
     vcf_file_name_variant_calling = "PEPPER_VARIANT_OUTPUT_VARIANT_CALLING"
     vcf_file_name_pepper = "PEPPER_VARIANT_OUTPUT_PEPPER"
@@ -177,24 +176,17 @@ def candidate_finder(options, input_dir, output_path):
     contigs, selected_candidates_phasing, selected_candidates_variant_calling = find_candidates(options, input_dir, all_prediction_pair)
     end_time = time.time()
 
-    vcf_file_phasing = VCFWriter(contigs, options.fasta, options.sample_name, output_path, vcf_file_name_phasing)
-    vcf_file_variant_calling = VCFWriter(contigs, options.fasta, options.sample_name, output_path, vcf_file_name_variant_calling)
-    vcf_file_pepper = VCFWriter(contigs, options.fasta, options.sample_name, output_path, vcf_file_name_pepper)
-    vcf_file_full = VCFWriter(contigs, options.fasta, options.sample_name, output_path, vcf_file_name_full)
+    vcf_file_full = VCFWriter(contigs, options.fasta, options.sample_name, output_path, vcf_file_name_full, vcf_file_name_pepper, vcf_file_name_variant_calling)
 
     mins = int((end_time - local_start_time) / 60)
     secs = int((end_time - local_start_time)) % 60
 
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL CANDIDATES FOUND FOR PHASING: "
-                     + str(len(selected_candidates_phasing)) + " TOTAL TIME SPENT: " + str(mins) + " Min " + str(secs) + " Sec\n")
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL CANDIDATES FOUND FOR VARIANT CALLING: "
-                     + str(len(selected_candidates_variant_calling)) + " TOTAL TIME SPENT: " + str(mins) + " Min " + str(secs) + " Sec\n")
-
-    vcf_file_phasing.write_vcf_records(selected_candidates_phasing, options, calling_mode=0)
-    vcf_file_full.write_vcf_records(selected_candidates_variant_calling, options, calling_mode=0)
-    vcf_file_pepper.write_vcf_records(selected_candidates_variant_calling, options, calling_mode=1)
-    vcf_file_variant_calling.write_vcf_records(selected_candidates_variant_calling, options, calling_mode=2)
-
+    # vcf_file_phasing.write_vcf_records(selected_candidates_phasing, options, calling_mode=0)
+    total_variants, total_pepper, total_variant_calling = vcf_file_full.write_vcf_records(selected_candidates_variant_calling, options)
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL CANDIDATES FOUND: " + str(total_variants) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL VARIANTS IN PEPPER: " + str(total_pepper) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL VARIANTS SELECTED FOR RE-GENOTYPING: " + str(total_variant_calling) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL TIME SPENT ON CANDIDATE FINDING: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
 
 def process_candidates(options, input_dir, output_dir):
