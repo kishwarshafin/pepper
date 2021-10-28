@@ -118,17 +118,17 @@ def set_parameters(options):
         if options.sub_command in ['call_variant', 'find_candidates']:
             # candidate finding
             if options.allowed_multiallelics is None:
-                options.allowed_multiallelics = 4
+                options.allowed_multiallelics = 3
             if options.snp_p_value is None:
                 options.snp_p_value = 0.1
             if options.insert_p_value is None:
-                options.insert_p_value = 0.001
+                options.insert_p_value = 0.1
             if options.delete_p_value is None:
                 options.delete_p_value = 0.1
             if options.snp_q_cutoff is None:
-                options.snp_q_cutoff = 10
+                options.snp_q_cutoff = 15
             if options.indel_q_cutoff is None:
-                options.indel_q_cutoff = 20
+                options.indel_q_cutoff = 15
     elif options.clr:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CLR VARIANT CALLING MODE SELECTED.\n")
         # image generation

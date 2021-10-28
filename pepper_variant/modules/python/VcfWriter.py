@@ -62,12 +62,13 @@ class VCFWriter:
         site_alts = []
         site_supports = []
         site_qualities = []
-
+        all_predictions = []
         for i, candidate in enumerate(candidates):
             contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions = candidate
             # print(contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions)
             predicted_genotype = np.argmax(predictions)
             gt_qual = max(gt_qual, 1.0 - predictions[0])
+            all_predictions.append(predictions)
 
             if not all_initialized:
                 site_contig = contig
@@ -94,6 +95,8 @@ class VCFWriter:
             gt = genotype_hp1 + genotype_hp2
             if len(gt) == 1:
                 gt = [0, gt[0]]
+        elif len(genotype_hp1) + len(genotype_hp2) > 2:
+            gt = [1, 2]
         else:
             gt = [0, 0]
 
