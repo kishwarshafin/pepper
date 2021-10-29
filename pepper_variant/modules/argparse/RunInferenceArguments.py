@@ -95,16 +95,16 @@ def add_run_inference_arguments(parser):
         help="If set then predictions will be imitated from the training set. [DEBUG MODE]"
     )
     profile_group = parser.add_mutually_exclusive_group(required=True)
-    profile_group.add_argument("--ont",
+    profile_group.add_argument("--ont_r9_guppy5_sup",
                                default=False,
                                action='store_true',
-                               help="Set to call variants on Oxford Nanopore reads.")
+                               help="Set to call variants on R9.4.1 Guppy 5+ sup Oxford Nanopore reads.")
+    profile_group.add_argument("--ont_r10_q20",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on R10.4 Q20 Oxford Nanopore reads.")
     profile_group.add_argument("--hifi",
                                default=False,
                                action='store_true',
                                help="Set to call variants on PacBio HiFi reads.")
-    profile_group.add_argument("--clr",
-                               default=False,
-                               action='store_true',
-                               help="Set to call variants on PacBio CLR reads.")
     return parser

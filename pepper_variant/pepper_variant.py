@@ -22,7 +22,7 @@ def main():
     2) Call consensus
     3) Stitch
     """
-    parser = argparse.ArgumentParser(description='PEPPER VARIANT is the variant calling module of PEPPER. This new module does not depend on haplotyping of the reads.',
+    parser = argparse.ArgumentParser(description='PEPPER VARIANT is the variant calling module of PEPPER.',
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
         "--version",
