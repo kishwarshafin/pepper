@@ -38,15 +38,15 @@ def set_parameters(options):
         # candidate finding
         if options.sub_command in ['call_variant', 'find_candidates']:
             if options.allowed_multiallelics is None:
-                options.allowed_multiallelics = 2
+                options.allowed_multiallelics = 3
             if options.snp_p_value is None:
-                options.snp_p_value = 0.35
+                options.snp_p_value = 0.3
             if options.insert_p_value is None:
-                options.insert_p_value = 0.30
+                options.insert_p_value = 0.35
             if options.delete_p_value is None:
                 options.delete_p_value = 0.35
             if options.snp_q_cutoff is None:
-                options.snp_q_cutoff = 5
+                options.snp_q_cutoff = 10
             if options.indel_q_cutoff is None:
                 options.indel_q_cutoff = 10
     if options.ont_r10_q20:
