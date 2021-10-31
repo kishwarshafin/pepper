@@ -40,7 +40,7 @@ def set_parameters(options):
             if options.allowed_multiallelics is None:
                 options.allowed_multiallelics = 3
             if options.snp_p_value is None:
-                options.snp_p_value = 0.3
+                options.snp_p_value = 0.25
             if options.insert_p_value is None:
                 options.insert_p_value = 0.35
             if options.delete_p_value is None:
