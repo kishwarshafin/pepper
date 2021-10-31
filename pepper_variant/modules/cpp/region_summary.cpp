@@ -392,9 +392,9 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                         int feature_index = get_feature_index(ref_base, base, read.flags.is_reverse);
 
                         // update the summary of base
-//                        if(base_quality >= min_snp_baseq)
-//                            coverage_vector[ref_position - ref_start] += 1;
-                        coverage_vector[ref_position - ref_start] += 1;
+                        if(base_quality >= min_snp_baseq)
+                            coverage_vector[ref_position - ref_start] += 1;
+
                         if(ref_base != base && base_quality >= min_snp_baseq) {
                             snp_count[ref_position - ref_start] += 1;
                             image_matrix[base_index][feature_index] += 1;
@@ -450,9 +450,8 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     }
 
                     // exclude reads which are not usable
-                    // This update may have broken ONT, checking now (USE ONLY FOR HIFI)
-//                    if(base_quality < min_indel_baseq * len && read.base_qualities[read_index - 1] >= min_snp_baseq)
-//                        coverage_vector[ref_position - 1 - ref_start] -= 1;
+                    if(base_quality < min_indel_baseq * len && read.base_qualities[read_index - 1] >= min_snp_baseq)
+                        coverage_vector[ref_position - 1 - ref_start] -= 1;
                     // cout<<ref_position - 1 <<" "<<alt<<" "<< len <<" "<<base_quality << " "<< min_baseq * len<<" "<<endl;
 
 
