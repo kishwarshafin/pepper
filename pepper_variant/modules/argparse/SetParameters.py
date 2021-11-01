@@ -16,7 +16,7 @@ def set_parameters(options):
             if options.min_mapq is None:
                 options.min_mapq = 5
             if options.min_snp_baseq is None:
-                options.min_snp_baseq = 1
+                options.min_snp_baseq = 5
             if options.min_indel_baseq is None:
                 options.min_indel_baseq = 5
             if options.snp_frequency is None:
