@@ -38,7 +38,7 @@ def set_parameters(options):
         # candidate finding
         if options.sub_command in ['call_variant', 'find_candidates']:
             if options.allowed_multiallelics is None:
-                options.allowed_multiallelics = 3
+                options.allowed_multiallelics = 4
             if options.snp_p_value is None:
                 options.snp_p_value = 0.3
             if options.insert_p_value is None:
