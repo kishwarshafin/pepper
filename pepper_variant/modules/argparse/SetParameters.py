@@ -46,7 +46,7 @@ def set_parameters(options):
             if options.delete_p_value is None:
                 options.delete_p_value = 0.4
             if options.snp_q_cutoff is None:
-                options.snp_q_cutoff = 17
+                options.snp_q_cutoff = 20
             if options.indel_q_cutoff is None:
                 options.indel_q_cutoff = 15
     if options.ont_r10_q20:
