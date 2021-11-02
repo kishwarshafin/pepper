@@ -40,15 +40,15 @@ def set_parameters(options):
             if options.allowed_multiallelics is None:
                 options.allowed_multiallelics = 3
             if options.snp_p_value is None:
-                options.snp_p_value = 0.25
+                options.snp_p_value = 0.3
             if options.insert_p_value is None:
-                options.insert_p_value = 0.35
+                options.insert_p_value = 0.4
             if options.delete_p_value is None:
-                options.delete_p_value = 0.35
+                options.delete_p_value = 0.4
             if options.snp_q_cutoff is None:
-                options.snp_q_cutoff = 10
+                options.snp_q_cutoff = 17
             if options.indel_q_cutoff is None:
-                options.indel_q_cutoff = 10
+                options.indel_q_cutoff = 15
     if options.ont_r10_q20:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING MODE SELECTED.\n")
         # image generation
