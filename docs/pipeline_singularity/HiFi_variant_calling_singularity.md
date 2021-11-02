@@ -1,13 +1,13 @@
 ## PacBio HiFi variant calling workflow [Using singularity]
 PEPPER-Margin-DeepVariant is a haplotype-aware variant calling pipeline for long reads.
 
-<img src="../../img/PMDV_variant_calling_HiFi.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow">
+<img src="../../img/PMDV_variant_calling_HiFi_v6.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow">
 
 ----
 ### PacBio HiFi HG002 chr20 case-study
 We evaluated this pipeline on `~35x` HG002 data.
 ```bash
-Sample:     HG002
+Sample:     HG003
 Coverage:   ~35x
 Region:     chr20
 Reference:  GRCh38_no_alt
@@ -64,7 +64,8 @@ BASE="${HOME}/hifi-case-study"
 # Set up input data
 INPUT_DIR="${BASE}/input/data"
 REF="GRCh38_no_alt.chr20.fa"
-BAM="HG002_PacBio_HiFi_35x_2_GRCh38_no_alt.chr20.bam"
+BAM="HG003.GRCh38.chr20.pFDA_truthv2.bam"
+OUTPUT_VCF="PEPPER_MARGIN_DEEPVARIANT_OUTPUT.vcf.gz"
 
 # Set the number of CPUs to use
 THREADS="64"
@@ -75,10 +76,11 @@ OUTPUT_DIR="${BASE}/output"
 ## Create local directory structure
 mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${INPUT_DIR}"
+mkdir -p input
 
 # Download the data to input directory
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_PacBio_HiFi_35x_2_GRCh38_no_alt.chr20.bam
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_PacBio_HiFi_35x_2_GRCh38_no_alt.chr20.bam.bai
+wget -P ${INPUT_DIR} https://downloads.pacbcloud.com/public/dataset/HG003/deepvariant-case-study/HG003.GRCh38.chr20.pFDA_truthv2.bam
+wget -P ${INPUT_DIR} https://downloads.pacbcloud.com/public/dataset/HG003/deepvariant-case-study/HG003.GRCh38.chr20.pFDA_truthv2.bam.bai
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/GRCh38_no_alt.chr20.fa
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/GRCh38_no_alt.chr20.fa.fai
 ```
@@ -86,57 +88,17 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/us
 ##### Step 3: Run PEPPER-Margin to generate a phased bam
 ```bash
 ## Pull the docker image to sigularity, this is a 6.6GB download
-singularity pull docker://kishwars/pepper_deepvariant:r0.4
-
-# The pull command creates pepper_deepvariant_r0.4.sif file locally
+singularity pull docker://kishwars/pepper_deepvariant:r0.6
 
 # Run PEPPER-Margin-DeepVariant
 singularity exec --bind /usr/lib/locale/ \
-pepper_deepvariant_r0.4.sif \
+pepper_deepvariant_r0.6.sif \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
 -o "${OUTPUT_DIR}" \
 -t ${THREADS} \
---ccs
-
-# This generates a Phased bam in the output directory: MARGIN_PHASED.PEPPER_SNP_MARGIN.haplotagged.bam
-```
-##### Step 4: Run DeepVariant
-```bash
-PHASED_BAM=MARGIN_PHASED.PEPPER_SNP_MARGIN.haplotagged.bam
-OUTPUT_PREFIX="HG002_HiFi_35x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
-OUTPUT_VCF="HG002_HiFi_35x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
-
-singularity pull docker://google/deepvariant:1.1.0
-
-# The pull command creates deepvariant_1.1.0.sif file locally
-
-singularity exec --bind /usr/lib/locale/ \
-deepvariant_1.1.0.sif \
-/opt/deepvariant/bin/run_deepvariant \
---model_type=PACBIO \
---ref="${INPUT_DIR}/${REF}" \
---reads="${OUTPUT_DIR}/${PHASED_BAM}" \
---output_vcf="${OUTPUT_DIR}/${OUTPUT_VCF}" \
---num_shards=${THREADS} \
---use_hp_information
-```
-
-##### Step 5: Phase the output VCF with Margin (Optional)
-```bash
-singularity exec --bind /usr/lib/locale/ \
-pepper_deepvariant_r0.4.sif \
-margin phase \
-"${INPUT_DIR}/${BAM}" \
-"${INPUT_DIR}/${REF}" \
-"${OUTPUT_DIR}/${OUTPUT_VCF}" \
-/opt/margin_dir/params/misc/allParams.phase_vcf.json \
--t ${THREADS} \
--M \
--o "${OUTPUT_DIR}/${OUTPUT_PREFIX}"
-
-OUTPUT_PHASED_VCF=${OUTPUT_PREFIX}.phased.vcf
+--hifi
 ```
 
 ###### Evaluation using hap.py (Optional)
@@ -144,12 +106,13 @@ You can evaluate the variants using `hap.py`.
 Download benchmarking data:
 ```bash
 # Set up input data
-TRUTH_VCF="HG002_GRCh38_1_22_v4.2.1_benchmark.vcf.gz"
-TRUTH_BED="HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed"
+TRUTH_VCF="HG003_GRCh38_1_22_v4.2.1_benchmark.vcf.gz"
+TRUTH_BED="HG003_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed"
 
 # Download truth VCFs
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_GRCh38_1_22_v4.2.1_benchmark.vcf.gz
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed
+wget -P ${INPUT_DIR} ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/release/AshkenazimTrio/HG003_NA24149_father/NISTv4.2.1/GRCh38/HG003_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed
+wget -P ${INPUT_DIR} ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/release/AshkenazimTrio/HG003_NA24149_father/NISTv4.2.1/GRCh38/HG003_GRCh38_1_22_v4.2.1_benchmark.vcf.gz
+wget -P ${INPUT_DIR} ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/release/AshkenazimTrio/HG003_NA24149_father/NISTv4.2.1/GRCh38/HG003_GRCh38_1_22_v4.2.1_benchmark.vcf.gz.tbi
 ```
 
 Run hap.py:
@@ -178,8 +141,8 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 |  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives |  Recall  | Precision | F1-Score |
 |:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:--------:|:---------:|:--------:|
-| INDEL |      11256     |       11175       |         81         |         94         | 0.992804 |  0.991953 | 0.992378 |
-|  SNP  |      71333     |       71277       |         56         |          8         | 0.999215 |  0.999888 | 0.999551 |
+| INDEL |      10628     |       10560       |         68         |         60         | 0.993602 |  0.994576 | 0.994089 |
+|  SNP  |      70166     |       70140       |         26         |         18         | 0.999629 |  0.999744 | 0.999687 |
 
 ### Authors:
 This pipeline is developed in a collaboration between UCSC genomics institute and the genomics team at Google health.

@@ -10,7 +10,7 @@ We evaluated this pipeline on `~30x` HG002 data. The data is publicly available,
 ```bash
 Sample:     HG002
 Coverage:   ~25-90x
-Basecaller: Guppy 5.0.7 or higher
+Basecaller: Guppy 5.0.7 "SUP"
 Region:     chr20
 Reference:  GRCh38_no_alt
 ```
@@ -72,7 +72,7 @@ THREADS="64"
 # Set up output directory
 OUTPUT_DIR="${BASE}/output"
 OUTPUT_PREFIX="HG002_ONT_30x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
-OUTPUT_VCF="HG002_ONT_30x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
+OUTPUT_VCF="PEPPER_MARGIN_DEEPVARIANT_OUTPUT.vcf.gz"
 
 ## Create local directory structure
 mkdir -p "${OUTPUT_DIR}"
@@ -88,25 +88,19 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/us
 ##### Step 3: Run PEPPER-Margin-DeepVariant
 ```bash
 ## Pull the docker image.
-sudo docker pull kishwars/pepper_deepvariant:r0.5
+sudo docker pull kishwars/pepper_deepvariant:r0.6
 
 # Run PEPPER-Margin-DeepVariant
-sudo docker run --ipc=host \
+sudo docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.5 \
+kishwars/pepper_deepvariant:r0.6 \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
 -o "${OUTPUT_DIR}" \
--p "${OUTPUT_PREFIX}" \
--t ${THREADS} \
---ont
-
-# Optional parameters:
-# -s HG002 # optional: Sets Sample Name
-# --gvcf # optional: Produces gVCF output
-# --phased_output # optional: Produces phased output
+-t "${THREADS}" \
+--ont_r9_guppy5_sup # For R10.4 Q20 reads set: --ont_r10_q20
 ```
 
 ###### Evaluation using hap.py (Optional)
@@ -148,8 +142,8 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 |  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives |  Recall  | Precision | F1-Score |
 |:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:--------:|:---------:|:--------:|
-| INDEL |      11256     |        7136       |        4120        |        2137        | 0.633973 |  0.771688 | 0.696084 |
-|  SNP  |      71333     |       71004       |         329        |         322        | 0.995388 |  0.995487 | 0.995437 |
+| INDEL |      11256     |        6897       |        4359        |        1211        | 0.61274  |  0.853443 | 0.713333 |
+|  SNP  |      71333     |       71012       |         321        |         256        | 0.99550  |  0.996409 | 0.995954 |
 
 ### Authors:
 This pipeline is developed in a collaboration between UCSC genomics institute and the genomics team at Google health.
