@@ -100,7 +100,7 @@ run_pepper_margin_deepvariant call_variant \
 -f "${INPUT_DIR}/${REF}" \
 -o "${OUTPUT_DIR}" \
 -t "${THREADS}" \
---ont_r9_guppy5_sup # For R10.4 Q20 reads set: --ont_r10_q20
+--ont_r9_guppy5_sup
 ```
 
 ###### Evaluation using hap.py (Optional)

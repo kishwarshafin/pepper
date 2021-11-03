@@ -10,7 +10,7 @@ We evaluated this pipeline on `~30x` HG002 data.
 ```bash
 Sample:     HG002
 Coverage:   ~25-90x
-Basecaller: Guppy 5.0.7 or higher
+Basecaller: Guppy 5.0.7 SUP or higher
 Region:     chr20
 Reference:  GRCh38_no_alt
 ```

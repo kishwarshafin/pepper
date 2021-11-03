@@ -11,10 +11,10 @@
 ### Version 0.6 update
 
 PEPPER-Margin-deepvariant v0.6 supports:
-* Oxford Nanopore Variant calling for Guppy 5.0.7 "Sup" basecaller
-* Oxford Nanopore Variant calling for R10.4 Q20
-* PacBio-HiFi data
-
+* Oxford Nanopore Variant calling for Guppy 5.0.7 "Sup" basecaller.
+* Oxford Nanopore Variant calling for R10.4 Q20.
+* PacBio-HiFi variant calling.
+* Assembly-based structural variant calling method [HapDup](https://github.com/fenderglass/hapdup).
 ---
 
 ### How to cite
@@ -23,19 +23,28 @@ Please cite the following manuscript if you are using `PEPPER-Margin-DeepVariant
 
 <details>
 <summary><a href="https://www.nature.com/articles/s41592-021-01299-w"><b>Nature Methods:</b> Haplotype-aware variant calling enables high accuracy in nanopore long-reads using deep neural networks.</a></summary>
-Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey Kolesnikov, Sidharth Goel, <br/> Gunjan Baid, Jordan M Eizenga, Karen H Miga, Paolo Carnevali, Miten Jain, Andrew Carroll, Benedict Paten.
+Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey Kolesnikov, Sidharth Goel, <br/> Gunjan Baid, Mikhail Kolmogorov, Jordan M. Eizenga, Karen H. Miga, Paolo Carnevali, Miten Jain, Andrew Carroll & Benedict Paten.
 </details>
 
 ---
-### Quickstart
-Please follow the quickstart guides to assess your setup. Please follow case-study documentations for detailed instructions.
-#### Oxford Nanopore
-* **Docker**: [Oxford Nanopore variant calling quick start](./docs/quickstart/variant_calling_docker_quickstart.md).
-* **Singularity**: [Oxford Nanopore variant calling quick start](./docs/quickstart/variant_calling_singularity_quickstart.md).
+### How to run
+PEPPER-Margin-DeepVariant can be run using **Docker** or **Singularity**. A simple docker command looks like:
+```bash
+sudo docker run \
+-v "${INPUT_DIR}":"${INPUT_DIR}" \
+-v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
+kishwars/pepper_deepvariant:r0.6 \
+run_pepper_margin_deepvariant call_variant \
+-b "${INPUT_DIR}/${BAM}" \
+-f "${INPUT_DIR}/${REF}" \
+-o "${OUTPUT_DIR}" \
+-t "${THREADS}" \
+--ont_r9_guppy5_sup
 
-#### PacBio-HiFi
-* **Docker**: [Oxford Nanopore variant calling quick start](./docs/quickstart/variant_calling_docker_quickstart.md).
-* **Singularity**: [Oxford Nanopore variant calling quick start](./docs/quickstart/variant_calling_singularity_quickstart.md).
+# --ont_r9_guppy5_sup is preset for ONT R9.4.1 Guppy 5 "Sup" basecaller
+# for ONT R10.4 Q20 reads: --ont_r10_q20
+# for PacBio-HiFi reads: --hifi
+```
 
 ### Case studies
 
@@ -45,10 +54,11 @@ The variant calling pipeline can be run on [Docker](https://docs.docker.com/inst
 The case-studies include input data and benchmarking of the run:
 * Nanopore variant calling using **Docker**: [Link](./docs/pipeline_docker/ONT_variant_calling.md)
 * Nanopore variant calling using **Singularity**: [Link](./docs/pipeline_singularity/ONT_variant_calling_singularity.md)
+* **Nanopore R10.4 Q20** variant calling: [Link](./docs/pipeline_docker/ONT_variant_calling_r10_q20.md)
 
 #### PacBio-HiFi variant calling
-* Nanopore variant calling using **Docker**: [Link](./docs/pipeline_docker/ONT_variant_calling.md)
-* Nanopore variant calling using **Singularity**: [Link](./docs/pipeline_singularity/ONT_variant_calling_singularity.md)
+* PacBio-HiFi variant calling using **Docker**: [Link](./docs/pipeline_docker/HiFi_variant_calling.md)
+* PacBio-HiFi variant calling using **Singularity**: [Link](./docs/pipeline_singularity/HiFi_variant_calling_singularity.md)
 
 ### License
 [PEPPER license](./LICENSE), [Margin License](https://github.com/UCSC-nanopore-cgl/margin/blob/master/LICENSE.txt) and [DeepVariant License](https://github.com/google/deepvariant/blob/r1.1/LICENSE) extend to the trained models (PEPPER, Margin and DeepVariant) and container environment (Docker and Singularity).
