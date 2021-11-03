@@ -48,7 +48,7 @@ run_pepper_margin_deepvariant call_variant \
 
 ### Case studies
 
-The variant calling pipeline can be run on [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) or [Singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps). The case studies are designed on `chr20` of `HG002` sample.
+The variant calling pipeline can be run on [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) or [Singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps). The case studies are designed on `chr20` of `HG002` sample for ONT and `HG003` for PacBio-HiFi.
 
 #### Oxford Nanopore Variant calling
 The case-studies include input data and benchmarking of the run:
