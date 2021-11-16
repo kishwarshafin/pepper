@@ -92,45 +92,30 @@ class TrainModule:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n")
                 exit()
 
-        if self.use_hp_info:
-            train_distributed_hp(self.train_file,
-                                 self.test_file,
-                                 self.batch_size,
-                                 self.epochs,
-                                 self.gpu_mode,
-                                 self.num_workers,
-                                 self.retrain_model,
-                                 self.retrain_model_path,
-                                 self.gru_layers,
-                                 self.hidden_size,
-                                 self.learning_rate,
-                                 self.weight_decay,
-                                 self.model_dir,
-                                 self.stats_dir,
-                                 device_ids,
-                                 total_callers,
-                                 train_mode=True)
-        else:
-            # train a SNP model
-            train_distributed(self.train_file,
-                              self.test_file,
-                              self.batch_size,
-                              self.test_batch_size,
-                              self.step_size,
-                              self.epochs,
-                              self.gpu_mode,
-                              self.num_workers,
-                              self.retrain_model,
-                              self.retrain_model_path,
-                              self.gru_layers,
-                              self.hidden_size,
-                              self.learning_rate,
-                              self.weight_decay,
-                              self.model_dir,
-                              self.stats_dir,
-                              device_ids,
-                              total_callers,
-                              train_mode=True)
+        if self.use_hp_info == 0:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: PEPPER HP TRAINING INITIATED.\n")
+            sys.stderr.flush()
+
+        train_distributed(self.train_file,
+                          self.test_file,
+                          self.batch_size,
+                          self.test_batch_size,
+                          self.step_size,
+                          self.epochs,
+                          self.gpu_mode,
+                          self.num_workers,
+                          self.retrain_model,
+                          self.retrain_model_path,
+                          self.gru_layers,
+                          self.hidden_size,
+                          self.learning_rate,
+                          self.weight_decay,
+                          self.model_dir,
+                          self.stats_dir,
+                          device_ids,
+                          total_callers,
+                          self.use_hp_info,
+                          train_mode=True)
 
 
 def handle_output_directory(output_dir):

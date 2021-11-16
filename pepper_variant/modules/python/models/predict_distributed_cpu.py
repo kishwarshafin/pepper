@@ -13,7 +13,7 @@ from numpy import argmax
 
 from pepper_variant.modules.python.models.dataloader_predict import SequenceDataset
 from pepper_variant.modules.python.models.ModelHander import ModelHandler
-from pepper_variant.modules.python.Options import ImageSizeOptions, TrainOptions
+from pepper_variant.modules.python.Options import ImageSizeOptions, ImageSizeOptionsHP, TrainOptions
 from pepper_variant.modules.python.DataStorePredict import DataStore
 
 
@@ -67,9 +67,10 @@ def predict(options, input_filepath, file_chunks, output_filepath, threads, thre
                           ort_session.get_inputs()[1].name: hidden.cpu().numpy(),
                           ort_session.get_inputs()[2].name: cell_state.cpu().numpy()}
             # the return value comes as a list
-            output_base = ort_session.run(None, ort_inputs)[0]
+            outputs = ort_session.run(None, ort_inputs)
+            output_base, output_type = tuple(outputs)
 
-            prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_base)
+            prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_type)
 
             batch_completed += 1
 
@@ -144,15 +145,20 @@ def predict_distributed_cpu(options, filepath, file_chunks, output_filepath, tot
     :return: Prediction dictionary
     """
     # predict_pytorch(filepath, file_chunks[0],  output_filepath, model_path, batch_size, num_workers, threads_per_caller)
+    if options.use_hp_info:
+        image_features = ImageSizeOptionsHP.IMAGE_HEIGHT
+    else:
+        image_features = ImageSizeOptions.IMAGE_HEIGHT
+
     transducer_model, hidden_size, gru_layers, prev_ite = \
         ModelHandler.load_simple_model_for_training(options.model_path,
-                                                    image_features=ImageSizeOptions.IMAGE_HEIGHT,
+                                                    image_features=image_features,
                                                     num_classes=ImageSizeOptions.TOTAL_LABELS,
                                                     num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
     transducer_model.eval()
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL LOADING TO ONNX\n")
-    x = torch.zeros(1, ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1, ImageSizeOptions.IMAGE_HEIGHT)
+    x = torch.zeros(1, ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1, image_features)
     h = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
     c = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
@@ -163,11 +169,12 @@ def predict_distributed_cpu(options, filepath, file_chunks, output_filepath, tot
                           opset_version=11,
                           do_constant_folding=True,
                           input_names=['image', 'hidden', 'cell_state'],
-                          output_names=['output_base'],
+                          output_names=['output_base', 'output_type'],
                           dynamic_axes={'image': {0: 'batch_size'},
                                         'hidden': {0: 'batch_size'},
                                         'cell_state': {0: 'batch_size'},
-                                        'output_base': {0: 'batch_size'}})
+                                        'output_base': {0: 'batch_size'},
+                                        'output_type': {0: 'batch_size'}})
 
     if options.quantized:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL QUANTIZATION ENABLED. \n")

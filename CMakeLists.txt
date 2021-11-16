@@ -34,25 +34,6 @@ add_dependencies(PEPPER htslib)
 target_link_libraries(PEPPER PRIVATE z)
 target_link_libraries(PEPPER PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
 
-# PEPPER_SNP
-pybind11_add_module(PEPPER_SNP pepper_snp/modules/src/pybind_api.cpp)
-
-add_dependencies(PEPPER_SNP htslib)
-
-# add all the external libraries
-target_link_libraries(PEPPER_SNP PRIVATE z)
-target_link_libraries(PEPPER_SNP PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
-
-# PEPPER_HP
-pybind11_add_module(PEPPER_HP pepper_hp/modules/src/pybind_api.cpp)
-
-add_dependencies(PEPPER_HP htslib)
-
-# add all the external libraries
-target_link_libraries(PEPPER_HP PRIVATE z)
-target_link_libraries(PEPPER_HP PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
-
-
 # PEPPER_VARIANT
 pybind11_add_module(PEPPER_VARIANT pepper_variant/modules/cpp/pybind_api.cpp)
 

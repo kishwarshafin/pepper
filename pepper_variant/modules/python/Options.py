@@ -1,9 +1,5 @@
 class ConsensCandidateFinder(object):
     REGION_SAFE_BASES = 100
-    SNP_FREQUENCY = 0.10
-    INSERT_FREQUENCY = 0.15
-    DELETE_FREQUENCY = 0.15
-    MIN_COVERAGE_THRESHOLD = 5
 
 
 class ImageSizeOptions(object):
@@ -11,25 +7,24 @@ class ImageSizeOptions(object):
     IMAGE_CHANNELS = 1
     CANDIDATE_WINDOW_SIZE = 20
 
-    TOTAL_LABELS = 3
+    TOTAL_LABELS = 28
     TOTAL_TYPE_LABELS = 3
     MIN_SEQUENCE_LENGTH = 1000
-    MIN_IMAGE_OVERLAP = 100
     decoded_labels = ["HOM-REF", "HET-ALT", "HOM-ALT"]
-    class_weights = [1.0] * TOTAL_LABELS
-    # class_weights_type = [1.0] * TOTAL_TYPE_LABELS
-    # decoded_type_labels = ['RR', 'RS', 'RI', 'RD', 'SS', 'SI', 'SD', 'II', 'ID', 'DD']
+    decoded_base_labels = ["RR", "RA", "RC", "RT", "RG", "R*", "R#", "AA", "AC", "AT", "AG", "A*", "A#", "CC", "CT", "CG", "C*", "C#", "TT", "TG", "T*", "T#", "GG", "G*", "G#", "**", "*#", "##"]
 
 
 class ImageSizeOptionsHP(object):
-    IMAGE_HEIGHT = 14
-    IMAGE_CHANNEL_HEIGHT = 10
+    IMAGE_HEIGHT = 48
+    TOTAL_LABELS = 28
+    TOTAL_TYPE_LABELS = 3
+
+    CANDIDATE_WINDOW_SIZE = 20
     IMAGE_CHANNELS = 1
     SEQ_LENGTH = 1000
     SEQ_OVERLAP = 50
     LABEL_LENGTH = SEQ_LENGTH
 
-    TOTAL_LABELS = 5
     MIN_SEQUENCE_LENGTH = 1000
     MIN_IMAGE_OVERLAP = 100
 
@@ -92,7 +87,7 @@ class TrainOptions(object):
     TRAIN_WINDOW = 100
     WINDOW_JUMP = 50
     GRU_LAYERS = 1
-    HIDDEN_SIZE = 128
+    HIDDEN_SIZE = 256
 
 
 class AlingerOptions(object):

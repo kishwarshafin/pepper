@@ -35,6 +35,7 @@ class SequenceDataset(Dataset):
         input_files = get_file_paths_from_directory(image_directory)
         self.all_images = []
         self.all_base_labels = []
+        self.all_type_labels = []
 
         start_time = time.time()
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: STARTING TO LOAD IMAGES.\n")
@@ -47,8 +48,10 @@ class SequenceDataset(Dataset):
                     for summary_name in summary_names:
                         images = hdf5_file['summaries'][summary_name]['images'][()]
                         base_labels = hdf5_file['summaries'][summary_name]['base_labels'][()]
+                        type_labels = hdf5_file['summaries'][summary_name]['type_label'][()]
                         self.all_images.extend(images)
                         self.all_base_labels.extend(base_labels)
+                        self.all_type_labels.extend(type_labels)
 
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "]" + " INFO: IMAGE LOADING FINISHED.\n")
         sys.stderr.flush()
@@ -63,8 +66,9 @@ class SequenceDataset(Dataset):
         # load the image
         image = np.array(self.all_images[index])
         base_label = self.all_base_labels[index]
+        type_label = self.all_type_labels[index]
 
-        return image, base_label
+        return image, base_label, type_label
 
     def __len__(self):
         return len(self.all_images)

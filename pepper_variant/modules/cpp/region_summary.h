@@ -12,7 +12,8 @@
 #include <utility>
 
 namespace ImageOptionsRegion {
-    static constexpr int MAX_COLOR_VALUE = 254;
+    static constexpr int MAX_COLOR_VALUE = 125;
+    static constexpr int MIN_COLOR_VALUE = -125;
     static constexpr int MISMATCH_COLOR_START = 128;
     static constexpr int REFERENCE_INDEX_START = 0;
     static constexpr int REFERENCE_INDEX_SIZE = 0;
@@ -20,17 +21,13 @@ namespace ImageOptionsRegion {
     static constexpr int BASE_INDEX_START = 11;
     static constexpr int BASE_INDEX_SIZE = 14;
     vector<string> column_values{"REFB:",
-                                 "REFF:",
-                                 "REFR:",
                                  "SNPS:",
-                                 "SUPF:",
-                                 "SUPW:",
                                  "INSS:",
-                                 "SUPF:",
-                                 "SUPR:",
                                  "DELS:",
+                                 "REFF:",
+                                 "SNPF:",
+                                 "INSF:",
                                  "DELF:",
-                                 "DELR:",
                                  "AFRW:",
                                  "CFRW:",
                                  "GFRW:",
@@ -38,6 +35,10 @@ namespace ImageOptionsRegion {
                                  "IFRW:",
                                  "DFRW:",
                                  "*FRW:",
+                                 "REFR:",
+                                 "SNPR:",
+                                 "INSR:",
+                                 "DELR:",
                                  "AREV:",
                                  "CREV:",
                                  "GREV:",

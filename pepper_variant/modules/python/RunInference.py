@@ -6,8 +6,6 @@ from pepper_variant.modules.python.ImageGenerationUI import ImageGenerationUtils
 from pepper_variant.modules.python.models.predict_distributed_cpu import predict_distributed_cpu
 from pepper_variant.modules.python.models.predict_distributed_cpu_fake import predict_distributed_cpu_fake
 from pepper_variant.modules.python.models.predict_distributed_gpu import predict_distributed_gpu
-from pepper_variant.modules.python.models.predict_hp_distributed_cpu import predict_hp_distributed_cpu
-from pepper_variant.modules.python.models.predict_hp_distributed_gpu import predict_hp_distributed_gpu
 from os.path import isfile, join
 from os import listdir
 
@@ -115,10 +113,7 @@ def distributed_cpu(options, image_dir, output_dir):
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(callers) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THREADS PER CALLER: " + str(threads_per_caller) + "\n")
-    if not options.use_hp_info:
-        predict_distributed_cpu(options, image_dir, file_chunks, output_dir, callers, threads_per_caller)
-    else:
-        predict_hp_distributed_cpu(image_dir, file_chunks, output_dir, options.model_path, options.batch_size, callers, threads_per_caller, options.num_workers)
+    predict_distributed_cpu(options, image_dir, file_chunks, output_dir, callers, threads_per_caller)
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION FINISHED SUCCESSFULLY. \n")
 
     end_time = time.time()

@@ -65,7 +65,7 @@ class DataStore(object):
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "depths")] = np.array(depths, dtype=np.uint8)
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "candidates")] = np.array(all_candidates, dtype=dt_candidates)
             self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "candidate_frequency")] = np.array(all_candidate_frequency, dtype=np.uint8)
-            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "images")] = np.array(all_images, dtype=np.uint8)
+            self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "images")] = np.array(all_images, dtype=np.int8)
             if train_mode:
                 self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "base_labels")] = np.array(all_base_labels, dtype=np.uint8)
                 self.file_handler['{}/{}/{}'.format(self._summary_path_, summary_name, "type_label")] = np.array(all_type_label, dtype=np.uint8)

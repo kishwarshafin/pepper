@@ -57,6 +57,18 @@ class ImageGenerator:
                                                                    thread_id)
 
             return candidate_images
+        else:
+            alignment_summarizer = AlignmentSummarizerHP(self.bam_handler,
+                                                         self.fasta_handler,
+                                                         self.chromosome_name,
+                                                         start_position,
+                                                         end_position)
+
+            candidate_images = alignment_summarizer.create_summary(options,
+                                                                   bed_list,
+                                                                   thread_id)
+
+            return candidate_images
 
 
 class ImageGenerationUtils:
@@ -187,6 +199,7 @@ class ImageGenerationUtils:
         """
         thread_prefix = "[THREAD " + "{:02d}".format(process_id) + "]"
 
+
         timestr = time.strftime("%m%d%Y_%H%M%S")
         file_name = options.image_output_directory + "pepper_variants_images_thread_" + str(process_id) + "_" + str(timestr)
 
@@ -205,54 +218,46 @@ class ImageGenerationUtils:
         sys.stderr.flush()
 
         start_time = time.time()
+        # print("Starting thread", thread_prefix)
         with DataStore(file_name, 'w') as output_hdf_file:
             for counter, interval in enumerate(intervals):
                 chr_name, _start, _end = interval
-
                 image_generator = ImageGenerator(chromosome_name=chr_name,
                                                  bam_file_path=options.bam,
                                                  fasta_file_path=options.fasta)
 
-                if not options.use_hp_info:
-                    candidates = image_generator.generate_summary(options, _start, _end, bed_list, process_id)
-                    if candidates is not None:
-                        # load the previously written objects
-                        # if os.path.exists(file_name):
-                        #     with gzip.open(file_name, 'rb') as rfp:
-                        #         previous_candidates = pickle.load(rfp)
-                        #         candidates.extend(previous_candidates)
-                        all_contig = []
-                        all_position = []
-                        all_depth = []
-                        all_candidates = []
-                        all_candidate_frequency = []
-                        all_image_matrix = []
-                        all_base_label = []
-                        all_type_label = []
-                        for i, candidate in enumerate(candidates):
-                            all_contig.append(candidate.contig)
-                            all_position.append(candidate.position)
-                            all_depth.append(candidate.depth)
-                            all_candidates.append(candidate.candidates)
-                            all_candidate_frequency.append(candidate.candidate_frequency)
-                            all_image_matrix.append(candidate.image_matrix)
-                            all_base_label.append(candidate.base_label)
-                            all_type_label.append(candidate.type_label)
+                candidates = image_generator.generate_summary(options, _start, _end, bed_list, process_id)
+                if candidates is not None:
+                    all_contig = []
+                    all_position = []
+                    all_depth = []
+                    all_candidates = []
+                    all_candidate_frequency = []
+                    all_image_matrix = []
+                    all_base_label = []
+                    all_type_label = []
+                    for i, candidate in enumerate(candidates):
+                        all_contig.append(candidate.contig)
+                        all_position.append(candidate.position)
+                        all_depth.append(candidate.depth)
+                        all_candidates.append(candidate.candidates)
+                        all_candidate_frequency.append(candidate.candidate_frequency)
+                        all_image_matrix.append(candidate.image_matrix)
+                        all_base_label.append(candidate.base_label)
+                        all_type_label.append(candidate.type_label)
 
-                        summary_name = chr_name + "_" + str(_start) + "_" + str(_end)
+                    summary_name = chr_name + "_" + str(_start) + "_" + str(_end)
 
-                        output_hdf_file.write_summary(summary_name,
-                                                      all_contig,
-                                                      all_position,
-                                                      all_depth,
-                                                      all_candidates,
-                                                      all_candidate_frequency,
-                                                      all_image_matrix,
-                                                      all_base_label,
-                                                      all_type_label,
-                                                      options.train_mode)
-
-                    # all_candidates.extend(candidates)
+                    output_hdf_file.write_summary(summary_name,
+                                                  all_contig,
+                                                  all_position,
+                                                  all_depth,
+                                                  all_candidates,
+                                                  all_candidate_frequency,
+                                                  all_image_matrix,
+                                                  all_base_label,
+                                                  all_type_label,
+                                                  options.train_mode)
 
                 if counter > 0 and counter % 10 == 0 and process_id == 0:
                     percent_complete = int((100 * counter) / len(intervals))

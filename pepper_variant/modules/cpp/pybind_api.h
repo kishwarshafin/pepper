@@ -51,15 +51,6 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
             .def_readwrite("chunked_type_labels", &RegionalImageSummary::chunked_type_labels)
             .def_readwrite("chunked_ids", &RegionalImageSummary::chunked_ids);
 
-        py::class_<RegionalImageSummaryHP>(m, "RegionalImageSummaryHP")
-                .def_readwrite("chunked_image_matrix_hp1", &RegionalImageSummaryHP::chunked_image_matrix_hp1)
-                .def_readwrite("chunked_image_matrix_hp2", &RegionalImageSummaryHP::chunked_image_matrix_hp2)
-                .def_readwrite("chunked_positions", &RegionalImageSummaryHP::chunked_positions)
-                .def_readwrite("chunked_index", &RegionalImageSummaryHP::chunked_index)
-                .def_readwrite("chunked_labels_hp1", &RegionalImageSummaryHP::chunked_labels_hp1)
-                .def_readwrite("chunked_labels_hp2", &RegionalImageSummaryHP::chunked_labels_hp2)
-                .def_readwrite("chunked_ids", &RegionalImageSummaryHP::chunked_ids);
-
     // Generate regional summary
        py::class_<RegionalSummaryGenerator>(m, "RegionalSummaryGenerator")
             .def(py::init<string &, long long &, long long &, string &>())
@@ -69,6 +60,15 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
             .def("generate_summary", &RegionalSummaryGenerator::generate_summary)
             .def("generate_labels", &RegionalSummaryGenerator::generate_labels)
             .def("generate_max_insert_summary", &RegionalSummaryGenerator::generate_max_insert_summary);
+
+        py::class_<RegionalSummaryGeneratorHP>(m, "RegionalSummaryGeneratorHP")
+                .def(py::init<string &, long long &, long long &, string &>())
+                .def_readwrite("max_observed_insert", &RegionalSummaryGeneratorHP::max_observed_insert)
+                .def_readwrite("cumulative_observed_insert", &RegionalSummaryGeneratorHP::cumulative_observed_insert)
+                .def_readwrite("total_observered_insert_bases", &RegionalSummaryGeneratorHP::total_observered_insert_bases)
+                .def("generate_summary", &RegionalSummaryGeneratorHP::generate_summary)
+                .def("generate_labels", &RegionalSummaryGeneratorHP::generate_labels)
+                .def("generate_max_insert_summary", &RegionalSummaryGeneratorHP::generate_max_insert_summary);
 
         py::class_<CandidateImageSummary>(m, "CandidateImageSummary")
             .def(py::init<>())
@@ -92,6 +92,37 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
 
                             /* Create a new C++ instance */
                             CandidateImageSummary p(t[0].cast<string>(), t[1].cast<long long>(), t[2].cast<int>(), t[3].cast< vector<string> >(), t[4].cast< vector<int> >(), t[5].cast<vector<vector<int> > >(), t[6].cast<int>(), t[7].cast<int>() );
+
+                            /* Assign any additional state */
+                            //dp.setExtra(t[1].cast<int>());
+
+                            return p;
+                        }
+                ));
+
+        // HP image generator
+        py::class_<CandidateImageSummaryHP>(m, "CandidateImageSummaryHP")
+                .def(py::init<>())
+                .def(py::init<string &, long long &, int &, vector<string> &, vector<int> &, vector<vector<int> > &, int &, int & >())
+                .def_readwrite("contig", &CandidateImageSummaryHP::contig)
+                .def_readwrite("position", &CandidateImageSummaryHP::position)
+                .def_readwrite("depth", &CandidateImageSummaryHP::depth)
+                .def_readwrite("candidates", &CandidateImageSummaryHP::candidates)
+                .def_readwrite("candidate_frequency", &CandidateImageSummaryHP::candidate_frequency)
+                .def_readwrite("image_matrix", &CandidateImageSummaryHP::image_matrix)
+                .def_readwrite("base_label", &CandidateImageSummaryHP::base_label)
+                .def_readwrite("type_label", &CandidateImageSummaryHP::type_label)
+                .def(py::pickle(
+                        [](const CandidateImageSummaryHP &p) { // __getstate__
+                            /* Return a tuple that fully encodes the state of the object */
+                            return py::make_tuple(p.contig, p.position, p.depth, p.candidates, p.candidate_frequency, p.image_matrix, p.base_label, p.type_label);
+                        },
+                        [](py::tuple t) { // __setstate__
+                            if (t.size() != 8)
+                                throw std::runtime_error("Invalid state!");
+
+                            /* Create a new C++ instance */
+                            CandidateImageSummaryHP p(t[0].cast<string>(), t[1].cast<long long>(), t[2].cast<int>(), t[3].cast< vector<string> >(), t[4].cast< vector<int> >(), t[5].cast<vector<vector<int> > >(), t[6].cast<int>(), t[7].cast<int>() );
 
                             /* Assign any additional state */
                             //dp.setExtra(t[1].cast<int>());
@@ -129,18 +160,6 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
             ));
 
 
-
-       // Generate regional summary
-       py::class_<RegionalSummaryGeneratorHP>(m, "RegionalSummaryGeneratorHP")
-               .def(py::init<long long &, long long &, string &>())
-               .def_readwrite("max_observed_insert", &RegionalSummaryGeneratorHP::max_observed_insert)
-               .def_readwrite("cumulative_observed_insert", &RegionalSummaryGeneratorHP::cumulative_observed_insert)
-               .def_readwrite("total_observered_insert_bases", &RegionalSummaryGeneratorHP::total_observered_insert_bases)
-               .def("generate_summary", &RegionalSummaryGeneratorHP::generate_summary)
-               .def("generate_labels", &RegionalSummaryGeneratorHP::generate_labels)
-               .def("generate_max_insert_summary", &RegionalSummaryGeneratorHP::generate_max_insert_summary);
-
-
         // data structure for methylation record
         py::class_<type_truth_record>(m, "type_truth_record")
                 .def(py::init<string &, long long &, long long &, string &, string &>())
@@ -149,6 +168,15 @@ PYBIND11_MODULE(PEPPER_VARIANT, m) {
                 .def_readwrite("pos_end", &type_truth_record::pos_end)
                 .def_readwrite("ref", &type_truth_record::ref)
                 .def_readwrite("alt", &type_truth_record::alt);
+
+        // data structure for methylation record
+        py::class_<type_truth_recordHP>(m, "type_truth_recordHP")
+                .def(py::init<string &, long long &, long long &, string &, string &>())
+                .def_readwrite("contig", &type_truth_recordHP::contig)
+                .def_readwrite("pos_start", &type_truth_recordHP::pos_start)
+                .def_readwrite("pos_end", &type_truth_recordHP::pos_end)
+                .def_readwrite("ref", &type_truth_recordHP::ref)
+                .def_readwrite("alt", &type_truth_recordHP::alt);
 
         // data structure for sequence name and their length
         py::class_<type_sequence>(m, "type_sequence")
