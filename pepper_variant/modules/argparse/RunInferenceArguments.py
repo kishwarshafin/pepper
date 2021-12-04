@@ -38,7 +38,14 @@ def add_run_inference_arguments(parser):
         "--quantized",
         default=True,
         action='store_true',
-        help="Use quantization for inference while on CPU inference mode. Speeds up inference. Default is True."
+        help="PEPPER: Use quantization for inference while on CPU inference mode. Speeds up inference. Default is True."
+    )
+    parser.add_argument(
+        "--no_quantized",
+        dest='quantized',
+        default=False,
+        action='store_false',
+        help="Do not use quantization for inference while on CPU inference mode. Speeds up inference."
     )
     parser.add_argument(
         "-g",
