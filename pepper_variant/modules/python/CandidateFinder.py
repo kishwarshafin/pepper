@@ -383,7 +383,7 @@ def small_chunk_stitch(options, file_chunks):
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                         # print("SINGLE: ", predicted_bases, max_observed_likelihood[allele], candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
-                    elif options.report_snp_above_freq > 0 and vaf >= options.report_snp_above_freq:
+                    elif 0 < options.report_snp_above_freq <= vaf:
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                 elif alt_type == '2':
@@ -392,7 +392,7 @@ def small_chunk_stitch(options, file_chunks):
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                         # print("INSERT: ", predicted_bases, max_observed_likelihood['*'], candidate.contig, candidate.position, reference_allele, allele, candidate.depth, allele_frequency)
-                    elif options.report_indel_above_freq > 0 and vaf >= options.report_indel_above_freq:
+                    elif 0 < options.report_indel_above_freq <= vaf:
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                 elif alt_type == '3':
@@ -403,7 +403,7 @@ def small_chunk_stitch(options, file_chunks):
                         variant_allele_support.append(allele_frequency)
 
                         # print("DELETE: ", predicted_bases, max_observed_likelihood['#'], candidate.contig, candidate.position, reference_allele, alt_allele, candidate.depth, allele_frequency)
-                    elif options.report_indel_above_freq > 0 and vaf >= options.report_indel_above_freq:
+                    elif 0 < options.report_indel_above_freq <= vaf:
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
 

@@ -50,9 +50,9 @@ def set_parameters(options):
             if options.indel_q_cutoff is None:
                 options.indel_q_cutoff = 10
             if options.report_snp_above_freq is None:
-                options.report_snp_above_freq = 0.20
+                options.report_snp_above_freq = 0.40
             if options.report_indel_above_freq is None:
-                options.report_indel_above_freq = 0.30
+                options.report_indel_above_freq = 0
     if options.ont_r10_q20:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING MODE SELECTED.\n")
         # image generation
@@ -200,5 +200,7 @@ def set_parameters(options):
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN DELETE PREDICTIVE VALUE:\t" + str(options.delete_p_value) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SNP QV CUTOFF FOR RE-GENOTYPING:\t" + str(options.snp_q_cutoff) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: INDEL QV CUTOFF FOR RE-GENOTYPING:\t" + str(options.indel_q_cutoff) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: REPORT ALL SNPs ABOVE THRESHOLD:\t" + str(options.report_snp_above_freq) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: REPORT ALL INDELs ABOVE THRESHOLD:\t" + str(options.report_indel_above_freq) + "\n")
 
     return options
