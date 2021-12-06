@@ -107,7 +107,6 @@ def candidates_to_variants(candidates, contig):
     dps = selected_dps + other_dps
     gts = selected_gts + other_gts
     ads = selected_ads + other_ads
-
     return contig, min_pos_start, max_pos_end, ref_sequence, alleles, genotype, dps, gts, ads, overall_non_ref_prob
 
 

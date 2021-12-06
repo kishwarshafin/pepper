@@ -49,7 +49,7 @@ class VCFWriter:
             normalized_candidates.append((contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions))
 
         candidates = normalized_candidates
-        gt_qual = 0.0
+        gt_qual = -1.0
         genotype_hp1 = []
         genotype_hp2 = []
 
@@ -67,7 +67,10 @@ class VCFWriter:
             contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions = candidate
             # print(contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions)
             predicted_genotype = np.argmax(predictions)
-            gt_qual = max(gt_qual, 1.0 - predictions[0])
+            if gt_qual < 0:
+                gt_qual = 1.0 - predictions[0]
+            else:
+                gt_qual = min(gt_qual, 1.0 - predictions[0])
 
             if not all_initialized:
                 site_contig = contig
@@ -97,6 +100,7 @@ class VCFWriter:
         else:
             gt = [0, 0]
 
+        # print(site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual)
         return site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual
 
     def write_vcf_records(self, variants_list, options):
