@@ -49,6 +49,10 @@ def set_parameters(options):
                 options.snp_q_cutoff = 15
             if options.indel_q_cutoff is None:
                 options.indel_q_cutoff = 10
+            if options.report_snp_above_freq is None:
+                options.report_snp_above_freq = 0.20
+            if options.report_indel_above_freq is None:
+                options.report_indel_above_freq = 0.30
     if options.ont_r10_q20:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING MODE SELECTED.\n")
         # image generation
@@ -89,6 +93,10 @@ def set_parameters(options):
                 options.snp_q_cutoff = 5
             if options.indel_q_cutoff is None:
                 options.indel_q_cutoff = 10
+            if options.report_snp_above_freq is None:
+                options.report_snp_above_freq = 0
+            if options.report_indel_above_freq is None:
+                options.report_indel_above_freq = 0
     elif options.hifi:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: HiFi VARIANT CALLING MODE SELECTED.\n")
         # image generation
@@ -129,6 +137,10 @@ def set_parameters(options):
                 options.snp_q_cutoff = 20
             if options.indel_q_cutoff is None:
                 options.indel_q_cutoff = 50
+            if options.report_snp_above_freq is None:
+                options.report_snp_above_freq = 0
+            if options.report_indel_above_freq is None:
+                options.report_indel_above_freq = 0
     # elif options.clr:
     #     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CLR VARIANT CALLING MODE SELECTED.\n")
     #     # image generation

@@ -96,6 +96,20 @@ def add_find_candidates_arguments(parser):
         help="GQ cutoff for an INDEL variant to be re-genotyped with DeepVariant. Variants with GQ below this will be re-genotyped."
     )
     parser.add_argument(
+        "--report_snp_above_freq",
+        required=False,
+        type=float,
+        default=None,
+        help="Report all SNPs above frequency for re-genotyping even if the predicted value is low. Set 0 to disable this."
+    )
+    parser.add_argument(
+        "--report_indel_above_freq",
+        required=False,
+        type=float,
+        default=None,
+        help="Report all INDELs above frequency for re-genotyping even if the predicted value is low. Set 0 to disable this."
+    )
+    parser.add_argument(
         "--freq_based",
         default=False,
         action='store_true',
