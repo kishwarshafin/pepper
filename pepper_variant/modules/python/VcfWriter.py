@@ -67,10 +67,18 @@ class VCFWriter:
             contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions = candidate
             # print(contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions)
             predicted_genotype = np.argmax(predictions)
-            if gt_qual < 0:
-                gt_qual = 1.0 - predictions[0]
+            # if gt_qual < 0:
+            #     gt_qual = 1.0 - predictions[0]
+            # else:
+            #     gt_qual = min(gt_qual, 1.0 - predictions[0])
+            if predicted_genotype != 0:
+                if gt_qual < 0:
+                    gt_qual = predictions[predicted_genotype]
+                else:
+                    gt_qual = min(gt_qual, predictions[predicted_genotype])
             else:
-                gt_qual = min(gt_qual, 1.0 - predictions[0])
+                if gt_qual < 0:
+                    gt_qual = 1.0 - predictions[0]
 
             if not all_initialized:
                 site_contig = contig
@@ -138,7 +146,7 @@ class VCFWriter:
 
             vafs = [round(ad/max(1, depth), 3) for ad in variant_allele_support]
 
-            # print(str(contig), ref_start, ref_end, qual, 'refCall', alleles, genotype, alt_qual, alt_qual, depth, variant_allele_support, vafs)
+            # print(str(contig), ref_start, ref_end, qual, alleles, genotype, alt_qual, alt_qual, depth, variant_allele_support, vafs)
 
             # always put things in all vcf
             if genotype == [0, 0]:
