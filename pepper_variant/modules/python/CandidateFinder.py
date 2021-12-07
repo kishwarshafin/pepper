@@ -376,7 +376,8 @@ def small_chunk_stitch(options, file_chunks):
                     continue
 
                 vaf = float(allele_frequency) / float(candidate.depth)
-                non_alt_prediction = 1.0 - candidate.prediction_base[0]
+                #non_alt_prediction = 1.0 - candidate.prediction_base[0]
+                non_alt_prediction = max(candidate.prediction_base[1], candidate.prediction_base[2])
                 if alt_type == '1':
                     if non_alt_prediction >= options.snp_p_value:
                         # add them to list
