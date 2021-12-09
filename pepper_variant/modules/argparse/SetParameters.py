@@ -40,7 +40,7 @@ def set_parameters(options):
             if options.allowed_multiallelics is None:
                 options.allowed_multiallelics = 4
             if options.snp_p_value is None:
-                options.snp_p_value = 0.15
+                options.snp_p_value = 0.10
             if options.insert_p_value is None:
                 options.insert_p_value = 0.20
             if options.delete_p_value is None:
@@ -50,7 +50,7 @@ def set_parameters(options):
             if options.indel_q_cutoff is None:
                 options.indel_q_cutoff = 10
             if options.report_snp_above_freq is None:
-                options.report_snp_above_freq = 0.40
+                options.report_snp_above_freq = 0
             if options.report_indel_above_freq is None:
                 options.report_indel_above_freq = 0
     if options.ont_r10_q20:
