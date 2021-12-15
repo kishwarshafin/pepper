@@ -250,7 +250,7 @@ We can use `test_loss.csv` to find which models has the lowest loss that we can 
 ### Evaluating a trained model
 First we run `PEPPER` with a model we select:
 ```bash
-BAM=${INPUT_DIR}/HG002_guppy422_2_GRCh38_no_alt.30x.bam
+BAM=${INPUT_DIR}/HG002_guppy422_2_GRCh38_no_alt.30x.haplotagged.bam
 REF=${INPUT_DIR}/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
 # Select the model you want to test
 MODEL=${MODEL_OUTPUT_DIR}/trained_models_****_****/PEPPER_VARIANT_STEP_****_checkpoint.pkl
