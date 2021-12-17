@@ -95,7 +95,7 @@ The following parameters are used to select reads:
 </center>
 
 ### Step 5: DeepVariant
-DeepVariant re-genotypes the candidates proposed by `PEPPER-HP` and reads haplotagged by `Margin`. We use the following features for DeepVariant:
+DeepVariant re-genotypes the candidates proposed by `PEPPER-HP` using reads haplotagged by `Margin`. We use the following features for DeepVariant:
 <img src="img/deepvariant_pileup.png" alt="PEPPER HP summary" height=100px>
 
 * **Read base**: Base observed at each position.
@@ -104,6 +104,6 @@ DeepVariant re-genotypes the candidates proposed by `PEPPER-HP` and reads haplot
 * **Strand**: Forward or reserver strand of read.
 * **Read support variant**: If the read supports the candidate variant.
 * **Base differs from ref**: If the base is a mismatch compared to the reference base.
-* **Haplotype tag**: Haplotype tag (0/1) of each read.
+* **Haplotype tag**: Haplotype tag (HP:0/HP:1/HP:2) of each read.
 
 We also sort the image based on the haplotype tag.
