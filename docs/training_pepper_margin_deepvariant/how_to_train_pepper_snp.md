@@ -1,5 +1,5 @@
 # How to train PEPPER SNP (Advanced- requires GPU)
-
+##### Written by: Kishwar Shafin, Verified by: Jimin Park
 In this walkthrough, we will see how to train `PEPPER SNP` and replace default model with custom models. In this excercise we will train a model on `Guppy 4.2.2` data which is currently not supported by `PEPPER-Margin-DeepVariant` as the error-rate of the basecaller is too high.
 
 ## Training PEPPER SNP
@@ -255,6 +255,10 @@ ${OUTPUT_VCF} \
 ## Replace the default PEPPER SNP model
 You can use the following command to run `PEPPER-Margin-DeepVariant` with your trained model instead of the default model using `--pepper_model`:
 ```bash
+BAM=HG002_guppy422_2_GRCh38_no_alt.30x.bam
+REF=GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+PEPPER_OUTPUT_DIR="${OUTPUT_DIR}"/pepper_deepvariant_output
+
 docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
@@ -262,7 +266,7 @@ kishwars/pepper_deepvariant:r0.7 \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
--o "${OUTPUT_DIR}" \
+-o "${PEPPER_OUTPUT_DIR}" \
 -t "${THREADS}" \
 --ont_r9_guppy5_sup \
 --pepper_model /PATH/TO/PEPPER_SNP.pkl

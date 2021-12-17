@@ -1,13 +1,13 @@
 ## PEPPER-Margin-DeepVariant r0.7 methods update
 
-We have made some changes in our pipeline that make it more accurate. Following is a description of the updated method:
+We have made changes in our pipeline that make it more accurate. Following is a description of the updated method:
 
 
 ### Step 1: PEPPER SNP
 Although called `PEPPER SNP`, the first step of the pipeline can now identify SNPs and INDELs. `PEPPER SNP` module calls variants using the following steps:
 
 i) `make_images`: This step creates summary of potential candidate variants.
-* We takes all reads with mapping quality above `--pepper_min_mapq`.
+* We take all reads with mapping quality above `--pepper_min_mapq`.
 * We only consider SNPs with base quality higher than `--pepper_min_snp_baseq` and we only consider INDELs with average base quality higher than `--pepper_min_indel_baseq`. The INDEL base quality only applied on inserts as deletions do not have base quality.
 * Then we find positions which have cumulative SNP frequency higher than `--pepper_snp_frequency`, insert frequency `--pepper_insert_frequency` or delete frequency `--pepper_delete_frequency`. We check the SNP, insert and delete threshold independently and see record all candidates that can be potentially a variant. For example, if a site has SNP frequency (any base other than the reference) higher than the threshold, we take all of the SNP alleles in that location as potential candidates.
 * Then for each candidate we do another set of filtering, we see if at least `--pepper_candidate_support_threshold` reads support that candidate and the frequency of the allele is above `--pepper_snp_candidate_frequency_threshold` for SNPs or `--pepper_indel_candidate_frequency_threshold` for INDELs.
