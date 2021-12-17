@@ -1,5 +1,5 @@
 # How to train PEPPER HP (Advanced- Requires GPU)
-
+##### Written by: Kishwar Shafin, Verified by: Jimin Park
 In this walkthrough, we will see how to train `PEPPER HP` and replace default model with custom models. In this excercise we will train a model on `Guppy 4.2.2` data which is currently not supported by `PEPPER-Margin-DeepVariant` as the error-rate of the basecaller is too high.
 
 ## Training PEPPER HP
@@ -82,7 +82,7 @@ ls -lha ${INPUT_DIR}
 # HG002_guppy422_2_GRCh38_no_alt.40x.bam
 # HG002_guppy422_2_GRCh38_no_alt.50x.bam
 ```
-### Step 5: Generate haplotagged BAM files
+### Step 4: Generate haplotagged BAM files
 PEPPER HP training requires haplotagged bams. So, first we will haplotag each of the bams we generated in the previous step. If you have also trained a `PEPPER SNP` model, then use that during haplotagging:
 
 ```bash
@@ -124,7 +124,7 @@ ls -lha ${INPUT_DIR}
 # HG002_guppy422_2_GRCh38_no_alt.40x.haplotagged.bam
 # HG002_guppy422_2_GRCh38_no_alt.50x.haplotagged.bam
 ```
-### Step 4: Train PEPPER HP
+### Step 5: Train PEPPER HP
 
 The first step of training PEPPER is to make training images. First we would activate PEPPER:
 ```bash

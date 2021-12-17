@@ -42,7 +42,7 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/pe
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/pepper_deepvariant_training/HG002_GRCh38_1_22_v4.2.1_benchmark.bed
 ```
 
-### Step 3: Downsample bam at different coverages
+### Step 2: Downsample bam at different coverages
 We want to train PEPPER for different coverages. We start by calculating the average coverage of the alignment file:
 ```bash
 samtools depth -r chr20 ${INPUT_DIR}/HG002_guppy422_2_GRCh38_no_alt.bam | awk '{sum+=$3} END { print "Average Coverage= ",sum/NR}'
@@ -71,7 +71,7 @@ ls -lha ${INPUT_DIR}
 # HG002_guppy422_2_GRCh38_no_alt.40x.bam
 # HG002_guppy422_2_GRCh38_no_alt.50x.bam
 ```
-### Step 4: Generate haplotagged BAM files and PEPPER HP candidates
+### Step 3: Generate haplotagged BAM files and PEPPER HP candidates
 Training DeepVariant requires haplotagged alignment files and candidates from PEPPER HP. The following command can be used to generate the haplotagged bam file and candidates using `PEPPER SNP-Margin-PEPPER HP`:
 
 ```bash
@@ -121,7 +121,7 @@ ls -lha ${INPUT_DIR}
 # HG002_guppy422_2_GRCh38_no_alt.40x.candidates.vcf.gz
 # HG002_guppy422_2_GRCh38_no_alt.50x.candidates.vcf.gz
 ```
-### Step 5: Annotate candidate variants with truth
+### Step 4: Annotate candidate variants with truth
 ```bash
 for coverage in 30 40 50
 do
@@ -201,7 +201,7 @@ do
 done
 ```
 
-### Step 6: DeepVariant training
+### Step 5: DeepVariant training
 
 #### Make examples
 Then we can start generating the training images:
