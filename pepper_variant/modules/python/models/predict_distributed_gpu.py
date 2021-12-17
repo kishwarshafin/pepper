@@ -10,16 +10,21 @@ from datetime import datetime
 
 from pepper_variant.modules.python.models.dataloader_predict import SequenceDataset
 from pepper_variant.modules.python.models.ModelHander import ModelHandler
-from pepper_variant.modules.python.Options import ImageSizeOptions, TrainOptions
+from pepper_variant.modules.python.Options import ImageSizeOptions, ImageSizeOptionsHP, TrainOptions
 from pepper_variant.modules.python.DataStorePredict import DataStore
 
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 
 
 def predict(options, input_filepath, output_filepath, threads):
+    if options.use_hp_info:
+        image_features = ImageSizeOptionsHP.IMAGE_HEIGHT
+    else:
+        image_features = ImageSizeOptions.IMAGE_HEIGHT
+
     transducer_model, hidden_size, gru_layers, prev_ite = \
         ModelHandler.load_simple_model_for_training(options.model_path,
-                                                    image_features=ImageSizeOptions.IMAGE_HEIGHT,
+                                                    image_features=image_features,
                                                     num_classes=ImageSizeOptions.TOTAL_LABELS,
                                                     num_type_classes=ImageSizeOptions.TOTAL_TYPE_LABELS)
 
@@ -58,12 +63,13 @@ def predict(options, input_filepath, output_filepath, threads):
 
             # run inference
             # output_base, output_type = transducer_model(images, hidden, cell_state, False)
-            output_base = transducer_model(images, hidden, cell_state, False)
+            outputs = transducer_model(images, hidden, cell_state, False)
 
-            output_base = output_base.detach().cpu().numpy()
-            # output_type = output_type.detach().cpu().numpy()
+            output_base, output_type = tuple(outputs)
+            # output_base = output_base.detach().cpu().numpy()
+            output_type = output_type.detach().cpu().numpy()
 
-            prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_base)
+            prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_type)
             batch_completed += 1
 
             if batch_completed % 100 == 0:

@@ -78,10 +78,7 @@ def distributed_gpu(options, image_dir, output_dir):
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(total_callers) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL THREADS PER CALLER: " + str(threads_per_caller) + "\n")
 
-    if not options.use_hp_info:
-        predict_distributed_gpu(options, image_dir, output_dir, total_callers)
-    else:
-        predict_hp_distributed_gpu(image_dir, file_chunks, output_dir, options.model_path, options.batch_size, total_callers, threads_per_caller, device_ids, options.num_workers)
+    predict_distributed_gpu(options, image_dir, output_dir, total_callers)
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION GENERATED SUCCESSFULLY.\n")
 
