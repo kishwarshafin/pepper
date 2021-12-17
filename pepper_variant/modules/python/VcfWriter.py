@@ -12,7 +12,7 @@ class VCFWriter:
     def __init__(self, all_contigs, reference_file_path, sample_name, output_dir, filename_full, filename_pepper, filename_variant_calling):
         self.fasta_handler = PEPPER_VARIANT.FASTA_handler(reference_file_path)
         contigs = self.fasta_handler.get_chromosome_names()
-        contigs = [x for x in contigs if x in all_contigs]
+        # contigs = [x for x in contigs if x in all_contigs]
         self.contigs = contigs
         self.vcf_header = self.get_vcf_header(sample_name, contigs)
         self.output_dir = output_dir
