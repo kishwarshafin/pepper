@@ -17,7 +17,7 @@ For training `DeepVariant` we need:
 In this case we are going to use 50x HG002 data basecalled with Guppy 4.2.2 basecaller.
 ```bash
 # Cutomize this directory to where you want to store your training data
-TRAIN_DIR=/data2/PEPPER_TRAINING
+TRAIN_DIR=/data/PEPPER_TRAINING
 mkdir -p "${TRAIN_DIR}"
 
 INPUT_DIR="${TRAIN_DIR}"/TRAIN_INPUTS
