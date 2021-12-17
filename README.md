@@ -18,13 +18,13 @@ PEPPER-Margin-deepvariant v0.6 supports:
 ---
 
 ### Useful links to documentations
-* Description of `PEPPER-Margin-DeepVariant`: [Link](./docs/misc/pepper_v0.7_method_update.md)
-* How to train `PEPPER-DeepVariant`
-    * How to train `PEPPER-SNP`: [Link](./docs/training_pepper_margin_deepvariant/how_to_train_pepper_snp.md)
-    * How to train `PEPPER-HP`: [Link](./docs/training_pepper_margin_deepvariant/how_to_train_pepper_hp.md)
-    * How to train `DeepVariant`: [Link](./docs/training_pepper_margin_deepvariant/how_to_train_deepvariant.md)
-* How to install `PEPPER` locally: [Link](./docs/local_install/install_pepper_locally.md)
-* List of parameters: [Link](./docs/usage/usage_and_parameters.md)
+* [Description of PEPPER-Margin-DeepVariant method.](./docs/misc/pepper_v0.7_method_update.md)
+* How to train PEPPER-DeepVariant:
+    * [How to train PEPPER-SNP.](./docs/training_pepper_margin_deepvariant/how_to_train_pepper_snp.md)
+    * [How to train PEPPER-HP.](./docs/training_pepper_margin_deepvariant/how_to_train_pepper_hp.md)
+    * [How to train DeepVariant (using candidates from PEPPER).](./docs/training_pepper_margin_deepvariant/how_to_train_deepvariant.md)
+* [How to install PEPPER locally.](./docs/local_install/install_pepper_locally.md)
+* [List of parameters and description.](./docs/usage/usage_and_parameters.md)
 
 
 ### How to cite
