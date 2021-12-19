@@ -291,7 +291,7 @@ pip3 install tensorflow
 ```
 Shuffle training and test set:
 ##### Note on input_pattern_list parameter (Please read)
-You do not need to replace ?? in `input_pattern_list` parameter. ? in this parameter is used as a wildcard.
+You do not need to replace ?? in `input_pattern_list` parameter. The `"?"` values in this parameter is used as a wildcard.
 
 ```bash
 # Shuffle training dataset
