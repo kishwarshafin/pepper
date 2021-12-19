@@ -290,6 +290,9 @@ pip3 install apache_beam[gcp]
 pip3 install tensorflow
 ```
 Shuffle training and test set:
+##### Note on input_pattern_list parameter (Please read)
+You do not need to replace ?? in `input_pattern_list` parameter. ? in this parameter is used as a wildcard.
+
 ```bash
 # Shuffle training dataset
 time python3 ${SHUFFLE_SCRIPT_DIR}/shuffle_tfrecords_beam.py \
