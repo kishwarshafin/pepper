@@ -75,10 +75,13 @@ def distributed_gpu(options, image_dir, output_dir):
 
     total_callers = min(total_callers, len(file_chunks))
     threads_per_caller = max(1, int(options.threads/total_callers))
+    # chunk the inputs
+    input_files = get_file_paths_from_directory(image_dir)
+
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL CALLERS: " + str(total_callers) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL THREADS PER CALLER: " + str(threads_per_caller) + "\n")
 
-    predict_distributed_gpu(options, image_dir, output_dir, total_callers)
+    predict_distributed_gpu(options, image_dir, input_files, output_dir, total_callers)
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PREDICTION GENERATED SUCCESSFULLY.\n")
 

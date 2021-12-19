@@ -10,6 +10,7 @@ import concurrent.futures
 from torch.utils.data import DataLoader
 import numpy as np
 from numpy import argmax
+import h5py
 
 from pepper_variant.modules.python.models.dataloader_predict import SequenceDataset
 from pepper_variant.modules.python.models.ModelHander import ModelHandler
@@ -17,18 +18,19 @@ from pepper_variant.modules.python.Options import ImageSizeOptions, ImageSizeOpt
 from pepper_variant.modules.python.DataStorePredict import DataStore
 
 
+def get_all_summary_names(input_file):
+    summary_names = []
+    with h5py.File(input_file, 'r') as hdf5_file:
+        if 'summaries' in hdf5_file:
+            summary_names = list(hdf5_file['summaries'].keys())
+
+    return summary_names
+
+
 def predict(options, input_filepath, file_chunks, output_filepath, threads, thread_id):
     # create output file
     output_filename = output_filepath + "pepper_prediction_" + str(thread_id) + ".hdf"
     prediction_data_file = DataStore(output_filename, mode='w')
-
-    # data loader
-    input_data = SequenceDataset(input_filepath, file_chunks)
-    data_loader = DataLoader(input_data,
-                             batch_size=options.batch_size,
-                             shuffle=False,
-                             num_workers=options.num_workers,
-                             collate_fn=SequenceDataset.my_collate)
 
     if thread_id == 0:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " + "INFO: SETTING THREADS TO: " + str(threads) + ".\n")
@@ -54,29 +56,42 @@ def predict(options, input_filepath, file_chunks, output_filepath, threads, thre
         sys.stderr.flush()
 
     batch_completed = 0
-    total_batches = len(data_loader)
-
-    with torch.no_grad():
-        for contigs, positions, depths, candidates, candidate_frequencies, images in data_loader:
+    for input_file in file_chunks:
+        summary_names = get_all_summary_names(input_file)
+        if thread_id == 0:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
+                             "INFO: TOTAL SUMMARIES: " + str(len(summary_names)) + ".\n")
             sys.stderr.flush()
-            # images = images.type(torch.FloatTensor)
-            hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-            cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-            # run inference on onnx mode, which takes numpy inputs
-            ort_inputs = {ort_session.get_inputs()[0].name: images.cpu().numpy(),
-                          ort_session.get_inputs()[1].name: hidden.cpu().numpy(),
-                          ort_session.get_inputs()[2].name: cell_state.cpu().numpy()}
-            # the return value comes as a list
-            outputs = ort_session.run(None, ort_inputs)
-            output_base, output_type = tuple(outputs)
+        for summary_index, summary_name in enumerate(summary_names):
+            # data loader
+            input_data = SequenceDataset(input_filepath, input_file, summary_name)
+            data_loader = DataLoader(input_data,
+                                     batch_size=options.batch_size,
+                                     shuffle=False,
+                                     num_workers=options.num_workers,
+                                     collate_fn=SequenceDataset.my_collate)
 
-            prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_type)
+            with torch.no_grad():
+                for contigs, positions, depths, candidates, candidate_frequencies, images in data_loader:
+                    sys.stderr.flush()
+                    # images = images.type(torch.FloatTensor)
+                    hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+                    cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
+                    # run inference on onnx mode, which takes numpy inputs
+                    ort_inputs = {ort_session.get_inputs()[0].name: images.cpu().numpy(),
+                                  ort_session.get_inputs()[1].name: hidden.cpu().numpy(),
+                                  ort_session.get_inputs()[2].name: cell_state.cpu().numpy()}
+                    # the return value comes as a list
+                    outputs = ort_session.run(None, ort_inputs)
+                    output_base, output_type = tuple(outputs)
 
-            batch_completed += 1
+                    prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_type)
 
-            if thread_id == 0 and batch_completed % 10 == 0:
+                    batch_completed += 1
+
+            if thread_id == 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
-                                 "INFO: BATCHES PROCESSED " + str(batch_completed) + "/" + str(total_batches) + ".\n")
+                                 "INFO: SUMMARY PROCESSED " + str(summary_index + 1) + "/" + str(len(summary_names)) + ".\n")
                 sys.stderr.flush()
 
     return thread_id

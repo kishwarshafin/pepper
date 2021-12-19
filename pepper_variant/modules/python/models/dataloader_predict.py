@@ -25,13 +25,14 @@ class SequenceDataset(Dataset):
     Arguments:
         A pkl directory
     """
-    def __init__(self, image_directory, file_chunks=None):
+
+    def __init__(self, image_directory, input_file=None, summary_name=None):
         # self.transform = transforms.Compose([transforms.ToTensor()])
         # self.transform = transforms.Compose([])
-        if file_chunks is None:
+        if input_file is None:
             input_files = get_file_paths_from_directory(image_directory)
         else:
-            input_files = file_chunks
+            input_files = [input_file]
 
         self.all_contigs = []
         self.all_positions = []
@@ -43,8 +44,23 @@ class SequenceDataset(Dataset):
         for input_file in input_files:
             with h5py.File(input_file, 'r') as hdf5_file:
                 if 'summaries' in hdf5_file:
-                    summary_names = list(hdf5_file['summaries'].keys())
-                    for summary_name in summary_names:
+                    if summary_name is None:
+                        summary_names = list(hdf5_file['summaries'].keys())
+                        for summary_name in summary_names:
+                            contigs = hdf5_file['summaries'][summary_name]['contigs'][()]
+                            positions = hdf5_file['summaries'][summary_name]['positions'][()]
+                            depths = hdf5_file['summaries'][summary_name]['depths'][()]
+                            candidates = hdf5_file['summaries'][summary_name]['candidates'][()]
+                            candidate_frequency = hdf5_file['summaries'][summary_name]['candidate_frequency'][()]
+                            images = hdf5_file['summaries'][summary_name]['images'][()]
+
+                            self.all_contigs.extend(contigs)
+                            self.all_positions.extend(positions)
+                            self.all_depths.extend(depths)
+                            self.all_candidates.extend(candidates)
+                            self.all_candidate_frequency.extend(candidate_frequency)
+                            self.all_images.extend(images)
+                    else:
                         contigs = hdf5_file['summaries'][summary_name]['contigs'][()]
                         positions = hdf5_file['summaries'][summary_name]['positions'][()]
                         depths = hdf5_file['summaries'][summary_name]['depths'][()]
@@ -58,6 +74,7 @@ class SequenceDataset(Dataset):
                         self.all_candidates.extend(candidates)
                         self.all_candidate_frequency.extend(candidate_frequency)
                         self.all_images.extend(images)
+
 
     @staticmethod
     def my_collate(batch):
