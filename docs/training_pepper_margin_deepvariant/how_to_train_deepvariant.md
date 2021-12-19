@@ -245,7 +245,7 @@ do
       --variant_caller "vcf_candidate_importer" \
       --truth_variants ${PEPPER_TRUTH_CANDIDATES} \
       --task {} \
-      --exclude_regions "'chr20,chr21,chr22'" )
+      --exclude_regions "'chr20 chr21 chr22'" )
 
   # Test samples from chr20
   (time seq 0 $((THREADS-1)) | \
