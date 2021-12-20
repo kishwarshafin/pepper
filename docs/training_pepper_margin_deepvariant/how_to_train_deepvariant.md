@@ -1,7 +1,9 @@
 # How to train DeepVariant (with PEPPER) (Advanced- Requires GPU)
-##### Prepared by: Kishwar Shafin
+##### Prepared by: Kishwar Shafin, Verified by: Jimin Park
 
 In this walkthrough, we will see how to train `DeepVariant` and replace default model with custom models. In this exercise, we will train a model on `Guppy 4.2.2` data which is currently not supported by `PEPPER-Margin-DeepVariant` as the error-rate of the basecaller is too high.
+
+**NOTE:** This tutorial goes through the basic steps required for training DeepVariant. However, there are many more options available to ease the training process of DeepVariant. [This documentation](https://github.com/google/deepvariant/blob/r1.3/docs/deepvariant-training-case-study.md) has a much more detailed explanation of the training process. If you have followed the official tutorial then you can use the `make_examples` stage from this tutorial and the rest of the steps should be exactly the same.
 
 ## Training DeepVariant
 We will now train `DeepVariant` that we use to genotype the candidates proposed by `PEPPER`.
