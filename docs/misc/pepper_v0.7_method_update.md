@@ -1,7 +1,27 @@
 ## PEPPER-Margin-DeepVariant r0.7 methods update
+## Overview
 
-We have made changes in our pipeline that make it more accurate. Following is a description of the updated method:
+One of the difficulties in designing inference models for Oxford Nanopore Sequencing technology has been systematic errors in homopolymer regions. The methods we have described in our [manuscript](https://www.nature.com/articles/s41592-021-01299-w) and used upto `r0.5` has a fundamental limitation in these regions. For example, let's look closely at the following genomic region:
 
+<p align="center">
+<img src="img/ONT_homopolymer.png" alt="PEPPER SNP summary" height=400px>
+</p>
+
+It is clearly difficult to know which variant is true among all the candidate variants we observe. In our previous versions, we would create one pileup summary (how many times we have observed each base) for the position of interest and could only predict if there's a possibility of having a true variant in that position. The prediction model looked like the following:
+```bash
+Class ID: prediction
+0: AA    5: CC    9: GG  12: TT   14: **
+1: AC    6: CG   10: GT  13: T*
+2: AG    7: CT   11: G*
+3: AT    8: C*    
+4: A*
+```
+In this scheme `*` represented either an insert or a delete. So, we were predicting what is the likelihood of observing a true indel given the summary of that position. Given the class balance and systematic errors, it is clearly a difficult problem to solve. Noteably, `Clair3` and `Medaka` also uses this scheme and this was first introduced by `Medaka`. However, `Clair3 pileup-WhatsHap-Clair3 Full` forces all candidates in low-complexity regions to be re-genotyped by a larger model in `Clair3 Full`. Given the majority of the INDELs are observed in low-complexity regions, `Clair3 Full` improves the INDEL variant quality slightly at lower coverages compared to `PEPPER-Margin-DeepVariant`, but, the fundamental problem of handling systematic errors within the inference model remained unsolved.
+
+In this version, we implemented a prediction scheme of `PEPPER` that can overcome this limitation. We designed a set of features in `PEPPER` that could differentiate the candidates that arise from the same position. That way we can have summaries of candidates arising from the same position with differentiable feature and we can predict the likelihood of a candidate being a true variant given summaries. This also simplified the training process as we now only have to predict `[HET, HOM, HOM-ALT]` for each candidate. Paired with `PEPPER` we re-genotype the variants that have poor quality or confounding predictions with `DeepVariant`. This scheme allows a more accurate and faster variant calling for long read sequencing platforms.
+
+## Description
+Following is a description of the updated method:
 
 ### Step 1: PEPPER SNP
 Although called `PEPPER SNP`, the first step of the pipeline can now identify SNPs and INDELs. `PEPPER SNP` module calls variants using the following steps:
@@ -13,9 +33,9 @@ i) `make_images`: This step creates summary of potential candidate variants.
 * Then for each candidate we do another set of filtering, we see if at least `--pepper_candidate_support_threshold` reads support that candidate and the frequency of the allele is above `--pepper_snp_candidate_frequency_threshold` for SNPs or `--pepper_indel_candidate_frequency_threshold` for INDELs.
   * Note, in the previous step, the thresholds are applied to each "site" whereas in this step the thresholds are applied to each candidate. For example, in a genomic position, if the reference base is `A` and we obverse `C, G, T` alts with `0.01, 0.05, 0.2` the frequency for previous step would be `0.01 + 0.05 + 0.2 = 0.26` but in this step, the frequency would be independent and `0.01, 0.05, 0.2` will have to be higher than `--pepper_snp_candidate_frequency_threshold`.
 * Finally, once the candidates are selected, we create a summary of read alignment:
-<center>
+<p align="center">
 <img src="img/PEPPER_SNP_image_v7.png" alt="PEPPER SNP summary" height=500px>
-</center>
+</p>
 
 * Feature descriptions:
   * <b>REF</b>: Encodes the reference base
@@ -42,10 +62,13 @@ iii) `find_candidates`: This step takes the predictions of the previous step to 
     * For a delete, if the value of `max(P[hom(0/1)], P[hom(1/1)])` is higher than `--pepper_delete_p_value` then it is considered as a candidate.
   * We genotype each candidate by taking argmax of `[hom (0/0), het (0/1), hom-alt (1/1)]`. The quality (QUAL) of the variant site is calculated by taking the minimum value of `P[argmax]` class for each candidate in the site.
   * SNP candidate variants with QUAL less than `--pepper_snp_q_cutoff` are re-genotyped with DeepVariant.
+  <p align="center">
   <img src="img/pepper_score_calibration_snp.png" alt="PEPPER SNP score calibration" width=700px>
-
+  </p>
   * INDEL candidate variants with QUAL less than `--pepper_indel_q_cutoff` are re-genotyped with DeepVariant.
+  <p align="center">
   <img src="img/pepper_score_calibration_indels.png" alt="PEPPER SNP score calibration" width=700px>
+  </p>
   * All variants are used for haplotagging with margin.
 
 ### Step 2: Margin [Haplotagging reads]
@@ -90,13 +113,15 @@ The following parameters are used to select reads:
 
 ### Step 3: PEPPER-HP [Only used for ONT]
 `PEPPER HP` uses the exact infrustucture as `PEPPER SNP`. The only difference is the way we generate the summary. The `PEPPER_HP` summary has the following attributes:
-<center>
+<p align="center">
 <img src="img/PEPPER_HP_image_v7.png" alt="PEPPER HP summary" height=700px>
-</center>
+</p>
 
 ### Step 5: DeepVariant
 DeepVariant re-genotypes the candidates proposed by `PEPPER-HP` using reads haplotagged by `Margin`. We use the following features for DeepVariant:
+<p align="center">
 <img src="img/deepvariant_pileup.png" alt="PEPPER HP summary" height=100px>
+</p>
 
 * **Read base**: Base observed at each position.
 * **Base quality**: Base quality of each bases.
