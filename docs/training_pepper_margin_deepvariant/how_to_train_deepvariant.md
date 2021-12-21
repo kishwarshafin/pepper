@@ -351,11 +351,12 @@ And then we can start training and evaluating concurrently:
 DEEPVARIANT_MODEL_OUTPUT_DIR=${OUTPUT_DIR}/deepvariant_models
 mkdir -p ${DEEPVARIANT_MODEL_OUTPUT_DIR}
 
-( time docker run \
+( time docker run --ipc=host \
+  --gpus all \
   -v "${INPUT_DIR}":"${INPUT_DIR}" \
   -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
   -u `id -u`:`id -g` \
-  google/deepvariant:"1.3.0-gpu" \
+  kishwars/pepper_deepvariant:r0.7-gpu \
   /opt/deepvariant/bin/model_train \
   --dataset_config_pbtxt="${OUTPUT_DIR}/training_set.dataset_config.pbtxt" \
   --train_dir="${DEEPVARIANT_MODEL_OUTPUT_DIR}" \
