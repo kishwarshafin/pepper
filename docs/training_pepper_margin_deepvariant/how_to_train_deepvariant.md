@@ -367,7 +367,19 @@ mkdir -p ${DEEPVARIANT_MODEL_OUTPUT_DIR}
   --learning_rate=0.0005 \
   --start_from_checkpoint="${ONT_DV_MODEL_DIR}/dv_ont_r9_guppy5_sup_vc_model" \
 ) > "${OUTPUT_DIR}/deepvariant_train.log" 2>&1 &
+```
+As we launch the training in background we won't see any errors if there are any issues with the run.
 
+Please keep an eye on the output log for a bit to make sure that training has started and then move to the next step:
+```bash
+# This will print the training log every 1.0 sec
+watch -n 1 cat "${OUTPUT_DIR}/deepvariant_train.log"
+
+# Once you are sure that training is going smoothly, proceed to the next step.
+```
+
+Now we can also launch the evaluation process.
+```bash
 # We can use the pepper-deepvariant docker for evaluation
 docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
