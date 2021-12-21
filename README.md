@@ -37,8 +37,8 @@ Detailed variant calling performance evaluation:
 ---
 
 ### Useful links to documentations
-* [Quickstarts to check system configuration.](###Case-studies-(chromosome-20-runs-for-performance-reproducibility))
-* [Case-studies to reproduce performance.](###Quickstarts-(small-runs-for-docker-or-singularity-to-test-system-configuration))
+* [Quickstarts to check system configuration.](#case-studies-chromosome-20-runs-for-performance-reproducibility)
+* [Case-studies to reproduce performance.](#quickstarts-small-runs-to-test-system-configuration)
 * [Description of PEPPER-Margin-DeepVariant method.](./docs/misc/pepper_v0.7_method_update.md)
 * How to train PEPPER-DeepVariant:
     * [How to train PEPPER-SNP.](./docs/training_pepper_margin_deepvariant/how_to_train_pepper_snp.md)
