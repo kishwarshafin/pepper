@@ -376,6 +376,7 @@ Please keep an eye on the output log for a bit to make sure that training has st
 watch -n 1 cat "${OUTPUT_DIR}/deepvariant_train.log"
 
 # Once you are sure that training is going smoothly, proceed to the next step.
+# You can cancel this watch by running ctrl+c
 ```
 
 Now we can also launch the evaluation process.
