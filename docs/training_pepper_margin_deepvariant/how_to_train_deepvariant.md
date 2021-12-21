@@ -342,9 +342,9 @@ ls ${ONT_DV_MODEL_DIR}
 # dv_ont_r9_guppy5_sup_vc_model.index
 # dv_ont_r9_guppy5_sup_vc_model.meta
 ```
-Next we fetch the gpu docker of DeepVariant:
+Next we fetch the gpu docker of PEPPER-DeepVariant:
 ```bash
-docker pull google/deepvariant:"1.3.0-gpu"
+docker pull kishwars/pepper_deepvariant:r0.7-gpu
 ```
 And then we can start training and evaluating concurrently:
 ```bash
