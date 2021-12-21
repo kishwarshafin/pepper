@@ -20,8 +20,8 @@ The new r0.7 variant calling results report:
 
 Detailed variant calling performance evaluation:
 * [ONT R9.4.1 Guppy 5 "Sup" HG003 whole genome (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_whole_genome.md)
-* [ONT R9.4.1 Guppy 5 "Sup" HG002-HG006 chr20 (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_whole_genome.md)
-* [PacBio HiFi (PEPPER-Margin-DeepVariant vs DeepVariant-WhatsHap-DeepVariant).](./docs/performance_evaluation)
+* [ONT R9.4.1 Guppy 5 "Sup" HG002-HG006 chr20 (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_chr20.md)
+* [PacBio HiFi (PEPPER-Margin-DeepVariant vs DeepVariant-WhatsHap-DeepVariant).](./docs/performance_evaluation/PacBio_hifi_HG003_chr20.md)
 
 ---
 
