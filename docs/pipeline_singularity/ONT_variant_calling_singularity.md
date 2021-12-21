@@ -16,6 +16,7 @@ Reference:  GRCh38_no_alt
 ```
 
 #### Command-line instructions
+##### Step 1: Install singularity [must be installed by root]
 <details>
 <summary>
 Expand to see singularity installation guide.
