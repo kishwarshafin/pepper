@@ -16,7 +16,7 @@ Please cite the following manuscript if you are using `PEPPER-Margin-DeepVariant
 
 Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey Kolesnikov, Sidharth Goel, <br/> Gunjan Baid, Mikhail Kolmogorov, Jordan M. Eizenga, Karen H. Miga, Paolo Carnevali, Miten Jain, Andrew Carroll & Benedict Paten.
 
-**Free access link to the manuscript:** [https://rdcu.be/cABfv]()
+**Free access link to the manuscript:** [https://rdcu.be/cABfv](https://rdcu.be/cABfv)
 </details>
 
 
