@@ -1,4 +1,4 @@
-## Oxford Nanopore variant calling workflow [Using singularity]
+## Oxford Nanopore R10.4 Q20 variant calling workflow [Using singularity]
 PEPPER-Margin-DeepVariant is a haplotype-aware variant calling pipeline for long reads.
 
 <img src="../../img/PMDV_variant_calling_ONT_v5.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow">

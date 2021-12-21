@@ -7,21 +7,34 @@
 <img src="./img/PMDV_variant_calling_ONT_v5.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow" width="720p"></img>
 </p>
 
+### How to cite
+Please cite the following manuscript if you are using `PEPPER-Margin-DeepVariant`:
+
+<details>
+<summary><a href="https://rdcu.be/cABfv"><b>Nature Methods:</b> Haplotype-aware variant calling enables high accuracy in nanopore long-reads using deep neural networks.</a></summary>
+Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey Kolesnikov, Sidharth Goel, <br/> Gunjan Baid, Mikhail Kolmogorov, Jordan M. Eizenga, Karen H. Miga, Paolo Carnevali, Miten Jain, Andrew Carroll & Benedict Paten.
+</details>
+
 ---
 ### Version r0.7 update
 
 The new r0.7 variant calling results report:
+* Detailed explanation of methods.
 * Detailed performance evaluation on ONT and PacBio-HiFi data.
 * Included training documentation for PEPPER-Margin-DeepVariant.
-* Detailed explanation of method update.
 * Examples on how to tune parameters to balance speed and accuracy.
+* State-of-the-art results for all platforms.
 
 ### Variant calling performance
 
 Detailed variant calling performance evaluation:
-* [ONT R9.4.1 Guppy 5 "Sup" HG003 whole genome (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_whole_genome.md)
-* [ONT R9.4.1 Guppy 5 "Sup" HG002-HG006 chr20 (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_chr20.md)
-* [PacBio HiFi (PEPPER-Margin-DeepVariant vs DeepVariant-WhatsHap-DeepVariant).](./docs/performance_evaluation/PacBio_hifi_HG003_chr20.md)
+* **ONT R9.4.1 Guppy 5.0.6 Sup:**
+  * [HG003 whole genome (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_whole_genome.md)
+  * [HG002-HG006 chr20 (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_chr20.md)
+* **ONT R10.4 Q20 Guppy 5.0.15 Sup:**
+  * [HG002 chr20 (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r10.4_q20_chr20.md)
+* **PacBio HiFi:**
+  * [HG003 chr20 (PEPPER-Margin-DeepVariant vs DeepVariant-WhatsHap-DeepVariant).](./docs/performance_evaluation/PacBio_hifi_HG003_chr20.md)
 
 ---
 
@@ -36,14 +49,7 @@ Detailed variant calling performance evaluation:
 * [How to tune parameters to balance speed and accuracy.](./docs/usage/speed_and_accuracy.md)
 
 
-### How to cite
-Please cite the following manuscript if you are using `PEPPER-Margin-DeepVariant`:
 
-
-<details>
-<summary><a href="https://www.nature.com/articles/s41592-021-01299-w"><b>Nature Methods:</b> Haplotype-aware variant calling enables high accuracy in nanopore long-reads using deep neural networks.</a></summary>
-Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey Kolesnikov, Sidharth Goel, <br/> Gunjan Baid, Mikhail Kolmogorov, Jordan M. Eizenga, Karen H. Miga, Paolo Carnevali, Miten Jain, Andrew Carroll & Benedict Paten.
-</details>
 
 ---
 ### How to run

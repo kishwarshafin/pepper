@@ -58,7 +58,7 @@ def set_parameters(options):
         # image generation
         if options.sub_command in ['call_variant', 'make_images', 'make_train_images']:
             if options.min_mapq is None:
-                options.min_mapq = 5
+                options.min_mapq = 1
             if options.min_snp_baseq is None:
                 options.min_snp_baseq = 1
             if options.min_indel_baseq is None:
