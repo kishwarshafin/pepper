@@ -90,30 +90,30 @@ At all coverages and for all samples `PEPPER-Margin-DeepVariant` outperforms `Cl
 #### HG002 chr20 variant calling performance
 
 <p align="center">
-<img src="img/pmdv_v7_release_ont_HG002.png" alt="PEPPER performance whole genome" height=500px>
+<img src="img/pmdv_v7_release_ont_HG002.png" alt="PEPPER performance whole genome">
 </p>
 
 #### HG003 chr20 variant calling performance
 
 <p align="center">
-<img src="img/pmdv_v7_release_ont_HG003.png" alt="PEPPER performance whole genome" height=500px>
+<img src="img/pmdv_v7_release_ont_HG003.png" alt="PEPPER performance whole genome">
 </p>
 
 #### HG004 chr20 variant calling performance
 
 <p align="center">
-<img src="img/pmdv_v7_release_ont_HG004.png" alt="PEPPER performance whole genome" height=500px>
+<img src="img/pmdv_v7_release_ont_HG004.png" alt="PEPPER performance whole genome">
 </p>
 
 #### HG005 chr20 variant calling performance
 <p align="center">
-<img src="img/pmdv_v7_release_ont_HG005.png" alt="PEPPER performance whole genome" height=500px>
+<img src="img/pmdv_v7_release_ont_HG005.png" alt="PEPPER performance whole genome">
 </p>
 
 #### HG006 chr20 variant calling performance
 
 <p align="center">
-<img src="img/pmdv_v7_release_ont_HG006.png" alt="PEPPER performance whole genome" height=500px>
+<img src="img/pmdv_v7_release_ont_HG006.png" alt="PEPPER performance whole genome">
 </p>
 
 ### Data availability

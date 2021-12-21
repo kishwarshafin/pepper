@@ -71,7 +71,7 @@ run_pepper_margin_deepvariant call_variant \
 
 In all stratified coverages `(30x, 60x, 85x)`, PEPPER-Margin-DeepVariant outperforms Clair3 both in SNP and INDEL accuracy:
 <p align="center">
-<img src="img/pmdv_v7_release_ont_HG003_wgs.png" alt="PEPPER performance whole genome" height=600px>
+<img src="img/pmdv_v7_release_ont_HG003_wgs.png" alt="PEPPER performance whole genome">
 </p>
 
 ##### HG003 30x performance:
