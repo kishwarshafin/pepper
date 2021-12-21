@@ -8,13 +8,21 @@
 </p>
 
 ---
-### Version 0.6 update
+### Version r0.7 update
 
-PEPPER-Margin-deepvariant v0.6 supports:
-* Oxford Nanopore Variant calling for Guppy 5.0.7 "Sup" basecaller.
-* Oxford Nanopore Variant calling for R10.4 Q20.
-* PacBio-HiFi variant calling.
-* Assembly-based structural variant calling method [HapDup](https://github.com/fenderglass/hapdup).
+The new r0.7 variant calling results report:
+* Detailed performance evaluation on ONT and PacBio-HiFi data.
+* Included training documentation for PEPPER-Margin-DeepVariant.
+* Detailed explanation of method update.
+* Examples on how to tune parameters to balance speed and accuracy.
+
+### Variant calling performance
+
+Detailed variant calling performance evaluation:
+* [ONT R9.4.1 Guppy 5 "Sup" HG003 whole genome (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_whole_genome.md)
+* [ONT R9.4.1 Guppy 5 "Sup" HG002-HG006 chr20 (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_whole_genome.md)
+* [PacBio HiFi (PEPPER-Margin-DeepVariant vs DeepVariant-WhatsHap-DeepVariant).](./docs/performance_evaluation)
+
 ---
 
 ### Useful links to documentations
@@ -25,6 +33,7 @@ PEPPER-Margin-deepvariant v0.6 supports:
     * [How to train DeepVariant (using candidates from PEPPER).](./docs/training_pepper_margin_deepvariant/how_to_train_deepvariant.md)
 * [How to install PEPPER locally.](./docs/local_install/install_pepper_locally.md)
 * [List of parameters and description.](./docs/usage/usage_and_parameters.md)
+* [How to tune parameters to balance speed and accuracy.](./docs/usage/speed_and_accuracy.md)
 
 
 ### How to cite
@@ -43,7 +52,7 @@ PEPPER-Margin-DeepVariant can be run using **Docker** or **Singularity**. A simp
 sudo docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.6 \
+kishwars/pepper_deepvariant:r0.7 \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \

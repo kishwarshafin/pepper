@@ -231,7 +231,7 @@ do
       -v "${INPUT_DIR}":"${INPUT_DIR}" \
       -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
       -u `id -u`:`id -g` \
-      kishwars/pepper_deepvariant:test-r0.7 \
+      kishwars/pepper_deepvariant:r0.7 \
       /opt/deepvariant/bin/make_examples \
       --mode training \
       --ref $REF \
@@ -256,7 +256,7 @@ do
       -v "${INPUT_DIR}":"${INPUT_DIR}" \
       -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
       -u `id -u`:`id -g` \
-      kishwars/pepper_deepvariant:test-r0.7 \
+      kishwars/pepper_deepvariant:r0.7 \
       /opt/deepvariant/bin/make_examples \
       --mode training \
       --ref $REF \
@@ -332,7 +332,7 @@ docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
 -u `id -u`:`id -g` \
-kishwars/pepper_deepvariant:test-r0.7 \
+kishwars/pepper_deepvariant:r0.7 \
 cp -r /opt/dv_models/ont_deepvariant_vc/ ${ONT_DV_MODEL_DIR}
 ```
 Now we can see the models in the directory:
@@ -372,7 +372,7 @@ docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
 -u `id -u`:`id -g` \
-kishwars/pepper_deepvariant:test-r0.7 \
+kishwars/pepper_deepvariant:r0.7 \
 /opt/deepvariant/bin/model_eval \
 --dataset_config_pbtxt="${OUTPUT_DIR}/test_set.dataset_config.pbtxt" \
 --checkpoint_dir="${DEEPVARIANT_MODEL_OUTPUT_DIR}" \
@@ -402,7 +402,7 @@ EVAL_OUTPUT_DIR=$OUTPUT_DIR/pepper_margin_deepvariant_eval
 docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:test-r0.7 \
+kishwars/pepper_deepvariant:r0.7 \
 run_pepper_margin_deepvariant call_variant \
 -b "${BAM}" \
 -f "${REF}" \
