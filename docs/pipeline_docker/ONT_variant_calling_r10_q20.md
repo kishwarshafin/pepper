@@ -17,8 +17,15 @@ Reference:  GRCh38_no_alt
 ```
 
 #### Command-line instructions
+
 ##### Step 1: Install docker
+<details>
+<summary>
+Expand to see docker installation guide.
+</summary>
+
 Please install docker and wget if you don't have it installed already. You can install docker for other distros from here:
+
 * [CentOS](https://docs.docker.com/engine/install/centos/) docker installation guide
 * [Debian/Raspbian](https://docs.docker.com/engine/install/debian/) docker installation guide
 * [Fedora](https://docs.docker.com/engine/install/fedora/) installation guide
@@ -57,6 +64,7 @@ docker run hello-world
 
 # If you can run docker without sudo then change the following commands accordingly.
 ```
+</details>
 
 ##### Step 2: Download and prepare input data
 ```bash
