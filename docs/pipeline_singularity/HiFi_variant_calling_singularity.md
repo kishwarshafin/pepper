@@ -4,8 +4,8 @@ PEPPER-Margin-DeepVariant is a haplotype-aware variant calling pipeline for long
 <img src="../../img/PMDV_variant_calling_HiFi_v6.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow">
 
 ----
-### PacBio HiFi HG002 chr20 case-study
-We evaluated this pipeline on `~35x` HG002 data.
+### PacBio HiFi HG003 chr20 case-study
+We evaluated this pipeline on `~35x` HG002 data. The data is publicly available, please feel free to download, run and evaluate the pipeline.
 ```bash
 Sample:     HG003
 Coverage:   ~35x

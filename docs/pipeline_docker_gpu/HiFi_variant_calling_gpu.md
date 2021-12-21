@@ -12,6 +12,7 @@ Coverage:   ~35x
 Region:     chr20
 Reference:  GRCh38_no_alt
 ```
+
 #### Command-line instructions
 
 ##### Step 1: Install CUDA and NVIDIA-docker

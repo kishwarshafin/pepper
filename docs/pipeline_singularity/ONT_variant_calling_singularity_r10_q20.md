@@ -6,11 +6,12 @@ PEPPER-Margin-DeepVariant is a haplotype-aware variant calling pipeline for long
 ----
 
 ### HG002 chr20 case-study
-We evaluated this pipeline on `~30x` HG002 data.
+We evaluated this pipeline on `~75x` HG002 data. The data is publicly available, please feel free to download, run and evaluate the pipeline.
 ```bash
 Sample:     HG002
+Chemistry:  R10.4 Q20
 Coverage:   ~25-90x
-Basecaller: Guppy 5.0.7 SUP or higher
+Basecaller: Guppy 5.0.15 Sup
 Region:     chr20
 Reference:  GRCh38_no_alt
 ```
