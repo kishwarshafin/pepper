@@ -15,18 +15,9 @@ Please cite the following manuscript if you are using `PEPPER-Margin-DeepVariant
 Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey Kolesnikov, Sidharth Goel, <br/> Gunjan Baid, Mikhail Kolmogorov, Jordan M. Eizenga, Karen H. Miga, Paolo Carnevali, Miten Jain, Andrew Carroll & Benedict Paten.
 </details>
 
-**Free access link:** [https://rdcu.be/cABfv]()
+**Free access link to the manuscript:** [https://rdcu.be/cABfv]()
 
 ---
-
-
-### Version r0.7 update
-The new r0.7 variant calling results report:
-* Detailed explanation of methods.
-* Detailed performance evaluation on ONT and PacBio-HiFi data.
-* Included training documentation for PEPPER-Margin-DeepVariant.
-* Examples on how to tune parameters to balance speed and accuracy.
-* State-of-the-art results for all platforms.
 
 ### Long read variant calling performance evaluation
 
@@ -42,6 +33,8 @@ Detailed variant calling performance evaluation:
 ---
 
 ### Useful links to documentations
+* [Quickstarts to check system configuration.](###Case-studies-(chromosome-20-runs-for-performance-reproducibility))
+* [Case-studies to reproduce performance.](###Quickstarts-(small-runs-for-docker-or-singularity-to-test-system-configuration))
 * [Description of PEPPER-Margin-DeepVariant method.](./docs/misc/pepper_v0.7_method_update.md)
 * How to train PEPPER-DeepVariant:
     * [How to train PEPPER-SNP.](./docs/training_pepper_margin_deepvariant/how_to_train_pepper_snp.md)
@@ -71,7 +64,7 @@ run_pepper_margin_deepvariant call_variant \
 # for PacBio-HiFi reads: --hifi
 ```
 
-### Quickstarts (small runs for docker or singularity to test system configuration)
+### Quickstarts (small runs to test system configuration)
 |                  Test type                    |                          Links                                             |
 |:---------------------------------------------:|:--------------------------------------------------------------------------:|
 |              Docker quickstart                |  [Link](./docs/quickstart/variant_calling_docker_quickstart.md)            |
