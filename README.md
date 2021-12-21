@@ -71,7 +71,7 @@ run_pepper_margin_deepvariant call_variant \
 # for PacBio-HiFi reads: --hifi
 ```
 
-### Case studies (One whole chromosome run for performance reproducibility)
+### Case studies (Chromosome 20 run for performance reproducibility)
 
 |                       Pipeline                                 |                         Docker                                 |                               Singularity                                       |                     NVIDIA-docker<br>(GPU)                             |
 |:--------------------------------------------------------------:|:--------------------------------------------------------------:|:-------------------------------------------------------------------------------:|:----------------------------------------------------------------------:|
