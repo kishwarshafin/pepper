@@ -6,17 +6,21 @@ PEPPER-Margin-DeepVariant is a haplotype-aware variant calling pipeline for long
 ----
 
 ### HG002 chr20 case-study
-We evaluated this pipeline on `~30x` HG002 data.
+We evaluated this pipeline on `~90x` HG002 data. The data is publicly available, please feel free to download, run and evaluate the pipeline.
 ```bash
 Sample:     HG002
 Coverage:   ~25-90x
-Basecaller: Guppy 5.0.7 SUP or higher
+Basecaller: Guppy 5.0.7 "SUP"
 Region:     chr20
 Reference:  GRCh38_no_alt
 ```
 
 #### Command-line instructions
-##### Step 1: Install singularity [must be installed by root]
+<details>
+<summary>
+Expand to see singularity installation guide.
+</summary>
+
 Please install [Singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps). This must be installed by the system admin.
 
 Follow these installation [instructions](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps) to install Singularity 3.7, if you want to install a newer version please follow instructions from the [singulaity website](https://sylabs.io/).
@@ -33,7 +37,6 @@ wget \
 pkg-config \
 git \
 cryptsetup
-
 
 # Install Go on linux: https://golang.org/doc/install
 export VERSION=1.14.12 OS=linux ARCH=amd64 && \
@@ -59,6 +62,7 @@ sudo make -C builddir install
 # After installation is complete log out and log in
 singularity help
 ```
+</details>
 
 ##### Step 2: Download and prepare input data
 ```bash
@@ -67,23 +71,23 @@ BASE="${HOME}/ont-case-study"
 # Set up input data
 INPUT_DIR="${BASE}/input/data"
 REF="GRCh38_no_alt.chr20.fa"
-BAM="HG002_guppy_507_2_GRCh38_pass.chr20.30x.bam"
+BAM="HG002_guppy_507_2_GRCh38_pass.chr20.bam"
 
 # Set the number of CPUs to use
 THREADS="64"
 
 # Set up output directory
 OUTPUT_DIR="${BASE}/output"
-OUTPUT_PREFIX="HG002_ONT_30x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
-OUTPUT_VCF="PEPPER_MARGIN_DEEPVARIANT_OUTPUT.vcf.gz"
+OUTPUT_PREFIX="HG002_ONT_R941_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
+OUTPUT_VCF="HG002_ONT_R941_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
 
 ## Create local directory structure
 mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${INPUT_DIR}"
 
 # Download the data to input directory
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_guppy_507_2_GRCh38_pass.chr20.30x.bam
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_guppy_507_2_GRCh38_pass.chr20.30x.bam.bai
+wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_guppy_507_2_GRCh38_pass.chr20.bam
+wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_guppy_507_2_GRCh38_pass.chr20.bam.bai
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/GRCh38_no_alt.chr20.fa
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/GRCh38_no_alt.chr20.fa.fai
 ```
@@ -91,7 +95,7 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/us
 ##### Step 3: Run PEPPER-Margin-DeepVariant
 ```bash
 ## Pull the docker image to sigularity
-singularity pull docker://kishwars/pepper_deepvariant:r0.6
+singularity pull docker://kishwars/pepper_deepvariant:r0.7
 
 # Run PEPPER-Margin-DeepVariant
 singularity exec --bind /usr/lib/locale/ \
@@ -100,6 +104,7 @@ run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
 -o "${OUTPUT_DIR}" \
+-p "${OUTPUT_PREFIX}" \
 -t "${THREADS}" \
 --ont_r9_guppy5_sup # For R10.4 Q20 reads set: --ont_r10_q20
 ```
@@ -142,8 +147,8 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 |  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives |  Recall  | Precision | F1-Score |
 |:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:--------:|:---------:|:--------:|
-| INDEL |      11256     |        6897       |        4359        |        1211        | 0.61274  |  0.853443 | 0.713333 |
-|  SNP  |      71333     |       71012       |         321        |         256        | 0.99550  |  0.996409 | 0.995954 |
+| INDEL |      11256     |        8297       |        2959        |        621         | 0.73711  |  0.931945 | 0.823161 |
+|  SNP  |      71333     |       71257       |         76         |        108         | 0.99893  |  0.998487 | 0.998711 |
 
 ### Authors:
 This pipeline is developed in a collaboration between UCSC genomics institute and the genomics team at Google health.

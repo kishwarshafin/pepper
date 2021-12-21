@@ -6,12 +6,12 @@ PEPPER-Margin-DeepVariant is a haplotype-aware variant calling pipeline for long
 ----
 
 ### HG002 chr20 case-study
-We evaluated this pipeline on `~85x` HG002 data. The data is publicly available, please feel free to download, run and evaluate the pipeline.
+We evaluated this pipeline on `~75x` HG002 data. The data is publicly available, please feel free to download, run and evaluate the pipeline.
 ```bash
 Sample:     HG002
-Chemistry: R10.4 Q20
+Chemistry:  R10.4 Q20
 Coverage:   ~25-90x
-Basecaller: Guppy 5
+Basecaller: Guppy 5.0.15 Sup
 Region:     chr20
 Reference:  GRCh38_no_alt
 ```
@@ -72,8 +72,8 @@ THREADS="64"
 
 # Set up output directory
 OUTPUT_DIR="${BASE}/output"
-OUTPUT_PREFIX="HG002_ONT_30x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
-OUTPUT_VCF="PEPPER_MARGIN_DEEPVARIANT_OUTPUT.vcf.gz"
+OUTPUT_PREFIX="HG002_ONT_R10_Q20_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
+OUTPUT_VCF="HG002_ONT_R10_Q20_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
 
 ## Create local directory structure
 mkdir -p "${OUTPUT_DIR}"
@@ -89,17 +89,18 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/us
 ##### Step 3: Run PEPPER-Margin-DeepVariant
 ```bash
 ## Pull the docker image.
-sudo docker pull kishwars/pepper_deepvariant:r0.6
+sudo docker pull kishwars/pepper_deepvariant:r0.7
 
 # Run PEPPER-Margin-DeepVariant
 sudo docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.6 \
+kishwars/pepper_deepvariant:r0.7 \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
 -o "${OUTPUT_DIR}" \
+-p "${OUTPUT_PREFIX}" \
 -t "${THREADS}" \
 --ont_r10_q20
 ```
@@ -141,10 +142,10 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 **Expected output:**
 
-|  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives |  Recall  | Precision | F1-Score |
-|:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:--------:|:---------:|:--------:|
-| INDEL |      11256     |        9554       |        1702        |        983        | 0.848792  |  0.908601 | 0.877678 |
-|  SNP  |      71333     |       71286       |         47        |         62         | 0.999341  |  0.999132 | 0.999236 |
+|  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives |  Recall   | Precision | F1-Score |
+|:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:---------:|:---------:|:--------:|
+| INDEL |      11256     |        9443       |        1813        |        893         | 0.838930  |  0.915436 | 0.875515 |
+|  SNP  |      71333     |       71288       |         45         |         55         | 0.999369  |  0.999229 | 0.999299 |
 
 ### Authors:
 This pipeline is developed in a collaboration between UCSC genomics institute and the genomics team at Google health.

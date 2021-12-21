@@ -6,7 +6,7 @@ PEPPER-Margin-DeepVariant is a haplotype-aware variant calling pipeline for long
 ----
 
 ### HG002 chr20 case-study
-We evaluated this pipeline on `~30x` HG002 data.
+We evaluated this pipeline on `~90x` HG002 data.
 ```bash
 Sample:     HG002
 Coverage:   ~25-90x
@@ -16,6 +16,13 @@ Reference:  GRCh38_no_alt
 ```
 
 #### Command-line instructions
+##### Step 1: Install CUDA and NVIDIA-docker
+
+<details>
+<summary>
+Expand to see <b>CUDA + NVIDIA-docker</b> installation guide.
+</summary>
+
 ##### Preprocessing: Install CUDA [must be installed by root]
 Install CUDA toolkit 11.0 from the [CUDA archive](https://developer.nvidia.com/cuda-toolkit-archive).
 
@@ -96,6 +103,7 @@ sudo systemctl restart docker
 sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
 # The output show show all your GPUs, if you enabled Docker for users then you should be able to run nvidia-docker without sudo
 ```
+</details>
 
 ##### Step 2: Download and prepare input data
 ```bash
@@ -104,23 +112,23 @@ BASE="${HOME}/ont-case-study"
 # Set up input data
 INPUT_DIR="${BASE}/input/data"
 REF="GRCh38_no_alt.chr20.fa"
-BAM="HG002_guppy_507_2_GRCh38_pass.chr20.30x.bam"
+BAM="HG002_guppy_507_2_GRCh38_pass.chr20.bam"
 
 # Set the number of CPUs to use
 THREADS="64"
 
 # Set up output directory
 OUTPUT_DIR="${BASE}/output"
-OUTPUT_PREFIX="HG002_ONT_30x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
-OUTPUT_VCF="HG002_ONT_30x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
+OUTPUT_PREFIX="HG002_ONT_90x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
+OUTPUT_VCF="HG002_ONT_90x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
 
 ## Create local directory structure
 mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${INPUT_DIR}"
 
 # Download the data to input directory
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_guppy_507_2_GRCh38_pass.chr20.30x.bam
-wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_guppy_507_2_GRCh38_pass.chr20.30x.bam.bai
+wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_guppy_507_2_GRCh38_pass.chr20.bam
+wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/HG002_guppy_507_2_GRCh38_pass.chr20.bam.bai
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/GRCh38_no_alt.chr20.fa
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/GRCh38_no_alt.chr20.fa.fai
 ```
@@ -128,14 +136,14 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/us
 ##### Step 3: Run PEPPER-Margin-DeepVariant
 ```bash
 ## Pull the docker image.
-sudo docker pull kishwars/pepper_deepvariant:r0.5-gpu
+sudo docker pull kishwars/pepper_deepvariant:r0.7-gpu
 
 # Run PEPPER-Margin-DeepVariant
 sudo docker run --ipc=host \
 --gpus all \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.5-gpu \
+kishwars/pepper_deepvariant:r0.7-gpu \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
@@ -143,12 +151,7 @@ run_pepper_margin_deepvariant call_variant \
 -p "${OUTPUT_PREFIX}" \
 -t ${THREADS} \
 -g \
---ont
-
-# Optional parameters:
-# -s HG002 # optional: Sets Sample Name
-# --gvcf # optional: Produces gVCF output
-# --phased_output # optional: Produces phased output
+--ont_r9_guppy5_sup
 ```
 
 ###### Evaluation using hap.py (Optional)
@@ -190,8 +193,8 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 |  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives |  Recall  | Precision | F1-Score |
 |:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:--------:|:---------:|:--------:|
-| INDEL |      11256     |        7131       |        4125        |        2146        | 0.633529 |  0.770800 | 0.695455 |
-|  SNP  |      71333     |       71006       |         327        |         314        | 0.995416 |  0.995598 | 0.995507 |
+| INDEL |      11256     |        8297       |        2959        |         621        | 0.737118 |  0.931945 | 0.823161 |
+|  SNP  |      71333     |       71257       |         76         |         108        | 0.998935 |  0.998487 | 0.998711 |
 
 ### Authors:
 This pipeline is developed in a collaboration between UCSC genomics institute and the genomics team at Google health.

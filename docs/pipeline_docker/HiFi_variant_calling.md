@@ -15,6 +15,11 @@ Reference:  GRCh38_no_alt
 
 #### Command-line instructions
 ##### Step 1: Install docker
+<details>
+<summary>
+Expand to see docker installation guide.
+</summary>
+
 Please install docker and wget if you don't have it installed already. You can install docker for other distros from here:
 * [CentOS](https://docs.docker.com/engine/install/centos/) docker installation guide
 * [Debian/Raspbian](https://docs.docker.com/engine/install/debian/) docker installation guide
@@ -54,6 +59,7 @@ docker run hello-world
 
 # If you can run docker without sudo then change the following commands accordingly.
 ```
+</details>
 
 ##### Step 2: Download and prepare input data
 ```bash
@@ -63,7 +69,8 @@ BASE="${HOME}/hifi-case-study"
 INPUT_DIR="${BASE}/input/data"
 REF="GRCh38_no_alt.chr20.fa"
 BAM="HG003.GRCh38.chr20.pFDA_truthv2.bam"
-OUTPUT_VCF="PEPPER_MARGIN_DEEPVARIANT_OUTPUT.vcf.gz"
+OUTPUT_PREFIX="HG002_HiFi_35x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
+OUTPUT_VCF="HG002_HiFi_35x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
 
 # Set the number of CPUs to use
 THREADS="64"
@@ -74,7 +81,6 @@ OUTPUT_DIR="${BASE}/output"
 ## Create local directory structure
 mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${INPUT_DIR}"
-mkdir -p input
 
 # Download the data to input directory
 wget -P ${INPUT_DIR} https://downloads.pacbcloud.com/public/dataset/HG003/deepvariant-case-study/HG003.GRCh38.chr20.pFDA_truthv2.bam
@@ -83,20 +89,21 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/us
 wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/usecase_data/GRCh38_no_alt.chr20.fa.fai
 ```
 
-##### Step 3: Run PEPPER-Margin to generate a phased bam
+##### Step 3: Run PEPPER-Margin-DeepVariant
 ```bash
 ## Pull the docker image.
-sudo docker pull kishwars/pepper_deepvariant:r0.6
+sudo docker pull kishwars/pepper_deepvariant:r0.7
 
 # Run PEPPER-Margin-DeepVariant
 sudo docker run --ipc=host \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.6 \
+kishwars/pepper_deepvariant:r0.7 \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
 -o "${OUTPUT_DIR}" \
+-p "${OUTPUT_PREFIX}" \
 -t "${THREADS}" \
 --hifi
 ```
@@ -140,8 +147,8 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 |  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives |  Recall  | Precision | F1-Score |
 |:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:--------:|:---------:|:--------:|
-| INDEL |      10628     |       10562       |         66         |         60         | 0.993790 |  0.994577 | 0.994183 |
-|  SNP  |      70166     |       70140       |         26         |         17         | 0.999629 |  0.999758 | 0.999694 |
+| INDEL |      10628     |       10558       |         70         |         69         | 0.993414 |  0.993765 | 0.993589 |
+|  SNP  |      70166     |       70137       |         29         |         21         | 0.999587 |  0.999701 | 0.999644 |
 
 ### Authors:
 This pipeline is developed in a collaboration between UCSC genomics institute and the genomics team at Google health.

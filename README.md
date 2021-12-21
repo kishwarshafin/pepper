@@ -11,13 +11,16 @@
 Please cite the following manuscript if you are using `PEPPER-Margin-DeepVariant`:
 
 <details>
-<summary><a href="https://rdcu.be/cABfv"><b>Nature Methods:</b> Haplotype-aware variant calling enables high accuracy in nanopore long-reads using deep neural networks.</a></summary>
+<summary><a href="https://www.nature.com/articles/s41592-021-01299-w"><b>Nature Methods:</b> Haplotype-aware variant calling with PEPPER-Margin-DeepVariant enables high accuracy in nanopore long-reads. </a></summary>
 Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey Kolesnikov, Sidharth Goel, <br/> Gunjan Baid, Mikhail Kolmogorov, Jordan M. Eizenga, Karen H. Miga, Paolo Carnevali, Miten Jain, Andrew Carroll & Benedict Paten.
 </details>
 
----
-### Version r0.7 update
+**Free access link:** [https://rdcu.be/cABfv]()
 
+---
+
+
+### Version r0.7 update
 The new r0.7 variant calling results report:
 * Detailed explanation of methods.
 * Detailed performance evaluation on ONT and PacBio-HiFi data.
@@ -25,7 +28,7 @@ The new r0.7 variant calling results report:
 * Examples on how to tune parameters to balance speed and accuracy.
 * State-of-the-art results for all platforms.
 
-### Variant calling performance
+### Long read variant calling performance evaluation
 
 Detailed variant calling performance evaluation:
 * **ONT R9.4.1 Guppy 5.0.6 Sup:**
@@ -48,9 +51,6 @@ Detailed variant calling performance evaluation:
 * [List of parameters and description.](./docs/usage/usage_and_parameters.md)
 * [How to tune parameters to balance speed and accuracy.](./docs/usage/speed_and_accuracy.md)
 
-
-
-
 ---
 ### How to run
 PEPPER-Margin-DeepVariant can be run using **Docker** or **Singularity**. A simple docker command looks like:
@@ -71,19 +71,14 @@ run_pepper_margin_deepvariant call_variant \
 # for PacBio-HiFi reads: --hifi
 ```
 
-### Case studies
+### Case studies (One whole chromosome run for performance reproducibility)
 
-The variant calling pipeline can be run on [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) or [Singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps). The case studies are designed on `chr20` of `HG002` sample for ONT and `HG003` for PacBio-HiFi.
+|                       Pipeline                                 |                         Docker                                 |                               Singularity                                       |                     NVIDIA-docker<br>(GPU)                             |
+|:--------------------------------------------------------------:|:--------------------------------------------------------------:|:-------------------------------------------------------------------------------:|:----------------------------------------------------------------------:|
+|              Nanopore R9.4.1<br>variant calling                |  [Link](./docs/pipeline_docker/ONT_variant_calling.md)         |  [Link](./docs/pipeline_singularity/ONT_variant_calling_singularity.md)         |  [Link](./docs/pipeline_docker_gpu/ONT_variant_calling_gpu.md)         |
+|              Nanopore R10.4 Q20<br>variant calling             |  [Link](./docs/pipeline_docker/ONT_variant_calling_r10_q20.md) |  [Link](./docs/pipeline_singularity/ONT_variant_calling_singularity_r10_q20.md) |  [Link](./docs/pipeline_docker_gpu/ONT_variant_calling_r10_q20_gpu.md) |
+|                  PacBio HiFi<br>variant calling                |  [Link](./docs/pipeline_docker/HiFi_variant_calling.md)        |  [Link](./docs/pipeline_singularity/HiFi_variant_calling_singularity.md)        | [Link](./docs/pipeline_docker_gpu/HiFi_variant_calling_gpu.md)         |
 
-#### Oxford Nanopore Variant calling
-The case-studies include input data and benchmarking of the run:
-* Nanopore variant calling using **Docker**: [Link](./docs/pipeline_docker/ONT_variant_calling.md)
-* Nanopore variant calling using **Singularity**: [Link](./docs/pipeline_singularity/ONT_variant_calling_singularity.md)
-* **Nanopore R10.4 Q20** variant calling: [Link](./docs/pipeline_docker/ONT_variant_calling_r10_q20.md)
-
-#### PacBio-HiFi variant calling
-* PacBio-HiFi variant calling using **Docker**: [Link](./docs/pipeline_docker/HiFi_variant_calling.md)
-* PacBio-HiFi variant calling using **Singularity**: [Link](./docs/pipeline_singularity/HiFi_variant_calling_singularity.md)
 
 ### License
 [PEPPER license](./LICENSE), [Margin License](https://github.com/UCSC-nanopore-cgl/margin/blob/master/LICENSE.txt) and [DeepVariant License](https://github.com/google/deepvariant/blob/r1.1/LICENSE) extend to the trained models (PEPPER, Margin and DeepVariant) and container environment (Docker and Singularity).

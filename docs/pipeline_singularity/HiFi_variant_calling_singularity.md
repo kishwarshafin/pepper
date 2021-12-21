@@ -15,6 +15,11 @@ Reference:  GRCh38_no_alt
 
 #### Command-line instructions
 ##### Step 1: Install singularity [must be installed by root]
+<details>
+<summary>
+Expand to see singularity installation guide.
+</summary>
+
 Please install [Singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps). This must be installed by the system admin.
 
 Follow these installation [instructions](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps) to install Singularity 3.7, if you want to install a newer version please follow instructions from the [singulaity website](https://sylabs.io/).
@@ -56,6 +61,7 @@ sudo make -C builddir install
 # After installation is complete log out and log in
 singularity help
 ```
+</details>
 
 ##### Step 2: Download and prepare input data
 ```bash
@@ -65,7 +71,8 @@ BASE="${HOME}/hifi-case-study"
 INPUT_DIR="${BASE}/input/data"
 REF="GRCh38_no_alt.chr20.fa"
 BAM="HG003.GRCh38.chr20.pFDA_truthv2.bam"
-OUTPUT_VCF="PEPPER_MARGIN_DEEPVARIANT_OUTPUT.vcf.gz"
+OUTPUT_PREFIX="HG002_HiFi_35x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20"
+OUTPUT_VCF="HG002_HiFi_35x_2_GRCh38_PEPPER_Margin_DeepVariant.chr20.vcf.gz"
 
 # Set the number of CPUs to use
 THREADS="64"
@@ -76,7 +83,6 @@ OUTPUT_DIR="${BASE}/output"
 ## Create local directory structure
 mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${INPUT_DIR}"
-mkdir -p input
 
 # Download the data to input directory
 wget -P ${INPUT_DIR} https://downloads.pacbcloud.com/public/dataset/HG003/deepvariant-case-study/HG003.GRCh38.chr20.pFDA_truthv2.bam
@@ -87,8 +93,8 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/us
 
 ##### Step 3: Run PEPPER-Margin to generate a phased bam
 ```bash
-## Pull the docker image to sigularity, this is a 6.6GB download
-singularity pull docker://kishwars/pepper_deepvariant:r0.6
+## Pull the docker image to sigularity
+singularity pull docker://kishwars/pepper_deepvariant:r0.7
 
 # Run PEPPER-Margin-DeepVariant
 singularity exec --bind /usr/lib/locale/ \
@@ -97,7 +103,8 @@ run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
 -o "${OUTPUT_DIR}" \
--t ${THREADS} \
+-p "${OUTPUT_PREFIX}" \
+-t "${THREADS}" \
 --hifi
 ```
 
@@ -141,8 +148,8 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 |  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives |  Recall  | Precision | F1-Score |
 |:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:--------:|:---------:|:--------:|
-| INDEL |      10628     |       10560       |         68         |         60         | 0.993602 |  0.994576 | 0.994089 |
-|  SNP  |      70166     |       70140       |         26         |         18         | 0.999629 |  0.999744 | 0.999687 |
+| INDEL |      10628     |       10558       |         70         |         69         | 0.993414 |  0.993765 | 0.993589 |
+|  SNP  |      70166     |       70137       |         29         |         21         | 0.999587 |  0.999701 | 0.999644 |
 
 ### Authors:
 This pipeline is developed in a collaboration between UCSC genomics institute and the genomics team at Google health.
