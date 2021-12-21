@@ -98,7 +98,7 @@ singularity pull docker://kishwars/pepper_deepvariant:r0.7
 
 # Run PEPPER-Margin-DeepVariant
 singularity exec --bind /usr/lib/locale/ \
-pepper_deepvariant_r0.6.sif \
+pepper_deepvariant_r0.7.sif \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
