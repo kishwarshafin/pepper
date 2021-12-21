@@ -1,12 +1,58 @@
 ## Variant calling quickstart (Using singularity)
-Here we show a quickstart for the Oxford Nanopore and PacBio HiFi variant calling.
+Here we show a quickstart for using Singularity in your system.
 
 ### Install docker
-Please see our [ONT](../pipeline_singularity/ONT_variant_calling_singularity.md) case-study documentation to see instructions on how to install docker.
+<details>
+<summary>
+Expand to see singularity installation guide.
+</summary>
+
+Please install [Singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps). This must be installed by the system admin.
+
+Follow these installation [instructions](https://sylabs.io/guides/3.7/user-guide/quick_start.html#quick-installation-steps) to install Singularity 3.7, if you want to install a newer version please follow instructions from the [singulaity website](https://sylabs.io/).
+```bash
+# Install dependencies
+sudo apt-get update && sudo apt-get install -y \
+build-essential \
+libssl-dev \
+uuid-dev \
+libgpgme11-dev \
+squashfs-tools \
+libseccomp-dev \
+wget \
+pkg-config \
+git \
+cryptsetup
+
+# Install Go on linux: https://golang.org/doc/install
+export VERSION=1.14.12 OS=linux ARCH=amd64 && \
+wget https://dl.google.com/go/go$VERSION.$OS-$ARCH.tar.gz && \
+sudo tar -C /usr/local -xzvf go$VERSION.$OS-$ARCH.tar.gz && \
+rm go$VERSION.$OS-$ARCH.tar.gz
+
+# Set environment variable
+echo 'export PATH=/usr/local/go/bin:$PATH' >> ~/.bashrc && \
+source ~/.bashrc
+
+# Download and install singularity
+export VERSION=3.7.0 && # adjust this as necessary \
+wget https://github.com/hpcng/singularity/releases/download/v${VERSION}/singularity-${VERSION}.tar.gz && \
+tar -xzf singularity-${VERSION}.tar.gz && \
+cd singularity
+
+# install sigularity
+./mconfig && \
+make -C builddir && \
+sudo make -C builddir install  
+
+# After installation is complete log out and log in
+singularity help
+```
+</details>
 
 ## Quickstart: Nanopore variant calling
 ```bash
-BASE="${HOME}/ont-quickstart"
+BASE="${HOME}/singularity-quickstart"
 
 # Set up input data
 INPUT_DIR="${BASE}/input/data"
@@ -37,11 +83,11 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/qu
 
 # Pull the docker images
 singularity pull docker://jmcdani20/hap.py:v0.3.12
-singularity pull docker://kishwars/pepper_deepvariant:r0.5
+singularity pull docker://kishwars/pepper_deepvariant:r0.7
 
 # Run PEPPER-Margin-DeepVariant
 singularity exec --bind /usr/lib/locale/ \
-pepper_deepvariant_r0.5.sif \
+pepper_deepvariant_r0.7.sif \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
@@ -49,7 +95,7 @@ run_pepper_margin_deepvariant call_variant \
 -p "${OUTPUT_PREFIX}" \
 -t ${THREADS} \
 -r chr20:1000000-1020000 \
---ont
+--ont_r9_guppy5_sup
 
 # Run hap.py
 singularity exec --bind /usr/lib/locale/ \
@@ -70,7 +116,8 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 |  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives | Recall | Precision | F1-Score |
 |:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:------:|:---------:|:--------:|
-| INDEL |        2       |         2         |          0         |          1         |   1.0  |    0.6    |    0.8   |
+| INDEL |        2       |         2         |          0         |          0         |   1.0  |    1.0    |    1.0   |
 |  SNP  |       39       |         39        |         39         |         39         |   1.0  |    1.0    |    1.0   |
+
 ### Authors:
 This pipeline is developed in a collaboration between UCSC genomics institute and the genomics team at Google health.

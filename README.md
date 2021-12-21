@@ -71,7 +71,14 @@ run_pepper_margin_deepvariant call_variant \
 # for PacBio-HiFi reads: --hifi
 ```
 
-### Case studies (Chromosome 20 run for performance reproducibility)
+### Quickstarts (small runs for docker or singularity to test system configuration)
+|                  Test type                    |                          Links                                             |
+|:---------------------------------------------:|:--------------------------------------------------------------------------:|
+|              Docker quickstart                |  [Link](./docs/quickstart/variant_calling_docker_quickstart.md)            |
+|              Singularity quickstart           |  [Link](./docs/quickstart/variant_calling_singularity_quickstart.md)       |
+|              Docker-gpu quickstart            |  [Link](./docs/quickstart/variant_calling_docker_gpu_quickstart.md)        |
+
+### Case studies (chromosome 20 runs for performance reproducibility)
 
 |                       Pipeline                                 |                         Docker                                 |                               Singularity                                       |                     NVIDIA-docker<br>(GPU)                             |
 |:--------------------------------------------------------------:|:--------------------------------------------------------------:|:-------------------------------------------------------------------------------:|:----------------------------------------------------------------------:|
