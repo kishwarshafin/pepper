@@ -370,10 +370,12 @@ mkdir -p ${DEEPVARIANT_MODEL_OUTPUT_DIR}
 ```
 As we launch the training in background we won't see any errors if there are any issues with the run.
 
-Please keep an eye on the output log for a bit to make sure that training has started and then move to the next step:
+Please keep an eye on the output log for a bit to make sure that training has started and then move to the next step.
+
+We highly recommend using `top` or `htop` to see if the processes launched successfully and are running. You can also inspect the log by running:
 ```bash
 # This will print the training log every 1.0 sec
-watch -n 1 cat "${OUTPUT_DIR}/deepvariant_train.log"
+watch -n 1 tail -n 20 "${OUTPUT_DIR}/deepvariant_train.log"
 
 # Once you are sure that training is going smoothly, proceed to the next step.
 # You can cancel this watch by running ctrl+c
