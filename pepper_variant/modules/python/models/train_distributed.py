@@ -129,7 +129,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         transducer_model = transducer_model.cuda()
         transducer_model = nn.parallel.DataParallel(transducer_model)
 
-    weights = [0.3, 1.0, 1.0]
+    weights = [1.0, 1.0, 1.0]
     class_weights = torch.tensor(weights).cuda()
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: Class weights: " + str(weights) + "\n")
     # Loss
