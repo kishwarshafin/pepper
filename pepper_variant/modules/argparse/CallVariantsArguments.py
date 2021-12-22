@@ -291,5 +291,9 @@ def add_call_variant_arguments(parser):
                                default=False,
                                action='store_true',
                                help="Set to call variants on PacBio HiFi reads.")
+    profile_group.add_argument("--clr",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on PacBio CLR reads.")
 
     return parser
