@@ -20,6 +20,20 @@ Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey 
 </details>
 
 
+
+---
+
+### Long read variant calling performance evaluation
+
+Detailed variant calling performance evaluation:
+* **ONT R9.4.1 Guppy 5.0.6 Sup:**
+  * [HG003 whole genome (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_whole_genome.md)
+  * [HG002-HG006 chr20 (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_chr20.md)
+* **ONT R10.4 Q20 Guppy 5.0.15 Sup:**
+  * [HG002 chr20 (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r10.4_q20_chr20.md)
+* **PacBio HiFi:**
+  * [HG003 chr20 (PEPPER-Margin-DeepVariant vs DeepVariant-WhatsHap-DeepVariant).](./docs/performance_evaluation/PacBio_hifi_HG003_chr20.md)
+
 ---
 
 ### Useful links to documentations
