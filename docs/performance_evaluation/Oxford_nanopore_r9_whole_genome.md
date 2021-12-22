@@ -1,6 +1,7 @@
 ## ONT R9.4.1 Guppy 5.0.7 "Sup" HG003 whole genome performance evaluation against Clair3
+For ONT variant calling, `PEPPER-Margin-DeepVariant` is often compared against [Clair3](https://github.com/HKU-BAL/Clair3). `Clair3` is developed by [HKUCS Bioinformatics Algorithm Lab](https://github.com/HKU-BAL) and it produces high-quality variant calling results for Oxford Nanopore data. We evaluated the performance of `PEPEPR r0.7` against `Clair3 v0.1-r9` in this evaluation.
 
-We hold out `HG003` sample while training `PEPPER-Margin-DeepVariant` so we use `HG003` to demonstrate our whole genome performance. Although `Clair3` reports that the `R9.4 Guppy 506 SUP` models are trained on `HG003`, we still outperform `Clair3` at a whole genome scale. We report both runtime and accuracy for this evaluation.
+We hold out `HG003` sample while training `PEPPER-Margin-DeepVariant` so we use `HG003` to demonstrate our whole genome performance. We report both runtime and accuracy for this evaluation.
 
 ### Setup
 We used `n2-standard-80` GCP instance for this comaprison:

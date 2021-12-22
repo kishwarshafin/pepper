@@ -1,4 +1,5 @@
 ## ONT R10.4 Q20 HG002 chr20 performance evaluation
+For ONT variant calling, `PEPPER-Margin-DeepVariant` is often compared against [Clair3](https://github.com/HKU-BAL/Clair3). `Clair3` is developed by [HKUCS Bioinformatics Algorithm Lab](https://github.com/HKU-BAL) and it produces high-quality variant calling results for Oxford Nanopore data. We evaluated the performance of `PEPEPR r0.7` against `Clair3 v0.1-r9` in this evaluation.
 
 We trained `PEPPER-Margin-DeepVariant` on R10.4 Q20 data. In our training scheme, we held out `chr20` from training. Same is reported in the training pipeline of `Clair3`. In this evaluation, we compare the variant calling performance of `PEPPER-Margin-DeepVariant` for HG002 R10.4 Q20 data.
 
