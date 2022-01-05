@@ -194,9 +194,9 @@ def set_parameters(options):
             if options.min_mapq is None:
                 options.min_mapq = 5
             if options.min_snp_baseq is None:
-                options.min_snp_baseq = 1
+                options.min_snp_baseq = 0
             if options.min_indel_baseq is None:
-                options.min_indel_baseq = 1
+                options.min_indel_baseq = 0
             if options.snp_frequency is None:
                 options.snp_frequency = 0.10
             if options.insert_frequency is None:
@@ -204,7 +204,7 @@ def set_parameters(options):
             if options.delete_frequency is None:
                 options.delete_frequency = 0.12
             if options.min_coverage_threshold is None:
-                options.min_coverage_threshold = 5
+                options.min_coverage_threshold = 3
             if options.candidate_support_threshold is None:
                 options.candidate_support_threshold = 2
             if options.snp_candidate_frequency_threshold is None:
@@ -227,6 +227,10 @@ def set_parameters(options):
                 options.snp_q_cutoff = 20
             if options.indel_q_cutoff is None:
                 options.indel_q_cutoff = 20
+            if options.report_snp_above_freq is None:
+                options.report_snp_above_freq = 0
+            if options.report_indel_above_freq is None:
+                options.report_indel_above_freq = 0
 
     if options.use_hp_info:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODE: PEPPER HP\n")
