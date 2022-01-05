@@ -106,6 +106,10 @@ def add_run_inference_arguments(parser):
                                default=False,
                                action='store_true',
                                help="Set to call variants on R9.4.1 Guppy 5+ sup Oxford Nanopore reads.")
+    profile_group.add_argument("--ont_r9_hac",
+                               default=False,
+                               action='store_true',
+                               help="Set to call variants on R9.4.1 Guppy HAC caller Oxford Nanopore reads.")
     profile_group.add_argument("--ont_r10_q20",
                                default=False,
                                action='store_true',

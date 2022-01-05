@@ -53,6 +53,52 @@ def set_parameters(options):
                 options.report_snp_above_freq = 0
             if options.report_indel_above_freq is None:
                 options.report_indel_above_freq = 0
+
+    if options.ont_r9_hac:
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING MODE SELECTED.\n")
+        # image generation
+        if options.sub_command in ['call_variant', 'make_images', 'make_train_images']:
+            if options.min_mapq is None:
+                options.min_mapq = 5
+            if options.min_snp_baseq is None:
+                options.min_snp_baseq = 1
+            if options.min_indel_baseq is None:
+                options.min_indel_baseq = 1
+            if options.snp_frequency is None:
+                options.snp_frequency = 0.10
+            if options.insert_frequency is None:
+                options.insert_frequency = 0.15
+            if options.delete_frequency is None:
+                options.delete_frequency = 0.15
+            if options.min_coverage_threshold is None:
+                options.min_coverage_threshold = 3
+            if options.candidate_support_threshold is None:
+                options.candidate_support_threshold = 2
+            if options.snp_candidate_frequency_threshold is None:
+                options.snp_candidate_frequency_threshold = 0.10
+            if options.indel_candidate_frequency_threshold is None:
+                options.indel_candidate_frequency_threshold = 0.12
+            if not options.skip_indels:
+                options.skip_indels = False
+        # candidate finding
+        if options.sub_command in ['call_variant', 'find_candidates']:
+            if options.allowed_multiallelics is None:
+                options.allowed_multiallelics = 4
+            if options.snp_p_value is None:
+                options.snp_p_value = 0.10
+            if options.insert_p_value is None:
+                options.insert_p_value = 0.25
+            if options.delete_p_value is None:
+                options.delete_p_value = 0.25
+            if options.snp_q_cutoff is None:
+                options.snp_q_cutoff = 15
+            if options.indel_q_cutoff is None:
+                options.indel_q_cutoff = 10
+            if options.report_snp_above_freq is None:
+                options.report_snp_above_freq = 0
+            if options.report_indel_above_freq is None:
+                options.report_indel_above_freq = 0
+
     if options.ont_r10_q20:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING MODE SELECTED.\n")
         # image generation
