@@ -29,14 +29,14 @@ class VCFWriter:
 
         # find the maximum reference allele
         for candidate in candidates:
-            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions = candidate
+            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions, in_repeat = candidate
             if len(ref_allele) > max_ref_length:
                 max_ref_length = len(ref_allele)
                 max_ref_allele = ref_allele
 
         normalized_candidates = []
         for candidate in candidates:
-            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions = candidate
+            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions, in_repeat = candidate
             suffix_needed = 0
             if len(ref_allele) < max_ref_length:
                 suffix_needed = max_ref_length - len(ref_allele)
@@ -46,7 +46,7 @@ class VCFWriter:
                 ref_allele = ref_allele + suffix_seq
                 alt_allele = [alt + suffix_seq for alt in alt_allele]
 
-            normalized_candidates.append((contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions))
+            normalized_candidates.append((contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions, in_repeat))
 
         candidates = normalized_candidates
         gt_qual = -1.0
@@ -62,10 +62,12 @@ class VCFWriter:
         site_alts = []
         site_supports = []
         site_qualities = []
+        site_in_repeat = False
 
         for i, candidate in enumerate(candidates):
-            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions = candidate
+            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions, in_repeat = candidate
             # print(contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions)
+            site_in_repeat = in_repeat or site_in_repeat
             predicted_genotype = np.argmax(predictions)
             # if gt_qual < 0:
             #     gt_qual = 1.0 - predictions[0]
@@ -109,7 +111,7 @@ class VCFWriter:
             gt = [0, 0]
 
         # print(site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual)
-        return site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual
+        return site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual, site_in_repeat
 
     def write_vcf_records(self, variants_list, options):
         total_variants, total_variants_pepper, total_variants_variant_calling = 0, 0, 0
@@ -118,7 +120,7 @@ class VCFWriter:
         for contig, position in sorted(variants_list):
             all_candidates = variants_list[(contig, position)]
 
-            contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability = self.candidate_list_to_variant(all_candidates, options)
+            contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability, site_in_repeat = self.candidate_list_to_variant(all_candidates, options)
             # print("RETURNED", contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability)
             if len(alleles) <= 0:
                 continue
@@ -134,8 +136,12 @@ class VCFWriter:
                 # this is a SNP
                 if qual <= options.snp_q_cutoff:
                     failed_variant = True
+                elif site_in_repeat and qual <= 30:
+                    failed_variant = True
             else:
                 if qual <= options.indel_q_cutoff:
+                    failed_variant = True
+                elif site_in_repeat and qual <= 30:
                     failed_variant = True
 
             selected_for_variant_calling = False

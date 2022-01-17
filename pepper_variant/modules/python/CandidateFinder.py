@@ -1,5 +1,6 @@
 import h5py
 import sys
+import math
 from os.path import isfile, join
 from os import listdir
 import concurrent.futures
@@ -275,6 +276,26 @@ def get_genotype_from_base(ref_base, base_prediction1, base_prediction2):
         return [0, 1]
 
 
+def repeat_annotation(sequence, kmer_size):
+    """
+    Annotate sequence with k-mer repeats.
+    """
+    max_observed_repeats = [1 for i in range(len(sequence))]
+    for i in range(len(sequence) - (kmer_size - 1)):
+        kmer_count = 0
+        start_index = i
+        end_index = i + (kmer_size - 1)
+        for j in range(i, len(sequence), kmer_size):
+            if sequence[i:i+kmer_size] == sequence[j:j+kmer_size]:
+                kmer_count += 1
+            else:
+                break
+            end_index = j + (kmer_size)
+        for k in range(start_index, min(len(sequence), end_index)):
+            max_observed_repeats[k] = max(max_observed_repeats[k], kmer_count)
+
+    return max_observed_repeats
+
 def small_chunk_stitch(options, file_chunks):
     fasta_handler = PEPPER_VARIANT.FASTA_handler(options.fasta)
     selected_candidate_list_margin = []
@@ -313,6 +334,26 @@ def small_chunk_stitch(options, file_chunks):
         for candidate in all_candidates:
 
             reference_base = fasta_handler.get_reference_sequence(candidate.contig, candidate.position, candidate.position+1).upper()
+            reference_upstream = fasta_handler.get_reference_sequence(candidate.contig, candidate.position, candidate.position + 20).upper()
+            reference_downstream = fasta_handler.get_reference_sequence(candidate.contig, max(0, candidate.position - 20), candidate.position).upper()
+
+            full_sequence = reference_downstream + reference_upstream
+            full_sequence = full_sequence.upper()
+
+            homopolymer_repeats = repeat_annotation(full_sequence, 1)
+            dimer_repeats = repeat_annotation(full_sequence, 2)
+            trimer_repeats = repeat_annotation(full_sequence, 3)
+
+            position_index = len(reference_downstream)
+            upward_lookup_index = min(len(homopolymer_repeats), position_index + 4)
+            downward_lookup_index = max(0, position_index - 5)
+            max_dimer_count = max(dimer_repeats[downward_lookup_index:upward_lookup_index])
+            max_trimer_count = max(trimer_repeats[downward_lookup_index:upward_lookup_index])
+            max_homopolymer_count = max(homopolymer_repeats[downward_lookup_index:upward_lookup_index])
+
+            candidate_in_repeat = False
+            if max_homopolymer_count >= 5 or max_dimer_count >= 4 or max_trimer_count >= 4:
+                candidate_in_repeat = True
 
             if reference_base not in ['A', 'C', 'G', 'T']:
                 continue
@@ -376,15 +417,18 @@ def small_chunk_stitch(options, file_chunks):
                     continue
 
                 vaf = float(allele_frequency) / float(candidate.depth)
-                #non_alt_prediction = 1.0 - candidate.prediction_base[0]
-                non_alt_prediction = max(candidate.prediction_base[1], candidate.prediction_base[2])
+                non_alt_prediction = 1.0 - candidate.prediction_base[0]
+                non_alt_phred = int(-10 * math.log10(max(1e-13, non_alt_prediction)))
                 if alt_type == '1':
                     if non_alt_prediction >= options.snp_p_value:
                         # add them to list
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
-                        # print("SINGLE: ", predicted_bases, max_observed_likelihood[allele], candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
-                    elif 0 < options.report_snp_above_freq <= vaf and non_alt_prediction >= 0.15:
+                    # repeat variants
+                    elif candidate_in_repeat and non_alt_phred <= 30:
+                        alt_alleles.append(''.join(alt_allele[1:]))
+                        variant_allele_support.append(allele_frequency)
+                    elif 0 < options.report_snp_above_freq <= vaf:
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                 elif alt_type == '2':
@@ -392,27 +436,35 @@ def small_chunk_stitch(options, file_chunks):
                         # add them to list
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
-                        # print("INSERT: ", predicted_bases, max_observed_likelihood['*'], candidate.contig, candidate.position, reference_allele, allele, candidate.depth, allele_frequency)
-                    elif 0 < options.report_indel_above_freq <= vaf and non_alt_prediction >= 0.2:
+                    # repeat variants
+                    elif candidate_in_repeat and non_alt_phred <= 20:
+                        alt_alleles.append(''.join(alt_allele[1:]))
+                        variant_allele_support.append(allele_frequency)
+                    elif 0 < options.report_indel_above_freq <= vaf:
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                 elif alt_type == '3':
-                    if non_alt_prediction >= options.delete_p_value :
+                    if non_alt_prediction >= options.delete_p_value:
                         # add them to list
                         alt_alleles.append(reference_allele)
                         reference_allele = ''.join(alt_allele[1:])
                         variant_allele_support.append(allele_frequency)
-
-                        # print("DELETE: ", predicted_bases, max_observed_likelihood['#'], candidate.contig, candidate.position, reference_allele, alt_allele, candidate.depth, allele_frequency)
-                    elif 0 < options.report_indel_above_freq <= vaf and non_alt_prediction >= 0.2:
+                    # repeat variants
+                    elif candidate_in_repeat and non_alt_phred <= 20:
+                        # add them to list
+                        alt_alleles.append(reference_allele)
+                        reference_allele = ''.join(alt_allele[1:])
+                        variant_allele_support.append(allele_frequency)
+                    elif 0 < options.report_indel_above_freq <= vaf:
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
 
                 predicted_genotype = np.argmax(candidate.prediction_base)
-                # print(candidate.contig, candidate.position, reference_base, alt_allele, allele_frequency, candidate.depth, vaf, prediction_value, candidate.prediction_base)
+                # print(candidate.contig, candidate.position, reference_base, alt_allele, allele_frequency, candidate.depth, vaf, "PRED: ", non_alt_prediction, "QUAL", non_alt_phred, candidate.prediction_base, candidate_in_repeat)
             if len(alt_alleles) > 0:
-                # print("SELECTED", candidate.contig, candidate.position, candidate.position + 1, reference_base, alt_alleles, genotype, candidate.depth, variant_allele_support)
-                selected_candidate_list_deepvariant.append((candidate.contig, candidate.position, candidate.position + len(reference_allele), reference_allele, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value, candidate.prediction_base))
+                # print("SELECTED", candidate.contig, candidate.position, candidate.position + 1, reference_allele, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value, non_alt_phred, candidate_in_repeat)
+                selected_candidate_list_deepvariant.append((candidate.contig, candidate.position, candidate.position + len(reference_allele), reference_allele, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value, candidate.prediction_base, candidate_in_repeat))
+            # print("----------------------------------------------------------------------")
 
     return selected_candidate_list_margin, selected_candidate_list_deepvariant
 
