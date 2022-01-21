@@ -397,8 +397,19 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                         // update the summary of base
                         if(base_quality >= min_snp_baseq) {
                             coverage_vector[ref_position - ref_start] += 1;
-                            if(!read.flags.is_reverse) image_matrix[base_index][4] -= 1;
-                            else image_matrix[base_index][15] -= 1;
+
+                            // look front and see if it's anchoring an INSERT or DELETE
+                            if(i == cigar.length - 1 && cigar_i != read.cigar_tuples.size() - 1) {
+                                CigarOp next_cigar = read.cigar_tuples[cigar_i + 1];
+                                if(next_cigar.operation != CIGAR_OPERATIONS::IN && next_cigar.operation != CIGAR_OPERATIONS::DEL) {
+                                    if(!read.flags.is_reverse) image_matrix[base_index][4] -= 1;
+                                    else image_matrix[base_index][15] -= 1;
+                                }
+                            }
+                            else {
+                                if (!read.flags.is_reverse) image_matrix[base_index][4] -= 1;
+                                else image_matrix[base_index][15] -= 1;
+                            }
                         }
 
 

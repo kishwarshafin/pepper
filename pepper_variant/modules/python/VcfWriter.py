@@ -136,13 +136,13 @@ class VCFWriter:
                 # this is a SNP
                 if qual <= options.snp_q_cutoff:
                     failed_variant = True
-                elif site_in_repeat and qual <= 30:
-                    failed_variant = True
+                # elif site_in_repeat and qual <= 30:
+                #     failed_variant = True
             else:
                 if qual <= options.indel_q_cutoff:
                     failed_variant = True
-                elif site_in_repeat and qual <= 30:
-                    failed_variant = True
+                # elif site_in_repeat and qual <= 30:
+                #     failed_variant = True
 
             selected_for_variant_calling = False
             # Mode 1 are variants we will NOT re-genotype. Mode 2 is the variants selected for re-genotyping.
@@ -153,18 +153,24 @@ class VCFWriter:
             vafs = [round(ad/max(1, depth), 3) for ad in variant_allele_support]
 
             # print(str(contig), ref_start, ref_end, qual, alleles, genotype, alt_qual, alt_qual, depth, variant_allele_support, vafs)
+            if site_in_repeat:
+                rep = "1"
+            else:
+                rep = "0"
 
             # always put things in all vcf
             if genotype == [0, 0]:
                 vcf_record = self.vcf_file_full.new_record(contig=str(contig), start=ref_start,
                                                            stop=ref_end, id='.', qual=qual,
                                                            filter='refCall', alleles=alleles, GT=genotype,
-                                                           AP=alt_qual, GQ=alt_qual, DP=depth, AD=variant_allele_support, VAF=vafs)
+                                                           AP=alt_qual, GQ=alt_qual, DP=depth, AD=variant_allele_support, VAF=vafs,
+                                                           REP=rep)
             else:
                 vcf_record = self.vcf_file_full.new_record(contig=str(contig), start=ref_start,
                                                            stop=ref_end, id='.', qual=qual,
                                                            filter='PASS', alleles=alleles, GT=genotype,
-                                                           AP=alt_qual, GQ=qual, DP=depth, AD=variant_allele_support, VAF=vafs)
+                                                           AP=alt_qual, GQ=qual, DP=depth, AD=variant_allele_support, VAF=vafs,
+                                                           REP=rep)
 
             self.vcf_file_full.write(vcf_record)
             total_variants += 1
@@ -230,6 +236,11 @@ class VCFWriter:
                  ('Number', 1),
                  ('Type', 'Float'),
                  ('Description', "Genotype Quality")]
+        header.add_meta(key='FORMAT', items=items)
+        items = [('ID', "REP"),
+                 ('Number', 1),
+                 ('Type', 'String'),
+                 ('Description', "If set to 1 then variant site is considered to be ina LowCompexity repeat region")]
         header.add_meta(key='FORMAT', items=items)
 
         sqs = self.fasta_handler.get_chromosome_names()

@@ -296,6 +296,63 @@ def repeat_annotation(sequence, kmer_size):
 
     return max_observed_repeats
 
+def overlapping_windows(sequence, window_size):
+    """
+    Implemented from: https://jszym.com/blog/dna_protein_complexity/
+    Returns overlapping windows of size `window_size` from sequence `sequence`
+    :param sequence: Sequence to extract windows from
+    :param window_size: the length of the windows to yield
+    """
+    for i in range(len(sequence) - window_size + 1):
+        yield sequence[i:i+window_size]
+
+
+def sequence_to_repvec(sequence):
+    """
+    Implemented from: https://jszym.com/blog/dna_protein_complexity/
+    Computes the repetition vector (as seen in Wooton, 1993) from a
+    given sequence of a biopolymer with `N` possible residues.
+
+    :param sequence: the nucleotide or protein sequence to generate a repetition vector for.
+    """
+    encountered_homopolymers = set()
+    repvec = []
+
+    for base in sequence:
+        if base not in encountered_homopolymers:
+            residue_count = sequence.count(base)
+
+            repvec.append(residue_count)
+
+            encountered_homopolymers.add(base)
+
+        if len(encountered_homopolymers) == 4:
+            break
+
+    while len(repvec) < 4:
+        repvec.append(0)
+
+    return sorted(repvec, reverse=True)
+
+
+def sequence_entropy(sequence):
+    """
+    Implemented from: https://jszym.com/blog/dna_protein_complexity/
+    Computes the Shannon Entropy of a given sequence. See (Wooton, 1993) for more.
+
+    :param sequence: the nucleotide or protein sequence whose Shannon Entropy is to calculated.
+    """
+    repvec = sequence_to_repvec(sequence)
+
+    entropy = 0
+
+    for n in repvec:
+        # we have to throw away elements whose value is 0 since log(0) is invalid
+        if n != 0:
+            entropy += -1 * ((n/len(sequence))*math.log((n/len(sequence)), 4))
+
+    return entropy
+
 def small_chunk_stitch(options, file_chunks):
     fasta_handler = PEPPER_VARIANT.FASTA_handler(options.fasta)
     selected_candidate_list_margin = []
@@ -351,8 +408,11 @@ def small_chunk_stitch(options, file_chunks):
             max_trimer_count = max(trimer_repeats[downward_lookup_index:upward_lookup_index])
             max_homopolymer_count = max(homopolymer_repeats[downward_lookup_index:upward_lookup_index])
 
+            upward_entropy = sequence_entropy(fasta_handler.get_reference_sequence(candidate.contig, candidate.position, candidate.position + 10).upper())
+            downward_entropy = sequence_entropy(fasta_handler.get_reference_sequence(candidate.contig, max(0, candidate.position - 10), candidate.position).upper())
+
             candidate_in_repeat = False
-            if max_homopolymer_count >= 5 or max_dimer_count >= 4 or max_trimer_count >= 4:
+            if max_homopolymer_count >= 5 or max_dimer_count >= 4 or max_trimer_count >= 4 or upward_entropy <= 0.8 or downward_entropy <= 0.5:
                 candidate_in_repeat = True
 
             if reference_base not in ['A', 'C', 'G', 'T']:
@@ -425,7 +485,7 @@ def small_chunk_stitch(options, file_chunks):
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                     # repeat variants
-                    elif candidate_in_repeat and non_alt_phred <= 30:
+                    elif candidate_in_repeat and non_alt_prediction >= 0.1:
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                     elif 0 < options.report_snp_above_freq <= vaf:
@@ -437,7 +497,7 @@ def small_chunk_stitch(options, file_chunks):
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                     # repeat variants
-                    elif candidate_in_repeat and non_alt_phred <= 20:
+                    elif candidate_in_repeat and non_alt_prediction >= 0.1:
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                     elif 0 < options.report_indel_above_freq <= vaf:
@@ -450,7 +510,7 @@ def small_chunk_stitch(options, file_chunks):
                         reference_allele = ''.join(alt_allele[1:])
                         variant_allele_support.append(allele_frequency)
                     # repeat variants
-                    elif candidate_in_repeat and non_alt_phred <= 20:
+                    elif candidate_in_repeat and non_alt_prediction >= 0.1:
                         # add them to list
                         alt_alleles.append(reference_allele)
                         reference_allele = ''.join(alt_allele[1:])
