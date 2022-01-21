@@ -136,13 +136,13 @@ class VCFWriter:
                 # this is a SNP
                 if qual <= options.snp_q_cutoff:
                     failed_variant = True
-                # elif site_in_repeat and qual <= 30:
-                #     failed_variant = True
+                elif site_in_repeat and qual <= 20:
+                    failed_variant = True
             else:
                 if qual <= options.indel_q_cutoff:
                     failed_variant = True
-                # elif site_in_repeat and qual <= 30:
-                #     failed_variant = True
+                elif site_in_repeat and qual <= 20:
+                    failed_variant = True
 
             selected_for_variant_calling = False
             # Mode 1 are variants we will NOT re-genotype. Mode 2 is the variants selected for re-genotyping.
