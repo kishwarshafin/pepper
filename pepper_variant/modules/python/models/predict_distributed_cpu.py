@@ -82,8 +82,8 @@ def predict(options, input_filepath, file_chunks, output_filepath, threads, thre
                                   ort_session.get_inputs()[1].name: hidden.cpu().numpy(),
                                   ort_session.get_inputs()[2].name: cell_state.cpu().numpy()}
                     # the return value comes as a list
-                    outputs = ort_session.run(None, ort_inputs)
-                    output_base, output_type = tuple(outputs)
+                    output_type = ort_session.run(None, ort_inputs)
+                    output_type = output_type[0]
 
                     prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_type)
 
@@ -134,13 +134,12 @@ def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, ba
             cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
             # run inference
-            output_base = transducer_model(images, hidden, cell_state, False)
-            # output_base, output_type = transducer_model(images, hidden, cell_state, False)
+            output_type = transducer_model(images, hidden, cell_state, False)
 
-            output_base = output_base.detach().cpu().numpy()
+            output_type = output_type.detach().cpu().numpy()
             # output_type = output_type.detach().cpu().numpy()
 
-            prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_base)
+            prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_type)
             batch_completed += 1
 
             if batch_completed % 100 == 0 and batch_completed != 0:
@@ -184,11 +183,10 @@ def predict_distributed_cpu(options, filepath, file_chunks, output_filepath, tot
                           opset_version=11,
                           do_constant_folding=True,
                           input_names=['image', 'hidden', 'cell_state'],
-                          output_names=['output_base', 'output_type'],
+                          output_names=['output_type'],
                           dynamic_axes={'image': {0: 'batch_size'},
                                         'hidden': {0: 'batch_size'},
                                         'cell_state': {0: 'batch_size'},
-                                        'output_base': {0: 'batch_size'},
                                         'output_type': {0: 'batch_size'}})
 
     if options.quantized:
@@ -223,5 +221,4 @@ def predict_distributed_cpu(options, filepath, file_chunks, output_filepath, tot
     secs = int((end_time - start_time)) % 60
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PREDICTION\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec\n")
-
 

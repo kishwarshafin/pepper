@@ -66,10 +66,8 @@ def predict(options, input_filepath, input_files, output_filepath, threads):
                 cell_state = cell_state.cuda()
 
                 # run inference
-                # output_base, output_type = transducer_model(images, hidden, cell_state, False)
-                outputs = transducer_model(images, hidden, cell_state, False)
+                output_type = transducer_model(images, hidden, cell_state, False)
 
-                output_base, output_type = tuple(outputs)
                 # output_base = output_base.detach().cpu().numpy()
                 output_type = output_type.detach().cpu().numpy()
 

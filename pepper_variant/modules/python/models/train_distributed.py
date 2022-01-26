@@ -18,16 +18,6 @@ from pepper_variant.modules.python.Options import ImageSizeOptions, ImageSizeOpt
 
 os.environ['PYTHONWARNINGS'] = 'ignore:semaphore_tracker:UserWarning'
 
-"""
-Train a model and return the model and optimizer trained.
-
-Input:
-- A train CSV containing training image set information (usually chr1-18)
-
-Return:
-- A trained model
-"""
-
 
 def save_best_model(transducer_model, model_optimizer, hidden_size, layers, epoch,
                     file_name):
@@ -58,12 +48,10 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
           retrain_model_path, gru_layers, hidden_size, lr, decay, model_dir, stats_dir, hp_mode, train_mode):
     train_loss_logger = open(stats_dir + "train_loss.csv", 'w')
     test_loss_logger = open(stats_dir + "test_loss.csv", 'w')
-    confusion_matrix_logger = open(stats_dir + "base_confusion_matrix.txt", 'w')
+    confusion_matrix_logger = open(stats_dir + "confusion_matrix.txt", 'w')
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOADING DATA\n")
     sys.stderr.flush()
-
-    train_with_base = False
 
     train_data_set = SequenceDataset(train_file)
 
@@ -117,7 +105,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: WEIGHT DECAY: " + str(decay) + "\n")
 
     model_optimizer = torch.optim.Adam(transducer_model.parameters(), lr=lr, weight_decay=decay)
-    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(model_optimizer, 'min')
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(model_optimizer, 'min', patience=2)
 
     if retrain_model is True:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OPTIMIZER LOADING\n")
@@ -129,17 +117,10 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         transducer_model = transducer_model.cuda()
         transducer_model = nn.parallel.DataParallel(transducer_model)
 
-    weights = [1.0, 1.0, 1.0]
-    class_weights = torch.tensor(weights).cuda()
-    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: Class weights: " + str(weights) + "\n")
     # Loss
-    if train_with_base:
-        criterion_base = nn.CrossEntropyLoss()
-    criterion_type = nn.CrossEntropyLoss(weight=class_weights)
+    criterion_type = nn.CrossEntropyLoss(reduction='sum')
 
     if gpu_mode is True:
-        if train_with_base:
-            criterion_base = criterion_base.cuda()
         criterion_type = criterion_type.cuda()
 
     start_epoch = prev_ite
@@ -148,9 +129,6 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TRAINING STARTING\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: START: " + str(start_epoch + 1) + " END: " + str(epoch_limit) + "\n")
     sys.stderr.flush()
-
-    # Creates a GradScaler once at the beginning of training.
-    # scaler = torch.cuda.amp.GradScaler()
 
     start_iteration = 0
     if step_size == 0:
@@ -166,8 +144,6 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     for iteration in range(start_iteration, iteration_limit, 1):
         start_time = time.time()
         total_loss = 0
-        total_base_loss = 0
-        total_type_loss = 0
         total_images = 0
 
         for images, base_labels, type_labels in train_loader:
@@ -175,14 +151,10 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             transducer_model = transducer_model.train()
 
             # image and label handling
-            if train_with_base:
-                base_labels = base_labels.type(torch.LongTensor)
             type_labels = type_labels.type(torch.LongTensor)
             images = images.type(torch.FloatTensor)
             if gpu_mode:
                 images = images.cuda()
-                if train_with_base:
-                    base_labels = base_labels.cuda()
                 type_labels = type_labels.cuda()
 
             # generate hidden and cell state
@@ -196,33 +168,18 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             # set the optimizer to zero grad
             model_optimizer.zero_grad()
 
-            output_base, output_type = transducer_model(images, hidden, cell_state, train_mode)
+            output_type = transducer_model(images, hidden, cell_state, train_mode)
+            loss = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
 
-            if train_with_base:
-                loss_base = criterion_base(output_base.contiguous().view(-1, num_classes), base_labels.contiguous().view(-1))
-            loss_type = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
-
-            if train_with_base:
-                base_type_loss = 0.3 * loss_base + loss_type
-            else:
-                base_type_loss = loss_type
-
-            base_type_loss.backward()
-
+            loss.backward()
             model_optimizer.step()
 
             # done calculating the loss
-            total_loss += base_type_loss.item()
-            if train_with_base:
-                total_base_loss += loss_base.item()
-            total_type_loss += loss_type.item()
-            total_images += images.size(0)
+            total_loss = loss.item()
+            total_images = images.size(0)
 
             # update the progress bar
             avg_loss = (total_loss / total_images) if total_images else 0
-            if train_with_base:
-                avg_base_loss = (total_base_loss / total_images) if total_images else 0
-            avg_type_loss = (total_type_loss / total_images) if total_images else 0
 
             if step_no % 100 == 0 and step_no > 0:
                 nom = step_no - ((iteration * len(train_loader)) - (iteration * len(train_loader)) % 100)
@@ -232,53 +189,26 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 mins = int((time_now - start_time) / 60)
                 secs = int((time_now - start_time)) % 60
 
-                if train_with_base:
-                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
-                                     + " ITERATION: " + str(iteration + 1)
-                                     + " EPOCH: " + str(epoch + 1)
-                                     + " STEP: " + str(step_no) + "/" + str((epoch + 1) * step_size) + "/" + str((iteration + 1) * len(train_loader))
-                                     + " LOSS: " + "{:.9f}".format(avg_loss)
-                                     + " BASE LOSS: " + "{:.9f}".format(avg_base_loss)
-                                     + " TYPE LOSS: " + "{:.9f}".format(avg_type_loss)
-                                     + " EPOCH COMPLETE: (" + str(percent_complete) + "%)"
-                                     + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
-                else:
-                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
-                                     + " ITERATION: " + str(iteration + 1)
-                                     + " EPOCH: " + str(epoch + 1)
-                                     + " STEP: " + str(step_no) + "/" + str((epoch + 1) * step_size) + "/" + str((iteration + 1) * len(train_loader))
-                                     + " LOSS: " + "{:.9f}".format(avg_loss)
-                                     + " EPOCH COMPLETE: (" + str(percent_complete) + "%)"
-                                     + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
+                sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: "
+                                 + " ITERATION: " + str(iteration + 1)
+                                 + " EPOCH: " + str(epoch + 1)
+                                 + " STEP: " + str(step_no) + "/" + str((epoch + 1) * step_size) + "/" + str((iteration + 1) * len(train_loader))
+                                 + " LOSS: " + "{:.9f}".format(avg_loss)
+                                 + " EPOCH COMPLETE: (" + str(percent_complete) + "%)"
+                                 + " [ELAPSED TIME: " + str(mins) + " Min " + str(secs) + " Sec]\n")
                 sys.stderr.flush()
 
             if step_no % step_size == 0 and step_no > 0:
                 transducer_model = transducer_model.eval()
                 torch.cuda.empty_cache()
 
-                stats_dictionary = test(test_file, test_batch_size, gpu_mode, transducer_model, num_workers,
-                                        gru_layers, hidden_size, train_with_base, num_classes=ImageSizeOptions.TOTAL_LABELS)
+                stats_dictionary = test(test_file, test_batch_size, gpu_mode, transducer_model)
 
                 save_best_model(transducer_model, model_optimizer, hidden_size, gru_layers, epoch, model_dir + "PEPPER_VARIANT_STEP_" + str(step_no) + '_checkpoint.pkl')
                 train_loss_logger.write(str(step_no) + "," + str(avg_loss) + "\n")
 
-                test_loss_logger.write(str(step_no) + "," + str(stats_dictionary['loss']) + "," + str(stats_dictionary['base_accuracy']) + "\n")
+                test_loss_logger.write(str(step_no) + "," + str(stats_dictionary['loss']) + "," + str(stats_dictionary['accuracy']) + "\n")
                 confusion_matrix_logger.write(str(step_no) + "\n")
-
-                # print confusion matrix to file
-                if train_with_base:
-                    confusion_matrix_logger.write("Base confusion Matrix:" + "\n")
-                    confusion_matrix_logger.write("            ")
-                    for label in ImageSizeOptions.decoded_base_labels:
-                        confusion_matrix_logger.write(str(label) + '         ')
-                    confusion_matrix_logger.write("\n")
-
-                    for i, row in enumerate(stats_dictionary['base_confusion_matrix'].value()):
-                        confusion_matrix_logger.write(str(ImageSizeOptions.decoded_base_labels[i]) + '   ')
-                        for j, val in enumerate(row):
-                            confusion_matrix_logger.write("{0:9d}".format(val) + '  ')
-                        confusion_matrix_logger.write("\n")
-                    confusion_matrix_logger.flush()
 
                 confusion_matrix_logger.write("Type confusion Matrix:" + "\n")
                 confusion_matrix_logger.write("            ")
@@ -286,7 +216,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                     confusion_matrix_logger.write(str(label) + '         ')
                 confusion_matrix_logger.write("\n")
 
-                for i, row in enumerate(stats_dictionary['type_confusion_matrix'].value()):
+                for i, row in enumerate(stats_dictionary['confusion_matrix'].value()):
                     confusion_matrix_logger.write(str(ImageSizeOptions.decoded_base_labels[i]) + '   ')
                     for j, val in enumerate(row):
                         confusion_matrix_logger.write("{0:9d}".format(val) + '  ')
@@ -302,7 +232,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 transducer_model = transducer_model.train()
 
                 epoch += 1
-                # scheduler.step(stats_dictionary['loss'])
+                scheduler.step(stats_dictionary['loss'])
 
             # increase step size
             step_no += 1
@@ -321,31 +251,31 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED TRAINING\n")
 
 
-def cleanup():
-    dist.destroy_process_group()
-
-
-def setup(rank, device_ids, args):
-    os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12355'
-
-    # initialize the process group
-    dist.init_process_group("gloo", rank=rank, world_size=len(device_ids))
-
-    train_file, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model, \
-    retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir, stats_dir, total_callers, \
-    train_mode = args
-
-    # issue with semaphore lock: https://github.com/pytorch/pytorch/issues/2517
-    # mp.set_start_method('spawn')
-
-    # Explicitly setting seed to make sure that models created in two processes
-    # start from same random weights and biases. https://github.com/pytorch/pytorch/issues/2517
-    torch.manual_seed(42)
-    train(train_file, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model, retrain_model_path,
-          gru_layers, hidden_size, learning_rate, weight_decay, model_dir, stats_dir, train_mode,
-          total_callers, rank, device_ids[rank])
-    cleanup()
+# def cleanup():
+#     dist.destroy_process_group()
+#
+#
+# def setup(rank, device_ids, args):
+#     os.environ['MASTER_ADDR'] = 'localhost'
+#     os.environ['MASTER_PORT'] = '12355'
+#
+#     # initialize the process group
+#     dist.init_process_group("gloo", rank=rank, world_size=len(device_ids))
+#
+#     train_file, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model, \
+#     retrain_model_path, gru_layers, hidden_size, learning_rate, weight_decay, model_dir, stats_dir, total_callers, \
+#     train_mode = args
+#
+#     # issue with semaphore lock: https://github.com/pytorch/pytorch/issues/2517
+#     # mp.set_start_method('spawn')
+#
+#     # Explicitly setting seed to make sure that models created in two processes
+#     # start from same random weights and biases. https://github.com/pytorch/pytorch/issues/2517
+#     torch.manual_seed(42)
+#     train(train_file, test_file, batch_size, test_batch_size, step_size, epochs, gpu_mode, num_workers, retrain_model, retrain_model_path,
+#           gru_layers, hidden_size, learning_rate, weight_decay, model_dir, stats_dir, train_mode,
+#           total_callers, rank, device_ids[rank])
+#     cleanup()
 
 def get_file_paths_from_directory(directory_path):
     """

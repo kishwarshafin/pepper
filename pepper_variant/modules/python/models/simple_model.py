@@ -42,7 +42,6 @@ class TransducerGRU(nn.Module):
         self.dropout_l4 = nn.Dropout(p=0.5)
         self.linear_5 = nn.Linear(self.linear_4_size, self.linear_5_size)
 
-        self.output_layer_base = nn.Linear(self.linear_5_size, self.num_classes)
         self.output_layer_type = nn.Linear(self.linear_5_size, self.num_classes_type)
 
     def forward(self, x, hidden, cell_state, train_mode=False):
@@ -70,14 +69,13 @@ class TransducerGRU(nn.Module):
         x = self.dropout_l4(x)
         # Linear layer 5
         x = self.linear_5(x)
-        x_base = self.output_layer_base(x)
         x_type = self.output_layer_type(x)
 
         if train_mode:
-            return x_base, x_type
+            return x_type
 
         softmax = nn.Softmax(dim=1)
-        return softmax(x_base), softmax(x_type)
+        return softmax(x_type)
 
     def init_hidden(self, batch_size, num_layers, bidirectional=True):
         num_directions = 1
