@@ -485,7 +485,7 @@ def small_chunk_stitch(options, file_chunks):
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                     # repeat variants
-                    elif candidate_in_repeat and non_alt_prediction >= 0.05:
+                    elif candidate_in_repeat and non_alt_prediction >= options.snp_p_value_in_lc:
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                     elif 0 < options.report_snp_above_freq <= vaf:
@@ -497,7 +497,7 @@ def small_chunk_stitch(options, file_chunks):
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                     # repeat variants
-                    elif candidate_in_repeat and non_alt_prediction >= 0.05:
+                    elif candidate_in_repeat and non_alt_prediction >= options.insert_p_value_in_lc:
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                     elif 0 < options.report_indel_above_freq <= vaf:
@@ -510,7 +510,7 @@ def small_chunk_stitch(options, file_chunks):
                         reference_allele = ''.join(alt_allele[1:])
                         variant_allele_support.append(allele_frequency)
                     # repeat variants
-                    elif candidate_in_repeat and non_alt_prediction >= 0.05:
+                    elif candidate_in_repeat and non_alt_prediction >= options.delete_p_value_in_lc:
                         # add them to list
                         alt_alleles.append(reference_allele)
                         reference_allele = ''.join(alt_allele[1:])

@@ -53,6 +53,17 @@ def set_parameters(options):
                 options.report_snp_above_freq = 0
             if options.report_indel_above_freq is None:
                 options.report_indel_above_freq = 0
+            if options.snp_p_value_in_lc is None:
+                options.snp_p_value_in_lc = 0.05
+            if options.insert_p_value_in_lc is None:
+                options.insert_p_value_in_lc = 0.05
+            if options.delete_p_value_in_lc is None:
+                options.delete_p_value_in_lc = 0.05
+            if options.snp_q_cutoff_in_lc is None:
+                options.snp_q_cutoff_in_lc = 20
+            if options.indel_q_cutoff_in_lc is None:
+                options.indel_q_cutoff_in_lc = 20
+
 
     if options.ont_r9_hac:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING MODE SELECTED.\n")
@@ -98,6 +109,16 @@ def set_parameters(options):
                 options.report_snp_above_freq = 0
             if options.report_indel_above_freq is None:
                 options.report_indel_above_freq = 0
+            if options.snp_p_value_in_lc is None:
+                options.snp_p_value_in_lc = 0.05
+            if options.insert_p_value_in_lc is None:
+                options.insert_p_value_in_lc = 0.01
+            if options.delete_p_value_in_lc is None:
+                options.delete_p_value_in_lc = 0.01
+            if options.snp_q_cutoff_in_lc is None:
+                options.snp_q_cutoff_in_lc = 20
+            if options.indel_q_cutoff_in_lc is None:
+                options.indel_q_cutoff_in_lc = 20
 
     if options.ont_r10_q20:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING MODE SELECTED.\n")
@@ -130,7 +151,7 @@ def set_parameters(options):
             if options.allowed_multiallelics is None:
                 options.allowed_multiallelics = 4
             if options.snp_p_value is None:
-                options.snp_p_value = 0.05
+                options.snp_p_value = 0.01
             if options.insert_p_value is None:
                 options.insert_p_value = 0.1
             if options.delete_p_value is None:
@@ -143,6 +164,16 @@ def set_parameters(options):
                 options.report_snp_above_freq = 0
             if options.report_indel_above_freq is None:
                 options.report_indel_above_freq = 0
+            if options.snp_p_value_in_lc is None:
+                options.snp_p_value_in_lc = 0.05
+            if options.insert_p_value_in_lc is None:
+                options.insert_p_value_in_lc = 0.05
+            if options.delete_p_value_in_lc is None:
+                options.delete_p_value_in_lc = 0.05
+            if options.snp_q_cutoff_in_lc is None:
+                options.snp_q_cutoff_in_lc = 20
+            if options.indel_q_cutoff_in_lc is None:
+                options.indel_q_cutoff_in_lc = 20
     elif options.hifi:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: HiFi VARIANT CALLING MODE SELECTED.\n")
         # image generation
@@ -187,6 +218,16 @@ def set_parameters(options):
                 options.report_snp_above_freq = 0
             if options.report_indel_above_freq is None:
                 options.report_indel_above_freq = 0
+            if options.snp_p_value_in_lc is None:
+                options.snp_p_value_in_lc = 0.05
+            if options.insert_p_value_in_lc is None:
+                options.insert_p_value_in_lc = 0.05
+            if options.delete_p_value_in_lc is None:
+                options.delete_p_value_in_lc = 0.05
+            if options.snp_q_cutoff_in_lc is None:
+                options.snp_q_cutoff_in_lc = 20
+            if options.indel_q_cutoff_in_lc is None:
+                options.indel_q_cutoff_in_lc = 20
     elif options.clr:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CLR VARIANT CALLING MODE SELECTED.\n")
         # image generation
@@ -231,11 +272,21 @@ def set_parameters(options):
                 options.report_snp_above_freq = 0
             if options.report_indel_above_freq is None:
                 options.report_indel_above_freq = 0
+            if options.snp_p_value_in_lc is None:
+                options.snp_p_value_in_lc = 0.05
+            if options.insert_p_value_in_lc is None:
+                options.insert_p_value_in_lc = 0.05
+            if options.delete_p_value_in_lc is None:
+                options.delete_p_value_in_lc = 0.05
+            if options.snp_q_cutoff_in_lc is None:
+                options.snp_q_cutoff_in_lc = 20
+            if options.indel_q_cutoff_in_lc is None:
+                options.indel_q_cutoff_in_lc = 20
 
     if options.use_hp_info:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODE: PEPPER HP\n")
     else:
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODE: PEPPER SNP\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODE: PEPPER\n")
 
     if options.sub_command in ['call_variant', 'make_images', 'make_train_images']:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: THRESHOLDS ARE SET TO: \n")
@@ -255,9 +306,18 @@ def set_parameters(options):
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN SNP PREDICTIVE VALUE:\t\t" + str(options.snp_p_value) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN INSERT PREDICTIVE VALUE:\t" + str(options.insert_p_value) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN DELETE PREDICTIVE VALUE:\t" + str(options.delete_p_value) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOW COMPLEXITY REGION SETUP:\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN SNP PREDICTIVE VALUE IN LOW-COMPLEXITY:\t" + str(options.snp_p_value_in_lc) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN INSERT PREDICTIVE VALUE IN LOW-COMPLEXITY:\t" + str(options.insert_p_value_in_lc) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN DELETE PREDICTIVE VALUE IN LOW-COMPLEXITY:\t" + str(options.delete_p_value_in_lc) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN DELETE PREDICTIVE VALUE IN LOW-COMPLEXITY:\t" + str(options.delete_p_value_in_lc) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SNP QV CUTOFF FOR RE-GENOTYPING:\t" + str(options.snp_q_cutoff) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: INDEL QV CUTOFF FOR RE-GENOTYPING:\t" + str(options.indel_q_cutoff) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOW COMPLEXITY REGION SETUP:\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SNP QV CUTOFF FOR RE-GENOTYPING IN LOW-COMPLEXITY:\t" + str(options.snp_q_cutoff_in_lc) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: INDEL QV CUTOFF FOR RE-GENOTYPING IN LOW-COMPLEXITY:\t" + str(options.indel_q_cutoff_in_lc) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: REPORT ALL SNPs ABOVE THRESHOLD:\t" + str(options.report_snp_above_freq) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: REPORT ALL INDELs ABOVE THRESHOLD:\t" + str(options.report_indel_above_freq) + "\n")
+
 
     return options

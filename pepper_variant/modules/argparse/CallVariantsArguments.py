@@ -241,7 +241,7 @@ def add_call_variant_arguments(parser):
         required=False,
         type=float,
         default=None,
-        help="Predicted value used for a insert to be considered a candidate."
+        help="Predicted value used for an insert to be considered a candidate."
     )
     parser.add_argument(
         "--delete_p_value",
@@ -249,6 +249,27 @@ def add_call_variant_arguments(parser):
         type=float,
         default=None,
         help="Predicted value used for a delete to be considered a candidate."
+    )
+    parser.add_argument(
+        "--snp_p_value_in_lc",
+        required=False,
+        type=float,
+        default=None,
+        help="Predicted value used for a SNP to be considered a candidate in low complexity regions."
+    )
+    parser.add_argument(
+        "--insert_p_value_in_lc",
+        required=False,
+        type=float,
+        default=None,
+        help="Predicted value used for an insert to be considered a candidate in low complexity regions."
+    )
+    parser.add_argument(
+        "--delete_p_value_in_lc",
+        required=False,
+        type=float,
+        default=None,
+        help="Predicted value used for a delete to be considered a candidate in low complexity regions."
     )
     parser.add_argument(
         "--snp_q_cutoff",
@@ -263,6 +284,20 @@ def add_call_variant_arguments(parser):
         type=float,
         default=None,
         help="GQ cutoff for an INDEL variant to be re-genotyped with DeepVariant. Variants with GQ below this will be re-genotyped."
+    )
+    parser.add_argument(
+        "--snp_q_cutoff_in_lc",
+        required=False,
+        type=float,
+        default=None,
+        help="GQ cutoff for a SNP variant in low complexity region to be re-genotyped with DeepVariant. Variants with GQ below this will be re-genotyped."
+    )
+    parser.add_argument(
+        "--indel_q_cutoff_in_lc",
+        required=False,
+        type=float,
+        default=None,
+        help="GQ cutoff for an INDEL variant in low complexity region to be re-genotyped with DeepVariant. Variants with GQ below this will be re-genotyped."
     )
     parser.add_argument(
         "--report_snp_above_freq",
