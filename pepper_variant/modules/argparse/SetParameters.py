@@ -22,9 +22,9 @@ def set_parameters(options):
             if options.snp_frequency is None:
                 options.snp_frequency = 0.10
             if options.insert_frequency is None:
-                options.insert_frequency = 0.15
+                options.insert_frequency = 0.10
             if options.delete_frequency is None:
-                options.delete_frequency = 0.15
+                options.delete_frequency = 0.10
             if options.min_coverage_threshold is None:
                 options.min_coverage_threshold = 3
             if options.candidate_support_threshold is None:
@@ -64,7 +64,6 @@ def set_parameters(options):
             if options.indel_q_cutoff_in_lc is None:
                 options.indel_q_cutoff_in_lc = 20
 
-
     if options.ont_r9_hac:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING MODE SELECTED.\n")
         # image generation
@@ -78,9 +77,9 @@ def set_parameters(options):
             if options.snp_frequency is None:
                 options.snp_frequency = 0.10
             if options.insert_frequency is None:
-                options.insert_frequency = 0.15
+                options.insert_frequency = 0.12
             if options.delete_frequency is None:
-                options.delete_frequency = 0.15
+                options.delete_frequency = 0.12
             if options.min_coverage_threshold is None:
                 options.min_coverage_threshold = 3
             if options.candidate_support_threshold is None:
@@ -88,7 +87,7 @@ def set_parameters(options):
             if options.snp_candidate_frequency_threshold is None:
                 options.snp_candidate_frequency_threshold = 0.10
             if options.indel_candidate_frequency_threshold is None:
-                options.indel_candidate_frequency_threshold = 0.12
+                options.indel_candidate_frequency_threshold = 0.10
             if not options.skip_indels:
                 options.skip_indels = False
         # candidate finding
@@ -133,9 +132,9 @@ def set_parameters(options):
             if options.snp_frequency is None:
                 options.snp_frequency = 0.1
             if options.insert_frequency is None:
-                options.insert_frequency = 0.1
+                options.insert_frequency = 0.08
             if options.delete_frequency is None:
-                options.delete_frequency = 0.1
+                options.delete_frequency = 0.08
             if options.min_coverage_threshold is None:
                 options.min_coverage_threshold = 3
             if options.candidate_support_threshold is None:
@@ -143,7 +142,7 @@ def set_parameters(options):
             if options.snp_candidate_frequency_threshold is None:
                 options.snp_candidate_frequency_threshold = 0.10
             if options.indel_candidate_frequency_threshold is None:
-                options.indel_candidate_frequency_threshold = 0.10
+                options.indel_candidate_frequency_threshold = 0.08
             if not options.skip_indels:
                 options.skip_indels = False
         # candidate finding
@@ -167,9 +166,9 @@ def set_parameters(options):
             if options.snp_p_value_in_lc is None:
                 options.snp_p_value_in_lc = 0.05
             if options.insert_p_value_in_lc is None:
-                options.insert_p_value_in_lc = 0.05
+                options.insert_p_value_in_lc = 0.01
             if options.delete_p_value_in_lc is None:
-                options.delete_p_value_in_lc = 0.05
+                options.delete_p_value_in_lc = 0.01
             if options.snp_q_cutoff_in_lc is None:
                 options.snp_q_cutoff_in_lc = 20
             if options.indel_q_cutoff_in_lc is None:
@@ -187,9 +186,9 @@ def set_parameters(options):
             if options.snp_frequency is None:
                 options.snp_frequency = 0.10
             if options.insert_frequency is None:
-                options.insert_frequency = 0.12
+                options.insert_frequency = 0.10
             if options.delete_frequency is None:
-                options.delete_frequency = 0.12
+                options.delete_frequency = 0.10
             if options.min_coverage_threshold is None:
                 options.min_coverage_threshold = 2
             if options.candidate_support_threshold is None:
@@ -197,7 +196,7 @@ def set_parameters(options):
             if options.snp_candidate_frequency_threshold is None:
                 options.snp_candidate_frequency_threshold = 0.10
             if options.indel_candidate_frequency_threshold is None:
-                options.indel_candidate_frequency_threshold = 0.12
+                options.indel_candidate_frequency_threshold = 0.10
             if not options.skip_indels:
                 options.skip_indels = False
         if options.sub_command in ['call_variant', 'find_candidates']:
@@ -209,7 +208,7 @@ def set_parameters(options):
             if options.insert_p_value is None:
                 options.insert_p_value = 0.001
             if options.delete_p_value is None:
-                options.delete_p_value = 0.01
+                options.delete_p_value = 0.001
             if options.snp_q_cutoff is None:
                 options.snp_q_cutoff = 20
             if options.indel_q_cutoff is None:
@@ -219,15 +218,15 @@ def set_parameters(options):
             if options.report_indel_above_freq is None:
                 options.report_indel_above_freq = 0
             if options.snp_p_value_in_lc is None:
-                options.snp_p_value_in_lc = 0.05
+                options.snp_p_value_in_lc = 0.001
             if options.insert_p_value_in_lc is None:
-                options.insert_p_value_in_lc = 0.05
+                options.insert_p_value_in_lc = 0.0001
             if options.delete_p_value_in_lc is None:
-                options.delete_p_value_in_lc = 0.05
+                options.delete_p_value_in_lc = 0.0001
             if options.snp_q_cutoff_in_lc is None:
-                options.snp_q_cutoff_in_lc = 20
+                options.snp_q_cutoff_in_lc = 30
             if options.indel_q_cutoff_in_lc is None:
-                options.indel_q_cutoff_in_lc = 20
+                options.indel_q_cutoff_in_lc = 30
     elif options.clr:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CLR VARIANT CALLING MODE SELECTED.\n")
         # image generation
@@ -306,18 +305,18 @@ def set_parameters(options):
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN SNP PREDICTIVE VALUE:\t\t" + str(options.snp_p_value) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN INSERT PREDICTIVE VALUE:\t" + str(options.insert_p_value) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN DELETE PREDICTIVE VALUE:\t" + str(options.delete_p_value) + "\n")
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOW COMPLEXITY REGION SETUP:\n")
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN SNP PREDICTIVE VALUE IN LOW-COMPLEXITY:\t" + str(options.snp_p_value_in_lc) + "\n")
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN INSERT PREDICTIVE VALUE IN LOW-COMPLEXITY:\t" + str(options.insert_p_value_in_lc) + "\n")
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN DELETE PREDICTIVE VALUE IN LOW-COMPLEXITY:\t" + str(options.delete_p_value_in_lc) + "\n")
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN DELETE PREDICTIVE VALUE IN LOW-COMPLEXITY:\t" + str(options.delete_p_value_in_lc) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SNP QV CUTOFF FOR RE-GENOTYPING:\t" + str(options.snp_q_cutoff) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: INDEL QV CUTOFF FOR RE-GENOTYPING:\t" + str(options.indel_q_cutoff) + "\n")
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOW COMPLEXITY REGION SETUP:\n")
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SNP QV CUTOFF FOR RE-GENOTYPING IN LOW-COMPLEXITY:\t" + str(options.snp_q_cutoff_in_lc) + "\n")
-        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: INDEL QV CUTOFF FOR RE-GENOTYPING IN LOW-COMPLEXITY:\t" + str(options.indel_q_cutoff_in_lc) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: REPORT ALL SNPs ABOVE THRESHOLD:\t" + str(options.report_snp_above_freq) + "\n")
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: REPORT ALL INDELs ABOVE THRESHOLD:\t" + str(options.report_indel_above_freq) + "\n")
+
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LOW COMPLEXITY REGION SETUP:\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN SNP PREDICTIVE VALUE:\t\t" + str(options.snp_p_value_in_lc) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN INSERT PREDICTIVE VALUE:\t" + str(options.insert_p_value_in_lc) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MIN DELETE PREDICTIVE VALUE:\t" + str(options.delete_p_value_in_lc) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SNP QV CUTOFF FOR RE-GENOTYPING:\t" + str(options.snp_q_cutoff_in_lc) + "\n")
+        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: INDEL QV CUTOFF FOR RE-GENOTYPING:\t" + str(options.indel_q_cutoff_in_lc) + "\n")
+
 
 
     return options
