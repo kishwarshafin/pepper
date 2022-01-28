@@ -118,7 +118,11 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         transducer_model = nn.parallel.DataParallel(transducer_model)
 
     # Loss
-    criterion_type = nn.CrossEntropyLoss(reduction='sum')
+    weights = [1.0, 1.0, 1.0]
+    weight_tensor = torch.Tensor(weights)
+    criterion_type = nn.CrossEntropyLoss(weight=weight_tensor, reduction='sum')
+
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: WEIGHTS: " + str(weights) + "\n")
 
     if gpu_mode is True:
         criterion_type = criterion_type.cuda()
