@@ -318,7 +318,7 @@ def add_call_variant_arguments(parser):
                                default=False,
                                action='store_true',
                                help="Set to call variants on R9.4.1 Guppy 5+ sup Oxford Nanopore reads.")
-    profile_group.add_argument("--ont_r9_hac",
+    profile_group.add_argument("--ont_r9_guppy4_hac",
                                default=False,
                                action='store_true',
                                help="Set to call variants on R9.4.1 Guppy HAC caller Oxford Nanopore reads.")

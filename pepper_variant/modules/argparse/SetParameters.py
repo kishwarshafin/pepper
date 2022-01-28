@@ -64,7 +64,7 @@ def set_parameters(options):
             if options.indel_q_cutoff_in_lc is None:
                 options.indel_q_cutoff_in_lc = 20
 
-    if options.ont_r9_hac:
+    if options.ont_r9_guppy4_hac:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING MODE SELECTED.\n")
         # image generation
         if options.sub_command in ['call_variant', 'make_images', 'make_train_images']:

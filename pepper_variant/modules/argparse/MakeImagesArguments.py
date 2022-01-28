@@ -155,7 +155,7 @@ def add_make_images_arguments(parser):
                                default=False,
                                action='store_true',
                                help="Set to call variants on R9.4.1 Guppy SUP caller Oxford Nanopore reads.")
-    profile_group.add_argument("--ont_r9_hac",
+    profile_group.add_argument("--ont_r9_guppy4_hac",
                                default=False,
                                action='store_true',
                                help="Set to call variants on R9.4.1 Guppy HAC caller Oxford Nanopore reads.")
