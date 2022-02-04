@@ -26,7 +26,7 @@ class SequenceDataset(Dataset):
         A pkl directory
     """
 
-    def __init__(self, image_directory, input_file=None, summary_name=None):
+    def __init__(self, image_directory, input_file=None, summary_names=None):
         # self.transform = transforms.Compose([transforms.ToTensor()])
         # self.transform = transforms.Compose([])
         if input_file is None:
@@ -44,7 +44,7 @@ class SequenceDataset(Dataset):
         for input_file in input_files:
             with h5py.File(input_file, 'r') as hdf5_file:
                 if 'summaries' in hdf5_file:
-                    if summary_name is None:
+                    if summary_names is None:
                         summary_names = list(hdf5_file['summaries'].keys())
                         for summary_name in summary_names:
                             contigs = hdf5_file['summaries'][summary_name]['contigs'][()]
@@ -61,19 +61,20 @@ class SequenceDataset(Dataset):
                             self.all_candidate_frequency.extend(candidate_frequency)
                             self.all_images.extend(images)
                     else:
-                        contigs = hdf5_file['summaries'][summary_name]['contigs'][()]
-                        positions = hdf5_file['summaries'][summary_name]['positions'][()]
-                        depths = hdf5_file['summaries'][summary_name]['depths'][()]
-                        candidates = hdf5_file['summaries'][summary_name]['candidates'][()]
-                        candidate_frequency = hdf5_file['summaries'][summary_name]['candidate_frequency'][()]
-                        images = hdf5_file['summaries'][summary_name]['images'][()]
+                        for summary_name in summary_names:
+                            contigs = hdf5_file['summaries'][summary_name]['contigs'][()]
+                            positions = hdf5_file['summaries'][summary_name]['positions'][()]
+                            depths = hdf5_file['summaries'][summary_name]['depths'][()]
+                            candidates = hdf5_file['summaries'][summary_name]['candidates'][()]
+                            candidate_frequency = hdf5_file['summaries'][summary_name]['candidate_frequency'][()]
+                            images = hdf5_file['summaries'][summary_name]['images'][()]
 
-                        self.all_contigs.extend(contigs)
-                        self.all_positions.extend(positions)
-                        self.all_depths.extend(depths)
-                        self.all_candidates.extend(candidates)
-                        self.all_candidate_frequency.extend(candidate_frequency)
-                        self.all_images.extend(images)
+                            self.all_contigs.extend(contigs)
+                            self.all_positions.extend(positions)
+                            self.all_depths.extend(depths)
+                            self.all_candidates.extend(candidates)
+                            self.all_candidate_frequency.extend(candidate_frequency)
+                            self.all_images.extend(images)
 
 
     @staticmethod

@@ -27,6 +27,11 @@ def get_all_summary_names(input_file):
     return summary_names
 
 
+def chunks(file_list, n):
+    for i in range(0, len(file_list), n):
+        yield file_list[i:i + n]
+
+
 def predict(options, input_filepath, file_chunks, output_filepath, threads, thread_id):
     # create output file
     output_filename = output_filepath + "pepper_prediction_" + str(thread_id) + ".hdf"
@@ -62,9 +67,11 @@ def predict(options, input_filepath, file_chunks, output_filepath, threads, thre
             sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
                              "INFO: TOTAL SUMMARIES: " + str(len(summary_names)) + ".\n")
             sys.stderr.flush()
-        for summary_index, summary_name in enumerate(summary_names):
+        chunked_summary_names = list(chunks(summary_names, 1))
+
+        for summary_index, summary_names in enumerate(chunked_summary_names):
             # data loader
-            input_data = SequenceDataset(input_filepath, input_file, summary_name)
+            input_data = SequenceDataset([input_filepath], input_file, summary_names)
             data_loader = DataLoader(input_data,
                                      batch_size=options.batch_size,
                                      shuffle=False,
@@ -72,9 +79,15 @@ def predict(options, input_filepath, file_chunks, output_filepath, threads, thre
                                      collate_fn=SequenceDataset.my_collate)
 
             with torch.no_grad():
+                if thread_id == 0:
+                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S START\n')))
+                    sys.stderr.flush()
                 for contigs, positions, depths, candidates, candidate_frequencies, images in data_loader:
                     sys.stderr.flush()
                     # images = images.type(torch.FloatTensor)
+                    if thread_id == 0:
+                        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S START IN\n')))
+                        sys.stderr.flush()
                     hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
                     cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
                     # run inference on onnx mode, which takes numpy inputs
@@ -86,12 +99,18 @@ def predict(options, input_filepath, file_chunks, output_filepath, threads, thre
                     output_type = output_type[0]
 
                     prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_type)
+                    if thread_id == 0:
+                        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S END IN\n')))
+                        sys.stderr.flush()
 
                     batch_completed += 1
+                if thread_id == 0:
+                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S END\n')))
+                    sys.stderr.flush()
 
             if thread_id == 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
-                                 "INFO: SUMMARY PROCESSED " + str(summary_index + 1) + "/" + str(len(summary_names)) + ".\n")
+                                 "INFO: SUMMARY PROCESSED " + str(summary_index + 1) + "/" + str(len(chunked_summary_names)) + ".\n")
                 sys.stderr.flush()
 
     return thread_id

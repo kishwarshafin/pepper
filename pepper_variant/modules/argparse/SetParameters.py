@@ -22,9 +22,9 @@ def set_parameters(options):
             if options.snp_frequency is None:
                 options.snp_frequency = 0.10
             if options.insert_frequency is None:
-                options.insert_frequency = 0.10
+                options.insert_frequency = 0.15
             if options.delete_frequency is None:
-                options.delete_frequency = 0.10
+                options.delete_frequency = 0.15
             if options.min_coverage_threshold is None:
                 options.min_coverage_threshold = 3
             if options.candidate_support_threshold is None:
@@ -132,9 +132,9 @@ def set_parameters(options):
             if options.snp_frequency is None:
                 options.snp_frequency = 0.1
             if options.insert_frequency is None:
-                options.insert_frequency = 0.08
+                options.insert_frequency = 0.1
             if options.delete_frequency is None:
-                options.delete_frequency = 0.08
+                options.delete_frequency = 0.1
             if options.min_coverage_threshold is None:
                 options.min_coverage_threshold = 3
             if options.candidate_support_threshold is None:
@@ -142,7 +142,7 @@ def set_parameters(options):
             if options.snp_candidate_frequency_threshold is None:
                 options.snp_candidate_frequency_threshold = 0.10
             if options.indel_candidate_frequency_threshold is None:
-                options.indel_candidate_frequency_threshold = 0.08
+                options.indel_candidate_frequency_threshold = 0.10
             if not options.skip_indels:
                 options.skip_indels = False
         # candidate finding

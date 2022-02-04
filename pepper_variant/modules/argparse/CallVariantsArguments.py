@@ -173,7 +173,7 @@ def add_call_variant_arguments(parser):
         type=int,
         required=False,
         default=512,
-        help="Batch size for testing, default is 128. Suggested values: 256/512/1024. Default is 128"
+        help="Batch size for testing, default is 128. Suggested values: 256/512/1024. Default is 512"
     )
     parser.add_argument(
         "-g",
