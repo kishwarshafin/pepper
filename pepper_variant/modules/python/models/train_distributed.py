@@ -78,7 +78,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
             exit(1)
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: RETRAIN MODEL LOADING\n")
         transducer_model, hidden_size, gru_layers, prev_ite = \
-            ModelHandler.load_simple_model_for_training(retrain_model,
+            ModelHandler.load_simple_model_for_training(retrain_model_path,
                                                         image_features=image_height,
                                                         num_classes=num_classes,
                                                         num_type_classes=num_type_classes)
@@ -105,7 +105,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: WEIGHT DECAY: " + str(decay) + "\n")
 
     model_optimizer = torch.optim.Adam(transducer_model.parameters(), lr=lr, weight_decay=decay)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(model_optimizer, 'min', patience=2)
+    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(model_optimizer, 'min', patience=10)
 
     if retrain_model is True:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OPTIMIZER LOADING\n")
@@ -153,6 +153,8 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         for images, base_labels, type_labels in train_loader:
             # make sure the model is in train mode.
             transducer_model = transducer_model.train()
+            # set the optimizer to zero grad
+            model_optimizer.zero_grad()
 
             # image and label handling
             type_labels = type_labels.type(torch.LongTensor)
@@ -161,18 +163,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 images = images.cuda()
                 type_labels = type_labels.cuda()
 
-            # generate hidden and cell state
-            hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-            cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-
-            if gpu_mode:
-                hidden = hidden.cuda()
-                cell_state = cell_state.cuda()
-
-            # set the optimizer to zero grad
-            model_optimizer.zero_grad()
-
-            output_type = transducer_model(images, hidden, cell_state, train_mode)
+            output_type = transducer_model(images, train_mode)
             loss = criterion_type(output_type.contiguous().view(-1, num_type_classes), type_labels.contiguous().view(-1))
 
             loss.backward()
@@ -206,7 +197,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 transducer_model = transducer_model.eval()
                 torch.cuda.empty_cache()
 
-                stats_dictionary = test(test_file, test_batch_size, gpu_mode, transducer_model)
+                stats_dictionary = test(test_file, test_batch_size, gpu_mode, transducer_model, num_workers)
 
                 save_best_model(transducer_model, model_optimizer, hidden_size, gru_layers, epoch, model_dir + "PEPPER_VARIANT_STEP_" + str(step_no) + '_checkpoint.pkl')
                 train_loss_logger.write(str(step_no) + "," + str(avg_loss) + "\n")
@@ -236,7 +227,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 transducer_model = transducer_model.train()
 
                 epoch += 1
-                scheduler.step(stats_dictionary['loss'])
+                # scheduler.step(stats_dictionary['loss'])
 
             # increase step size
             step_no += 1

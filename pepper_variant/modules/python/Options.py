@@ -5,7 +5,7 @@ class ConsensCandidateFinder(object):
 class ImageSizeOptions(object):
     IMAGE_HEIGHT = 26
     IMAGE_CHANNELS = 1
-    CANDIDATE_WINDOW_SIZE = 20
+    CANDIDATE_WINDOW_SIZE = 32
 
     TOTAL_LABELS = 28
     TOTAL_TYPE_LABELS = 3

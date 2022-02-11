@@ -25,50 +25,54 @@ class TransducerGRU(nn.Module):
                                num_layers=self.num_layers,
                                bidirectional=bidirectional,
                                batch_first=True)
-        self.decoder = nn.LSTM(2 * self.lstm_2_hidden_size,
+        self.decoder = nn.LSTM(2 * self.lstm_1_hidden_size,
                                self.lstm_2_hidden_size,
                                num_layers=self.num_layers,
                                bidirectional=bidirectional,
                                batch_first=True)
-        self.dropout_rnn = nn.Dropout(p=0.3)
-
+        self.activation = nn.SELU()
+        self.dropout_rnn = nn.Dropout(p=0.2)
         self.linear_1 = nn.Linear((self.lstm_2_hidden_size * 2) * (ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1), self.linear_1_size)
         self.dropout_l1 = nn.Dropout(p=0.2)
+
         self.linear_2 = nn.Linear(self.linear_1_size, self.linear_2_size)
         self.dropout_l2 = nn.Dropout(p=0.2)
         self.linear_3 = nn.Linear(self.linear_2_size, self.linear_3_size)
         self.dropout_l3 = nn.Dropout(p=0.2)
         self.linear_4 = nn.Linear(self.linear_3_size, self.linear_4_size)
-        self.dropout_l4 = nn.Dropout(p=0.5)
+        self.dropout_l4 = nn.Dropout(p=0.2)
         self.linear_5 = nn.Linear(self.linear_4_size, self.linear_5_size)
 
         self.output_layer_type = nn.Linear(self.linear_5_size, self.num_classes_type)
 
-    def forward(self, x, hidden, cell_state, train_mode=False):
-        hidden = hidden.transpose(0, 1).contiguous()
-        cell_state = cell_state.transpose(0, 1).contiguous()
+    def forward(self, x, train_mode=False):
         # Encoder RNN
         self.encoder.flatten_parameters()
-        x, (hidden, cell_state) = self.encoder(x, (hidden, cell_state))
+        x, (h, c) = self.encoder(x)
         # Decoder RNN
         self.decoder.flatten_parameters()
-        x, (hidden, cell_state) = self.decoder(x, (hidden, cell_state))
+        x, (h, c) = self.decoder(x)
         x = self.dropout_rnn(x)
         x = torch.flatten(x, start_dim=1, end_dim=2)
         # Linear layer 1
         x = self.linear_1(x)
+        x = self.activation(x)
         x = self.dropout_l1(x)
         # Linear layer 2
         x = self.linear_2(x)
+        x = self.activation(x)
         x = self.dropout_l2(x)
         # Linear layer 3
         x = self.linear_3(x)
+        x = self.activation(x)
         x = self.dropout_l3(x)
         # Linear layer 4
         x = self.linear_4(x)
+        x = self.activation(x)
         x = self.dropout_l4(x)
         # Linear layer 5
         x = self.linear_5(x)
+        x = self.activation(x)
         x_type = self.output_layer_type(x)
 
         if train_mode:

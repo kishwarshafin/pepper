@@ -92,8 +92,8 @@ class TrainModule:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: NO GPU AVAILABLE BUT GPU MODE IS SET\n")
                 exit()
 
-        if self.use_hp_info == 0:
-            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] ERROR: PEPPER HP TRAINING INITIATED.\n")
+        if self.use_hp_info:
+            sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: PEPPER HP TRAINING INITIATED.\n")
             sys.stderr.flush()
 
         train_distributed(self.train_file,

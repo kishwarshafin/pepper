@@ -9,14 +9,14 @@ from pepper_variant.modules.python.models.dataloader import SequenceDataset
 from pepper_variant.modules.python.Options import ImageSizeOptions, TrainOptions
 
 
-def test(data_file, batch_size, gpu_mode, transducer_model):
+def test(data_file, batch_size, gpu_mode, transducer_model, num_workers):
     start_time = time.time()
     # data loader
     test_data = SequenceDataset(data_file)
     test_loader = DataLoader(test_data,
                              batch_size=batch_size,
                              shuffle=False,
-                             num_workers=0,
+                             num_workers=num_workers,
                              pin_memory=False,
                              drop_last=True)
 
@@ -40,22 +40,13 @@ def test(data_file, batch_size, gpu_mode, transducer_model):
 
     with torch.no_grad():
         for ii, (images, base_labels, type_labels) in enumerate(test_loader):
-            base_labels = base_labels.type(torch.LongTensor)
             type_labels = type_labels.type(torch.LongTensor)
             images = images.type(torch.FloatTensor)
             if gpu_mode:
                 images = images.cuda()
-                base_labels = base_labels.cuda()
                 type_labels = type_labels.cuda()
 
-            hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-            cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-
-            if gpu_mode:
-                cell_state = cell_state.cuda()
-                hidden = hidden.cuda()
-
-            output_type = transducer_model(images, hidden, cell_state, train_mode=True)
+            output_type = transducer_model(images, train_mode=True)
             loss = criterion_type(output_type.contiguous().view(-1, ImageSizeOptions.TOTAL_TYPE_LABELS), type_labels.contiguous().view(-1))
 
             confusion_matrix.add(output_type.data.contiguous().view(-1, ImageSizeOptions.TOTAL_TYPE_LABELS), type_labels.data.contiguous().view(-1))

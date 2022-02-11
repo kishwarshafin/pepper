@@ -79,34 +79,17 @@ def predict(options, input_filepath, file_chunks, output_filepath, threads, thre
                                      collate_fn=SequenceDataset.my_collate)
 
             with torch.no_grad():
-                if thread_id == 0:
-                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S START\n')))
-                    sys.stderr.flush()
                 for contigs, positions, depths, candidates, candidate_frequencies, images in data_loader:
                     sys.stderr.flush()
-                    # images = images.type(torch.FloatTensor)
-                    if thread_id == 0:
-                        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S START IN\n')))
-                        sys.stderr.flush()
-                    hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-                    cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
                     # run inference on onnx mode, which takes numpy inputs
-                    ort_inputs = {ort_session.get_inputs()[0].name: images.cpu().numpy(),
-                                  ort_session.get_inputs()[1].name: hidden.cpu().numpy(),
-                                  ort_session.get_inputs()[2].name: cell_state.cpu().numpy()}
+                    ort_inputs = {ort_session.get_inputs()[0].name: images.cpu().numpy()}
                     # the return value comes as a list
                     output_type = ort_session.run(None, ort_inputs)
                     output_type = output_type[0]
 
                     prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_type)
-                    if thread_id == 0:
-                        sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S END IN\n')))
-                        sys.stderr.flush()
 
                     batch_completed += 1
-                if thread_id == 0:
-                    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S END\n')))
-                    sys.stderr.flush()
 
             if thread_id == 0:
                 sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] " +
@@ -149,11 +132,9 @@ def predict_pytorch(input_filepath, file_chunks, output_filepath, model_path, ba
         for contigs, positions, depths, candidates, candidate_frequencies, images in data_loader:
             sys.stderr.flush()
             images = images.type(torch.FloatTensor)
-            hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-            cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
             # run inference
-            output_type = transducer_model(images, hidden, cell_state, False)
+            output_type = transducer_model(images, False)
 
             output_type = output_type.detach().cpu().numpy()
             # output_type = output_type.detach().cpu().numpy()
@@ -192,20 +173,16 @@ def predict_distributed_cpu(options, filepath, file_chunks, output_filepath, tot
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL LOADING TO ONNX\n")
     x = torch.zeros(1, ImageSizeOptions.CANDIDATE_WINDOW_SIZE + 1, image_features)
-    h = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-    c = torch.zeros(1, 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
     if not os.path.isfile(options.model_path + ".onnx"):
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: SAVING MODEL TO ONNX\n")
-        torch.onnx.export(transducer_model, (x, h, c),
+        torch.onnx.export(transducer_model, x,
                           options.model_path + ".onnx",
                           opset_version=11,
                           do_constant_folding=True,
-                          input_names=['image', 'hidden', 'cell_state'],
+                          input_names=['image'],
                           output_names=['output_type'],
                           dynamic_axes={'image': {0: 'batch_size'},
-                                        'hidden': {0: 'batch_size'},
-                                        'cell_state': {0: 'batch_size'},
                                         'output_type': {0: 'batch_size'}})
 
     if options.quantized:

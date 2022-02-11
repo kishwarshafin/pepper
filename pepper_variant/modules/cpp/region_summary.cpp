@@ -411,11 +411,9 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                                 else image_matrix[base_index][15] -= 1;
                             }
                         }
-
-
                         if(ref_base != base && base_quality >= min_snp_baseq) {
                             snp_count[ref_position - ref_start] += 1;
-                            if(feature_index >= 0) image_matrix[base_index][feature_index] += 1;
+                            if(feature_index >= 0) image_matrix[base_index][feature_index] -= 1;
                             // save the candidate
                             string candidate_string = char(AlleleType::SNP_ALLELE + '0') + alt;
 
@@ -478,7 +476,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
 
                     // only process candidates that are smaller than 50bp as they 50bp+ means SV
                     if(candidate_string.length() <= 61 && base_quality >= min_indel_baseq * len) {
-                        if(insert_count_index >= 0) image_matrix[base_index][insert_count_index] += 1;
+                        if(insert_count_index >= 0) image_matrix[base_index][insert_count_index] -= 1;
 
                         insert_count[ref_position - 1 - ref_start] += 1;
                         int region_index = (int) (ref_position - 1 - ref_start);
@@ -513,7 +511,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     char ref_base = reference_sequence[ref_position - 1 - ref_start];
                     int base_index = (int)(ref_position - 1 - ref_start + cumulative_observed_insert[ref_position - 1 - ref_start]);
                     int delete_count_index =  get_feature_index(ref_base, 'D', read.flags.is_reverse);
-                    if(delete_count_index >= 0) image_matrix[base_index][delete_count_index] += 1.0;
+                    if(delete_count_index >= 0) image_matrix[base_index][delete_count_index] -= 1.0;
 
                     // process delete allele here
                     string ref = reference_sequence.substr(ref_position - ref_start - 1, cigar.length + 1);
@@ -565,7 +563,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                         char ref_base = reference_sequence[ref_position - ref_start + i];
                         int feature_index = get_feature_index(ref_base, '*', read.flags.is_reverse);
 
-                        if(feature_index >= 0)  image_matrix[base_index][feature_index] += 1;
+                        if(feature_index >= 0)  image_matrix[base_index][feature_index] -= 1;
 //                        coverage_vector[ref_position - ref_start + i] += 1.0;
                     }
                 }
@@ -736,6 +734,7 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
                 cout<<"CANDIDATE TYPE: "<<candidate_string[0]<<endl;
                 cout<<"REF BASE: "<<reference_sequence[candidate_position - ref_start]<<endl;
             }
+            char ref_base = reference_sequence[candidate_position - ref_start];
             if (train_mode) {
                 vector<type_truth_record> hp1_truths = hp1_truth_alleles[base_index];
                 vector<type_truth_record> hp2_truths = hp2_truth_alleles[base_index];
@@ -869,9 +868,13 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
                     cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
                 }
                 int mid_index = candidate_window_size / 2;
+                int forward_feature_index = get_feature_index(ref_base, candidate_string[1], false);
+                int reverse_feature_index = get_feature_index(ref_base, candidate_string[1], true);
                 candidate_summary.image_matrix[mid_index][1] = get_reference_feature_value(candidate_string[1]); // min((int) candidate_string.length() - 1, ImageOptionsRegion::MAX_COLOR_VALUE);
                 candidate_summary.image_matrix[mid_index][5] = min(allele_depth_fwd, ImageOptionsRegion::MAX_COLOR_VALUE);
                 candidate_summary.image_matrix[mid_index][16] = min(allele_depth_rev, ImageOptionsRegion::MAX_COLOR_VALUE);
+                candidate_summary.image_matrix[mid_index][forward_feature_index] = (-1) * candidate_summary.image_matrix[mid_index][forward_feature_index];
+                candidate_summary.image_matrix[mid_index][reverse_feature_index] = (-1) * candidate_summary.image_matrix[mid_index][reverse_feature_index];
                 candidate_summary.candidates.push_back(candidate_string);
                 candidate_summary.candidate_frequency.push_back(min(allele_depth, ImageOptionsRegion::MAX_COLOR_VALUE));
             } else if (insert_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '2') {
@@ -880,9 +883,13 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
                     cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
                 }
                 int mid_index = candidate_window_size / 2;
+                int forward_feature_index = get_feature_index(ref_base, 'I', false);
+                int reverse_feature_index = get_feature_index(ref_base, 'I', true);
                 candidate_summary.image_matrix[mid_index][2] = min((int) candidate_string.length() - 1, ImageOptionsRegion::MAX_COLOR_VALUE);
                 candidate_summary.image_matrix[mid_index][6] = min(allele_depth_fwd, ImageOptionsRegion::MAX_COLOR_VALUE);
                 candidate_summary.image_matrix[mid_index][17] = min(allele_depth_rev, ImageOptionsRegion::MAX_COLOR_VALUE);
+                candidate_summary.image_matrix[mid_index][forward_feature_index] = (-1) * candidate_summary.image_matrix[mid_index][forward_feature_index];
+                candidate_summary.image_matrix[mid_index][reverse_feature_index] = (-1) * candidate_summary.image_matrix[mid_index][reverse_feature_index];
                 candidate_summary.candidates.push_back(candidate_string);
                 candidate_summary.candidate_frequency.push_back(min(allele_depth, ImageOptionsRegion::MAX_COLOR_VALUE));
             } else if (delete_threshold_pass[candidate_position - ref_start] && candidate_string[0] == '3') {
@@ -891,11 +898,27 @@ vector<CandidateImageSummary> RegionalSummaryGenerator::generate_summary(vector 
                     cout << AlleleFrequencyMap[candidate_position - ref_start][candidate_string] << endl;
                 }
                 int mid_index = candidate_window_size / 2;
-                candidate_summary.image_matrix[mid_index][3] = min((int) candidate_string.length() - 1, ImageOptionsRegion::MAX_COLOR_VALUE);
+                int del_len = (int) candidate_string.length() - 1;
+                int end_index = min(mid_index + del_len - 1, candidate_window_size - 1);
+                int forward_feature_index = get_feature_index(ref_base, 'D', false);
+                int reverse_feature_index = get_feature_index(ref_base, 'D', true);
+                candidate_summary.image_matrix[mid_index][3] = min((int) del_len, ImageOptionsRegion::MAX_COLOR_VALUE);
                 candidate_summary.image_matrix[mid_index][7] = min(allele_depth_fwd, ImageOptionsRegion::MAX_COLOR_VALUE);
                 candidate_summary.image_matrix[mid_index][18] = min(allele_depth_rev, ImageOptionsRegion::MAX_COLOR_VALUE);
+                candidate_summary.image_matrix[mid_index][forward_feature_index] = (-1) * candidate_summary.image_matrix[mid_index][forward_feature_index];
+                candidate_summary.image_matrix[mid_index][reverse_feature_index] = (-1) * candidate_summary.image_matrix[mid_index][reverse_feature_index];
                 candidate_summary.candidates.push_back(candidate_string);
                 candidate_summary.candidate_frequency.push_back(min(allele_depth, ImageOptionsRegion::MAX_COLOR_VALUE));
+                // Update the image matrix for the rest of the window
+                forward_feature_index = get_feature_index(ref_base, '*', false);
+                reverse_feature_index = get_feature_index(ref_base, '*', true);
+                for(int idx = mid_index + 1; idx <= end_index; idx++) {
+                    candidate_summary.image_matrix[idx][3] = min((int) candidate_string.length() - 1, ImageOptionsRegion::MAX_COLOR_VALUE);
+                    candidate_summary.image_matrix[idx][7] = min(allele_depth_fwd, ImageOptionsRegion::MAX_COLOR_VALUE);
+                    candidate_summary.image_matrix[idx][18] = min(allele_depth_rev, ImageOptionsRegion::MAX_COLOR_VALUE);
+                    candidate_summary.image_matrix[idx][forward_feature_index] = (-1) * candidate_summary.image_matrix[idx][forward_feature_index];
+                    candidate_summary.image_matrix[idx][reverse_feature_index] = (-1) * candidate_summary.image_matrix[idx][reverse_feature_index];
+                }
             }
             all_candidate_images.push_back(candidate_summary);
             if(debug) {
