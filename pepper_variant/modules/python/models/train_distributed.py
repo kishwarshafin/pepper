@@ -104,8 +104,8 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LEARNING RATE: " + str(lr) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: WEIGHT DECAY: " + str(decay) + "\n")
 
-    model_optimizer = torch.optim.Adam(transducer_model.parameters(), lr=lr, weight_decay=decay)
-    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(model_optimizer, 'min', patience=10)
+    model_optimizer = torch.optim.RAdam(transducer_model.parameters(), lr=lr, weight_decay=decay)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(model_optimizer, 'max', patience=2, min_lr=0.75 * lr)
 
     if retrain_model is True:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: OPTIMIZER LOADING\n")
@@ -118,7 +118,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
         transducer_model = nn.parallel.DataParallel(transducer_model)
 
     # Loss
-    weights = [1.0, 1.0, 1.0]
+    weights = [0.3, 1.0, 1.0]
     weight_tensor = torch.Tensor(weights)
     criterion_type = nn.CrossEntropyLoss(weight=weight_tensor, reduction='sum')
 
@@ -227,7 +227,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
                 transducer_model = transducer_model.train()
 
                 epoch += 1
-                # scheduler.step(stats_dictionary['loss'])
+                scheduler.step(stats_dictionary['accuracy'])
 
             # increase step size
             step_no += 1

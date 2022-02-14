@@ -7,6 +7,7 @@ import sys
 import time
 import torch
 from datetime import datetime
+import numpy as np
 
 
 def get_file_paths_from_directory(directory_path):
@@ -85,7 +86,7 @@ class SequenceDataset(Dataset):
         candidate = [item[3] for item in batch]
         candidate_frequency = [item[4] for item in batch]
         image = [item[5] for item in batch]
-
+        image = np.array(image)
         image = torch.FloatTensor(image)
         # print(type(contig), type(position), type(depth), type(candidate), type(candidate_frequency), type(image))
 
