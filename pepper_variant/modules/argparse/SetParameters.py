@@ -204,29 +204,29 @@ def set_parameters(options):
             if options.allowed_multiallelics is None:
                 options.allowed_multiallelics = 4
             if options.snp_p_value is None:
-                options.snp_p_value = 0.01
+                options.snp_p_value = 0
             if options.insert_p_value is None:
-                options.insert_p_value = 0.001
+                options.insert_p_value = 0
             if options.delete_p_value is None:
-                options.delete_p_value = 0.001
+                options.delete_p_value = 0
             if options.snp_q_cutoff is None:
-                options.snp_q_cutoff = 20
+                options.snp_q_cutoff = 15
             if options.indel_q_cutoff is None:
-                options.indel_q_cutoff = 50
+                options.indel_q_cutoff = 20
             if options.report_snp_above_freq is None:
                 options.report_snp_above_freq = 0
             if options.report_indel_above_freq is None:
                 options.report_indel_above_freq = 0
             if options.snp_p_value_in_lc is None:
-                options.snp_p_value_in_lc = 0.001
+                options.snp_p_value_in_lc = 0
             if options.insert_p_value_in_lc is None:
-                options.insert_p_value_in_lc = 0.0001
+                options.insert_p_value_in_lc = 0
             if options.delete_p_value_in_lc is None:
-                options.delete_p_value_in_lc = 0.0001
+                options.delete_p_value_in_lc = 0
             if options.snp_q_cutoff_in_lc is None:
-                options.snp_q_cutoff_in_lc = 30
+                options.snp_q_cutoff_in_lc = 15
             if options.indel_q_cutoff_in_lc is None:
-                options.indel_q_cutoff_in_lc = 30
+                options.indel_q_cutoff_in_lc = 20
     elif options.clr:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: CLR VARIANT CALLING MODE SELECTED.\n")
         # image generation
