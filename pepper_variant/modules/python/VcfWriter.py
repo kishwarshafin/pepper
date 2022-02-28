@@ -69,10 +69,6 @@ class VCFWriter:
             # print(contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions)
             site_in_repeat = in_repeat or site_in_repeat
             predicted_genotype = np.argmax(predictions)
-            # if gt_qual < 0:
-            #     gt_qual = 1.0 - predictions[0]
-            # else:
-            #     gt_qual = min(gt_qual, 1.0 - predictions[0])
             if predicted_genotype != 0:
                 if gt_qual < 0:
                     gt_qual = predictions[predicted_genotype]
@@ -80,7 +76,8 @@ class VCFWriter:
                     gt_qual = min(gt_qual, predictions[predicted_genotype])
             else:
                 if gt_qual < 0:
-                    gt_qual = 1.0 - predictions[0]
+                    # gt_qual = 1.0 - predictions[0]
+                    gt_qual = max(predictions[1], predictions[2])
 
             if not all_initialized:
                 site_contig = contig
@@ -133,7 +130,7 @@ class VCFWriter:
             alt_qual = max(1, int(-10 * math.log10(max(0.000000001, 1.0 - genotype_probability))))
             failed_variant = False
             if max_alt_len == 1:
-                # this is a SNP
+                # this is SNP
                 if qual <= options.snp_q_cutoff:
                     failed_variant = True
                 elif site_in_repeat and qual <= options.snp_q_cutoff_in_lc:

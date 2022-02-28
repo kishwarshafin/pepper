@@ -46,9 +46,9 @@ def set_parameters(options):
             if options.delete_p_value is None:
                 options.delete_p_value = 0.2
             if options.snp_q_cutoff is None:
-                options.snp_q_cutoff = 20
+                options.snp_q_cutoff = 15
             if options.indel_q_cutoff is None:
-                options.indel_q_cutoff = 20
+                options.indel_q_cutoff = 15
             if options.report_snp_above_freq is None:
                 options.report_snp_above_freq = 0
             if options.report_indel_above_freq is None:
@@ -56,9 +56,9 @@ def set_parameters(options):
             if options.snp_p_value_in_lc is None:
                 options.snp_p_value_in_lc = 0.01
             if options.insert_p_value_in_lc is None:
-                options.insert_p_value_in_lc = 0.2
+                options.insert_p_value_in_lc = 0.1
             if options.delete_p_value_in_lc is None:
-                options.delete_p_value_in_lc = 0.2
+                options.delete_p_value_in_lc = 0.15
             if options.snp_q_cutoff_in_lc is None:
                 options.snp_q_cutoff_in_lc = 20
             if options.indel_q_cutoff_in_lc is None:

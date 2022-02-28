@@ -408,11 +408,11 @@ def small_chunk_stitch(options, file_chunks):
             max_trimer_count = max(trimer_repeats[downward_lookup_index:upward_lookup_index])
             max_homopolymer_count = max(homopolymer_repeats[downward_lookup_index:upward_lookup_index])
 
-            upward_entropy = sequence_entropy(fasta_handler.get_reference_sequence(candidate.contig, candidate.position, candidate.position + 10).upper())
-            downward_entropy = sequence_entropy(fasta_handler.get_reference_sequence(candidate.contig, max(0, candidate.position - 10), candidate.position).upper())
+            # upward_entropy = sequence_entropy(fasta_handler.get_reference_sequence(candidate.contig, candidate.position, candidate.position + 10).upper())
+            # downward_entropy = sequence_entropy(fasta_handler.get_reference_sequence(candidate.contig, max(0, candidate.position - 10), candidate.position).upper())
 
             candidate_in_repeat = False
-            if max_homopolymer_count >= 5 or max_dimer_count >= 4 or max_trimer_count >= 4 or upward_entropy <= 0.8 or downward_entropy <= 0.5:
+            if max_homopolymer_count >= 5 or max_dimer_count >= 4 or max_trimer_count >= 4:
                 candidate_in_repeat = True
 
             if reference_base not in ['A', 'C', 'G', 'T']:
@@ -427,7 +427,7 @@ def small_chunk_stitch(options, file_chunks):
             else:
                 genotype = [1, 1]
 
-            prediction_value = 1.0 - candidate.prediction_base[0]
+            prediction_value = candidate.prediction_base[predicted_genotype]
 
             # this is for Margin. Only pick SNPs.
             alt_alleles = []
@@ -477,8 +477,8 @@ def small_chunk_stitch(options, file_chunks):
                     continue
 
                 vaf = float(allele_frequency) / float(candidate.depth)
-                non_alt_prediction = 1.0 - candidate.prediction_base[0]
-                non_alt_phred = int(-10 * math.log10(max(1e-13, non_alt_prediction)))
+                non_alt_prediction = max(candidate.prediction_base[1], candidate.prediction_base[2])
+
                 if alt_type == '1':
                     if non_alt_prediction >= options.snp_p_value:
                         # add them to list
