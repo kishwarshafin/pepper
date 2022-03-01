@@ -186,7 +186,7 @@ def set_parameters(options):
             if options.snp_frequency is None:
                 options.snp_frequency = 0.10
             if options.insert_frequency is None:
-                options.insert_frequency = 0.10
+                options.insert_frequency = 0.12
             if options.delete_frequency is None:
                 options.delete_frequency = 0.10
             if options.min_coverage_threshold is None:
