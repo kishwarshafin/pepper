@@ -156,7 +156,7 @@ def set_parameters(options):
             if options.delete_p_value is None:
                 options.delete_p_value = 0.001
             if options.snp_q_cutoff is None:
-                options.snp_q_cutoff = 30
+                options.snp_q_cutoff = 15
             if options.indel_q_cutoff is None:
                 options.indel_q_cutoff = 30
             if options.report_snp_above_freq is None:
@@ -170,9 +170,9 @@ def set_parameters(options):
             if options.delete_p_value_in_lc is None:
                 options.delete_p_value_in_lc = 0.001
             if options.snp_q_cutoff_in_lc is None:
-                options.snp_q_cutoff_in_lc = 40
+                options.snp_q_cutoff_in_lc = 20
             if options.indel_q_cutoff_in_lc is None:
-                options.indel_q_cutoff_in_lc = 40
+                options.indel_q_cutoff_in_lc = 35
     elif options.hifi:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: HiFi VARIANT CALLING MODE SELECTED.\n")
         # image generation
