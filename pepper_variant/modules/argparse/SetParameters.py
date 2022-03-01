@@ -150,29 +150,29 @@ def set_parameters(options):
             if options.allowed_multiallelics is None:
                 options.allowed_multiallelics = 4
             if options.snp_p_value is None:
-                options.snp_p_value = 0.01
+                options.snp_p_value = 0.00001
             if options.insert_p_value is None:
-                options.insert_p_value = 0.1
+                options.insert_p_value = 0.001
             if options.delete_p_value is None:
-                options.delete_p_value = 0.1
+                options.delete_p_value = 0.001
             if options.snp_q_cutoff is None:
-                options.snp_q_cutoff = 15
+                options.snp_q_cutoff = 30
             if options.indel_q_cutoff is None:
-                options.indel_q_cutoff = 15
+                options.indel_q_cutoff = 30
             if options.report_snp_above_freq is None:
                 options.report_snp_above_freq = 0
             if options.report_indel_above_freq is None:
                 options.report_indel_above_freq = 0
             if options.snp_p_value_in_lc is None:
-                options.snp_p_value_in_lc = 0.05
+                options.snp_p_value_in_lc = 0.000001
             if options.insert_p_value_in_lc is None:
-                options.insert_p_value_in_lc = 0.01
+                options.insert_p_value_in_lc = 0.001
             if options.delete_p_value_in_lc is None:
-                options.delete_p_value_in_lc = 0.01
+                options.delete_p_value_in_lc = 0.001
             if options.snp_q_cutoff_in_lc is None:
-                options.snp_q_cutoff_in_lc = 20
+                options.snp_q_cutoff_in_lc = 40
             if options.indel_q_cutoff_in_lc is None:
-                options.indel_q_cutoff_in_lc = 20
+                options.indel_q_cutoff_in_lc = 40
     elif options.hifi:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: HiFi VARIANT CALLING MODE SELECTED.\n")
         # image generation
