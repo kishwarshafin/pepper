@@ -202,26 +202,6 @@ int RegionalSummaryGenerator::get_feature_index(char ref_base, char base, bool i
     base = toupper(base);
     ref_base = toupper(ref_base);
     bool valid_ref = check_ref_base(ref_base);
-
-//    if(valid_ref && ref_base == base) {
-//        // this is a match situation
-//        if (!is_reverse) {
-////            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START;
-////            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 1;
-////            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 2;
-////            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 3;
-//            // return ImageOptionsRegion::BASE_INDEX_START;
-//            return 1;
-//        } else {
-//            // tagged and forward
-////            if (base == 'A') return ImageOptionsRegion::BASE_INDEX_START + 4;
-////            if (base == 'C') return ImageOptionsRegion::BASE_INDEX_START + 5;
-////            if (base == 'G') return ImageOptionsRegion::BASE_INDEX_START + 6;
-////            if (base == 'T') return ImageOptionsRegion::BASE_INDEX_START + 7;
-//            // return ImageOptionsRegion::BASE_INDEX_START + 1;
-//            return 2;
-//        }
-//    }
     if(valid_ref) {
         // this is a mismatch situation
         if (!is_reverse) {
@@ -397,7 +377,6 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                         // update the summary of base
                         if(base_quality >= min_snp_baseq) {
                             coverage_vector[ref_position - ref_start] += 1;
-
                             // look front and see if it's anchoring an INSERT or DELETE
                             if(i == cigar.length - 1 && cigar_i != read.cigar_tuples.size() - 1) {
                                 CigarOp next_cigar = read.cigar_tuples[cigar_i + 1];
@@ -411,6 +390,7 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                                 else image_matrix[base_index][15] -= 1;
                             }
                         }
+
                         if(ref_base != base && base_quality >= min_snp_baseq) {
                             snp_count[ref_position - ref_start] += 1;
                             if(feature_index >= 0) image_matrix[base_index][feature_index] -= 1;
@@ -459,16 +439,19 @@ void RegionalSummaryGenerator::populate_summary_matrix(vector< vector<int> >& im
                     if (read_index - 1 >= 0) alt = read.sequence.substr(read_index - 1, cigar.length + 1);
                     else alt = ref_base + read.sequence.substr(read_index, cigar.length);
 
-                    int len = cigar.length;
+                    int len = cigar.length + 1;
                     base_quality = 0;
-                    for(int i = 0; i < len; i++) {
-                        base_quality += read.base_qualities[read_index+i];
+                    int start_index = 0;
+                    if (read_index - 1 >= 0) start_index  = read_index - 1;
+                    else start_index = read_index;
+
+                    for(int i = start_index; i < start_index + len; i++) {
+                        base_quality += read.base_qualities[i];
                     }
 
-                    // exclude reads which are not usable
-                    if(base_quality < min_indel_baseq * len && read.base_qualities[read_index - 1] >= min_snp_baseq)
-                        coverage_vector[ref_position - 1 - ref_start] -= 1;
-                    // cout<<ref_position - 1 <<" "<<alt<<" "<< len <<" "<<base_quality << " "<< min_baseq * len<<" "<<endl;
+                    // include reads that were excluded due to anchor bases' quality
+                    if(base_quality >= min_indel_baseq * len && read.base_qualities[start_index] < min_snp_baseq)
+                        coverage_vector[ref_position - 1 - ref_start] += 1;
 
 
                     // save the candidate
