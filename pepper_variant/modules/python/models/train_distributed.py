@@ -104,7 +104,7 @@ def train(train_file, test_file, batch_size, test_batch_size, step_size, epoch_l
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: LEARNING RATE: " + str(lr) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: WEIGHT DECAY: " + str(decay) + "\n")
 
-    model_optimizer = torch.optim.RAdam(transducer_model.parameters(), lr=lr, weight_decay=decay)
+    model_optimizer = torch.optim.Adam(transducer_model.parameters(), lr=lr, weight_decay=decay)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(model_optimizer, 'max', patience=2, min_lr=0.75 * lr)
 
     if retrain_model is True:
