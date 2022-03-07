@@ -97,11 +97,11 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/us
 ##### Step 3: Run PEPPER-Margin-DeepVariant
 ```bash
 ## Pull the docker image to sigularity
-singularity pull docker://kishwars/pepper_deepvariant:r0.7
+singularity pull docker://kishwars/pepper_deepvariant:r0.8
 
 # Run PEPPER-Margin-DeepVariant
 singularity exec --bind /usr/lib/locale/ \
-pepper_deepvariant_r0.7.sif \
+pepper_deepvariant_r0.8.sif \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
@@ -149,8 +149,8 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 |  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives |  Recall   | Precision | F1-Score |
 |:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:---------:|:---------:|:--------:|
-| INDEL |      11256     |        9442       |        1816        |        897         | 0.838664  |  0.915057 | 0.875196 |
-|  SNP  |      71333     |       71288       |         45         |         50         | 0.999369  |  0.999299 | 0.999334 |
+| INDEL |      11256     |        9442       |        1781        |        824         | 0.841773  |  0.921695 | 0.879923 |
+|  SNP  |      71333     |       71288       |         56         |         56         | 0.999215  |  0.999215 | 0.999215 |
 
 ### Authors:
 This pipeline is developed in a collaboration between UCSC genomics institute and the genomics team at Google health.

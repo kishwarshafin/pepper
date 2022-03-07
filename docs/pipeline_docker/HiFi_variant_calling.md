@@ -92,13 +92,13 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/us
 ##### Step 3: Run PEPPER-Margin-DeepVariant
 ```bash
 ## Pull the docker image.
-sudo docker pull kishwars/pepper_deepvariant:r0.7
+sudo docker pull kishwars/pepper_deepvariant:r0.8
 
 # Run PEPPER-Margin-DeepVariant
 sudo docker run --ipc=host \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.7 \
+kishwars/pepper_deepvariant:r0.8 \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
@@ -147,8 +147,8 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 |  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives |  Recall  | Precision | F1-Score |
 |:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:--------:|:---------:|:--------:|
-| INDEL |      10628     |       10558       |         70         |         69         | 0.993414 |  0.993765 | 0.993589 |
-|  SNP  |      70166     |       70137       |         29         |         21         | 0.999587 |  0.999701 | 0.999644 |
+| INDEL |      10628     |       10558       |         64         |         75         | 0.993978 |  0.993233 | 0.993605 |
+|  SNP  |      70166     |       70137       |         26         |         15         | 0.999629 |  0.999786 | 0.999708 |
 
 ### Authors:
 This pipeline is developed in a collaboration between UCSC genomics institute and the genomics team at Google health.
