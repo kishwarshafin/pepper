@@ -24,7 +24,7 @@ In this version, we implemented a prediction scheme of `PEPPER` that can overcom
 Following is a description of the updated method:
 
 ### Step 1: PEPPER
-The first step of the pipeline can now identify SNPs and INDELs. `PEPPER` module calls variants using the following steps:
+The first step of the pipeline identifies SNP and INDEL candidates. `PEPPER` module calls variants using the following steps:
 
 i) `make_images`: This step creates summary of potential candidate variants.
 * We take all reads with mapping quality above `--pepper_min_mapq`.

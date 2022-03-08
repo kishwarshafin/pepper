@@ -1,5 +1,6 @@
 # How to train DeepVariant (with PEPPER) (Advanced- Requires GPU)
 ##### Prepared by: Kishwar Shafin, Verified by: Jimin Park
+##### We thank [Guillaume Holley](https://github.com/GuillaumeHolley) for the kind suggestions and contributions to the training pipeline.
 
 In this walkthrough, we will see how to train `DeepVariant` and replace default model with custom models. In this exercise, we will train a model on `Guppy 4.2.2` data which is currently not supported by `PEPPER-Margin-DeepVariant` as the error-rate of the basecaller is too high.
 
@@ -14,7 +15,7 @@ For training `DeepVariant` we need:
 * A bam file where reads of a sample are aligned to a reference,
 * Associated reference file to which the reads are aligned (FASTA).
 * Truth VCF file ideally from Genome-In-a-Bottle for the sample.
-* Annotated candidates from PEPPER HP.
+* Annotated candidates from PEPPER.
 
 In this case we are going to use 50x HG002 data basecalled with Guppy 4.2.2 basecaller.
 ```bash
@@ -73,8 +74,8 @@ ls -lha ${INPUT_DIR}
 # HG002_guppy422_2_GRCh38_no_alt.40x.bam
 # HG002_guppy422_2_GRCh38_no_alt.50x.bam
 ```
-### Step 3: Generate haplotagged BAM files and PEPPER HP candidates
-Training DeepVariant requires haplotagged alignment files and candidates from PEPPER HP. The following command can be used to generate the haplotagged bam file and candidates using `PEPPER SNP-Margin-PEPPER HP`:
+### Step 3: Generate haplotagged BAM files and PEPPER candidates
+Training DeepVariant requires haplotagged alignment files and candidates from PEPPER. The following command can be used to generate the haplotagged bam file and candidates using `PEPPER-Margin`:
 
 ```bash
 for coverage in 30 40 50
@@ -99,13 +100,13 @@ do
   -k
   # If you trained a custom PEPPER model, then use the following parameter
   # to use the custom model to generate the haplotagged bams:
-  # --pepper_model </path/to/PEPPER_SNP.pkl>
+  # --pepper_model </path/to/PEPPER_MODEL.pkl>
 
 
   mv ${OUTPUT_DIR}/PEPPER_SNP_HAPLOTAG_${coverage}x_output/intermediate_files/PHASED.PEPPER_MARGIN.haplotagged.bam ${INPUT_DIR}/HG002_guppy422_2_GRCh38_no_alt.${coverage}x.haplotagged.bam
   mv ${OUTPUT_DIR}/PEPPER_SNP_HAPLOTAG_${coverage}x_output/intermediate_files/PHASED.PEPPER_MARGIN.haplotagged.bam.bai ${INPUT_DIR}/HG002_guppy422_2_GRCh38_no_alt.${coverage}x.haplotagged.bam.bai
-  mv ${OUTPUT_DIR}/PEPPER_SNP_HAPLOTAG_${coverage}x_output/intermediate_files/PEPPER_HP_VARIANT_FULL.vcf.gz ${INPUT_DIR}/HG002_guppy422_2_GRCh38_no_alt.${coverage}x.candidates.vcf.gz
-  mv ${OUTPUT_DIR}/PEPPER_SNP_HAPLOTAG_${coverage}x_output/intermediate_files/PEPPER_HP_VARIANT_FULL.vcf.gz.tbi ${INPUT_DIR}/HG002_guppy422_2_GRCh38_no_alt.${coverage}x.candidates.vcf.gz.tbi
+  mv ${OUTPUT_DIR}/PEPPER_SNP_HAPLOTAG_${coverage}x_output/intermediate_files/PEPPER_VARIANT_FULL.vcf.gz ${INPUT_DIR}/HG002_guppy422_2_GRCh38_no_alt.${coverage}x.candidates.vcf.gz
+  mv ${OUTPUT_DIR}/PEPPER_SNP_HAPLOTAG_${coverage}x_output/intermediate_files/PEPPER_VARIANT_FULL.vcf.gz.tbi ${INPUT_DIR}/HG002_guppy422_2_GRCh38_no_alt.${coverage}x.candidates.vcf.gz.tbi
 done
 ```
 
@@ -276,6 +277,11 @@ done
 ```
 
 #### Shuffle the examples
+
+**PLEASE READ:** If you have a memory limited machine then a better way to shuffle the examples without running out of memory has been implemented by [Guillaume Holley](https://github.com/GuillaumeHolley) in this repository: https://github.com/GuillaumeHolley/TFrecordShuffler.
+
+
+
 Next step is to shuffle the models. This is an important step in training deepvariant. There are several ways to do it as explained in the [documentation](https://github.com/google/deepvariant/blob/r1.3/docs/deepvariant-training-case-study.md). However, we will use the local version for simplicity. Please choose one that works best for your use-case:
 
 ```bash
@@ -411,6 +417,7 @@ We can use the `PEPPER-Margin-DeepVariant` pipeline and replace the default Deep
 BAM=${INPUT_DIR}/HG002_guppy422_2_GRCh38_no_alt.30x.haplotagged.bam
 REF=${INPUT_DIR}/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
 # Select the model you want to test
+# Put the step number instead of **** so we can keep track of the performance of each model
 DEEPVARIANT_MODEL=${DEEPVARIANT_MODEL_OUTPUT_DIR}/model.ckpt-****
 EVAL_OUTPUT_DIR=$OUTPUT_DIR/pepper_margin_deepvariant_eval
 
@@ -427,9 +434,8 @@ run_pepper_margin_deepvariant call_variant \
 --ont_r9_guppy5_sup \
 --dv_model "${DEEPVARIANT_MODEL}"
 
-# Use the following parameters if you also trained different PEPPER SNP and PEPPER HP models:
-# --pepper_model /PATH/TO/PEPPER_SNP.pkl
-# --pepper_hp_model /PATH/TO/PEPPER_HP.pkl
+# Use the following parameters if you also trained different PEPPER models:
+# --pepper_model /PATH/TO/PEPPER_MODEL.pkl
 ```
 
 Then we benchmark the output of PEPPER using `hap.py`:
@@ -440,7 +446,6 @@ TRUTH_VCF=${INPUT_DIR}/HG002_GRCh38_1_22_v4.2.1_benchmark.vcf.gz
 
 OUTPUT_VCF=${EVAL_OUTPUT_DIR}/PEPPER_MARGIN_DEEPVARIANT_FINAL_OUTPUT.vcf.gz
 HAPPY_OUTPUT_DIR=${OUTPUT_DIR}/happy_outputs
-# Put the step number instead of **** so we can keep track of the performance of each model
 HAPPY_OUTPUT_FILE=${HAPPY_OUTPUT_DIR}/HG002_30x_pepper_margin_deepvariant
 
 mkdir -p ${HAPPY_OUTPUT_DIR}

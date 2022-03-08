@@ -1,5 +1,7 @@
 # How to train PEPPER (Advanced- requires GPU)
 ##### Written by: Kishwar Shafin, Verified by: Jimin Park
+##### We thank [Guillaume Holley](https://github.com/GuillaumeHolley) for the kind suggestions and contributions to the training pipeline.
+
 In this walkthrough, we will see how to train `PEPPER` and replace default model with custom models. In this excercise we will train a model on `Guppy 4.2.2` data which is currently not supported by `PEPPER-Margin-DeepVariant` as the error-rate of the basecaller is too high.
 
 ## Training PEPPER
