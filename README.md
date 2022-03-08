@@ -7,6 +7,8 @@
 <img src="./img/PMDV_variant_calling_ONT_v5.png" alt="PEPPER-Margin-DeepVariant Variant Calling Workflow" width="720p"></img>
 </p>
 
+---
+
 ### How to cite
 Please cite the following manuscript if you are using `PEPPER-Margin-DeepVariant`:
 
@@ -19,6 +21,7 @@ Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey 
 **Free access link to the manuscript:** [https://rdcu.be/cABfv](https://rdcu.be/cABfv)
 </details>
 
+---
 
 ### Critical care application
 
@@ -37,6 +40,7 @@ Clinical report:
 </summary>
 Authors: John Gorzynski, Sneha Goenka, Kishwar Shafin, Tanner Jensen, Dianna Fisk, Megan Grove, Elizabeth Spiteri, Trevor Pesout, Jean Monlong, Jonathan Bernstein, Scott Ceresnak, Pi-Chuan Chang, Jeffrey Christle, Henry Chubb, Kyla Dunn, Daniel Garalde, Joseph Guillory, Maura Ruzhnikov, Chris Wright, Courtney Wusthoff, Katherine Xiong, Seth Hollander, Gerald Berry, Miten Jain, Fritz Sedlazeck, Andrew Carroll, Benedict Paten, Euan Ashley.
 </details>
+
 ---
 
 ### Long read variant calling performance evaluation
@@ -68,7 +72,7 @@ PEPPER-Margin-DeepVariant can be run using **Docker** or **Singularity**. A simp
 sudo docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.7 \
+kishwars/pepper_deepvariant:r0.8 \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
