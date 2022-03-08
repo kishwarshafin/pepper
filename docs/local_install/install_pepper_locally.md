@@ -12,7 +12,7 @@ liblzma-dev libhdf5-dev python3-pip python3-virtualenv virtualenv
 git clone https://github.com/kishwarshafin/pepper.git
 cd pepper
 make install
-. ./vnev/bin/activate
+. ./venv/bin/activate
 
 pepper_variant --help
 ```

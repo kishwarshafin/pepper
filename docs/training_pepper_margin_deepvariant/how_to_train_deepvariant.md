@@ -87,7 +87,7 @@ do
   -v "${INPUT_DIR}":"${INPUT_DIR}" \
   -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
   -u `id -u`:`id -g` \
-  kishwars/pepper_deepvariant:r0.7 \
+  kishwars/pepper_deepvariant:r0.8 \
   run_pepper_margin_deepvariant call_variant \
   -b $BAM \
   -f $REF \
@@ -95,12 +95,11 @@ do
   -t $THREADS \
   -s HG002 \
   --ont_r9_guppy5_sup \
-  --only_pepper \
+  --only_haplotag \
   -k
-  # If you trained a custom PEPPER SNP model, then use the following parameter
+  # If you trained a custom PEPPER model, then use the following parameter
   # to use the custom model to generate the haplotagged bams:
   # --pepper_model </path/to/PEPPER_SNP.pkl>
-  # --pepper_hp_model </path/to/PEPPER_HP.pkl>
 
 
   mv ${OUTPUT_DIR}/PEPPER_SNP_HAPLOTAG_${coverage}x_output/intermediate_files/PHASED.PEPPER_MARGIN.haplotagged.bam ${INPUT_DIR}/HG002_guppy422_2_GRCh38_no_alt.${coverage}x.haplotagged.bam
@@ -231,7 +230,7 @@ do
       -v "${INPUT_DIR}":"${INPUT_DIR}" \
       -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
       -u `id -u`:`id -g` \
-      kishwars/pepper_deepvariant:r0.7 \
+      kishwars/pepper_deepvariant:r0.8 \
       /opt/deepvariant/bin/make_examples \
       --mode training \
       --ref $REF \
@@ -256,7 +255,7 @@ do
       -v "${INPUT_DIR}":"${INPUT_DIR}" \
       -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
       -u `id -u`:`id -g` \
-      kishwars/pepper_deepvariant:r0.7 \
+      kishwars/pepper_deepvariant:r0.8 \
       /opt/deepvariant/bin/make_examples \
       --mode training \
       --ref $REF \
@@ -332,7 +331,7 @@ docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
 -u `id -u`:`id -g` \
-kishwars/pepper_deepvariant:r0.7 \
+kishwars/pepper_deepvariant:r0.8 \
 cp -r /opt/dv_models/ont_deepvariant_vc/ ${ONT_DV_MODEL_DIR}
 ```
 Now we can see the models in the directory:
@@ -344,7 +343,7 @@ ls ${ONT_DV_MODEL_DIR}
 ```
 Next we fetch the gpu docker of PEPPER-DeepVariant:
 ```bash
-docker pull kishwars/pepper_deepvariant:r0.7-gpu
+docker pull kishwars/pepper_deepvariant:r0.8-gpu
 ```
 And then we can start training and evaluating concurrently:
 ```bash
@@ -356,7 +355,7 @@ mkdir -p ${DEEPVARIANT_MODEL_OUTPUT_DIR}
   -v "${INPUT_DIR}":"${INPUT_DIR}" \
   -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
   -u `id -u`:`id -g` \
-  kishwars/pepper_deepvariant:r0.7-gpu \
+  kishwars/pepper_deepvariant:r0.8-gpu \
   /opt/deepvariant/bin/model_train \
   --dataset_config_pbtxt="${OUTPUT_DIR}/training_set.dataset_config.pbtxt" \
   --train_dir="${DEEPVARIANT_MODEL_OUTPUT_DIR}" \
@@ -388,7 +387,7 @@ docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
 -u `id -u`:`id -g` \
-kishwars/pepper_deepvariant:r0.7 \
+kishwars/pepper_deepvariant:r0.8 \
 /opt/deepvariant/bin/model_eval \
 --dataset_config_pbtxt="${OUTPUT_DIR}/test_set.dataset_config.pbtxt" \
 --checkpoint_dir="${DEEPVARIANT_MODEL_OUTPUT_DIR}" \
@@ -418,7 +417,7 @@ EVAL_OUTPUT_DIR=$OUTPUT_DIR/pepper_margin_deepvariant_eval
 docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.7 \
+kishwars/pepper_deepvariant:r0.8 \
 run_pepper_margin_deepvariant call_variant \
 -b "${BAM}" \
 -f "${REF}" \

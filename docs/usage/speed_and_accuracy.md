@@ -1,5 +1,7 @@
 # How to tune parameters for improved runtime.
 
+##### NOTE: This analysis has been demonstrated on r0.7. The overall concept of the analysis remains the same for r0.8.
+
 We have tuned our pipeline to provide a balance between speed vs accuracy. However, accuracy gets priority over speed in most cases. We understand the need for speed in many rapid applications. Here we discuss and provide some guidance on how to tune parameters for your use-case that will provide you the best runtime.
 
 Before we discuss parameters, we want to remind a few basic ways to improve runtime:

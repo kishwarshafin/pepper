@@ -83,11 +83,11 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/qu
 
 # Pull the docker images
 singularity pull docker://jmcdani20/hap.py:v0.3.12
-singularity pull docker://kishwars/pepper_deepvariant:r0.7
+singularity pull docker://kishwars/pepper_deepvariant:r0.8
 
 # Run PEPPER-Margin-DeepVariant
 singularity exec --bind /usr/lib/locale/ \
-pepper_deepvariant_r0.7.sif \
+pepper_deepvariant_r0.8.sif \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \

@@ -20,19 +20,30 @@ Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey 
 </details>
 
 
+### Critical care application
 
+In collaboration with Stanford medicine, we demonstrated the ability to identify disease causing variants in a critical care setting with `PEPPER-Margin-DeepVariant`.
+
+Following are the publications that demonstrate the performance of `PEPPER-Margin-DeepVariant` in critical care:
+
+<details>
+<summary><a href="https://www.nejm.org/doi/10.1056/NEJMc2112090"><b>New England Journal of Medicine:</b> Ultrarapid Nanopore Genome Sequencing in a Critical Care Setting </a>
+</summary>
+Authors: John Gorzynski, Sneha Goenka, Kishwar Shafin, Tanner Jensen, Dianna Fisk, Megan Grove, Elizabeth Spiteri, Trevor Pesout, Jean Monlong, Gunjan Baid, Jonathan Bernstein, Scott Ceresnak, Pi-Chuan Chang, Jeffrey Christle, Henry Chubb, Karen Dalton, Kyla Dunn, Daniel Garalde, Joseph Guillory, Joshua Knowles, Alexey Kolesnikov, Michael Ma, Tia Moscarello, Maria Nattestad, Marco Perez, Maura Ruzhnikov, Mehrzad Samadi, Ankit Setia, Chris Wright, Courtney J Wusthoff, Katherine Xiong, Tong Zhu, Miten Jain, Fritz Sedlazeck, Andrew Carroll, Benedict Paten, Euan Ashley.
+</details>
+Clinical report:
+<details>
+<summary><a href="https://www.ahajournals.org/doi/abs/10.1161/CIRCGEN.121.003591"><b>Circulation: Genomic and Precision Medicine:</b>Ultra-Rapid Nanopore Whole Genome Genetic Diagnosis of Dilated Cardiomyopathy in an Adolescent With Cardiogenic Shock</a>
+</summary>
+Authors: John Gorzynski, Sneha Goenka, Kishwar Shafin, Tanner Jensen, Dianna Fisk, Megan Grove, Elizabeth Spiteri, Trevor Pesout, Jean Monlong, Jonathan Bernstein, Scott Ceresnak, Pi-Chuan Chang, Jeffrey Christle, Henry Chubb, Kyla Dunn, Daniel Garalde, Joseph Guillory, Maura Ruzhnikov, Chris Wright, Courtney Wusthoff, Katherine Xiong, Seth Hollander, Gerald Berry, Miten Jain, Fritz Sedlazeck, Andrew Carroll, Benedict Paten, Euan Ashley.
+</details>
 ---
 
 ### Long read variant calling performance evaluation
 
 Detailed variant calling performance evaluation:
-* **ONT R9.4.1 Guppy 5.0.6 Sup:**
-  * [HG003 whole genome (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_whole_genome.md)
-  * [HG002-HG006 chr20 (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r9_chr20.md)
-* **ONT R10.4 Q20 Guppy 5.0.15 Sup:**
-  * [HG002 chr20 (PEPPER vs Clair3).](./docs/performance_evaluation/Oxford_nanopore_r10.4_q20_chr20.md)
-* **PacBio HiFi:**
-  * [HG003 chr20 (PEPPER-Margin-DeepVariant vs DeepVariant-WhatsHap-DeepVariant).](./docs/performance_evaluation/PacBio_hifi_HG003_chr20.md)
+* **Nanopore R9.4.1 Guppy 5.0.6 SUP:**
+  * [HG003 whole genome](./docs/performance_evaluation/Oxford_nanopore_r9_whole_genome.md)
 
 ---
 
@@ -41,8 +52,7 @@ Detailed variant calling performance evaluation:
 * [Case-studies to reproduce performance.](#case-studies-chromosome-20-runs-for-performance-reproducibility)
 * [Description of PEPPER-Margin-DeepVariant method.](./docs/misc/pepper_v0.7_method_update.md)
 * How to train PEPPER-DeepVariant:
-    * [How to train PEPPER-SNP.](./docs/training_pepper_margin_deepvariant/how_to_train_pepper_snp.md)
-    * [How to train PEPPER-HP.](./docs/training_pepper_margin_deepvariant/how_to_train_pepper_hp.md)
+    * [How to train PEPPER.](./docs/training_pepper_margin_deepvariant/how_to_train_pepper.md)
     * [How to train DeepVariant (using candidates from PEPPER).](./docs/training_pepper_margin_deepvariant/how_to_train_deepvariant.md)
 * [How to install PEPPER locally.](./docs/local_install/install_pepper_locally.md)
 * [List of parameters and description.](./docs/usage/usage_and_parameters.md)

@@ -1,4 +1,4 @@
-## PEPPER-Margin-DeepVariant r0.7 methods update
+## PEPPER-Margin-DeepVariant methods
 ## Overview
 
 One of the difficulties in designing inference models for Oxford Nanopore Sequencing technology has been systematic errors in homopolymer regions. The methods we have described in our [manuscript](https://www.nature.com/articles/s41592-021-01299-w) and used upto `r0.5` has a fundamental limitation in these regions. For example, let's look closely at the following genomic region:
@@ -34,7 +34,7 @@ i) `make_images`: This step creates summary of potential candidate variants.
   * Note, in the previous step, the thresholds are applied to each "site" whereas in this step the thresholds are applied to each candidate. For example, in a genomic position, if the reference base is `A` and we obverse `C, G, T` alts with `0.01, 0.05, 0.2` the frequency for previous step would be `0.01 + 0.05 + 0.2 = 0.26` but in this step, the frequency would be independent and `0.01, 0.05, 0.2` will have to be higher than `--pepper_snp_candidate_frequency_threshold`.
 * Finally, once the candidates are selected, we create a summary of read alignment:
 <p align="center">
-<img src="img/PEPPER_SNP_image_v7.png" alt="PEPPER SNP summary" height=500px>
+<img src="img/PEPPER_SNP_image.png" alt="PEPPER SNP summary" height=500px>
 </p>
 
 * Feature descriptions:
@@ -110,17 +110,10 @@ The following parameters are used to select reads:
 
 * `phase.maxDepth`: reads are downsampled to an expected depth of this parameter.  Longer reads are preferentially selected during downsampling.
 
-
-### Step 3: PEPPER-HP [Only used for ONT]
-`PEPPER HP` uses the exact infrustucture as `PEPPER SNP`. The only difference is the way we generate the summary. The `PEPPER_HP` summary has the following attributes:
-<p align="center">
-<img src="img/PEPPER_HP_image_v7.png" alt="PEPPER HP summary" height=700px>
-</p>
-
-### Step 5: DeepVariant
+### Step 3: DeepVariant
 DeepVariant re-genotypes the candidates proposed by `PEPPER-HP` using reads haplotagged by `Margin`. We use the following features for DeepVariant:
 <p align="center">
-<img src="img/deepvariant_pileup.png" alt="PEPPER HP summary" height=100px>
+<img src="img/deepvariant_pileup.png" alt="DeepVariant summary" height=100px>
 </p>
 
 * **Read base**: Base observed at each position.

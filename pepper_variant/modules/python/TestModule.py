@@ -28,20 +28,27 @@ def do_test(test_file, use_hp_info, batch_size, gpu_mode, num_workers, model_pat
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL LOADING\n")
 
+    if not use_hp_info:
+        image_height = ImageSizeOptions.IMAGE_HEIGHT
+        num_classes = ImageSizeOptions.TOTAL_LABELS
+        num_type_classes = ImageSizeOptions.TOTAL_TYPE_LABELS
+    else:
+        image_height = ImageSizeOptionsHP.IMAGE_HEIGHT
+        num_classes = ImageSizeOptionsHP.TOTAL_LABELS
+        num_type_classes = ImageSizeOptionsHP.TOTAL_TYPE_LABELS
+
     if use_hp_info:
         transducer_model, hidden_size, gru_layers, prev_ite = \
             ModelHandler.load_simple_model_for_training(model_path,
-                                                        input_channels=ImageSizeOptionsHP.IMAGE_CHANNELS,
-                                                        image_features=ImageSizeOptionsHP.IMAGE_HEIGHT,
-                                                        seq_len=ImageSizeOptionsHP.SEQ_LENGTH,
-                                                        num_classes=ImageSizeOptionsHP.TOTAL_LABELS)
+                                                        image_features=image_height,
+                                                        num_classes=num_classes,
+                                                        num_type_classes=num_type_classes)
     else:
         transducer_model, hidden_size, gru_layers, prev_ite = \
             ModelHandler.load_simple_model_for_training(model_path,
-                                                        input_channels=ImageSizeOptions.IMAGE_CHANNELS,
-                                                        image_features=ImageSizeOptions.IMAGE_HEIGHT,
-                                                        seq_len=ImageSizeOptions.SEQ_LENGTH,
-                                                        num_classes=ImageSizeOptions.TOTAL_LABELS)
+                                                        image_features=image_height,
+                                                        num_classes=num_classes,
+                                                        num_type_classes=num_type_classes)
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: MODEL LOADED\n")
 
@@ -49,8 +56,6 @@ def do_test(test_file, use_hp_info, batch_size, gpu_mode, num_workers, model_pat
         transducer_model = torch.nn.DataParallel(transducer_model).cuda()
 
     if use_hp_info:
-        stats_dictioanry = test_hp(test_file, batch_size, gpu_mode, transducer_model, num_workers,
-                                   gru_layers, hidden_size, num_classes=ImageSizeOptionsHP.TOTAL_LABELS)
+        stats_dictionary = test(test_file, batch_size, gpu_mode, transducer_model, num_workers)
     else:
-        stats_dictioanry = test(test_file, batch_size, gpu_mode, transducer_model, num_workers,
-                                gru_layers, hidden_size, num_classes=ImageSizeOptions.TOTAL_LABELS)
+        stats_dictionary = test(test_file, batch_size, gpu_mode, transducer_model, num_workers)

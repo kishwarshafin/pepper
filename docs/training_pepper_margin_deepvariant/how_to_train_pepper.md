@@ -1,9 +1,9 @@
-# How to train PEPPER SNP (Advanced- requires GPU)
+# How to train PEPPER (Advanced- requires GPU)
 ##### Written by: Kishwar Shafin, Verified by: Jimin Park
-In this walkthrough, we will see how to train `PEPPER SNP` and replace default model with custom models. In this excercise we will train a model on `Guppy 4.2.2` data which is currently not supported by `PEPPER-Margin-DeepVariant` as the error-rate of the basecaller is too high.
+In this walkthrough, we will see how to train `PEPPER` and replace default model with custom models. In this excercise we will train a model on `Guppy 4.2.2` data which is currently not supported by `PEPPER-Margin-DeepVariant` as the error-rate of the basecaller is too high.
 
-## Training PEPPER SNP
-The first step is to train `PEPPER-SNP` that we use to find initial variants for phasing.
+## Training PEPPER
+The first step is to train `PEPPER` that we use to find initial variants for phasing.
 
 ### Step 1: Install PEPPER locally
 We recommend installing PEPPER locally for training PEPPER as it requires GPU for training.
@@ -30,7 +30,7 @@ For training `PEPPER` we need:
 In this case we are going to use 50x HG002 data basecalled with Guppy 4.2.2 basecaller.
 ```bash
 # Cutomize this directory to where you want to store your training data
-TRAIN_DIR=/data/PEPPER_SNP_TRAINING/
+TRAIN_DIR=/data/PEPPER_TRAINING/
 mkdir -p "${TRAIN_DIR}"
 
 INPUT_DIR="${TRAIN_DIR}"/TRAIN_INPUTS/
@@ -83,7 +83,7 @@ ls -lha ${INPUT_DIR}
 # HG002_guppy422_2_GRCh38_no_alt.50x.bam
 ```
 
-### Step 4: Train PEPPER SNP
+### Step 4: Train PEPPER
 
 The first step of training PEPPER is to make training images. First we would activate PEPPER:
 ```bash
@@ -100,8 +100,8 @@ TRUTH_VCF=${INPUT_DIR}/HG002_GRCh38_1_22_v4.2.1_benchmark.vcf.gz
 REF=${INPUT_DIR}/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
 
 # OUTPUT DIRECTORIES WHERE TRAINING EXAMPLES WILL BE SAVED
-TRAIN_OUTPUT=${INPUT_DIR}/PEPPER_SNP_TRAIN_IMAGES
-TEST_OUTPUT=${INPUT_DIR}/PEPPER_SNP_TEST_IMAGES
+TRAIN_OUTPUT=${INPUT_DIR}/PEPPER_TRAIN_IMAGES
+TEST_OUTPUT=${INPUT_DIR}/PEPPER_TEST_IMAGES
 
 for coverage in 30 40 50
 do
@@ -150,9 +150,9 @@ Parameters:
 
 #### Train model
 
-Then we train a model for `PEPPER-SNP`:
+Then we train a model for `PEPPER`:
 ```bash
-MODEL_OUTPUT_DIR=${INPUT_DIR}/PEPPER_SNP_MODEL_OUTPUT
+MODEL_OUTPUT_DIR=${INPUT_DIR}/PEPPER_MODEL_OUTPUT
 
 pepper_variant_train train_model \
 -train ${TRAIN_OUTPUT} \
@@ -208,7 +208,7 @@ BAM=${INPUT_DIR}/HG002_guppy422_2_GRCh38_no_alt.30x.bam
 REF=${INPUT_DIR}/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
 # Select the model you want to test
 MODEL=${MODEL_OUTPUT_DIR}/trained_models_****_****/PEPPER_VARIANT_STEP_****_checkpoint.pkl
-EVAL_OUTPUT_DIR=$OUTPUT_DIR/pepper_snp_output/pepper_snp_model_****
+EVAL_OUTPUT_DIR=$OUTPUT_DIR/pepper_output/pepper_model_****
 
 pepper_variant call_variant \
 -b $BAM \
@@ -232,7 +232,7 @@ TRUTH_VCF=${INPUT_DIR}/HG002_GRCh38_1_22_v4.2.1_benchmark.vcf.gz
 OUTPUT_VCF=${EVAL_OUTPUT_DIR}/PEPPER_VARIANT_FULL.vcf
 HAPPY_OUTPUT_DIR=${OUTPUT_DIR}/happy_outputs
 # Put the step number instead of **** so we can keep track of the performance of each model
-HAPPY_OUTPUT_FILE=${HAPPY_OUTPUT_DIR}/HG002_30x_pepper_snp_model_****
+HAPPY_OUTPUT_FILE=${HAPPY_OUTPUT_DIR}/HG002_30x_pepper_model_****
 
 mkdir -p ${HAPPY_OUTPUT_DIR}
 
@@ -252,7 +252,7 @@ ${OUTPUT_VCF} \
 ```
 
 
-## Replace the default PEPPER SNP model
+## Replace the default PEPPER model
 You can use the following command to run `PEPPER-Margin-DeepVariant` with your trained model instead of the default model using `--pepper_model`:
 ```bash
 BAM=HG002_guppy422_2_GRCh38_no_alt.30x.bam
@@ -262,12 +262,12 @@ PEPPER_OUTPUT_DIR="${OUTPUT_DIR}"/pepper_deepvariant_output
 docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.7 \
+kishwars/pepper_deepvariant:r0.8 \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
 -o "${PEPPER_OUTPUT_DIR}" \
 -t "${THREADS}" \
 --ont_r9_guppy5_sup \
---pepper_model /PATH/TO/PEPPER_SNP.pkl
+--pepper_model /PATH/TO/PEPPER_MODEL.pkl
 ```

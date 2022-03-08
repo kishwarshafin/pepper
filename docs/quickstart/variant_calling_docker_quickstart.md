@@ -82,13 +82,13 @@ wget -P ${INPUT_DIR} https://storage.googleapis.com/pepper-deepvariant-public/qu
 
 # Pull the docker images
 sudo docker pull jmcdani20/hap.py:v0.3.12
-sudo docker pull kishwars/pepper_deepvariant:r0.7
+sudo docker pull kishwars/pepper_deepvariant:r0.8
 
 # Run PEPPER-Margin-DeepVariant
 sudo docker run \
 -v "${INPUT_DIR}":"${INPUT_DIR}" \
 -v "${OUTPUT_DIR}":"${OUTPUT_DIR}" \
-kishwars/pepper_deepvariant:r0.7 \
+kishwars/pepper_deepvariant:r0.8 \
 run_pepper_margin_deepvariant call_variant \
 -b "${INPUT_DIR}/${BAM}" \
 -f "${INPUT_DIR}/${REF}" \
