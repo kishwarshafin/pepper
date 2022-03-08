@@ -23,8 +23,8 @@ In this version, we implemented a prediction scheme of `PEPPER` that can overcom
 ## Description
 Following is a description of the updated method:
 
-### Step 1: PEPPER SNP
-Although called `PEPPER SNP`, the first step of the pipeline can now identify SNPs and INDELs. `PEPPER SNP` module calls variants using the following steps:
+### Step 1: PEPPER
+The first step of the pipeline can now identify SNPs and INDELs. `PEPPER` module calls variants using the following steps:
 
 i) `make_images`: This step creates summary of potential candidate variants.
 * We take all reads with mapping quality above `--pepper_min_mapq`.
@@ -34,7 +34,7 @@ i) `make_images`: This step creates summary of potential candidate variants.
   * Note, in the previous step, the thresholds are applied to each "site" whereas in this step the thresholds are applied to each candidate. For example, in a genomic position, if the reference base is `A` and we obverse `C, G, T` alts with `0.01, 0.05, 0.2` the frequency for previous step would be `0.01 + 0.05 + 0.2 = 0.26` but in this step, the frequency would be independent and `0.01, 0.05, 0.2` will have to be higher than `--pepper_snp_candidate_frequency_threshold`.
 * Finally, once the candidates are selected, we create a summary of read alignment:
 <p align="center">
-<img src="img/PEPPER_SNP_image.png" alt="PEPPER SNP summary" height=500px>
+<img src="img/PEPPER_SNP_image.png" alt="PEPPER summary" height=500px>
 </p>
 
 * Feature descriptions:
