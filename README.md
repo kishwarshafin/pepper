@@ -24,7 +24,7 @@ Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey 
 
 In collaboration with Stanford medicine, we demonstrated the ability to identify disease causing variants in a critical care setting with `PEPPER-Margin-DeepVariant`.
 
-Following are the publications that demonstrate the performance of `PEPPER-Margin-DeepVariant` in critical care:
+Following are the publications that demonstrate the performance of `PEPPER-Margin-DeepVariant` in a clinical setup:
 
 <details>
 <summary><a href="https://www.nejm.org/doi/10.1056/NEJMc2112090"><b>New England Journal of Medicine:</b> Ultrarapid Nanopore Genome Sequencing in a Critical Care Setting </a>
@@ -45,12 +45,14 @@ Detailed variant calling performance evaluation:
 * **Nanopore R9.4.1 Guppy 5.0.6 SUP:**
   * [HG003 whole genome](./docs/performance_evaluation/Oxford_nanopore_r9_whole_genome.md)
 
+Please follow the case-studies documentation for PacBio-HiFi and ONT 10.4 Q20 performance evaluation.
+
 ---
 
 ### Useful links to documentations
 * [Quickstarts to check system configuration.](#quickstarts-small-runs-to-test-system-configuration)
 * [Case-studies to reproduce performance.](#case-studies-chromosome-20-runs-for-performance-reproducibility)
-* [Description of PEPPER-Margin-DeepVariant method.](./docs/misc/pepper_v0.7_method_update.md)
+* [Description of PEPPER-Margin-DeepVariant method.](./docs/misc/pepper_methods.md)
 * How to train PEPPER-DeepVariant:
     * [How to train PEPPER.](./docs/training_pepper_margin_deepvariant/how_to_train_pepper.md)
     * [How to train DeepVariant (using candidates from PEPPER).](./docs/training_pepper_margin_deepvariant/how_to_train_deepvariant.md)
@@ -59,6 +61,7 @@ Detailed variant calling performance evaluation:
 * [How to tune parameters to balance speed and accuracy.](./docs/usage/speed_and_accuracy.md)
 
 ---
+
 ### How to run
 PEPPER-Margin-DeepVariant can be run using **Docker** or **Singularity**. A simple docker command looks like:
 ```bash
