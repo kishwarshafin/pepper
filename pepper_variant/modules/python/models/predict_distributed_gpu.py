@@ -58,17 +58,12 @@ def predict(options, input_filepath, input_files, output_filepath, threads):
             for contigs, positions, depths, candidates, candidate_frequencies, images in data_loader:
                 sys.stderr.flush()
                 images = images.type(torch.FloatTensor)
-                hidden = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
-                cell_state = torch.zeros(images.size(0), 2 * TrainOptions.GRU_LAYERS, TrainOptions.HIDDEN_SIZE)
 
                 images = images.cuda()
-                hidden = hidden.cuda()
-                cell_state = cell_state.cuda()
 
                 # run inference
-                output_type = transducer_model(images, hidden, cell_state, False)
+                output_type = transducer_model(images, False)
 
-                # output_base = output_base.detach().cpu().numpy()
                 output_type = output_type.detach().cpu().numpy()
 
                 prediction_data_file.write_prediction(batch_completed, contigs, positions, depths, candidates, candidate_frequencies, output_type)

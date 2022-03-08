@@ -25,7 +25,7 @@ Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey 
 
 ### Critical care application
 
-In collaboration with Stanford medicine, we demonstrated the ability to identify disease causing variants in a critical care setting with `PEPPER-Margin-DeepVariant`.
+In collaboration with Stanford medicine, we demonstrated the ability to identify disease causing variants in a critical care setting with nanopore sequencing and `PEPPER-Margin-DeepVariant`.
 
 Following are the publications that demonstrate the performance of `PEPPER-Margin-DeepVariant` in a clinical setup:
 Clinical report:
