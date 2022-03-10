@@ -19,6 +19,7 @@ def merge_vcf_records(options):
         for record in all_deepvariant_records:
             positional_dv_records[(record.chrom, record.pos)] = record
             total_records += 1
+        dv_samples = list(deepvariant_vcf_file.header.samples)
     else:
         deepvariant_vcf_file_snps = VariantFile(options.vcf_deepvariant_snps)
         deepvariant_vcf_file_indels = VariantFile(options.vcf_deepvariant_indels)
@@ -33,13 +34,16 @@ def merge_vcf_records(options):
         for record in all_indel_records:
             positional_dv_records[(record.chrom, record.pos)] = record
             total_records += 1
+        dv_samples = list(deepvariant_vcf_file_snps.header.samples)
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL VARIANTS IN DeepVariant: " + str(total_records) + "\n")
 
     # get all contigs from PEPPER
     contigs = []
     pepper_samples = list(pepper_vcf_file.header.samples)
-    dv_samples = list(deepvariant_vcf_file.header.samples)
+    print(pepper_samples)
+    print(dv_samples)
+
     if len(pepper_samples) > 1 or len(dv_samples) > 1:
         raise ValueError("ERROR: VARIANT FILE HAS MORE THAN ONE SAMPLE.")
     if pepper_samples[0] != dv_samples[0]:

@@ -27,7 +27,7 @@ def add_merge_variants_arguments(parser):
     )
     parser.add_argument(
         "-vdi",
-        "--deepvariant_vcf_file_indels",
+        "--vcf_deepvariant_indels",
         type=str,
         required=False,
         help="Path to VCF file from DeepVariant with INDEL records."
