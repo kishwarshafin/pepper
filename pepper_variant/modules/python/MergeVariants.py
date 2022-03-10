@@ -8,15 +8,31 @@ from pepper_variant.modules.python.MergedVcfWriter import VCFWriter
 def merge_vcf_records(options):
     pepper_vcf_file = VariantFile(options.vcf_pepper)
     all_pepper_records = pepper_vcf_file.fetch()
-    deepvariant_vcf_file = VariantFile(options.vcf_deepvariant)
-    all_deepvariant_records = deepvariant_vcf_file.fetch()
-    output_vcf_name = 'PEPPER_MARGIN_DEEPVARIANT_OUTPUT.vcf.gz'
-
     positional_dv_records = defaultdict()
     total_records = 0
-    for record in all_deepvariant_records:
-        positional_dv_records[(record.chrom, record.pos)] = record
-        total_records += 1
+    output_vcf_name = 'PEPPER_MARGIN_DEEPVARIANT_OUTPUT.vcf.gz'
+
+    if options.vcf_deepvariant:
+        deepvariant_vcf_file = VariantFile(options.vcf_deepvariant)
+        all_deepvariant_records = deepvariant_vcf_file.fetch()
+
+        for record in all_deepvariant_records:
+            positional_dv_records[(record.chrom, record.pos)] = record
+            total_records += 1
+    else:
+        deepvariant_vcf_file_snps = VariantFile(options.vcf_deepvariant_snps)
+        deepvariant_vcf_file_indels = VariantFile(options.vcf_deepvariant_indels)
+        all_snp_records = deepvariant_vcf_file_snps.fetch()
+        all_indel_records = deepvariant_vcf_file_indels.fetch()
+
+        # record all snps
+        for record in all_snp_records:
+            positional_dv_records[(record.chrom, record.pos)] = record
+            total_records += 1
+        # record all indels
+        for record in all_indel_records:
+            positional_dv_records[(record.chrom, record.pos)] = record
+            total_records += 1
 
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL VARIANTS IN DeepVariant: " + str(total_records) + "\n")
 

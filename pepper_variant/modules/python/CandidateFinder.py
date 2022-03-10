@@ -461,7 +461,7 @@ def small_chunk_stitch(options, file_chunks):
             variant_allele_support = []
             max_delete_length = 0
             reference_allele = reference_base
-
+            non_alt_predictions = []
             for alt_allele, allele_frequency in zip(candidate.candidates, candidate.candidate_frequency):
                 # print("GENERAL: ", candidate.contig, candidate.position, reference_allele, ''.join(alt_allele), candidate.depth, allele_frequency)
                 alt_type = alt_allele[0]
@@ -478,7 +478,7 @@ def small_chunk_stitch(options, file_chunks):
 
                 vaf = float(allele_frequency) / float(candidate.depth)
                 non_alt_prediction = max(candidate.prediction_base[1], candidate.prediction_base[2])
-
+                non_alt_predictions.append(non_alt_prediction)
                 if alt_type == '1':
                     if non_alt_prediction >= options.snp_p_value:
                         # add them to list
@@ -523,7 +523,7 @@ def small_chunk_stitch(options, file_chunks):
                 # print(candidate.contig, candidate.position, reference_base, alt_allele, allele_frequency, candidate.depth, vaf, "PRED: ", non_alt_prediction, "QUAL", non_alt_phred, candidate.prediction_base, candidate_in_repeat)
             if len(alt_alleles) > 0:
                 # print("SELECTED", candidate.contig, candidate.position, candidate.position + 1, reference_allele, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value, non_alt_phred, candidate_in_repeat)
-                selected_candidate_list_deepvariant.append((candidate.contig, candidate.position, candidate.position + len(reference_allele), reference_allele, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value, candidate.prediction_base, candidate_in_repeat))
+                selected_candidate_list_deepvariant.append((candidate.contig, candidate.position, candidate.position + len(reference_allele), reference_allele, alt_alleles, genotype, candidate.depth, variant_allele_support, prediction_value, candidate.prediction_base, non_alt_predictions, candidate_in_repeat))
             # print("----------------------------------------------------------------------")
 
     return selected_candidate_list_margin, selected_candidate_list_deepvariant

@@ -1,14 +1,20 @@
 from pysam import VariantFile, VariantHeader
-from pepper_variant.build import PEPPER_VARIANT
-import math
+import pysam
 
 
 class VCFWriter:
     def __init__(self, all_contigs, sample_name, output_dir, filename):
         self.vcf_header = self.get_vcf_header(sample_name, all_contigs)
         self.output_dir = output_dir
-        self.filename = filename
-        self.vcf_file = VariantFile(self.output_dir + "/" + self.filename, 'w', header=self.vcf_header)
+        self.filename = self.output_dir + "/" + filename
+        self.vcf_file = VariantFile(self.filename, 'w', header=self.vcf_header)
+
+    def __del__(self):
+        # close the files
+        self.vcf_file.close()
+
+        # index the files
+        pysam.tabix_index(self.filename, preset="vcf", force=True)
 
     def write_vcf_records(self, vcf_record, sample, is_deepvariant_call):
         if 'PASS' not in vcf_record.filter.keys():
@@ -44,7 +50,8 @@ class VCFWriter:
 
         self.vcf_file.write(vcf_record)
 
-    def get_vcf_header(self, sample_name, contigs):
+    @staticmethod
+    def get_vcf_header(sample_name, contigs):
         header = VariantHeader()
 
         items = [('ID', "PASS"),
@@ -107,6 +114,5 @@ class VCFWriter:
             header.contigs.add(contig, length=length)
 
         header.add_sample(sample_name)
-
 
         return header
