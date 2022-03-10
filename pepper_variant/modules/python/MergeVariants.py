@@ -69,7 +69,7 @@ def merge_vcf_records(options):
             final_record = record
             total_pepper_calls += 1
 
-        if 'PASS' not in final_record.filter.keys():
+        if 'PASS' in final_record.filter.keys():
             total_pass_calls += 1
 
         vcf_out.write_vcf_records(final_record, sample, is_dv)
