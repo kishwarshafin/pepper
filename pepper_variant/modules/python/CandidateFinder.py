@@ -391,28 +391,28 @@ def small_chunk_stitch(options, file_chunks):
         for candidate in all_candidates:
 
             reference_base = fasta_handler.get_reference_sequence(candidate.contig, candidate.position, candidate.position+1).upper()
-            reference_upstream = fasta_handler.get_reference_sequence(candidate.contig, candidate.position, candidate.position + 20).upper()
-            reference_downstream = fasta_handler.get_reference_sequence(candidate.contig, max(0, candidate.position - 20), candidate.position).upper()
+            reference_upstream = fasta_handler.get_reference_sequence(candidate.contig, candidate.position, candidate.position + 10).upper()
+            reference_downstream = fasta_handler.get_reference_sequence(candidate.contig, max(0, candidate.position - 10), candidate.position).upper()
 
             full_sequence = reference_downstream + reference_upstream
             full_sequence = full_sequence.upper()
 
             homopolymer_repeats = repeat_annotation(full_sequence, 1)
-            dimer_repeats = repeat_annotation(full_sequence, 2)
-            trimer_repeats = repeat_annotation(full_sequence, 3)
+            # dimer_repeats = repeat_annotation(full_sequence, 2)
+            # trimer_repeats = repeat_annotation(full_sequence, 3)
 
             position_index = len(reference_downstream)
             upward_lookup_index = min(len(homopolymer_repeats), position_index + 4)
             downward_lookup_index = max(0, position_index - 5)
-            max_dimer_count = max(dimer_repeats[downward_lookup_index:upward_lookup_index])
-            max_trimer_count = max(trimer_repeats[downward_lookup_index:upward_lookup_index])
+            # max_dimer_count = max(dimer_repeats[downward_lookup_index:upward_lookup_index])
+            # max_trimer_count = max(trimer_repeats[downward_lookup_index:upward_lookup_index])
             max_homopolymer_count = max(homopolymer_repeats[downward_lookup_index:upward_lookup_index])
 
             # upward_entropy = sequence_entropy(fasta_handler.get_reference_sequence(candidate.contig, candidate.position, candidate.position + 10).upper())
             # downward_entropy = sequence_entropy(fasta_handler.get_reference_sequence(candidate.contig, max(0, candidate.position - 10), candidate.position).upper())
 
             candidate_in_repeat = False
-            if max_homopolymer_count >= 5 or max_dimer_count >= 4 or max_trimer_count >= 4:
+            if max_homopolymer_count >= 5:
                 candidate_in_repeat = True
 
             if reference_base not in ['A', 'C', 'G', 'T']:
@@ -480,7 +480,7 @@ def small_chunk_stitch(options, file_chunks):
                 non_alt_prediction = max(candidate.prediction_base[1], candidate.prediction_base[2])
                 non_alt_predictions.append(non_alt_prediction)
                 if alt_type == '1':
-                    if non_alt_prediction >= options.snp_p_value:
+                    if not candidate_in_repeat and non_alt_prediction >= options.snp_p_value:
                         # add them to list
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
@@ -492,7 +492,7 @@ def small_chunk_stitch(options, file_chunks):
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                 elif alt_type == '2':
-                    if non_alt_prediction >= options.insert_p_value:
+                    if not candidate_in_repeat and non_alt_prediction >= options.insert_p_value:
                         # add them to list
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
@@ -504,7 +504,7 @@ def small_chunk_stitch(options, file_chunks):
                         alt_alleles.append(''.join(alt_allele[1:]))
                         variant_allele_support.append(allele_frequency)
                 elif alt_type == '3':
-                    if non_alt_prediction >= options.delete_p_value:
+                    if not candidate_in_repeat and non_alt_prediction >= options.delete_p_value:
                         # add them to list
                         alt_alleles.append(reference_allele)
                         reference_allele = ''.join(alt_allele[1:])
