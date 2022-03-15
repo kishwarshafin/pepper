@@ -160,12 +160,12 @@ class VCFWriter:
             if max_alt_len == 1:
                 # this is SNP
                 is_snp = True
-                if qual <= options.snp_q_cutoff:
+                if not site_in_repeat and qual <= options.snp_q_cutoff:
                     failed_variant = True
                 elif site_in_repeat and qual <= options.snp_q_cutoff_in_lc:
                     failed_variant = True
             else:
-                if qual <= options.indel_q_cutoff:
+                if not site_in_repeat and qual <= options.indel_q_cutoff:
                     failed_variant = True
                 elif site_in_repeat and qual <= options.indel_q_cutoff_in_lc:
                     failed_variant = True
