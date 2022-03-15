@@ -60,9 +60,9 @@ def set_parameters(options):
             if options.delete_p_value_in_lc is None:
                 options.delete_p_value_in_lc = 0.1
             if options.snp_q_cutoff_in_lc is None:
-                options.snp_q_cutoff_in_lc = 10
+                options.snp_q_cutoff_in_lc = 15
             if options.indel_q_cutoff_in_lc is None:
-                options.indel_q_cutoff_in_lc = 10
+                options.indel_q_cutoff_in_lc = 15
 
     if options.ont_r9_guppy4_hac:
         sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: ONT VARIANT CALLING MODE SELECTED.\n")
