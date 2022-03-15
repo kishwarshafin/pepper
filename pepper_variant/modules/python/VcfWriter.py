@@ -1,3 +1,4 @@
+import pysam
 from pysam import VariantFile, VariantHeader
 from pepper_variant.build import PEPPER_VARIANT
 import collections
@@ -16,9 +17,33 @@ class VCFWriter:
         self.contigs = contigs
         self.vcf_header = self.get_vcf_header(sample_name, contigs)
         self.output_dir = output_dir
-        self.vcf_file_full = VariantFile(self.output_dir + filename_full + '.vcf', 'w', header=self.vcf_header)
-        self.vcf_file_pepper = VariantFile(self.output_dir + filename_pepper + '.vcf', 'w', header=self.vcf_header)
-        self.vcf_file_variant_calling = VariantFile(self.output_dir + filename_variant_calling + '.vcf', 'w', header=self.vcf_header)
+
+        self.full_vcf_file_name = self.output_dir + filename_full + '.vcf.gz'
+        self.pepper_vcf_file_name = self.output_dir + filename_pepper + '.vcf.gz'
+        self.variant_vcf_file_name = self.output_dir + filename_variant_calling + '.vcf.gz'
+        self.snp_variant_vcf_file_name = self.output_dir + filename_variant_calling + '_SNPs.vcf.gz'
+        self.indel_variant_vcf_file_name = self.output_dir + filename_variant_calling + '_INDEL.vcf.gz'
+
+        self.vcf_file_full = VariantFile(self.full_vcf_file_name, 'w', header=self.vcf_header)
+        self.vcf_file_pepper = VariantFile(self.pepper_vcf_file_name, 'w', header=self.vcf_header)
+        self.vcf_file_variant_calling = VariantFile(self.variant_vcf_file_name, 'w', header=self.vcf_header)
+        self.vcf_file_variant_calling_snp = VariantFile(self.snp_variant_vcf_file_name, 'w', header=self.vcf_header)
+        self.vcf_file_variant_calling_indel = VariantFile(self.indel_variant_vcf_file_name, 'w', header=self.vcf_header)
+
+    def __del__(self):
+        # close the files
+        self.vcf_file_full.close()
+        self.vcf_file_pepper.close()
+        self.vcf_file_variant_calling.close()
+        self.vcf_file_variant_calling_snp.close()
+        self.vcf_file_variant_calling_indel.close()
+
+        # index the files
+        pysam.tabix_index(self.full_vcf_file_name, preset="vcf", force=True)
+        pysam.tabix_index(self.pepper_vcf_file_name, preset="vcf", force=True)
+        pysam.tabix_index(self.variant_vcf_file_name, preset="vcf", force=True)
+        pysam.tabix_index(self.snp_variant_vcf_file_name, preset="vcf", force=True)
+        pysam.tabix_index(self.indel_variant_vcf_file_name, preset="vcf", force=True)
 
     def candidate_list_to_variant(self, candidates, options):
         candidates = sorted(candidates, key=lambda x: (x[5], x[8]), reverse=True)
@@ -29,14 +54,14 @@ class VCFWriter:
 
         # find the maximum reference allele
         for candidate in candidates:
-            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions, in_repeat = candidate
+            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions, non_alt_predictions, in_repeat = candidate
             if len(ref_allele) > max_ref_length:
                 max_ref_length = len(ref_allele)
                 max_ref_allele = ref_allele
 
         normalized_candidates = []
         for candidate in candidates:
-            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions, in_repeat = candidate
+            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions, non_alt_predictions, in_repeat = candidate
             suffix_needed = 0
             if len(ref_allele) < max_ref_length:
                 suffix_needed = max_ref_length - len(ref_allele)
@@ -46,7 +71,7 @@ class VCFWriter:
                 ref_allele = ref_allele + suffix_seq
                 alt_allele = [alt + suffix_seq for alt in alt_allele]
 
-            normalized_candidates.append((contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions, in_repeat))
+            normalized_candidates.append((contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions, non_alt_predictions, in_repeat))
 
         candidates = normalized_candidates
         gt_qual = -1.0
@@ -63,9 +88,10 @@ class VCFWriter:
         site_supports = []
         site_qualities = []
         site_in_repeat = False
+        site_non_alt_predictions = []
 
         for i, candidate in enumerate(candidates):
-            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions, in_repeat = candidate
+            contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions, non_alt_predictions, in_repeat = candidate
             # print(contig, ref_start, ref_end, ref_allele, alt_allele, genotype, depth, variant_allele_support, genotype_probability, predictions)
             site_in_repeat = in_repeat or site_in_repeat
             predicted_genotype = np.argmax(predictions)
@@ -91,6 +117,7 @@ class VCFWriter:
             site_alts.append(alt_allele[0])
             site_supports.append(variant_allele_support[0])
             site_qualities.append(genotype_probability)
+            site_non_alt_predictions.extend(non_alt_predictions)
 
             # het
             if predicted_genotype == 1:
@@ -108,16 +135,16 @@ class VCFWriter:
             gt = [0, 0]
 
         # print(site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual)
-        return site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual, site_in_repeat
+        return site_contig, site_ref_start, site_ref_end, site_ref_allele, site_alts, gt, site_depth, site_supports, gt_qual, site_non_alt_predictions, site_in_repeat
 
     def write_vcf_records(self, variants_list, options):
-        total_variants, total_variants_pepper, total_variants_variant_calling = 0, 0, 0
+        total_variants, total_variants_pepper, total_variants_variant_calling, total_variants_variant_calling_snp, total_variants_variant_calling_indel = 0, 0, 0, 0, 0
 
         last_position = -1
         for contig, position in sorted(variants_list):
             all_candidates = variants_list[(contig, position)]
 
-            contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability, site_in_repeat = self.candidate_list_to_variant(all_candidates, options)
+            contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability, non_alt_predictions, site_in_repeat = self.candidate_list_to_variant(all_candidates, options)
             # print("RETURNED", contig, ref_start, ref_end, ref_seq, alleles, genotype, depth, variant_allele_support, genotype_probability)
             if len(alleles) <= 0:
                 continue
@@ -129,14 +156,16 @@ class VCFWriter:
             qual = max(1, int(-10 * math.log10(max(0.000000001, 1.0 - genotype_probability))))
             alt_qual = max(1, int(-10 * math.log10(max(0.000000001, 1.0 - genotype_probability))))
             failed_variant = False
+            is_snp = False
             if max_alt_len == 1:
                 # this is SNP
-                if qual <= options.snp_q_cutoff:
+                is_snp = True
+                if not site_in_repeat and qual <= options.snp_q_cutoff:
                     failed_variant = True
                 elif site_in_repeat and qual <= options.snp_q_cutoff_in_lc:
                     failed_variant = True
             else:
-                if qual <= options.indel_q_cutoff:
+                if not site_in_repeat and qual <= options.indel_q_cutoff:
                     failed_variant = True
                 elif site_in_repeat and qual <= options.indel_q_cutoff_in_lc:
                     failed_variant = True
@@ -160,26 +189,33 @@ class VCFWriter:
                 vcf_record = self.vcf_file_full.new_record(contig=str(contig), start=ref_start,
                                                            stop=ref_end, id='.', qual=qual,
                                                            filter='refCall', alleles=alleles, GT=genotype,
-                                                           AP=alt_qual, GQ=alt_qual, DP=depth, AD=variant_allele_support, VAF=vafs,
+                                                           AP=non_alt_predictions, GQ=alt_qual, DP=depth, AD=variant_allele_support, VAF=vafs,
                                                            REP=rep)
             else:
                 vcf_record = self.vcf_file_full.new_record(contig=str(contig), start=ref_start,
                                                            stop=ref_end, id='.', qual=qual,
                                                            filter='PASS', alleles=alleles, GT=genotype,
-                                                           AP=alt_qual, GQ=qual, DP=depth, AD=variant_allele_support, VAF=vafs,
+                                                           AP=non_alt_predictions, GQ=qual, DP=depth, AD=variant_allele_support, VAF=vafs,
                                                            REP=rep)
 
             self.vcf_file_full.write(vcf_record)
             total_variants += 1
 
             if selected_for_variant_calling:
+                if is_snp:
+                    self.vcf_file_variant_calling_snp.write(vcf_record)
+                    total_variants_variant_calling_snp += 1
+                else:
+                    self.vcf_file_variant_calling_indel.write(vcf_record)
+                    total_variants_variant_calling_indel += 1
+
                 self.vcf_file_variant_calling.write(vcf_record)
                 total_variants_variant_calling += 1
             else:
                 self.vcf_file_pepper.write(vcf_record)
                 total_variants_pepper += 1
 
-        return total_variants, total_variants_pepper, total_variants_variant_calling
+        return total_variants, total_variants_pepper, total_variants_variant_calling, total_variants_variant_calling_snp, total_variants_variant_calling_indel
 
     def get_vcf_header(self, sample_name, contigs):
         header = VariantHeader()
@@ -220,7 +256,7 @@ class VCFWriter:
                  ('Description', "Variant allele fractions.")]
         header.add_meta(key='FORMAT', items=items)
         items = [('ID', "AP"),
-                 ('Number', 1),
+                 ('Number', "A"),
                  ('Type', 'Float'),
                  ('Description', "Maximum variant allele probability for each allele.")]
         header.add_meta(key='FORMAT', items=items)
@@ -249,6 +285,5 @@ class VCFWriter:
             header.contigs.add(sq_id, length=ln)
 
         header.add_sample(sample_name)
-
 
         return header

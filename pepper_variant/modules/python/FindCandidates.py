@@ -181,10 +181,12 @@ def candidate_finder(options, input_dir, output_path):
     secs = int((end_time - local_start_time)) % 60
 
     # vcf_file_phasing.write_vcf_records(selected_candidates_phasing, options, calling_mode=0)
-    total_variants, total_pepper, total_variant_calling = vcf_file_full.write_vcf_records(selected_candidates_variant_calling, options)
+    total_variants, total_pepper, total_variant_calling, total_variant_calling_snp, total_variant_calling_indel = vcf_file_full.write_vcf_records(selected_candidates_variant_calling, options)
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL CANDIDATES FOUND: " + str(total_variants) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL VARIANTS IN PEPPER: " + str(total_pepper) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL VARIANTS SELECTED FOR RE-GENOTYPING: " + str(total_variant_calling) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL SNP VARIANTS SELECTED FOR RE-GENOTYPING: " + str(total_variant_calling_snp) + "\n")
+    sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: FINISHED PROCESSING, TOTAL INDEL VARIANTS SELECTED FOR RE-GENOTYPING: " + str(total_variant_calling_indel) + "\n")
     sys.stderr.write("[" + str(datetime.now().strftime('%m-%d-%Y %H:%M:%S')) + "] INFO: TOTAL TIME SPENT ON CANDIDATE FINDING: " + str(mins) + " Min " + str(secs) + " Sec\n")
 
 
