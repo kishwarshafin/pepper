@@ -6,6 +6,13 @@ In this walkthrough, we will see how to train `DeepVariant` and replace default 
 
 **NOTE:** This tutorial goes through the basic steps required for training DeepVariant. However, there are many more options available to ease the training process of DeepVariant. [This documentation](https://github.com/google/deepvariant/blob/r1.3/docs/deepvariant-training-case-study.md) has a much more detailed explanation of the training process. If you have followed the official tutorial then you can use the `make_examples` stage from this tutorial and the rest of the steps should be exactly the same.
 
+## Setup
+In this setup we train one model with `--alt_aligned_pileup "diff_channels"` for calling SNPs and INDELs. However, you can train a `rows` model for INDEL calling and `none` model for SNP calling. 
+
+To achieve two model setup, please repeat the DeepVariant training step with `--alt_aligned_pileup "none"` and `--alt_aligned_pileup "rows"` respectively.
+Once you have the models, you can then use `--dv_model_snp <model_path>` and `--dv_model_indel <model_path>` to specify the model path for SNP and INDEL
+independently. You can also select the alt alignment by `--dv_alt_aligned_pileup_snp` or `--dv_alt_aligned_pileup_indel` where `alt_aligned_pileup` can be `diff_channels`, `none` or `rows`.
+
 ## Training DeepVariant
 We will now train `DeepVariant` that we use to genotype the candidates proposed by `PEPPER`.
 

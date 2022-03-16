@@ -193,8 +193,8 @@ ${OUTPUT_DIR}/${OUTPUT_VCF} \
 
 |  Type | Truth<br>total | True<br>positives | False<br>negatives | False<br>positives |  Recall   | Precision | F1-Score |
 |:-----:|:--------------:|:-----------------:|:------------------:|:------------------:|:---------:|:---------:|:--------:|
-| INDEL |      11256     |        9442       |        1779        |        821         | 0.841951  |  0.921973 | 0.880147 |
-|  SNP  |      71333     |       71288       |         56         |         56         | 0.999215  |  0.999215 | 0.999215 |
+| INDEL |      11256     |        9442       |        1724        |        774         | 0.846837  |  0.926517 | 0.884887 |
+|  SNP  |      71333     |       71288       |         60         |         51         | 0.999159  |  0.999285 | 0.999222 |
 
 ### Authors:
 This pipeline is developed in a collaboration between UCSC genomics institute and the genomics team at Google health.
