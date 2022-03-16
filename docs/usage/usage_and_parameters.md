@@ -103,18 +103,24 @@ run_pepper_margin_deepvariant call_variant --help
 | --margin_phase_model       | String | Path to a custom margin model.               |
 
 ### Parameters for DeepVariant
-| Parameter                    | Type    | Description                                                                        |
-|------------------------------|---------|------------------------------------------------------------------------------------|
-| --dv_model                   | String  | Path to a custom DeepVariant model.                                                |
-| --dv_alt_aligned_pileup      | String  | DeepVariant alt_align_pileup used for make_examples. [none, rows, diff_channels]   |
-| --dv_realign_reads           | String  | If true then local read alingment will be performed. [set: true/false]             |
-| --dv_partition_size          | String  | DeepVariant partition_size used for make_examples.                                 |
-| --dv_min_mapping_quality     | Integer | DeepVariant minimum mapping quality.                                               |
-| --dv_min_base_quality        | Integer | DeepVariant minimum base quality.                                                  |
-| --dv_sort_by_haplotypes      | String  | If true then haplotype sorting will be used. [set: true/false]                     |
-| --dv_parse_sam_aux_fields    | String  | If true then auxiliary field parsing is enabled. [set: true/false]                 |
-| --dv_add_hp_channel          | String  | If true then hp channel will be added. [set: true/false]                           |
-| --dv_use_hp_information      | String  | If true then hp information will be properly used. [set: true/false]               |
-| --dv_use_multiallelic_mode   | String  | If true multiallelic model will be used during post-processing. [set: true/false]  |
-| --dv_vsc_min_fraction_indels | String  | DeepVariant minimum vsc fraction for indels.                                       |
-| --dv_vsc_min_fraction_snps   | String  | DeepVariant minimum vsc fraction for snps.                                         |
+| Parameter                     | Type    | Description                                                                                              |
+|-------------------------------|---------|----------------------------------------------------------------------------------------------------------|
+| --dv_model                    | String  | Path to a custom DeepVariant model. If set, then this model will be used for both SNP and INDEL calling. |
+| --dv_model_snp                | String  | Custom DeepVariant model for SNP calling.                                                                |
+| --dv_model_indel              | String  | Custom DeepVariant model for INDEL calling.                                                              |
+| --dv_alt_aligned_pileup       | String  | alt_align_pileup used for make_examples of --dv_model parameter. [none, rows, diff_channels]             |
+| --dv_alt_aligned_pileup_snp   | String  | alt_align_pileup used for make_examples of --dv_model_snp parameter. [none, rows, diff_channels]         |
+| --dv_alt_aligned_pileup_indel | String  | alt_align_pileup used for make_examples of --dv_model_indel parameter. [none, rows, diff_channels]       |
+| --dv_pileup_image_width       | String  | DeepVariant image width. [none, rows, diff_channels]                                                     |
+| --dv_realign_reads            | String  | If true then local read alingment will be performed. [set: true/false]                                   |
+| --dv_partition_size           | String  | DeepVariant partition_size used for make_examples.                                                       |
+| --dv_min_mapping_quality      | Integer | DeepVariant minimum mapping quality.                                                                     |
+| --dv_min_base_quality         | Integer | DeepVariant minimum base quality.                                                                        |
+| --dv_vsc_min_fraction_indels  | String  | DeepVariant minimum vsc fraction for indels.                                                             |
+| --dv_vsc_min_fraction_snps    | String  | DeepVariant minimum vsc fraction for snps.                                                               |
+| --dv_sort_by_haplotypes       | String  | If true then haplotype sorting will be used. [set: true/false]                                           |
+| --dv_parse_sam_aux_fields     | String  | If true then auxiliary field parsing is enabled. [set: true/false]                                       |
+| --dv_add_hp_channel           | String  | If true then hp channel will be added. [set: true/false]                                                 |
+| --dv_use_hp_information       | String  | If true then hp information will be properly used. [set: true/false]                                     |
+| --dv_use_multiallelic_mode    | String  | If true multiallelic model will be used during post-processing. [set: true/false]                        |
+

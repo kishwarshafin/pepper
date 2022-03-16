@@ -71,6 +71,21 @@ iii) `find_candidates`: This step takes the predictions of the previous step to 
   </p>
   * All variants are used for haplotagging with margin.
 
+
+Update in `r0.8`: From this version, we split the SNP and INDEL candidates into two VCFs to enable SNP and INDEL calling separately with DeepVariant.
+The PEPPER output VCFs are:
+```bash
+PEPPER_VARIANT_FULL.vcf.gz : Contails all variants reported by PEPPER.
+PEPPER_VARIANT_OUTPUT_PEPPER.vcf.gz: Contains only the variants that are found high-quality in PEPPER and will not be re-gotyped with DeepVariant.
+PEPPER_VARIANT_OUTPUT_VARIANT_CALLING_INDEL.vcf.gz: Contains INDEL candidate variants that will be re-genotyped with DeepVariant.
+PEPPER_VARIANT_OUTPUT_VARIANT_CALLING_SNPs.vcf.gz: Contains SNP candidate variants that will be re-genotyped with DeepVariant.
+PEPPER_VARIANT_OUTPUT_VARIANT_CALLING.vcf.gz: Contains all candidate variants (SNPs + INDELs) that will be re-genotyped with DeepVariant.
+```
+
+For Oxford Nanopore variant calling, we now use:
+* DeepVariant `rows` mode that uses INDEL realignment for calling candidate variants from `PEPPER_VARIANT_OUTPUT_VARIANT_CALLING_INDEL.vcf.gz`.
+* DeepVariant `none` mode that uses SNP calling for calling candidate variants from `PEPPER_VARIANT_OUTPUT_VARIANT_CALLING_SNPs.vcf.gz`.
+
 ### Step 2: Margin [Haplotagging reads]
 Margin uses the read-based evidence of linkage between heterozygous variant sites to find the most likely assignment of reads and alleles to haplotypes.
 The tool first selects a set of high-quality primary reads and variants for use in the initial phasing workflow.
@@ -111,7 +126,7 @@ The following parameters are used to select reads:
 * `phase.maxDepth`: reads are downsampled to an expected depth of this parameter.  Longer reads are preferentially selected during downsampling.
 
 ### Step 3: DeepVariant
-DeepVariant re-genotypes the candidates proposed by `PEPPER-HP` using reads haplotagged by `Margin`. We use the following features for DeepVariant:
+DeepVariant re-genotypes the candidates proposed by `PEPPER` using reads haplotagged by `Margin`. We use the following features for DeepVariant:
 <p align="center">
 <img src="img/deepvariant_pileup.png" alt="DeepVariant summary" height=100px>
 </p>
