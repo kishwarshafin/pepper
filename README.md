@@ -25,15 +25,17 @@ Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey 
 
 ### Critical care application
 
-In collaboration with Stanford medicine, we demonstrated the ability to identify disease causing variants in a critical care setting with nanopore sequencing and `PEPPER-Margin-DeepVariant`.
+In a project led by [Professor Euan Ashley](https://www.euanangusashley.com/), the team demonstrated the ability to identify disease causing variants in a critical care setting with nanopore sequencing and `PEPPER-Margin-DeepVariant`.
 
 Following are the publications that demonstrate the performance of `PEPPER-Margin-DeepVariant` in a clinical setup:
+
 Clinical report:
 <details>
 <summary><a href="https://www.nejm.org/doi/10.1056/NEJMc2112090"><b>New England Journal of Medicine:</b> Ultrarapid Nanopore Genome Sequencing in a Critical Care Setting </a>
 </summary>
 Authors: John Gorzynski, Sneha Goenka, Kishwar Shafin, Tanner Jensen, Dianna Fisk, Megan Grove, Elizabeth Spiteri, Trevor Pesout, Jean Monlong, Gunjan Baid, Jonathan Bernstein, Scott Ceresnak, Pi-Chuan Chang, Jeffrey Christle, Henry Chubb, Karen Dalton, Kyla Dunn, Daniel Garalde, Joseph Guillory, Joshua Knowles, Alexey Kolesnikov, Michael Ma, Tia Moscarello, Maria Nattestad, Marco Perez, Maura Ruzhnikov, Mehrzad Samadi, Ankit Setia, Chris Wright, Courtney J Wusthoff, Katherine Xiong, Tong Zhu, Miten Jain, Fritz Sedlazeck, Andrew Carroll, Benedict Paten, Euan Ashley.
 </details>
+
 Case report:
 <details>
 <summary><a href="https://www.ahajournals.org/doi/abs/10.1161/CIRCGEN.121.003591"><b>Circulation: Genomic and Precision Medicine:</b>Ultra-Rapid Nanopore Whole Genome Genetic Diagnosis of Dilated Cardiomyopathy in an Adolescent With Cardiogenic Shock</a>
