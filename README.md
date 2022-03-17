@@ -25,7 +25,7 @@ Authors: Kishwar Shafin, Trevor Pesout, Pi-Chuan Chang, Maria Nattestad, Alexey 
 
 ### Critical care application
 
-In a project led by [Professor Euan Ashley](https://www.euanangusashley.com/), the team demonstrated the ability to identify disease causing variants in a critical care setting with nanopore sequencing and `PEPPER-Margin-DeepVariant`.
+In a project led by [Professor Euan Ashley](https://www.euanangusashley.com/), the team demonstrated the ability to identify clinically actionable disease causing variants in a critical care setting with nanopore sequencing and `PEPPER-Margin-DeepVariant`.
 
 Following are the publications that demonstrate the performance of `PEPPER-Margin-DeepVariant` in a clinical setup:
 
