@@ -37,7 +37,7 @@ class TransducerGRU(nn.Module):
         self.linear_4 = nn.Linear(self.linear_3_size, self.linear_4_size)
         self.linear_5 = nn.Linear(self.linear_4_size, self.linear_5_size)
 
-        self.output_layer = nn.Linear(self.linear_5_size, self.num_classes)
+        self.output_layer = nn.Linear(self.linear_5_size, self.num_classes_type)
 
     def forward(self, x, hidden, cell_state, train_mode=False):
         # Reshape for CNN
