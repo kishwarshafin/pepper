@@ -1,12 +1,12 @@
-h5py==2.10.0
-numpy==1.22.0
-torch==1.10.0
+h5py
+numpy
+torch
 wget
 torchvision
 onnx
 onnxruntime
-hyperopt==0.2
-cython>=0.29.12
+hyperopt
+cython
 pyyaml
 torchnet
 intervaltree
