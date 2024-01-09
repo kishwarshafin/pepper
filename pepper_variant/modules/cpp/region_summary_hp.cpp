@@ -1055,7 +1055,7 @@ void RegionalSummaryGeneratorHP::debug_print_matrix_hp(vector<vector<int> > imag
 
     cout<<"POS:\t";
     for(int i=0; i < positions.size(); i++ ) {
-        printf("%3lld\t", positions[i] % 100);
+        printf("%3lu\t", positions[i] % 100);
     }
     cout << endl;
     int image_size = ImageOptionsRegionHP::REFERENCE_INDEX_SIZE + ImageOptionsRegionHP::SUPPORT_INDEX_SIZE + ImageOptionsRegionHP::BASE_INDEX_SIZE;
