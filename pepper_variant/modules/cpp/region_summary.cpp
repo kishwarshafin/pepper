@@ -957,7 +957,7 @@ void RegionalSummaryGenerator::debug_print_matrix(vector<vector<int> > image_mat
 
     cout<<"POS:\t";
     for(int i=0; i < positions.size(); i++ ) {
-        printf("%3lld\t", positions[i] % 100);
+        printf("%3lu\t", positions[i] % 100);
     }
     cout << endl;
     int image_size = ImageOptionsRegion::REFERENCE_INDEX_SIZE + ImageOptionsRegion::SUPPORT_INDEX_SIZE + ImageOptionsRegion::BASE_INDEX_SIZE;
