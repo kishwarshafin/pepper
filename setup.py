@@ -147,7 +147,7 @@ if __name__ == '__main__':
         description=__description__,
         long_description="Please visit (GitHub)[https://github.com/kishwarshafin/pepper] for description",
         long_description_content_type=__long_description_content_type__,
-        python_requires='>=3.5.*',
+        python_requires='>=3.5',
         install_requires=python_dependencies,
         entry_points={
             'console_scripts': [
