@@ -1,0 +1,740 @@
+running install
+/opt/conda/envs/pytorch/lib/python3.10/site-packages/setuptools/_distutils/cmd.py:66: SetuptoolsDeprecationWarning: setup.py install is deprecated.
+!!
+
+        ********************************************************************************
+        Please avoid running ``setup.py`` directly.
+        Instead, use pypa/build, pypa/installer or other
+        standards-based tools.
+
+        See https://blog.ganssle.io/articles/2021/10/setup-py-deprecated.html for details.
+        ********************************************************************************
+
+!!
+  self.initialize_options()
+/opt/conda/envs/pytorch/lib/python3.10/site-packages/setuptools/_distutils/cmd.py:66: EasyInstallDeprecationWarning: easy_install command is deprecated.
+!!
+
+        ********************************************************************************
+        Please avoid running ``setup.py`` and ``easy_install``.
+        Instead, use pypa/build, pypa/installer or other
+        standards-based tools.
+
+        See https://github.com/pypa/setuptools/issues/917 for details.
+        ********************************************************************************
+
+!!
+  self.initialize_options()
+running bdist_egg
+running egg_info
+creating pepper_polish.egg-info
+writing pepper_polish.egg-info/PKG-INFO
+writing dependency_links to pepper_polish.egg-info/dependency_links.txt
+writing entry points to pepper_polish.egg-info/entry_points.txt
+writing requirements to pepper_polish.egg-info/requires.txt
+writing top-level names to pepper_polish.egg-info/top_level.txt
+writing manifest file 'pepper_polish.egg-info/SOURCES.txt'
+reading manifest file 'pepper_polish.egg-info/SOURCES.txt'
+reading manifest template 'MANIFEST.in'
+adding license file 'LICENSE'
+writing manifest file 'pepper_polish.egg-info/SOURCES.txt'
+installing library code to build/bdist.linux-x86_64/egg
+running install_lib
+running build_py
+creating build
+creating build/lib.linux-x86_64-cpython-310
+creating build/lib.linux-x86_64-cpython-310/pepper
+copying pepper/pepper.py -> build/lib.linux-x86_64-cpython-310/pepper
+copying pepper/__init__.py -> build/lib.linux-x86_64-cpython-310/pepper
+copying pepper/version.py -> build/lib.linux-x86_64-cpython-310/pepper
+copying pepper/pepper_train.py -> build/lib.linux-x86_64-cpython-310/pepper
+creating build/lib.linux-x86_64-cpython-310/pepper/modules
+creating build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/call_consensus.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/make_images.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/DataStorePredict.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/Stitch.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/FileManager.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/polish.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/download_model.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/__init__.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/ImageGenerationUI.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/perform_stitch.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/train_models.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/Options.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/StitchV2.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/run_hyperband.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/test_models.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/AlignmentSummarizer.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+copying pepper/modules/python/DataStore.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python
+creating build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/test.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/Seq2Seq_atn.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/train.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/hyperband.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/predict_distributed_cpu.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/dataloader.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/predict_distributed_gpu.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/__init__.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/predict.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/resnet.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/dataloader_predict.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/ModelHander.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/simple_model.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+copying pepper/modules/python/models/train_distributed.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/models
+creating build/lib.linux-x86_64-cpython-310/pepper/modules/python/helper
+copying pepper/modules/python/helper/generate_pileup_from_reads.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/helper
+copying pepper/modules/python/helper/hyperband_result.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/helper
+copying pepper/modules/python/helper/__init__.py -> build/lib.linux-x86_64-cpython-310/pepper/modules/python/helper
+creating build/lib.linux-x86_64-cpython-310/pepper_variant
+copying pepper_variant/pepper_variant_train.py -> build/lib.linux-x86_64-cpython-310/pepper_variant
+copying pepper_variant/pepper_variant.py -> build/lib.linux-x86_64-cpython-310/pepper_variant
+creating build/lib.linux-x86_64-cpython-310/pepper_variant/modules
+creating build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/FindCandidates.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/RunInference.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/AlignmentSummarizerHP.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/CandidateFinderCPP.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/TrainModule.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/VcfWriter.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/CallVariant.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/DataStorePredict.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/FileManager.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/ExcludeContigs.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/MakeImages.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/ImageGenerationUI.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/Options.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/MergeVariants.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/TestModule.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/MergedVcfWriter.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/CandidateFinder.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/AlignmentSummarizer.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+copying pepper_variant/modules/python/DataStore.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python
+creating build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse
+copying pepper_variant/modules/argparse/RunInferenceArguments.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse
+copying pepper_variant/modules/argparse/MakeImagesArguments.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse
+copying pepper_variant/modules/argparse/MergeVariantsArguments.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse
+copying pepper_variant/modules/argparse/SetParameters.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse
+copying pepper_variant/modules/argparse/CallVariantsArguments.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse
+copying pepper_variant/modules/argparse/FindCandidatesArguments.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse
+creating build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/predict_hp_distributed_cpu.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/test.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/hyperband.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/test_hp.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/predict_distributed_cpu.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/dataloader.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/train_distributed_hp.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/predict_distributed_gpu.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/predict_distributed_cpu_fake.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/simple_model_no_cnn.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/dataloader_predict.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/simple_model_transformers.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/ModelHander.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/simple_model.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/predict_hp_distributed_gpu.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+copying pepper_variant/modules/python/models/train_distributed.py -> build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models
+running build_ext
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found Python: /opt/conda/envs/pytorch/bin/python3.10 (found version "3.10.12") found components: Interpreter Development Development.Module Development.Embed 
+Python found
+-- pybind11 v2.12.0 dev1
+-- Performing Test HAS_FLTO
+-- Performing Test HAS_FLTO - Success
+-- Configuring done (2.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/ubuntu/pepper/build/temp.linux-x86_64-cpython-310
+[  8%] Creating directories for 'htslib'
+[ 16%] Performing download step (download, verify and extract) for 'htslib'
+-- Downloading...
+   dst='/home/ubuntu/pepper/build/temp.linux-x86_64-cpython-310/htslib/src/htslib-1.9.tar.bz2'
+   timeout='none'
+   inactivity timeout='none'
+-- Using src='https://github.com/samtools/htslib/releases/download/1.9/htslib-1.9.tar.bz2'
+-- [download 0% complete]
+-- [download 3% complete]
+-- [download 5% complete]
+-- [download 7% complete]
+-- [download 9% complete]
+-- [download 11% complete]
+-- [download 12% complete]
+-- [download 14% complete]
+-- [download 15% complete]
+-- [download 16% complete]
+-- [download 22% complete]
+-- [download 25% complete]
+-- [download 28% complete]
+-- [download 46% complete]
+-- [download 100% complete]
+-- Downloading... done
+-- extracting...
+     src='/home/ubuntu/pepper/build/temp.linux-x86_64-cpython-310/htslib/src/htslib-1.9.tar.bz2'
+     dst='/home/ubuntu/pepper/build/temp.linux-x86_64-cpython-310/htslib/src/htslib'
+-- extracting... [tar xfz]
+-- extracting... [analysis]
+-- extracting... [rename]
+-- extracting... [clean up]
+-- extracting... done
+[ 25%] No update step for 'htslib'
+[ 33%] No patch step for 'htslib'
+[ 41%] Performing configure step for 'htslib'
+checking for gcc... gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to accept ISO C89... none needed
+checking for ranlib... ranlib
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for C compiler warning flags... -Wall
+checking for special C compiler options needed for large files... no
+checking for _FILE_OFFSET_BITS value needed for large files... no
+checking for _LARGEFILE_SOURCE value needed for large files... no
+checking shared library type for unknown-Linux... plain .so
+checking how to run the C preprocessor... gcc -E
+checking for egrep... /usr/bin/grep -E
+checking for ANSI C header files... yes
+checking for sys/types.h... yes
+checking for sys/stat.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for memory.h... yes
+checking for strings.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for unistd.h... yes
+checking for stdlib.h... (cached) yes
+checking for unistd.h... (cached) yes
+checking for sys/param.h... yes
+checking for getpagesize... yes
+checking for working mmap... yes
+checking for gmtime_r... yes
+checking for fsync... yes
+checking for drand48... yes
+checking whether fdatasync is declared... yes
+checking for fdatasync... yes
+checking for library containing log... -lm
+checking for zlib.h... yes
+checking for inflate in -lz... yes
+checking for library containing recv... none required
+checking for libdeflate.h... no
+checking for libdeflate_deflate_compress in -ldeflate... no
+configure: WARNING: GCS support not enabled: requires libcurl support
+checking whether PTHREAD_MUTEX_RECURSIVE is declared... yes
+configure: creating ./config.status
+config.status: creating config.mk
+config.status: creating htslib.pc.tmp
+config.status: creating config.h
+[ 50%] Performing build step for 'htslib'
+make[3]: warning: jobserver unavailable: using -j1.  Add '+' to parent make rule.
+[ 58%] No install step for 'htslib'
+[ 66%] Completed 'htslib'
+[ 66%] Built target htslib
+[ 75%] Building CXX object CMakeFiles/PEPPER_VARIANT.dir/pepper_variant/modules/cpp/pybind_api.cpp.o
+[ 83%] Building CXX object CMakeFiles/PEPPER.dir/pepper/modules/src/pybind_api.cpp.o
+[ 91%] Linking CXX shared module PEPPER.cpython-310-x86_64-linux-gnu.so
+[ 91%] Built target PEPPER
+[100%] Linking CXX shared module PEPPER_VARIANT.cpython-310-x86_64-linux-gnu.so
+[100%] Built target PEPPER_VARIANT
+CMAKE VERSION:  3.28.0
+---------- Running CMake prepare ----------------------------------------
+---------- Building extensions ----------------------------------------
+<__main__.CMakeExtension('PEPPER') at 0x7f1b761c7b50>
+/home/ubuntu/pepper/build/temp.linux-x86_64-cpython-310/PEPPER.cpython-310-x86_64-linux-gnu.so
+/home/ubuntu/pepper/build/lib.linux-x86_64-cpython-310/pepper/build/
+copying /home/ubuntu/pepper/build/temp.linux-x86_64-cpython-310/PEPPER.cpython-310-x86_64-linux-gnu.so -> /home/ubuntu/pepper/build/lib.linux-x86_64-cpython-310/pepper/build
+<__main__.CMakeExtension('PEPPER_VARIANT') at 0x7f1b76981d50>
+/home/ubuntu/pepper/build/temp.linux-x86_64-cpython-310/PEPPER_VARIANT.cpython-310-x86_64-linux-gnu.so
+/home/ubuntu/pepper/build/lib.linux-x86_64-cpython-310/pepper_variant/build/
+copying /home/ubuntu/pepper/build/temp.linux-x86_64-cpython-310/PEPPER_VARIANT.cpython-310-x86_64-linux-gnu.so -> /home/ubuntu/pepper/build/lib.linux-x86_64-cpython-310/pepper_variant/build
+creating build/bdist.linux-x86_64
+creating build/bdist.linux-x86_64/egg
+creating build/bdist.linux-x86_64/egg/pepper_variant
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/pepper_variant_train.py -> build/bdist.linux-x86_64/egg/pepper_variant
+creating build/bdist.linux-x86_64/egg/pepper_variant/modules
+creating build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse/RunInferenceArguments.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse/MakeImagesArguments.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse/MergeVariantsArguments.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse/SetParameters.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse/CallVariantsArguments.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/argparse/FindCandidatesArguments.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse
+creating build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/FindCandidates.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/RunInference.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/AlignmentSummarizerHP.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/CandidateFinderCPP.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/TrainModule.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/VcfWriter.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/CallVariant.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/DataStorePredict.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/FileManager.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/ExcludeContigs.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/MakeImages.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/ImageGenerationUI.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/Options.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/MergeVariants.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/TestModule.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+creating build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/predict_hp_distributed_cpu.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/test.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/hyperband.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/test_hp.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/predict_distributed_cpu.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/dataloader.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/train_distributed_hp.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/predict_distributed_gpu.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/predict_distributed_cpu_fake.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/simple_model_no_cnn.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/dataloader_predict.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/simple_model_transformers.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/ModelHander.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/simple_model.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/predict_hp_distributed_gpu.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/models/train_distributed.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/MergedVcfWriter.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/CandidateFinder.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/AlignmentSummarizer.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/modules/python/DataStore.py -> build/bdist.linux-x86_64/egg/pepper_variant/modules/python
+creating build/bdist.linux-x86_64/egg/pepper_variant/build
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/build/PEPPER_VARIANT.cpython-310-x86_64-linux-gnu.so -> build/bdist.linux-x86_64/egg/pepper_variant/build
+copying build/lib.linux-x86_64-cpython-310/pepper_variant/pepper_variant.py -> build/bdist.linux-x86_64/egg/pepper_variant
+creating build/bdist.linux-x86_64/egg/pepper
+copying build/lib.linux-x86_64-cpython-310/pepper/pepper.py -> build/bdist.linux-x86_64/egg/pepper
+creating build/bdist.linux-x86_64/egg/pepper/modules
+creating build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/call_consensus.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+creating build/bdist.linux-x86_64/egg/pepper/modules/python/helper
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/helper/generate_pileup_from_reads.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/helper
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/helper/hyperband_result.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/helper
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/helper/__init__.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/helper
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/make_images.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/DataStorePredict.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/Stitch.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/FileManager.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/polish.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/download_model.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/__init__.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/ImageGenerationUI.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/perform_stitch.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/train_models.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/Options.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/StitchV2.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/run_hyperband.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+creating build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/test.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/Seq2Seq_atn.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/train.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/hyperband.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/predict_distributed_cpu.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/dataloader.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/predict_distributed_gpu.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/__init__.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/predict.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/resnet.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/dataloader_predict.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/ModelHander.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/simple_model.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/models/train_distributed.py -> build/bdist.linux-x86_64/egg/pepper/modules/python/models
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/test_models.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/AlignmentSummarizer.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/modules/python/DataStore.py -> build/bdist.linux-x86_64/egg/pepper/modules/python
+copying build/lib.linux-x86_64-cpython-310/pepper/__init__.py -> build/bdist.linux-x86_64/egg/pepper
+creating build/bdist.linux-x86_64/egg/pepper/build
+copying build/lib.linux-x86_64-cpython-310/pepper/build/PEPPER.cpython-310-x86_64-linux-gnu.so -> build/bdist.linux-x86_64/egg/pepper/build
+copying build/lib.linux-x86_64-cpython-310/pepper/version.py -> build/bdist.linux-x86_64/egg/pepper
+copying build/lib.linux-x86_64-cpython-310/pepper/pepper_train.py -> build/bdist.linux-x86_64/egg/pepper
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/pepper_variant_train.py to pepper_variant_train.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse/RunInferenceArguments.py to RunInferenceArguments.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse/MakeImagesArguments.py to MakeImagesArguments.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse/MergeVariantsArguments.py to MergeVariantsArguments.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse/SetParameters.py to SetParameters.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse/CallVariantsArguments.py to CallVariantsArguments.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/argparse/FindCandidatesArguments.py to FindCandidatesArguments.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/FindCandidates.py to FindCandidates.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/RunInference.py to RunInference.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/AlignmentSummarizerHP.py to AlignmentSummarizerHP.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/CandidateFinderCPP.py to CandidateFinderCPP.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/TrainModule.py to TrainModule.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/VcfWriter.py to VcfWriter.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/CallVariant.py to CallVariant.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/DataStorePredict.py to DataStorePredict.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/FileManager.py to FileManager.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/ExcludeContigs.py to ExcludeContigs.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/MakeImages.py to MakeImages.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/ImageGenerationUI.py to ImageGenerationUI.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/Options.py to Options.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/MergeVariants.py to MergeVariants.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/TestModule.py to TestModule.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/predict_hp_distributed_cpu.py to predict_hp_distributed_cpu.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/test.py to test.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/hyperband.py to hyperband.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/test_hp.py to test_hp.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/predict_distributed_cpu.py to predict_distributed_cpu.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/dataloader.py to dataloader.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/train_distributed_hp.py to train_distributed_hp.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/predict_distributed_gpu.py to predict_distributed_gpu.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/predict_distributed_cpu_fake.py to predict_distributed_cpu_fake.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/simple_model_no_cnn.py to simple_model_no_cnn.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/dataloader_predict.py to dataloader_predict.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/simple_model_transformers.py to simple_model_transformers.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/ModelHander.py to ModelHander.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/simple_model.py to simple_model.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/predict_hp_distributed_gpu.py to predict_hp_distributed_gpu.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/models/train_distributed.py to train_distributed.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/MergedVcfWriter.py to MergedVcfWriter.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/CandidateFinder.py to CandidateFinder.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/AlignmentSummarizer.py to AlignmentSummarizer.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/modules/python/DataStore.py to DataStore.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper_variant/pepper_variant.py to pepper_variant.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/pepper.py to pepper.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/call_consensus.py to call_consensus.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/helper/generate_pileup_from_reads.py to generate_pileup_from_reads.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/helper/hyperband_result.py to hyperband_result.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/helper/__init__.py to __init__.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/make_images.py to make_images.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/DataStorePredict.py to DataStorePredict.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/Stitch.py to Stitch.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/FileManager.py to FileManager.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/polish.py to polish.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/download_model.py to download_model.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/__init__.py to __init__.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/ImageGenerationUI.py to ImageGenerationUI.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/perform_stitch.py to perform_stitch.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/train_models.py to train_models.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/Options.py to Options.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/StitchV2.py to StitchV2.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/run_hyperband.py to run_hyperband.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/test.py to test.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/Seq2Seq_atn.py to Seq2Seq_atn.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/train.py to train.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/hyperband.py to hyperband.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/predict_distributed_cpu.py to predict_distributed_cpu.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/dataloader.py to dataloader.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/predict_distributed_gpu.py to predict_distributed_gpu.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/__init__.py to __init__.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/predict.py to predict.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/resnet.py to resnet.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/dataloader_predict.py to dataloader_predict.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/ModelHander.py to ModelHander.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/simple_model.py to simple_model.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/models/train_distributed.py to train_distributed.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/test_models.py to test_models.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/AlignmentSummarizer.py to AlignmentSummarizer.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/modules/python/DataStore.py to DataStore.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/__init__.py to __init__.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/version.py to version.cpython-310.pyc
+byte-compiling build/bdist.linux-x86_64/egg/pepper/pepper_train.py to pepper_train.cpython-310.pyc
+creating build/bdist.linux-x86_64/egg/EGG-INFO
+copying pepper_polish.egg-info/PKG-INFO -> build/bdist.linux-x86_64/egg/EGG-INFO
+copying pepper_polish.egg-info/SOURCES.txt -> build/bdist.linux-x86_64/egg/EGG-INFO
+copying pepper_polish.egg-info/dependency_links.txt -> build/bdist.linux-x86_64/egg/EGG-INFO
+copying pepper_polish.egg-info/entry_points.txt -> build/bdist.linux-x86_64/egg/EGG-INFO
+copying pepper_polish.egg-info/not-zip-safe -> build/bdist.linux-x86_64/egg/EGG-INFO
+copying pepper_polish.egg-info/requires.txt -> build/bdist.linux-x86_64/egg/EGG-INFO
+copying pepper_polish.egg-info/top_level.txt -> build/bdist.linux-x86_64/egg/EGG-INFO
+writing build/bdist.linux-x86_64/egg/EGG-INFO/native_libs.txt
+creating dist
+creating 'dist/pepper_polish-0.8.0-py3.10-linux-x86_64.egg' and adding 'build/bdist.linux-x86_64/egg' to it
+removing 'build/bdist.linux-x86_64/egg' (and everything under it)
+Processing pepper_polish-0.8.0-py3.10-linux-x86_64.egg
+removing '/opt/conda/envs/pytorch/lib/python3.10/site-packages/pepper_polish-0.8.0-py3.10-linux-x86_64.egg' (and everything under it)
+creating /opt/conda/envs/pytorch/lib/python3.10/site-packages/pepper_polish-0.8.0-py3.10-linux-x86_64.egg
+Extracting pepper_polish-0.8.0-py3.10-linux-x86_64.egg to /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Adding pepper-polish 0.8.0 to easy-install.pth file
+Installing pepper script to /opt/conda/envs/pytorch/bin
+Installing pepper_train script to /opt/conda/envs/pytorch/bin
+Installing pepper_variant script to /opt/conda/envs/pytorch/bin
+Installing pepper_variant_train script to /opt/conda/envs/pytorch/bin
+
+Installed /opt/conda/envs/pytorch/lib/python3.10/site-packages/pepper_polish-0.8.0-py3.10-linux-x86_64.egg
+Processing dependencies for pepper-polish==0.8.0
+Searching for pysam==0.22.0
+Best match: pysam 0.22.0
+Processing pysam-0.22.0-py3.10-linux-x86_64.egg
+Adding pysam 0.22.0 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/pysam-0.22.0-py3.10-linux-x86_64.egg
+Searching for intervaltree==3.1.0
+Best match: intervaltree 3.1.0
+Processing intervaltree-3.1.0-py3.10.egg
+Adding intervaltree 3.1.0 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/intervaltree-3.1.0-py3.10.egg
+Searching for torchnet==0.0.4
+Best match: torchnet 0.0.4
+Processing torchnet-0.0.4-py3.10.egg
+Adding torchnet 0.0.4 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/torchnet-0.0.4-py3.10.egg
+Searching for PyYAML==6.0.1
+Best match: PyYAML 6.0.1
+Adding PyYAML 6.0.1 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for Cython==3.0.7
+Best match: Cython 3.0.7
+Processing Cython-3.0.7-py3.10.egg
+Adding Cython 3.0.7 to easy-install.pth file
+Installing cygdb script to /opt/conda/envs/pytorch/bin
+Installing cython script to /opt/conda/envs/pytorch/bin
+Installing cythonize script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/Cython-3.0.7-py3.10.egg
+Searching for hyperopt==0.2
+Best match: hyperopt 0.2
+Processing hyperopt-0.2-py3.10.egg
+Adding hyperopt 0.2 to easy-install.pth file
+Installing hyperopt-mongo-worker script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/hyperopt-0.2-py3.10.egg
+Searching for onnxruntime==1.16.3
+Best match: onnxruntime 1.16.3
+Processing onnxruntime-1.16.3-py3.10-linux-x86_64.egg
+Adding onnxruntime 1.16.3 to easy-install.pth file
+Installing onnxruntime_test script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/onnxruntime-1.16.3-py3.10-linux-x86_64.egg
+Searching for onnx==1.15.0
+Best match: onnx 1.15.0
+Processing onnx-1.15.0-py3.10-linux-x86_64.egg
+Adding onnx 1.15.0 to easy-install.pth file
+Installing backend-test-tools script to /opt/conda/envs/pytorch/bin
+Installing check-model script to /opt/conda/envs/pytorch/bin
+Installing check-node script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/onnx-1.15.0-py3.10-linux-x86_64.egg
+Searching for torchvision==0.15.2
+Best match: torchvision 0.15.2
+Adding torchvision 0.15.2 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for wget==3.2
+Best match: wget 3.2
+Processing wget-3.2-py3.10.egg
+Adding wget 3.2 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/wget-3.2-py3.10.egg
+Searching for torch==2.0.1
+Best match: torch 2.0.1
+Adding torch 2.0.1 to easy-install.pth file
+Installing convert-caffe2-to-onnx script to /opt/conda/envs/pytorch/bin
+Installing convert-onnx-to-caffe2 script to /opt/conda/envs/pytorch/bin
+Installing torchrun script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for numpy==1.25.2
+Best match: numpy 1.25.2
+Adding numpy 1.25.2 to easy-install.pth file
+Installing f2py script to /opt/conda/envs/pytorch/bin
+Installing f2py3 script to /opt/conda/envs/pytorch/bin
+Installing f2py3.10 script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for h5py==3.10.0
+Best match: h5py 3.10.0
+Processing h5py-3.10.0-py3.10-linux-x86_64.egg
+Adding h5py 3.10.0 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/h5py-3.10.0-py3.10-linux-x86_64.egg
+Searching for sortedcontainers==2.4.0
+Best match: sortedcontainers 2.4.0
+Processing sortedcontainers-2.4.0-py3.10.egg
+Adding sortedcontainers 2.4.0 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/sortedcontainers-2.4.0-py3.10.egg
+Searching for visdom==0.2.4
+Best match: visdom 0.2.4
+Processing visdom-0.2.4-py3.10.egg
+Adding visdom 0.2.4 to easy-install.pth file
+Installing visdom script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/visdom-0.2.4-py3.10.egg
+Searching for six==1.16.0
+Best match: six 1.16.0
+Adding six 1.16.0 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for bson==0.5.10
+Best match: bson 0.5.10
+Processing bson-0.5.10-py3.10.egg
+Adding bson 0.5.10 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/bson-0.5.10-py3.10.egg
+Searching for cloudpickle==2.2.1
+Best match: cloudpickle 2.2.1
+Adding cloudpickle 2.2.1 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for tqdm==4.66.1
+Best match: tqdm 4.66.1
+Adding tqdm 4.66.1 to easy-install.pth file
+Installing tqdm script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for future==0.18.3
+Best match: future 0.18.3
+Processing future-0.18.3-py3.10.egg
+Adding future 0.18.3 to easy-install.pth file
+Installing futurize script to /opt/conda/envs/pytorch/bin
+Installing pasteurize script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/future-0.18.3-py3.10.egg
+Searching for networkx==2.2
+Best match: networkx 2.2
+Processing networkx-2.2-py3.10.egg
+Adding networkx 2.2 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/networkx-2.2-py3.10.egg
+Searching for scipy==1.11.3
+Best match: scipy 1.11.3
+Adding scipy 1.11.3 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for sympy==1.12
+Best match: sympy 1.12
+Adding sympy 1.12 to easy-install.pth file
+Installing isympy script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for protobuf==4.24.3
+Best match: protobuf 4.24.3
+Adding protobuf 4.24.3 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for packaging==21.3
+Best match: packaging 21.3
+Adding packaging 21.3 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for flatbuffers==23.5.26
+Best match: flatbuffers 23.5.26
+Processing flatbuffers-23.5.26-py3.10.egg
+Adding flatbuffers 23.5.26 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/flatbuffers-23.5.26-py3.10.egg
+Searching for coloredlogs==15.0.1
+Best match: coloredlogs 15.0.1
+Processing coloredlogs-15.0.1-py3.10.egg
+Adding coloredlogs 15.0.1 to easy-install.pth file
+Installing coloredlogs script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/coloredlogs-15.0.1-py3.10.egg
+Searching for Pillow==10.0.1
+Best match: Pillow 10.0.1
+Adding Pillow 10.0.1 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for requests==2.31.0
+Best match: requests 2.31.0
+Adding requests 2.31.0 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for Jinja2==3.1.2
+Best match: Jinja2 3.1.2
+Adding Jinja2 3.1.2 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for typing-extensions==4.8.0
+Best match: typing-extensions 4.8.0
+Adding typing-extensions 4.8.0 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for filelock==3.12.4
+Best match: filelock 3.12.4
+Adding filelock 3.12.4 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for websocket-client==1.6.3
+Best match: websocket-client 1.6.3
+Adding websocket-client 1.6.3 to easy-install.pth file
+Installing wsdump script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for jsonpatch==1.33
+Best match: jsonpatch 1.33
+Processing jsonpatch-1.33-py3.10.egg
+Adding jsonpatch 1.33 to easy-install.pth file
+Installing jsondiff script to /opt/conda/envs/pytorch/bin
+Installing jsonpatch script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/jsonpatch-1.33-py3.10.egg
+Searching for tornado==6.3.3
+Best match: tornado 6.3.3
+Adding tornado 6.3.3 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for python-dateutil==2.8.2
+Best match: python-dateutil 2.8.2
+Adding python-dateutil 2.8.2 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for decorator==5.1.1
+Best match: decorator 5.1.1
+Adding decorator 5.1.1 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for mpmath==1.3.0
+Best match: mpmath 1.3.0
+Adding mpmath 1.3.0 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for pyparsing==3.1.1
+Best match: pyparsing 3.1.1
+Adding pyparsing 3.1.1 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for humanfriendly==10.0
+Best match: humanfriendly 10.0
+Processing humanfriendly-10.0-py3.10.egg
+Adding humanfriendly 10.0 to easy-install.pth file
+Installing humanfriendly script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/humanfriendly-10.0-py3.10.egg
+Searching for certifi==2023.11.17
+Best match: certifi 2023.11.17
+Processing certifi-2023.11.17-py3.10.egg
+Adding certifi 2023.11.17 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages/certifi-2023.11.17-py3.10.egg
+Searching for urllib3==1.26.16
+Best match: urllib3 1.26.16
+Adding urllib3 1.26.16 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for idna==3.4
+Best match: idna 3.4
+Adding idna 3.4 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for charset-normalizer==3.2.0
+Best match: charset-normalizer 3.2.0
+Adding charset-normalizer 3.2.0 to easy-install.pth file
+Installing normalizer script to /opt/conda/envs/pytorch/bin
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for MarkupSafe==2.1.3
+Best match: MarkupSafe 2.1.3
+Adding MarkupSafe 2.1.3 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Searching for jsonpointer==2.4
+Best match: jsonpointer 2.4
+Adding jsonpointer 2.4 to easy-install.pth file
+
+Using /opt/conda/envs/pytorch/lib/python3.10/site-packages
+Finished processing dependencies for pepper-polish==0.8.0

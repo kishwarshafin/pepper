@@ -1,43 +1,57 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.5)
 
-# Name of the project
+# name of the project is PEPPER
 PROJECT(pepper)
-set(CMAKE_CXX_FLAGS "-fPIC -O3 -pipe")
-set(CMAKE_C_FLAGS "-fPIC -O3 -pipe -shared -rdynamic")
+set (CMAKE_CXX_FLAGS "-fPIC -O3 -pipe")
+set (CMAKE_C_FLAGS "-fPIC -O3 -pipe -shared -rdynamic")
 
 SET(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Python and include its components
+#FIND_PACKAGE(PythonInterp 3 REQUIRED)
+#FIND_PACKAGE(PythonLibs 3 REQUIRED)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 
-if(Python_FOUND)
+#if (PYTHONINTERP_FOUND)
+#    message("Python found")
+#else()
+#    message("Python not found")
+#endif()
+if (Python_FOUND)
     message("Python found")
 else()
     message("Python not found")
 endif()
 
-# Include HTSlib configuration
-# Replace this with the correct relative path to your htslib.cmake
-include(pepper/modules/htslib.cmake)
+# enable installing dependencies
+option(INSTALL_DEPENDENCIES
+        "Install project dependencies"
+        ON)
 
-# Assuming Pybind11 is downloaded and located at "<project_root>/external/pybind11"
-# Adjust the path as needed based on where Pybind11 is located
-add_subdirectory(external/pybind11)
+INCLUDE(pepper/modules/htslib.cmake)
+INCLUDE(pepper/modules/pybind11.cmake)
 
-# Pybind11 interface
+# pybind11 to interface
 pybind11_add_module(PEPPER pepper/modules/src/pybind_api.cpp)
+
 add_dependencies(PEPPER htslib)
+
+# add all the external libraries
 target_link_libraries(PEPPER PRIVATE z)
 target_link_libraries(PEPPER PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
 
 # PEPPER_VARIANT
 pybind11_add_module(PEPPER_VARIANT pepper_variant/modules/cpp/pybind_api.cpp)
+
 add_dependencies(PEPPER_VARIANT htslib)
+
+# add all the external libraries
 target_link_libraries(PEPPER_VARIANT PRIVATE z)
 target_link_libraries(PEPPER_VARIANT PRIVATE ${HTSLIB_SRC_DIR}/libhts.a)
 
-# Uncomment these if you have tests
-# ENABLE_TESTING()
-# ADD_SUBDIRECTORY(modules/unit_tests)
+#-------------------
+# Test
+#-------------------
+#ENABLE_TESTING()
+#ADD_SUBDIRECTORY(modules/unit_tests)
 

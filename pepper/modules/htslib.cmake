@@ -11,6 +11,7 @@ ExternalProject_Add(htslib
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND autoconf && ./configure --prefix=${CMAKE_BINARY_DIR}/htslib --disable-lzma --disable-s3 --disable-plugins --disable-bz2 --disable-libcurl
         BUILD_COMMAND make CFLAGS=${CMAKE_C_FLAGS}
+	DOWNLOAD_EXTRACT_TIMESTAMP true
         INSTALL_COMMAND "")
 ExternalProject_Get_Property(htslib SOURCE_DIR)
 set(HTSLIB_SRC_DIR ${SOURCE_DIR})

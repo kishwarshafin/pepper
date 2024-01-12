@@ -4,8 +4,7 @@ import sys
 
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
-#from distutils.version import LooseVersion
-from packaging.version import Version
+from distutils.version import LooseVersion
 import subprocess
 
 __pkg_name__ = 'pepper'
@@ -22,11 +21,10 @@ class CMakeBuild(build_ext):
     def run(self):
         try:
             out = subprocess.check_output(['cmake', '--version'])
-            #cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)', out.decode()).group(1))
-            cmake_version = Version(re.search(r'version\s*([\d.]+)', out.decode()).group(1))
+            cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)',
+                                                   out.decode()).group(1))
             print("CMAKE VERSION: ", cmake_version)
-            #if cmake_version < '3':
-            if cmake_version < Version('3'):
+            if cmake_version < '3':
                 raise RuntimeError("CMake >= 3 is required.")
         except OSError:
             raise RuntimeError(
@@ -35,12 +33,9 @@ class CMakeBuild(build_ext):
 
         build_directory = os.path.abspath(self.build_temp)
 
-        #cmake_args = [
-        #    '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + build_directory,
-        #    '-DPYTHON_EXECUTABLE=' + sys.executable
-        #]
         cmake_args = [
-            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + build_directory
+            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + build_directory,
+            '-DPYTHON_EXECUTABLE=' + sys.executable
         ]
 
         cfg = 'Debug' if self.debug else 'Release'
@@ -152,7 +147,7 @@ if __name__ == '__main__':
         description=__description__,
         long_description="Please visit (GitHub)[https://github.com/kishwarshafin/pepper] for description",
         long_description_content_type=__long_description_content_type__,
-        python_requires='>=3.5',
+        python_requires='>=3.5.*',
         install_requires=python_dependencies,
         entry_points={
             'console_scripts': [

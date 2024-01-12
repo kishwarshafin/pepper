@@ -1,14 +1,26 @@
+# Include the ExternalProject module
+include(ExternalProject)
+
+# Set the version and URL for the Pybind11 library
 set(PYBIND11_VERSION "2.6.2")
 set(PYBIND11_URL "https://github.com/pybind/pybind11/archive/v${PYBIND11_VERSION}.tar.gz")
-set(PYBIND11_DOWNLOAD_PATH "${CMAKE_BINARY_DIR}/pybind11-${PYBIND11_VERSION}.tar.gz")
-set(PYBIND11_EXTRACTED_PATH "${CMAKE_BINARY_DIR}/pybind11-${PYBIND11_VERSION}")
 
-if (NOT EXISTS ${PYBIND11_DOWNLOAD_PATH})
-    file(DOWNLOAD ${PYBIND11_URL} ${PYBIND11_DOWNLOAD_PATH})
-endif()
+# Use ExternalProject_Add to download and extract Pybind11
+ExternalProject_Add(
+    pybind11
+    URL ${PYBIND11_URL}
+    PREFIX ${CMAKE_BINARY_DIR}/pybind11-${PYBIND11_VERSION}
+    DOWNLOAD_EXTRACT_TIMESTAMP true
+    # Specify where to install Pybind11 (if necessary)
+    # INSTALL_DIR ${CMAKE_BINARY_DIR}/pybind11-install
+    # Add any additional configuration options for Pybind11 here
+)
 
-execute_process(COMMAND ${CMAKE_COMMAND} -E tar xfz ${PYBIND11_DOWNLOAD_PATH}
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        RESULT_VARIABLE pybind11)
+# Set the include directory for Pybind11 (useful for other CMake files to locate Pybind11 headers)
+set(PYBIND11_INCLUDE_DIR "${CMAKE_BINARY_DIR}/pybind11-${PYBIND11_VERSION}/src/pybind11/include")
 
-add_subdirectory(${PYBIND11_EXTRACTED_PATH})
+
+# Optional: Add a custom target to build Pybind11 (if needed)
+# This can be useful if you want to explicitly control when Pybind11 is built
+# add_custom_target(build_pybind11 DEPENDS pybind11)
+

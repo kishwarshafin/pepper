@@ -1,0 +1,5 @@
+include CMakeLists.txt build.sh LICENSE MANIFEST.in
+include README.md requirements.txt pepper/modules/htslib.cmake pepper/modules/pybind11.cmake
+recursive-include img/ *
+recursive-include pepper/ *
+recursive-include pepper_variant/ *
